@@ -1,1 +1,5 @@
-/* You can add global styles to this file, and also import other style files */
+// Import all partials
+@import './styles/base';
+@import './styles/mixins';
+@import './styles/variables';
+

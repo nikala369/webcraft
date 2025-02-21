@@ -1,0 +1,27 @@
+@import './variables';
+
+:root {
+  --primary: #{$primary};
+  --secondary: #{$secondary};
+  --accent: #{$accent-color};
+  --text: #{$text-color};
+  --bg-header: #{$background-color};
+}
+
+* {
+  margin: 0px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: $base-font-size;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: $base-font-family;
+  line-height: $line-height;
+  color: var(--text);
+  background-color: var(--bg);
+}
