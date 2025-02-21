@@ -66,6 +66,9 @@
             },
             "development": {
               "buildTarget": "auto-website-builder:build:development"
+            },
+            "options": {
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"
