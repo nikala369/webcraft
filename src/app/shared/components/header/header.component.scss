@@ -1,28 +1,43 @@
 @use '../../../../styles/variables' as v;
 @use '../../../../styles/mixins' as m;
 
-// Base header styling
 .header {
-  height: 200px;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   z-index: 1000;
-  background: transparent;
+
   //background: rgba(v.$bg-header, 0.98);
-  //backdrop-filter: blur(10px);
-  //box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease-out;
-  padding: 15px;
+  background: transparent;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  padding: 0.5rem 0;
+
+  @include m.breakpoint(md) {
+    padding: 0 0;
+  }
+
+  &.scrolled {
+    // Switch to a brand color or a semi-transparent color
+    background: rgba(v.$bg-header, 0.95);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
 
   &__container {
     @include m.container;
+
     display: flex;
     align-items: center;
+
+    min-height: v.$header-height;
+
+    padding: 0 1rem;
+    box-sizing: border-box;
   }
 
-  /* Left, Center, Right columns - each takes equal space (flex:1) */
+  /* Left, Center, Right columns - each flex:1 */
   &__left,
   &__center,
   &__right {
@@ -31,33 +46,29 @@
     flex: 1;
   }
 
-  /* Center the nav container */
   &__center {
     justify-content: center;
   }
 
-  /* Right side for desktop auth & hamburger toggle */
   &__right {
     justify-content: flex-end;
     gap: 1rem;
   }
 
-  /* -- LOGO -- */
+  /* LOGO */
   &__logo {
     display: inline-flex;
     align-items: center;
     text-decoration: none;
     transition: transform 0.3s ease;
+    width: 150px;
 
-    &:hover {
+    &-icon {
+      width: 32.5%;
+      margin-right: 0.5rem;
 
-      .shape {
-        &--1 {
-          transform: rotate(45deg) scale(1.1);
-        }
-        &--2 {
-          transform: rotate(-30deg) scale(0.9);
-        }
+      @include m.breakpoint(md) {
+        width: 27.5%;
       }
     }
 
@@ -65,7 +76,6 @@
       font-size: 1.4rem;
       font-weight: 700;
       color: v.$primary;
-      margin-right: 0.75rem;
     }
 
     &-shapes {
@@ -75,23 +85,23 @@
     }
   }
 
-  // Desktop Nav
+  /* Desktop Nav */
   &__nav {
     @include m.breakpoint(md) {
-      display: none; // Hide nav on mobile
+      display: none;
     }
   }
 
-  // Desktop Auth
+  /* Desktop Auth */
   &__auth {
     display: flex;
     gap: 1rem;
     @include m.breakpoint(md) {
-      display: none; // Hide on mobile
+      display: none;
     }
   }
 
-  // Mobile Hamburger
+  /* Mobile Toggle */
   &__toggle {
     display: none;
     background: none;
@@ -99,14 +109,12 @@
     padding: 0.5rem;
     cursor: pointer;
 
-    // Show toggle on mobile
     @include m.breakpoint(md) {
       display: block;
     }
 
     .hamburger {
       position: relative;
-      /* Smaller, two-line hamburger */
       width: 20px;
       height: 14px;
 
@@ -141,14 +149,15 @@
   }
 }
 
-/* Mobile Navigation / Sidebar */
+/* MOBILE NAV SIDEBAR */
 .mobile-nav {
   position: fixed;
-  top: v.$header-height; // push below header
+  top: v.$header-height; /* starts below header */
   left: 0;
   width: 100%;
   height: calc(100vh - #{v.$header-height});
-  background: rgba(v.$bg-header, 0.98);
+  background: #111a33;
+  border-top: 1px solid #ffffff;
   backdrop-filter: blur(10px);
   transform: translateX(100%);
   transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
@@ -159,6 +168,10 @@
     transform: translateX(0);
   }
 
+  &.scrolled {
+    background: v.$bg-header;
+  }
+
   &__content {
     padding: 2rem;
   }
@@ -166,7 +179,6 @@
   &__list {
     list-style: none;
     margin-bottom: 2rem;
-    /* Clearer spacing for mobile list items */
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
@@ -177,7 +189,7 @@
     transform: translateY(10px);
     transition: all 0.3s ease;
 
-    // Staggered fade for each item
+    /* Stagger for each item */
     @for $i from 1 through 5 {
       &:nth-child(#{$i}) {
         transition-delay: 0.07s * $i;
@@ -197,6 +209,10 @@
     font-weight: 500;
     transition: color 0.3s;
 
+    @include m.breakpoint(md) {
+      color: white;
+    }
+
     &:hover {
       color: v.$secondary;
     }
@@ -206,16 +222,19 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    /* You can add font-size or other styling here if needed */
   }
 }
 
-// Navigation links (desktop)
+/* Desktop Nav Items */
 .nav {
   &__list {
     display: flex;
     gap: 2.5rem;
     list-style: none;
+  }
+
+  &__item {
+    font-size: 14.5px;
   }
 
   &__link {
@@ -227,12 +246,8 @@
     font-weight: 500;
     overflow: hidden;
 
-    &:hover .nav__underline {
-      transform: scaleX(1);
-    }
-
-    &.active .nav__underline {
-      transform: scaleX(1);
+    &:hover {
+      cursor: pointer;
     }
   }
 
@@ -256,9 +271,9 @@
   }
 }
 
-// Shapes (logo)
+/* Logo shapes */
 .shape {
-  position: relative; // remove absolute to keep them horizontally aligned
+  position: relative;
   background: v.$secondary;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 
@@ -267,7 +282,6 @@
     height: 16px;
     border-radius: 4px;
   }
-
   &--2 {
     width: 12px;
     height: 12px;
@@ -275,7 +289,7 @@
   }
 }
 
-// Auth links
+/* Auth Links */
 .auth__link {
   padding: 0.5rem 1.25rem;
   border-radius: 8px;
@@ -287,8 +301,12 @@
   &--login {
     color: v.$text-color;
 
+    @include m.breakpoint(md) {
+      color: white;
+      text-align: center;
+    }
+
     &:hover {
-      //color: v.$secondary;
       box-shadow: 0 6px 16px rgba(v.$secondary, 0.3);
     }
   }
@@ -297,10 +315,12 @@
     background: v.$secondary;
     color: #fff;
     box-shadow: 0 4px 12px rgba(v.$secondary, 0.2);
-    cursor: pointer;
+
+    @include m.breakpoint(md) {
+      text-align: center;
+    }
 
     &:hover {
-      //transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(v.$secondary, 0.3);
     }
   }

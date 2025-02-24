@@ -1,0 +1,36 @@
+<div class="preview-container">
+  <!-- Preview Header (Theme, Device Toggle, Fonts) -->
+  <div class="preview-header">
+    <app-theme-switcher
+      (themeChange)="loadTheme($event)">
+    </app-theme-switcher>
+
+    <app-preview-view-toggle
+      (viewChange)="changeView($event)">
+    </app-preview-view-toggle>
+
+    <app-font-selector
+      [fonts]="selectedTheme()?.availableFonts"
+      (fontChange)="handleComponentUpdate({ font: $event })">
+    </app-font-selector>
+  </div>
+
+  <!-- Live Preview Iframe -->
+  <div class="preview-wrapper">
+    <iframe
+      #previewIframe
+      [srcdoc]="sanitizedTemplate()"
+      (load)="initPreview()"
+      class="preview-iframe">
+    </iframe>
+
+    <!-- Customization Panel - Dynamic Modal -->
+    <app-component-customizer
+      *ngIf="selectedComponent()"
+      [component]="selectedComponent()"
+      (update)="handleComponentUpdate($event)"
+      (close)="selectedComponent.set(null)"
+    ></app-component-customizer>
+  </div>
+
+</div>

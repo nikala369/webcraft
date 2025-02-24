@@ -11,37 +11,30 @@ import { CommonModule } from '@angular/common';
 })
 export class HeaderComponent {
   isMenuOpen = signal(false);
+  scrolled = false; // for controlling the background
 
   navLinks = [
     { path: '/about', label: 'About' },
     { path: '/packages', label: 'Packages' },
+    { path: '/pricing', label: 'Pricing' },
     { path: '/contact', label: 'Contact' }
   ];
 
+  constructor() {}
+
+  // Listen for scroll events
+  @HostListener('window:scroll')
+  onScroll() {
+    this.scrolled = (window.pageYOffset > 50);
+  }
+
   toggleMenu() {
     this.isMenuOpen.update(open => !open);
-    // Prevent scrolling when sidebar is open
     document.body.style.overflow = this.isMenuOpen() ? 'hidden' : '';
   }
 
   closeMenu() {
     this.isMenuOpen.set(false);
     document.body.style.overflow = '';
-  }
-
-  @HostListener('window:keydown.escape')
-  handleEscape() {
-    if (this.isMenuOpen()) {
-      this.closeMenu();
-    }
-  }
-
-  @HostListener('document:click', ['$event'])
-  handleOutsideClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    // If clicking outside .header and menu is open, close it
-    if (!target.closest('.header') && this.isMenuOpen()) {
-      this.closeMenu();
-    }
   }
 }

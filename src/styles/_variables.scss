@@ -5,7 +5,7 @@ $primary: #ffffff;
 $secondary: #0984e3;
 $accent-color: #00b894;
 $text-color: #c9c9c9;
-$bg-header: #212020;
+$bg-header: #131212;
 
 // Additional derived variable if needed
 $secondary-dark: darken($secondary, 10%);
@@ -16,7 +16,7 @@ $base-font-size: 16px;
 $line-height: 1.6;
 
 // LAYOUT
-$header-height: 65px;
+$header-height: 50px;
 $max-width: 1200px;
 $mobile-breakpoint: 768px;
 

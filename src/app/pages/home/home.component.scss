@@ -37,11 +37,16 @@
     text-align: center;
     min-height: 100vh;
     padding: 0 1rem;
+
+    @include m.breakpoint(md) {
+      min-height: 80vh;
+    }
   }
 
   &__frame {
     border: 10px solid #000;
-    padding: 5rem 10rem; /* Large desktop padding */
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    padding: 5rem 10rem;
     background: rgba(255, 255, 255, 0.05);
     max-width: 900px;
     margin: 0 auto;
@@ -166,7 +171,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
 
-  &--primary {
+  @include m.breakpoint(md) {
+    width: 100%;
+  }
+
+
+    &--primary {
     background: v.$secondary; /* from your SCSS variables */
     color: #fff;
 

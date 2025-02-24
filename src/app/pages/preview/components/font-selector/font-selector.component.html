@@ -1,0 +1,3 @@
+<select (change)="onFontSelect($event.target.value)">
+  <option *ngFor="let font of fonts" [value]="font">{{ font }}</option>
+</select>

@@ -1,0 +1,52 @@
+<div class="customizer-modal">
+  <h2>Customize {{ componentData().id }}</h2>
+
+  <!-- Edit Text -->
+  <label for="text">Edit {{ componentData().id }} Text:</label>
+  <input
+    id="text"
+    type="text"
+    [value]="newText()"
+    (input)="updateText($event)"
+  />
+
+  <!-- Select Color -->
+  <label for="color">Select {{ componentData().id }} Color:</label>
+  <input
+    id="color"
+    type="color"
+    [value]="newColor()"
+    (input)="updateColor($event)"
+  />
+
+  <!-- Menu Link Editor for Components like Header/Footer -->
+  <div *ngIf="componentData().menuLinks?.length">
+    <h3>Edit Menu Links:</h3>
+    <div *ngFor="let link of menuLinks(); let i = index">
+      <label for="menuLink{{ i }}">Link {{ i + 1 }}</label>
+      <input
+        id="menuLink{{ i }}"
+        type="text"
+        [value]="link"
+        (input)="updateMenuLink(i, $event.target.value)"
+      />
+    </div>
+  </div>
+
+  <!-- Image Uploader -->
+  <app-image-uploader
+    *ngIf="componentData().uploadable"
+    (uploaded)="handleImageUpload($event)"
+  ></app-image-uploader>
+
+  <!-- Action Buttons -->
+  <div class="modal-actions">
+    <button
+      class="apply-btn"
+      (click)="applyChanges()"
+      [disabled]="!isValid()">
+      {{ _component()?.applyLabel || 'Apply Changes' }}
+    </button>
+    <button class="cancel-btn" (click)="close.emit()">Cancel</button>
+  </div>
+</div>

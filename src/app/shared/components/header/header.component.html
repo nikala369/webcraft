@@ -1,14 +1,18 @@
-<header class="header">
+<header class="header" [class.scrolled]="scrolled">
   <div class="header__container">
     <!-- LEFT: Logo -->
     <div class="header__left">
-      <a class="header__logo" routerLink="/" aria-label="Home">
-        <span class="header__logo-text">WebCraft</span>
+<!--      <a class="header__logo" routerLink="/" aria-label="Home" (click)="closeMenu()">-->
+<!--        <span class="header__logo-text">WebCraft</span>-->
         <!-- Inline shapes container -->
-        <div class="header__logo-shapes">
-          <div class="shape shape--1"></div>
-          <div class="shape shape--2"></div>
-        </div>
+<!--        <div class="header__logo-shapes">-->
+<!--          <div class="shape shape&#45;&#45;1"></div>-->
+<!--          <div class="shape shape&#45;&#45;2"></div>-->
+<!--        </div>-->
+<!--      </a>-->
+      <a class="header__logo" routerLink="/" aria-label="Home" (click)="closeMenu()">
+        <img src="assets/header/webcraft-logo.svg" alt="WebCraft Logo" class="header__logo-icon" />
+        <span class="header__logo-text">WebCraft</span>
       </a>
     </div>
 
@@ -48,7 +52,7 @@
   </div>
 
   <!-- Mobile Navigation / Sidebar -->
-  <nav class="mobile-nav" [class.active]="isMenuOpen()" aria-label="Mobile navigation">
+  <nav class="mobile-nav" [class.active]="isMenuOpen()" [class.scrolled]="scrolled" aria-label="Mobile navigation">
     <div class="mobile-nav__content">
       <ul class="mobile-nav__list">
         <li class="mobile-nav__item" *ngFor="let link of navLinks">

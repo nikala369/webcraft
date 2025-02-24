@@ -1,0 +1,6 @@
+<div class="theme-switcher">
+  <label>Select Theme:</label>
+  <button *ngFor="let theme of themes()" (click)="selectTheme(theme)">
+    {{ theme }}
+  </button>
+</div>
