@@ -28,7 +28,7 @@
         id="menuLink{{ i }}"
         type="text"
         [value]="link"
-        (input)="updateMenuLink(i, $event.target.value)"
+        (input)="updateMenuLink(i, $event)"
       />
     </div>
   </div>
@@ -44,7 +44,8 @@
     <button
       class="apply-btn"
       (click)="applyChanges()"
-      [disabled]="!isValid()">
+      [disabled]="!isValid()"
+    >
       {{ _component()?.applyLabel || 'Apply Changes' }}
     </button>
     <button class="cancel-btn" (click)="close.emit()">Cancel</button>

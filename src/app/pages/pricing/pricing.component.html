@@ -20,7 +20,7 @@
           <li><span class="checkmark standard-check"></span> 24-Hour Delivery</li>
           <li><span class="checkmark standard-check"></span> Secure Hosting</li>
         </ul>
-        <button class="btn btn--primary">TRY STANDARD</button>
+        <button class="btn btn--primary" (click)="navigateToPreview('standard')">TRY STANDARD</button>
       </div>
 
       <!-- Premium Plan -->
@@ -37,7 +37,7 @@
           <li><span class="checkmark premium-check"></span> Analytics Dashboard</li>
           <li><span class="checkmark premium-check"></span> Dedicated Support</li>
         </ul>
-        <button class="btn btn--premium">TRY PREMIUM</button>
+        <button class="btn btn--premium" (click)="navigateToPreview('premium')">TRY PREMIUM</button>
       </div>
     </div>
   </div>

@@ -11,7 +11,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(appRoutes),
     provideHttpClient(),
     BrowserModule,
-    BrowserAnimationsModule,
+    BrowserAnimationsModule
     // Add other providers here if needed (e.g., interceptors, signals, etc.)
   ]
 };

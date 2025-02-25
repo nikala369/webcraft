@@ -12,9 +12,9 @@ export class FontSelectorComponent {
   @Output() fontChange = new EventEmitter<string>();
   selectedFont = signal<string>('Roboto');
 
-  onFontSelect(font: string) {
-    console.log(font, 'Font value')
-    this.selectedFont.set(font);
-    this.fontChange.emit(font);
+  onFontSelect(font: any) {
+    let fontValue = font.target.value;
+    this.selectedFont.set(fontValue);
+    this.fontChange.emit(fontValue);
   }
 }

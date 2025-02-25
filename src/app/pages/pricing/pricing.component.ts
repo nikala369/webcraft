@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import {Component} from '@angular/core';
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-pricing',
@@ -9,4 +10,9 @@ import { Component } from '@angular/core';
 })
 export class PricingComponent {
 
+  constructor(private router: Router) {}
+
+  navigateToPreview(plan: 'standard' | 'premium') {
+    this.router.navigate(['/preview'], { queryParams: { plan } });
+  }
 }

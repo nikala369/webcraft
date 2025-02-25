@@ -15,8 +15,8 @@ export class HeaderComponent {
 
   navLinks = [
     { path: '/about', label: 'About' },
-    { path: '/packages', label: 'Packages' },
     { path: '/pricing', label: 'Pricing' },
+    { path: '/learn-more', label: 'Learn more' },
     { path: '/contact', label: 'Contact' }
   ];
 

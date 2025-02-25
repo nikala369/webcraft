@@ -1,36 +1,57 @@
 <div class="preview-container">
-  <!-- Preview Header (Theme, Device Toggle, Fonts) -->
-  <div class="preview-header">
-    <app-theme-switcher
-      (themeChange)="loadTheme($event)">
-    </app-theme-switcher>
-
-    <app-preview-view-toggle
-      (viewChange)="changeView($event)">
-    </app-preview-view-toggle>
-
-    <app-font-selector
-      [fonts]="selectedTheme()?.availableFonts"
-      (fontChange)="handleComponentUpdate({ font: $event })">
-    </app-font-selector>
+  <!-- Main Introductory Text -->
+  <div class="preview-intro">
+    <h1 class="preview-main-title">Build Your Perfect Website</h1>
+    <p class="preview-main-subtitle">
+      Explore different themes, and customize your design to perfection in few minutes!.
+    </p>
   </div>
 
-  <!-- Live Preview Iframe -->
+  <h2 class="preview-title">
+    <span>{{ currentPlan() | uppercase }}</span> PLAN
+  </h2>
+
+  <!-- Preview Header (Theme, Device Toggle, Fonts) -->
+  <div class="preview-header">
+    <div class="preview-controls">
+      <app-theme-switcher (themeChange)="loadTheme($event)"></app-theme-switcher>
+
+      <!-- Device Toggle Icons -->
+      <app-preview-view-toggle (viewChange)="changeView($event)"></app-preview-view-toggle>
+
+      <!-- Font Selector -->
+      <app-font-selector
+        [fonts]="selectedTheme()?.availableFonts"
+        (fontChange)="handleComponentUpdate({ font: $event })">
+      </app-font-selector>
+    </div>
+  </div>
+
+  <!-- Main Preview Area -->
   <div class="preview-wrapper">
-    <iframe
-      #previewIframe
-      [srcdoc]="sanitizedTemplate()"
-      (load)="initPreview()"
-      class="preview-iframe">
-    </iframe>
+
+
+    <!-- Render Standard or Premium Structure Dynamically -->
+    <ng-container *ngIf="currentPlan() === 'standard'">
+      <app-standard-structure [customizations]="customizations()"></app-standard-structure>
+    </ng-container>
+
+    <ng-container *ngIf="currentPlan() === 'premium'">
+      <app-premium-structure [customizations]="customizations()"></app-premium-structure>
+    </ng-container>
 
     <!-- Customization Panel - Dynamic Modal -->
     <app-component-customizer
       *ngIf="selectedComponent()"
       [component]="selectedComponent()"
       (update)="handleComponentUpdate($event)"
-      (close)="selectedComponent.set(null)"
-    ></app-component-customizer>
+      (close)="selectedComponent.set(null)">
+    </app-component-customizer>
   </div>
 
+  <!-- Main Save and Cancel Actions -->
+  <div class="preview-footer">
+    <button class="btn btn--primary" (click)="saveAllChanges()">Save Changes</button>
+    <button class="btn btn--secondary" (click)="resetCustomizations()">Reset</button>
+  </div>
 </div>
