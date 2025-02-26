@@ -1,0 +1,32 @@
+.structure-container {
+  width: 100%;
+  //max-width: 1200px;
+  margin: 0 auto;
+  //padding: 2rem;
+  background: rgba(204, 192, 192, 0.03);
+  //box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.structure-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 1.5rem;
+}
+
+.hero-section {
+  text-align: center;
+  background: rgba(40, 118, 255, 0.1);
+  padding: 2rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.content-section {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}

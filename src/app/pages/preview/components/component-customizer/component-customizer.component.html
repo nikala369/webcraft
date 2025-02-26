@@ -1,51 +1,42 @@
 <div class="customizer-modal">
   <h2>Customize {{ componentData().id }}</h2>
 
-  <!-- Edit Text -->
-  <label for="text">Edit {{ componentData().id }} Text:</label>
-  <input
-    id="text"
-    type="text"
-    [value]="newText()"
-    (input)="updateText($event)"
-  />
+  <!-- Render fields dynamically based on config -->
+  <ng-container *ngFor="let field of config()">
+    <div class="form-group">
+      <label [for]="field.key">{{ field.label }}:</label>
+      <ng-container [ngSwitch]="field.type">
+        <!-- Text Field -->
+        <input *ngSwitchCase="'text'" [id]="field.key" type="text"
+               [value]="(componentData())[field.key]"
+               (input)="updateText($event)" />
 
-  <!-- Select Color -->
-  <label for="color">Select {{ componentData().id }} Color:</label>
-  <input
-    id="color"
-    type="color"
-    [value]="newColor()"
-    (input)="updateColor($event)"
-  />
+        <!-- Color Field -->
+        <input *ngSwitchCase="'color'" [id]="field.key" type="color"
+               [value]="(componentData())[field.key]"
+               (input)="updateColor($event)" />
 
-  <!-- Menu Link Editor for Components like Header/Footer -->
-  <div *ngIf="componentData().menuLinks?.length">
-    <h3>Edit Menu Links:</h3>
-    <div *ngFor="let link of menuLinks(); let i = index">
-      <label for="menuLink{{ i }}">Link {{ i + 1 }}</label>
-      <input
-        id="menuLink{{ i }}"
-        type="text"
-        [value]="link"
-        (input)="updateMenuLink(i, $event)"
-      />
+        <!-- File Field -->
+        <input *ngSwitchCase="'file'"
+               [id]="field.key"
+               type="file"
+               (change)="onFileChange($event)" />
+
+        <!-- List Field -->
+        <div *ngSwitchCase="'list'">
+          <div *ngFor="let item of (componentData())[field.key]; let i = index">
+            <label [for]="field.key + i">{{ field.label }} {{ i + 1 }}:</label>
+            <input [id]="field.key + i" type="text"
+                   [value]="item"
+                   (input)="updateMenuItem(i, $event)" />
+          </div>
+        </div>
+      </ng-container>
     </div>
-  </div>
+  </ng-container>
 
-  <!-- Image Uploader -->
-  <app-image-uploader
-    *ngIf="componentData().uploadable"
-    (uploaded)="handleImageUpload($event)"
-  ></app-image-uploader>
-
-  <!-- Action Buttons -->
   <div class="modal-actions">
-    <button
-      class="apply-btn"
-      (click)="applyChanges()"
-      [disabled]="!isValid()"
-    >
+    <button class="apply-btn" (click)="applyChanges()" [disabled]="!isValid()">
       {{ _component()?.applyLabel || 'Apply Changes' }}
     </button>
     <button class="cancel-btn" (click)="close.emit()">Cancel</button>

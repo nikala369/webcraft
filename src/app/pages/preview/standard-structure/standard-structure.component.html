@@ -1,1 +1,27 @@
-<p>standard-structure works!</p>
+<div class="structure-container">
+  <!-- Header Section -->
+  <app-structure-header
+    [customizations]="customizations()?.header"
+    (click)="handleComponentSelection('header')">
+  </app-structure-header>
+
+  <!-- Hero Section -->
+  <section class="hero-section" (click)="handleComponentSelection('hero')">
+    <h2>{{ customizations()?.hero?.title || 'Welcome to Your Website' }}</h2>
+    <p>{{ customizations()?.hero?.subtitle || 'Customize your hero section' }}</p>
+  </section>
+
+  <!-- Content Section -->
+  <section class="content-section" (click)="handleComponentSelection('hero')">
+    <h3>{{ customizations()?.hero?.title || 'About Us' }}</h3>
+    <p>{{ customizations()?.hero?.subtitle || 'This is where your content will appear.' }}</p>
+  </section>
+
+  <!-- Footer Section -->
+  <!--
+  <app-structure-footer
+    [customizations]="customizations()?.footer"
+    (click)="handleComponentSelection('footer')">
+  </app-structure-footer>
+  -->
+</div>

@@ -19,6 +19,117 @@
   padding: 0 1.5rem;
 }
 
+@mixin dropdown-styles($width: 180px, $z-index: 100) {
+  position: relative;
+  z-index: $z-index;
+
+  .custom-dropdown {
+    position: relative;
+    width: $width;
+    background: #1c1f2e;
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 3px 7.5px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    @include breakpoint(md) {
+      width: 110px;
+    }
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+
+      // Really nice design of hover - think about it!!!
+      //box-shadow: 0 0 2.5px rgba(255, 255, 255, 0.6);
+      //border-color: #1c1f2e;
+    }
+
+    .selected-option {
+      background: none;
+      border: none;
+      color: white;
+      font-weight: 500;
+      padding: 12px 16px;
+      width: 100%;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+    }
+
+    .arrow {
+      color: rgba(255, 255, 255, 0.6);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &.active {
+        transform: rotate(180deg);
+      }
+    }
+
+    .dropdown-options {
+      position: absolute;
+      top: calc(100%);
+      left: 0;
+      width: 100%;
+      background: #2a2e3f;
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      z-index: 1000;
+      margin-top: 4px;
+
+      max-height: 250px;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: #1c1f2e;
+        border-radius: 6px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 6px;
+      }
+
+      .custom-option {
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.03);
+          color: #fff;
+        }
+
+        &.active {
+          background: #1c1f2e;
+          color: white;
+        }
+      }
+    }
+  }
+}
+
+
 // RESPONSIVE MIXIN
 @mixin breakpoint($size) {
   @media (max-width: map-get((

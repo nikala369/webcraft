@@ -1,0 +1,40 @@
+// preview-view-toggle.component.scss
+.device-toggle {
+  display: flex;
+  gap: 0.5rem;
+  background: #1c1f2e;
+  border-radius: 8px;
+  padding: 0.5rem;
+
+  &-button {
+    padding: 0.75rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: rgba(255, 255, 255, 0.6);
+
+    &:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    &.active {
+      background: rgba(40, 118, 255, 0.2);
+      color: #2876ff;
+    }
+
+    svg {
+      display: block;
+      stroke-width: 1.5;
+    }
+  }
+}
+
+// Hide mobile toggle button on actual mobile devices
+@media (max-width: 768px) {
+  .device-toggle-button[aria-label="Mobile view"] {
+    display: none;
+  }
+}

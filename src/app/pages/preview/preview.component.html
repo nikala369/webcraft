@@ -3,53 +3,68 @@
   <div class="preview-intro">
     <h1 class="preview-main-title">Build Your Perfect Website</h1>
     <p class="preview-main-subtitle">
-      Explore different themes, and customize your design to perfection in few minutes!.
+      Explore different themes, choose fonts, and customize your design to perfection in a few minutes!
     </p>
   </div>
 
+  <!-- Plan Title -->
   <h2 class="preview-title">
     <span>{{ currentPlan() | uppercase }}</span> PLAN
   </h2>
 
-  <!-- Preview Header (Theme, Device Toggle, Fonts) -->
+  <!-- Preview Header -->
   <div class="preview-header">
-    <div class="preview-controls">
-      <app-theme-switcher (themeChange)="loadTheme($event)"></app-theme-switcher>
+    <!-- Theme Selector -->
+    <app-theme-switcher class="preview-header__left"
+                        (themeChange)="loadTheme($event)"
+                        [plan]="currentPlan()">
+    </app-theme-switcher>
 
-      <!-- Device Toggle Icons -->
-      <app-preview-view-toggle (viewChange)="changeView($event)"></app-preview-view-toggle>
-
-      <!-- Font Selector -->
-      <app-font-selector
-        [fonts]="selectedTheme()?.availableFonts"
-        (fontChange)="handleComponentUpdate({ font: $event })">
-      </app-font-selector>
+    <!-- View Toggle (Only on Desktop) -->
+    <div class="preview-header__center" *ngIf="!isMobileView()">
+      <img src="assets/preview/desktop-icon.svg"
+           alt="Desktop View"
+           class="view-icon"
+           [class.active]="viewMode() === 'view-desktop'"
+           (click)="toggleView('view-desktop')">
+      <img src="assets/preview/mobile-icon.svg"
+           alt="Mobile View"
+           class="view-icon"
+           [class.active]="viewMode() === 'view-mobile'"
+           (click)="toggleView('view-mobile')">
     </div>
+
+    <!-- Font Selector -->
+    <app-font-picker class="preview-header__right"
+                     (fontChange)="handleFontUpdate($event)">
+    </app-font-picker>
   </div>
 
   <!-- Main Preview Area -->
-  <div class="preview-wrapper">
-
-
-    <!-- Render Standard or Premium Structure Dynamically -->
+  <div class="preview-wrapper" [ngClass]="viewMode()">
     <ng-container *ngIf="currentPlan() === 'standard'">
-      <app-standard-structure [customizations]="customizations()"></app-standard-structure>
+      <app-standard-structure
+        [customizations]="customizations"
+        (componentSelected)="handleComponentSelection($event)"
+      >
+      </app-standard-structure>
     </ng-container>
-
     <ng-container *ngIf="currentPlan() === 'premium'">
-      <app-premium-structure [customizations]="customizations()"></app-premium-structure>
+      <!-- Premium Structure Code (if applicable) -->
     </ng-container>
+  </div>
 
-    <!-- Customization Panel - Dynamic Modal -->
+  <!-- Customization Modal (for updates via modal) -->
+  <div class="modal-overlay" *ngIf="selectedCustomization()">
     <app-component-customizer
-      *ngIf="selectedComponent()"
-      [component]="selectedComponent()"
+      [componentKey]="selectedCustomization()!.key"
+      [initialData]="selectedCustomization()!.data"
       (update)="handleComponentUpdate($event)"
       (close)="selectedComponent.set(null)">
     </app-component-customizer>
   </div>
 
-  <!-- Main Save and Cancel Actions -->
+  <!-- Save and Reset Actions -->
   <div class="preview-footer">
     <button class="btn btn--primary" (click)="saveAllChanges()">Save Changes</button>
     <button class="btn btn--secondary" (click)="resetCustomizations()">Reset</button>

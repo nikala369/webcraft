@@ -1,0 +1,16 @@
+<header class="structure-header structure-header--default"
+        [ngStyle]="{
+          'background-color': customizations?.backgroundColor,
+          'color': customizations?.text
+        }">
+  <div class="structure-header__logo">
+    <img [src]="customizations?.logoUrl || ''" alt="Logo" />
+  </div>
+  <nav class="structure-header__menu">
+    <ul>
+      <li *ngFor="let item of customizations?.menuItems">
+        <a [href]="item.link">{{ item.label }}</a>
+      </li>
+    </ul>
+  </nav>
+</header>

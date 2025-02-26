@@ -1,0 +1,33 @@
+.structure-header {
+  /* Base styles that rely on CSS variables */
+  background-color: var(--header-bg);
+  color: var(--header-text);
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &__logo {
+    img {
+      height: 50px;
+    }
+  }
+
+  &__menu {
+    ul {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+      margin: 0;
+      padding: 0;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+      transition: opacity 0.2s;
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
+}

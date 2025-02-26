@@ -1,3 +1,20 @@
-<select (change)="onFontSelect($event)">
-  <option *ngFor="let font of fonts" [value]="font">{{ font }}</option>
-</select>
+<div class="font-picker">
+  <div class="custom-dropdown" [class.active]="dropdownOpen()">
+    <button class="selected-option" (click)="toggleDropdown()">
+      <span [style.fontFamily]="selectedFont()?.family">{{ selectedFont()?.name }}</span>
+      <svg class="arrow" [class.active]="dropdownOpen()" width="12" height="8" viewBox="0 0 12 8">
+        <path fill="currentColor" d="M6 7.4L0.6 2 2 0.6l4 4 4-4 1.4 1.4z"/>
+      </svg>
+    </button>
+
+    <div class="dropdown-options" *ngIf="dropdownOpen()" (click)="$event.stopPropagation()">
+      <div *ngFor="let font of fonts()"
+           class="custom-option"
+           [class.active]="font.id === selectedFont()?.id"
+           (click)="selectFont(font)"
+           [style.fontFamily]="font.family">
+        {{ font.name }}
+      </div>
+    </div>
+  </div>
+</div>
