@@ -1,27 +1,18 @@
-// Modal overlay to cover the entire screen.
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5); // Semi-transparent background.
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000; // Ensure it appears above other content.
-}
+@use '../../../../../styles/mixins' as m;
 
-// Customized modal styles.
+
 .customizer-modal {
   background-color: #1f1f2e;
   padding: 2rem;
   border-radius: 12px;
   width: 600px;
+  max-height: 80vh; // Fixed height on desktop
+  overflow-y: auto;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   color: #ffffff;
   animation: fadeIn 0.3s ease;
   transition: transform 0.3s ease, opacity 0.3s ease;
+  position: relative;
 
   h2 {
     font-size: 1.5rem;
@@ -32,21 +23,80 @@
   .form-group {
     margin-bottom: 1rem;
 
+    // For file and color fields, disable pointer events on the label
     label {
       display: block;
       margin-bottom: 0.5rem;
       font-weight: 600;
+      pointer-events: none;
     }
 
-    input[type='text'],
-    input[type='color'],
-    input[type='file'] {
+    input[type='text'] {
       width: 100%;
       padding: 0.6rem;
       border-radius: 6px;
       border: 1px solid #333;
       background-color: #2c2c3d;
       color: #fff;
+    }
+
+    /* Custom styles for color input */
+    input[type='color'] {
+      -webkit-appearance: none;
+      border: none;
+      width: 100%;
+      height: 50px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    input[type='color']::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    input[type='color']::-webkit-color-swatch {
+      border: none;
+      border-radius: 10px;
+    }
+
+    .file-field-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+
+      margin-top: 25px;
+
+      @include m.breakpoint(md) {
+        flex-direction: column;
+      }
+    }
+
+    input[type='file'] {
+      width: 100%;
+      min-width: 50%;
+      max-height: 40px;
+      padding: 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background-color: #2c2c3d;
+      color: #fff;
+    }
+
+    .list-field-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+
+      @include m.breakpoint(md) {
+        flex-direction: column;
+      }
+
+      .mobile-li-text {
+        @include m.breakpoint(md) {
+          width: 100%;
+          margin-bottom: 15px;
+        }
+      }
     }
   }
 
@@ -87,6 +137,36 @@
       }
     }
   }
+
+  .color-input-container {
+    display: flex;
+    align-items: center;
+
+    .color-hex {
+      margin-left: 1rem;
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+  }
+
+  .file-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    @include m.breakpoint(md) {
+      margin-top: 20px;
+    }
+
+    .image-control {
+      width: 50%;
+    }
+
+    small {
+      opacity: 0.8;
+      font-size: 0.85rem;
+    }
+  }
 }
 
 @keyframes fadeIn {
@@ -97,5 +177,36 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Mobile styles: full screen modal with a visible close button */
+@media (max-width: 768px) {
+  .customizer-modal {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  .close-btn {
+    display: block;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: none;
+    font-size: 2rem;
+    color: #fff;
+    cursor: pointer;
+    z-index: 1100;
+  }
+}
+
+/* Hide the close button on desktop */
+@media (min-width: 769px) {
+  .close-btn {
+    display: none;
   }
 }

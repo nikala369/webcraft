@@ -42,7 +42,7 @@ export class PreviewComponent {
   // Customizations state
   customizations = signal<Customizations>({
     header: {
-      backgroundColor: '#2876FF',
+      backgroundColor: '#59c743',
       text: 'Welcome!',
       logoUrl: '',
       menuItems: [
@@ -130,12 +130,16 @@ export class PreviewComponent {
   }
 
   // Handler for updates coming from the modal (using selectedCustomization)
-  handleComponentUpdate(update: Partial<Customizations[keyof Customizations]>) {
+  handleComponentUpdate(update: any) {
     const key = this.selectedComponent()?.key;
     if (!key) return;
+
     this.customizations.update(current => ({
       ...current,
-      [key]: { ...current[key], ...update }
+      [key]: {
+        ...current[key],
+        ...update
+      }
     }));
   }
 

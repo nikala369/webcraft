@@ -2,17 +2,26 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
   header: [
     { key: 'backgroundColor', label: 'Background Color', type: 'color', defaultValue: '#2876FF' },
     { key: 'logoUrl', label: 'Logo', type: 'file' },
-    { key: 'menuItems', label: 'Menu Items', type: 'list' }
+    {
+      key: 'menuItems',
+      label: 'Menu Items',
+      type: 'list',
+      defaultValue: [
+        { id: 1, label: 'Home', link: '/' },
+        { id: 2, label: 'About', link: '/about' },
+        { id: 3, label: 'Contact', link: '/contact' }
+      ]
+    }
   ],
   hero: [
     { key: 'backgroundImage', label: 'Background Image', type: 'file' },
-    { key: 'title', label: 'Title', type: 'text' },
-    { key: 'subtitle', label: 'Subtitle', type: 'text' }
+    { key: 'title', label: 'Title', type: 'text', defaultValue: 'Your Perfect Website' },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', defaultValue: 'Fast, beautiful, and easy to customize' }
   ],
   footer: [
     { key: 'backgroundColor', label: 'Background Color', type: 'color', defaultValue: '#1a1a1a' },
     { key: 'textColor', label: 'Text Color', type: 'color', defaultValue: '#ffffff' },
-    { key: 'copyrightText', label: 'Copyright Text', type: 'text' }
+    { key: 'copyrightText', label: 'Copyright Text', type: 'text', defaultValue: '© 2025 MyWebsite' }
   ]
 };
 

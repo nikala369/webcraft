@@ -1,44 +1,70 @@
-<div class="customizer-modal">
-  <h2>Customize {{ componentData().id }}</h2>
+<div class="modal-overlay">
+  <div class="customizer-modal">
+    <!-- Close button: visible only on mobile -->
+    <button class="close-btn" (click)="cancel()">×</button>
+    <h2>Customize {{ componentData().id }}</h2>
 
-  <!-- Render fields dynamically based on config -->
-  <ng-container *ngFor="let field of config()">
-    <div class="form-group">
-      <label [for]="field.key">{{ field.label }}:</label>
-      <ng-container [ngSwitch]="field.type">
-        <!-- Text Field -->
-        <input *ngSwitchCase="'text'" [id]="field.key" type="text"
-               [value]="(componentData())[field.key]"
-               (input)="updateText($event)" />
+    <!-- Dynamically render form fields based on config -->
+    <ng-container *ngFor="let field of config()">
+      <div class="form-group">
+        <!-- For text and list fields, we associate the label with the input.
+             For file and color fields, we remove the association to avoid unwanted clicks. -->
+        <label  *ngIf="(field.type === 'text' || field.type === 'list') ? field.key : null">
+          {{ field.label }}:
+        </label>
+        <ng-container [ngSwitch]="field.type">
+          <!-- Text Field -->
+          <input *ngSwitchCase="'text'"
+                 [id]="field.key"
+                 type="text"
+                 [value]="componentData()[field.key]"
+                 (input)="updateField(field.key, $event)" />
 
-        <!-- Color Field -->
-        <input *ngSwitchCase="'color'" [id]="field.key" type="color"
-               [value]="(componentData())[field.key]"
-               (input)="updateColor($event)" />
+          <!-- Color Field + Display of Hex Code -->
+          <ng-container *ngSwitchCase="'color'">
+            <div class="color-input-container">
+              <input [id]="field.key"
+                     type="color"
+                     [value]="componentData()[field.key]"
+                     (input)="updateField(field.key, $event)" />
+              <span class="color-hex">
+                {{ componentData()[field.key] }}
+              </span>
+            </div>
+          </ng-container>
 
-        <!-- File Field -->
-        <input *ngSwitchCase="'file'"
-               [id]="field.key"
-               type="file"
-               (change)="onFileChange($event)" />
+          <!-- File Field + Display of Chosen File -->
+          <ng-container *ngSwitchCase="'file'">
+            <div class="file-field-container">
+                <input [id]="field.key"
+                       type="file"
+                       (change)="onFileChange(field.key, $event)" />
+                <div class="file-info" *ngIf="componentData()[field.key]">
+                  <img class="image-control" [src]="componentData()[field.key]" alt="Preview" />
+                </div>
+            </div>
+          </ng-container>
 
-        <!-- List Field -->
-        <div *ngSwitchCase="'list'">
-          <div *ngFor="let item of (componentData())[field.key]; let i = index">
-            <label [for]="field.key + i">{{ field.label }} {{ i + 1 }}:</label>
-            <input [id]="field.key + i" type="text"
-                   [value]="item"
-                   (input)="updateMenuItem(i, $event)" />
+          <!-- List Field (array of strings) -->
+          <div *ngSwitchCase="'list'" class="list-field-container">
+            <div class="mobile-li-text" *ngFor="let item of componentData()[field.key]; let i = index; trackBy: trackByIndex">
+              <input [id]="field.key + i"
+                     type="text"
+                     [ngModel]="item.label || item"
+                     (ngModelChange)="updateListField(field.key, i, $event)" />
+            </div>
           </div>
-        </div>
-      </ng-container>
-    </div>
-  </ng-container>
+        </ng-container>
+      </div>
+    </ng-container>
 
-  <div class="modal-actions">
-    <button class="apply-btn" (click)="applyChanges()" [disabled]="!isValid()">
-      {{ _component()?.applyLabel || 'Apply Changes' }}
-    </button>
-    <button class="cancel-btn" (click)="close.emit()">Cancel</button>
+    <div class="modal-actions">
+      <button class="apply-btn"
+              (click)="applyChanges()"
+              [disabled]="!isValid()">
+        Apply Changes
+      </button>
+      <button class="cancel-btn" (click)="cancel()">Cancel</button>
+    </div>
   </div>
 </div>
