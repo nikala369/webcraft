@@ -1,0 +1,67 @@
+.hover-wrapper {
+  position: relative;
+  transition: all 0.3s ease-in-out;
+
+  // **Adaptive Inner Shine Effect**
+  .hover-effect {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    pointer-events: none;
+    transition: all 0.4s ease-in-out;
+    z-index: 1;
+    opacity: 0;
+
+    // Default glow for dark backgrounds
+    background: radial-gradient(rgba(255, 255, 255, 0.15), transparent 75%);
+  }
+
+  // **Light Background Adaptation**
+  &[data-light-bg="true"] .hover-effect {
+    background: radial-gradient(rgba(0, 0, 0, 0.12), transparent 75%);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+  }
+
+  // **Hover Effect Activation**
+  &:hover .hover-effect {
+    opacity: 1;
+    box-shadow: inset 0 0 15px rgba(65, 65, 65, 0.2), 0 6px 20px rgb(228, 230, 234);
+  }
+
+  &[data-light-bg="true"]:hover .hover-effect {
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.15), 0 6px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  // **Minimalist Edit Button (Always Visible)**
+  .edit-button {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50%;
+    padding: 7.5px;
+    cursor: pointer;
+    z-index: 100;
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+
+    svg {
+      width: 18px;
+      height: 18px;
+      fill: #333;
+      transition: fill 0.2s ease;
+    }
+
+    &:hover {
+      transform: translateY(-50%) scale(1.1);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+      background: #fff;
+
+      svg {
+        fill: #1e1f1f;
+      }
+    }
+  }
+}

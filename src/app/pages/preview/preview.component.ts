@@ -30,6 +30,7 @@ export class PreviewComponent {
   renderer = inject(Renderer2);
   route = inject(ActivatedRoute);
 
+  selectedFont = '';
   // Signals
   isMobileView = signal(window.innerWidth <= 768);
   viewMode = signal<'view-desktop' | 'view-mobile'>('view-desktop');
@@ -42,8 +43,8 @@ export class PreviewComponent {
   // Customizations state
   customizations = signal<Customizations>({
     header: {
-      backgroundColor: '#59c743',
-      text: 'Welcome!',
+      backgroundColor: '#8080d7',
+      textColor: '#f5f5f5',
       logoUrl: '',
       menuItems: [
         { id: 1, label: 'Home', link: '/' },
@@ -151,8 +152,8 @@ export class PreviewComponent {
     }));
   }
 
-  handleFontUpdate(font: string) {
-    // Implement font update logic as needed
+  handleFontUpdate(font: any) {
+    this.selectedFont = font;
   }
 
   // Save all customizations (e.g. send to backend)
@@ -173,7 +174,7 @@ export class PreviewComponent {
     return {
       header: {
         backgroundColor: '#2876FF',
-        text: 'Welcome!',
+        textColor: '#ffffff',
         logoUrl: '',
         menuItems: [
           { id: 1, label: 'Home', link: '/' },
@@ -183,8 +184,8 @@ export class PreviewComponent {
       },
       hero: {
         backgroundImage: 'https://example.com/hero.jpg',
-        title: 'Your Perfect Website',
-        subtitle: 'Fast, beautiful, and easy to customize'
+        title: '',
+        subtitle: ''
       },
       footer: {
         backgroundColor: '#1a1a1a',
@@ -198,7 +199,7 @@ export class PreviewComponent {
 export interface Customizations {
   header: {
     backgroundColor: string;
-    text: string;
+    textColor: string;
     logoUrl: string;
     menuItems: { id: number; label: string; link: string }[];
   };

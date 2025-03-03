@@ -44,6 +44,8 @@
   <div class="preview-wrapper" [ngClass]="viewMode()">
     <ng-container *ngIf="currentPlan() === 'standard'">
       <app-standard-structure
+        [isMobileLayout]="viewMode() === 'view-mobile' || isMobileView()"
+        [selectedFont]="selectedFont"
         [customizations]="customizations"
         (componentSelected)="handleComponentSelection($event)"
       >

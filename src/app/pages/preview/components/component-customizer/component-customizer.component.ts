@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CustomizationFormConfig, FieldConfig } from "./customizing-form-config";
-import {FormsModule} from "@angular/forms";
+import { FormsModule } from "@angular/forms";
 
 export interface ComponentData {
   id: string;
@@ -21,8 +21,10 @@ export class ComponentCustomizerComponent {
 
   @Input() set initialData(value: any) {
     if (value) {
+      // Save a deep clone for cancel/revert logic.
       this.originalData = structuredClone(value);
       const configFields = CustomizationFormConfig[this.componentKey] || [];
+      // Merge provided data with defaults.
       const mergedData: ComponentData = { id: this.componentKey, ...value };
 
       configFields.forEach((field: FieldConfig) => {
@@ -38,6 +40,7 @@ export class ComponentCustomizerComponent {
   @Output() update = new EventEmitter<ComponentData>();
   @Output() close = new EventEmitter<void>();
 
+  // Local state holding the component data.
   localData = signal<ComponentData>({ id: this.componentKey });
   config = computed(() => CustomizationFormConfig[this.componentKey] || []);
   componentData = computed(() => this.localData());
@@ -56,7 +59,7 @@ export class ComponentCustomizerComponent {
   onFileChange(fieldKey: string, event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files?.[0]) {
-      const file = input?.files[0];
+      const file = input.files[0];
       this.handleImageUpload(fieldKey, file);
     }
   }
@@ -77,6 +80,7 @@ export class ComponentCustomizerComponent {
       return { ...current, [fieldKey]: list };
     });
   }
+
   trackByIndex(index: number, item: any): number {
     return index;
   }
@@ -84,14 +88,20 @@ export class ComponentCustomizerComponent {
   isValid = computed(() => {
     const data = this.localData();
     return this.config().every((field: FieldConfig) => {
-      if (field.type === 'text') return !!data[field.key]?.trim();
-      if (field.type === 'file') return !!data[field.key];
+      if (field.type === 'text') {
+        // If not required, allow empty.
+        if (field.required === false) return true;
+        return !!data[field.key]?.trim();
+      }
+      if (field.type === 'file') {
+        return !!data[field.key];
+      }
+      // Additional validations for other field types can go here.
       return true;
     });
   });
 
   applyChanges(): void {
-    // const { id, ...data } = this.localData();
     this.update.emit(this.localData());
     this.close.emit();
   }

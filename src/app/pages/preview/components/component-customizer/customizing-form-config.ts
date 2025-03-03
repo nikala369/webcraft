@@ -1,6 +1,19 @@
 export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
   header: [
-    { key: 'backgroundColor', label: 'Background Color', type: 'color', defaultValue: '#2876FF' },
+    {
+      key: 'backgroundColor',
+      label: 'BACKGROUND',
+      type: 'color',
+      defaultValue: '#2876FF',
+      required: true
+    },
+    {
+      key: 'textColor',
+      label: 'TEXT COLOR',
+      type: 'color',
+      defaultValue: '#ffffff',
+      required: true
+    },
     { key: 'logoUrl', label: 'Logo', type: 'file' },
     {
       key: 'menuItems',
@@ -15,8 +28,8 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
   ],
   hero: [
     { key: 'backgroundImage', label: 'Background Image', type: 'file' },
-    { key: 'title', label: 'Title', type: 'text', defaultValue: 'Your Perfect Website' },
-    { key: 'subtitle', label: 'Subtitle', type: 'text', defaultValue: 'Fast, beautiful, and easy to customize' }
+    { key: 'title', label: 'Title', type: 'text', defaultValue: '', required: false },
+    { key: 'subtitle', label: 'Subtitle', type: 'text', defaultValue: '', required: false }
   ],
   footer: [
     { key: 'backgroundColor', label: 'Background Color', type: 'color', defaultValue: '#1a1a1a' },
@@ -30,4 +43,5 @@ export interface FieldConfig {
   label: string;          // e.g., 'Background Color'
   type: 'text' | 'color' | 'file' | 'list'; // type of input
   defaultValue?: any;
+  required?: boolean;
 }

@@ -7,9 +7,8 @@
     <!-- Dynamically render form fields based on config -->
     <ng-container *ngFor="let field of config()">
       <div class="form-group">
-        <!-- For text and list fields, we associate the label with the input.
-             For file and color fields, we remove the association to avoid unwanted clicks. -->
-        <label  *ngIf="(field.type === 'text' || field.type === 'list') ? field.key : null">
+        <!-- For text and list fields, we associate the label with the input -->
+        <label *ngIf="(field.type === 'text' || field.type === 'list')" [attr.for]="field.key">
           {{ field.label }}:
         </label>
         <ng-container [ngSwitch]="field.type">
@@ -20,37 +19,43 @@
                  [value]="componentData()[field.key]"
                  (input)="updateField(field.key, $event)" />
 
-          <!-- Color Field + Display of Hex Code -->
+          <!-- Color Field + Display of Label (centered) -->
           <ng-container *ngSwitchCase="'color'">
-            <div class="color-input-container">
-              <input [id]="field.key"
-                     type="color"
+            <div class="custom-color-picker">
+              <!-- Background swatch with centered label -->
+              <div class="color-swatch"
+                   [style.background-color]="componentData()[field.key] || '#ffffff'">
+                <span class="placeholder-text">
+                  {{ field.label }}
+                </span>
+              </div>
+              <!-- The actual color input on top (transparent) -->
+              <input type="color"
                      [value]="componentData()[field.key]"
-                     (input)="updateField(field.key, $event)" />
-              <span class="color-hex">
-                {{ componentData()[field.key] }}
-              </span>
+                     (input)="updateField(field.key, $event)"
+                     class="actual-color-input" />
             </div>
           </ng-container>
 
           <!-- File Field + Display of Chosen File -->
           <ng-container *ngSwitchCase="'file'">
             <div class="file-field-container">
-                <input [id]="field.key"
-                       type="file"
-                       (change)="onFileChange(field.key, $event)" />
-                <div class="file-info" *ngIf="componentData()[field.key]">
-                  <img class="image-control" [src]="componentData()[field.key]" alt="Preview" />
-                </div>
+              <input [id]="field.key"
+                     type="file"
+                     (change)="onFileChange(field.key, $event)" />
+              <div class="file-info" *ngIf="componentData()[field.key]">
+                <img class="image-control" [src]="componentData()[field.key]" alt="Preview" />
+              </div>
             </div>
           </ng-container>
 
-          <!-- List Field (array of strings) -->
+          <!-- List Field (array of strings) using ngModel for two-way binding -->
           <div *ngSwitchCase="'list'" class="list-field-container">
-            <div class="mobile-li-text" *ngFor="let item of componentData()[field.key]; let i = index; trackBy: trackByIndex">
+            <div class="mobile-li-text"
+                 *ngFor="let item of componentData()[field.key]; let i = index; trackBy: trackByIndex">
               <input [id]="field.key + i"
                      type="text"
-                     [ngModel]="item.label || item"
+                     [ngModel]="item.label || ''"
                      (ngModelChange)="updateListField(field.key, i, $event)" />
             </div>
           </div>

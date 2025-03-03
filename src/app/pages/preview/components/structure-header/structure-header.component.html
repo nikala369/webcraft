@@ -1,16 +1,42 @@
-<header class="structure-header structure-header--default"
+<header class="structure-header"
+        [ngClass]="{
+          'structure-header--mobile': isMobileLayout
+        }"
         [ngStyle]="{
           'background-color': customizations?.backgroundColor,
-          'color': customizations?.text
+          'font-family': fontFamily
         }">
+  <!-- LOGO SECTION -->
   <div class="structure-header__logo">
-    <img [src]="customizations?.logoUrl || ''" alt="Logo" />
+    <img [src]="customizations?.logoUrl || '/assets/standard-header/default-logo.svg'" alt="Logo" class="logo" />
+    <!-- If there's a 'text' field for brand name, you can display it next to the logo -->
+<!--    <span class="brand-text" *ngIf="customizations?.text">{{ customizations.text }}</span>-->
   </div>
-  <nav class="structure-header__menu">
+
+<!--  // Desktop nav-->
+  <nav class="structure-header__menu" [ngStyle]="{'color': customizations?.textColor}" *ngIf="!isMobileLayout">
     <ul>
       <li *ngFor="let item of customizations?.menuItems">
-        <a [href]="item.link">{{ item.label }}</a>
+        <div class="nav-link-wrapper">
+          <a [href]="item.link">{{ item.label }}</a>
+        </div>
       </li>
     </ul>
   </nav>
+
+  <!-- MOBILE HAMBURGER MENU -->
+  <div class="structure-header__mobile" *ngIf="isMobileLayout">
+    <button class="hamburger-btn" (click)="toggleMobileMenu()">
+      <img src="assets/standard-header/standard-menu-icon.svg" alt="Standard menu icon"/>
+    </button>
+    <nav class="mobile-menu" [class.open]="isMobileMenuOpen()">
+      <ul>
+        <li *ngFor="let item of customizations?.menuItems">
+          <a [href]="item.link" (click)="toggleMobileMenu()">
+            {{ item.label }}
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
 </header>

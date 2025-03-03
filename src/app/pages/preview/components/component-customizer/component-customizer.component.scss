@@ -43,7 +43,7 @@
     /* Custom styles for color input */
     input[type='color'] {
       -webkit-appearance: none;
-      border: none;
+      border: 1px solid white;
       width: 100%;
       height: 50px;
       border-radius: 10px;
@@ -52,10 +52,47 @@
     input[type='color']::-webkit-color-swatch-wrapper {
       padding: 0;
     }
+
     input[type='color']::-webkit-color-swatch {
-      border: none;
+      border: 1px solid white;
       border-radius: 10px;
     }
+
+    .custom-color-picker {
+      position: relative;
+      width: 100%;
+      height: 50px; // match your desired height
+      border: 1px solid white;
+      border-radius: 10px;
+    }
+
+    .color-swatch {
+      position: absolute;
+      inset: 0; // shorthand for top, right, bottom, left: 0;
+      border-radius: 10px;
+    }
+
+    .placeholder-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: lightgrey;
+      font-size: 1rem;
+      pointer-events: none; // so clicks pass through to the input
+    }
+
+    .actual-color-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0; // hide the native UI; you can change opacity if you want a visible swatch
+      cursor: pointer;
+      border-radius: 10px;
+      z-index: 2;
+    }
+
 
     .file-field-container {
       display: flex;

@@ -19,9 +19,9 @@
   padding: 0 1.5rem;
 }
 
-@mixin dropdown-styles($width: 180px, $z-index: 100) {
+@mixin dropdown-styles($width: 180px, $z-index: 2000) {
   position: relative;
-  z-index: $z-index;
+  z-index: $z-index + 1000;
 
   .custom-dropdown {
     position: relative;

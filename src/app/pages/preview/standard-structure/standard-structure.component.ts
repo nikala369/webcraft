@@ -3,23 +3,27 @@ import { StructureHeaderComponent } from '../components/structure-header/structu
 import { StructureFooterComponent } from '../components/structure-footer/structure-footer.component';
 import { CommonModule } from '@angular/common';
 import { Customizations } from '../preview.component';
+import {SectionHoverWrapperComponent} from "../components/section-hover-wrapper/section-hover-wrapper.component";
+import {RouterOutlet} from "@angular/router";
 
 @Component({
   selector: 'app-standard-structure',
   standalone: true,
-  imports: [StructureHeaderComponent, StructureFooterComponent, CommonModule],
+  imports: [StructureHeaderComponent, StructureFooterComponent, SectionHoverWrapperComponent, CommonModule, RouterOutlet],
   templateUrl: './standard-structure.component.html',
   styleUrls: ['./standard-structure.component.scss']
 })
 export class StandardStructureComponent {
   // The parent passes in the customizations as a signal function for reactivity.
   @Input() customizations!: () => Customizations;
+  @Input() isMobileLayout = false;
+  @Input() selectedFont: any;
 
   // When a section is clicked, we emit an event with the section key.
   @Output() componentSelected = new EventEmitter<{ key: keyof Customizations; name: string }>();
 
   handleComponentSelection(componentKey: keyof Customizations): void {
-    // Create a simple object with a key and a human-friendly name.
+    // Create a simple object with a key and name.
     const selectedData = {
       key: componentKey,
       name: componentKey.charAt(0).toUpperCase() + componentKey.slice(1)

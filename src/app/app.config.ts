@@ -1,5 +1,5 @@
 import { ApplicationConfig } from '@angular/core';
-import { provideRouter, withViewTransitions, withInMemoryScrolling } from '@angular/router';
+import {provideRouter, withViewTransitions, withInMemoryScrolling, withComponentInputBinding} from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { appRoutes } from './app.routes';
 import { BrowserModule } from '@angular/platform-browser';
@@ -10,6 +10,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(
       appRoutes,
       withViewTransitions(),
+      withComponentInputBinding(),
       withInMemoryScrolling({ scrollPositionRestoration: 'top' })
     ),
     provideHttpClient(),
