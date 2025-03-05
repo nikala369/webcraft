@@ -1,6 +1,6 @@
 <div class="structure-container" [style]="{'font-family': selectedFont}">
   <!-- Header Section -->
-  <app-section-hover-wrapper [isMobile]="isMobileLayout" (onEdit)="handleComponentSelection('header')">
+  <app-section-hover-wrapper [isMobile]="isMobileLayout" [isMobileView]="isMobileView" (onEdit)="handleComponentSelection('header')">
     <app-structure-header
       [isMobileLayout]="isMobileLayout"
       [customizations]="customizations()?.header">
@@ -9,7 +9,7 @@
 
 
   <!-- Hero Section -->
-  <app-section-hover-wrapper [backgroundColor]="customizations()?.header?.backgroundColor" [isMobile]="isMobileLayout" (onEdit)="handleComponentSelection('hero')">
+  <app-section-hover-wrapper [backgroundColor]="customizations()?.header?.backgroundColor" [isMobile]="isMobileLayout" [isMobileView]="isMobileView" (onEdit)="handleComponentSelection('hero')">
   <section class="hero-section">
     <h2>{{ customizations()?.hero?.title || '' }}</h2>
     <p>{{ customizations()?.hero?.subtitle || '' }}</p>

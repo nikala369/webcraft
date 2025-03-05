@@ -43,7 +43,7 @@ export class PreviewComponent {
   // Customizations state
   customizations = signal<Customizations>({
     header: {
-      backgroundColor: '#8080d7',
+      backgroundColor: '#313d7a',
       textColor: '#f5f5f5',
       logoUrl: '',
       menuItems: [

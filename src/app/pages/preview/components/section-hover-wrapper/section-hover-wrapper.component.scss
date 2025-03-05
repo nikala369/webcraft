@@ -1,67 +1,101 @@
+@use '../../../../../styles/mixins' as m;
+
 .hover-wrapper {
   position: relative;
   transition: all 0.3s ease-in-out;
+  /* Ensure the element has a transparent border initially */
+  border-radius: 0px;
 
-  // **Adaptive Inner Shine Effect**
-  .hover-effect {
+  /* Pseudo-element for hover effect */
+  &::before {
+    content: "";
     position: absolute;
     inset: 0;
-    border-radius: 10px;
+    border-radius: inherit;
     pointer-events: none;
-    transition: all 0.4s ease-in-out;
-    z-index: 1;
+    border: 2px solid #0a8cf1; // Blue border
+    box-shadow: inset 0 0 10px rgba(40, 148, 255, 0.4); // Inner shadow
     opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 1;
 
-    // Default glow for dark backgrounds
-    background: radial-gradient(rgba(255, 255, 255, 0.15), transparent 75%);
+    @include m.breakpoint(md) {
+      border: none;
+      box-shadow: none;
+    }
   }
 
-  // **Light Background Adaptation**
-  &[data-light-bg="true"] .hover-effect {
-    background: radial-gradient(rgba(0, 0, 0, 0.12), transparent 75%);
-    border: 1px solid rgba(0, 0, 0, 0.15);
-  }
-
-  // **Hover Effect Activation**
-  &:hover .hover-effect {
+  &:hover::before {
     opacity: 1;
-    box-shadow: inset 0 0 15px rgba(65, 65, 65, 0.2), 0 6px 20px rgb(228, 230, 234);
+    @include m.breakpoint(md) {
+      opacity: 0;
+      border: none;
+    }
   }
 
-  &[data-light-bg="true"]:hover .hover-effect {
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.15), 0 6px 20px rgba(0, 0, 0, 0.08);
+  /* Apply hover effects only when not in mobile view */
+  &:not(.view-mobile) {
+    &:hover::before {
+      opacity: 1;
+    }
+    &:hover .edit-button {
+      opacity: 1;
+    }
   }
 
-  // **Minimalist Edit Button (Always Visible)**
+  /* Disable hover effects when in mobile view */
+  &.view-mobile {
+    &::before {
+      opacity: 0 !important;
+    }
+    .edit-button {
+      opacity: 0 !important;
+    }
+  }
+
+  /* Edit button styling */
   .edit-button {
     position: absolute;
-    right: 5px;
+    left: 50%;
     top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.95);
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 0;
+    background: rgba(255, 255, 255, 0.98);
     border: none;
     border-radius: 50%;
-    padding: 7.5px;
+    padding: 10px;
     cursor: pointer;
-    z-index: 100;
-    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.15),
+      0 2px 4px rgba(0, 0, 0, 0.1);
 
     svg {
-      width: 18px;
-      height: 18px;
-      fill: #333;
+      width: 20px;
+      height: 20px;
+      fill: #2d3748;
       transition: fill 0.2s ease;
     }
 
     &:hover {
-      transform: translateY(-50%) scale(1.1);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+      transform: translate(-50%, -50%) scale(1.1);
+      box-shadow:
+        0 6px 16px rgba(0, 0, 0, 0.2),
+        0 3px 6px rgba(0, 0, 0, 0.15);
       background: #fff;
 
       svg {
-        fill: #1e1f1f;
+        fill: #1a202c;
       }
+    }
+  }
+
+  /* Show edit button on hover */
+  &:hover .edit-button {
+    opacity: 1;
+    @include m.breakpoint(md) {
+      opacity: 0;
     }
   }
 }

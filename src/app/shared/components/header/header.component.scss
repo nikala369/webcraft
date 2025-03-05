@@ -35,6 +35,10 @@
 
     padding: 0 1rem;
     box-sizing: border-box;
+
+    @include m.breakpoint(md) {
+      padding: 0 1.5rem;
+    }
   }
 
   /* Left, Center, Right columns - each flex:1 */

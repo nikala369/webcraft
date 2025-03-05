@@ -1,4 +1,4 @@
-<div class="hover-wrapper" (mouseenter)="isHovered = true" (mouseleave)="isHovered = false">
+<div class="hover-wrapper" [class.view-mobile]="isMobileView === 'view-mobile'" (mouseenter)="isHovered = true" (mouseleave)="isHovered = false">
   <div class="hover-effect" [class.active]="isHovered && !isMobile"></div>
 
   <!-- Smooth Minimalist Edit Button (Pencil Icon) -->

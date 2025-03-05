@@ -1,20 +1,25 @@
 <header class="structure-header"
-        [ngClass]="{
-          'structure-header--mobile': isMobileLayout
-        }"
+        [ngClass]="{'structure-header--mobile': isMobileLayout}"
         [ngStyle]="{
           'background-color': customizations?.backgroundColor,
           'font-family': fontFamily
-        }">
+        }"
+        role="banner"
+        aria-label="Main website header">
+
   <!-- LOGO SECTION -->
   <div class="structure-header__logo">
-    <img [src]="customizations?.logoUrl || '/assets/standard-header/default-logo.svg'" alt="Logo" class="logo" />
+    <img [src]="customizations?.logoUrl || '/assets/standard-header/default-logo.svg'"
+         alt="Logo" class="logo" />
     <!-- If there's a 'text' field for brand name, you can display it next to the logo -->
-<!--    <span class="brand-text" *ngIf="customizations?.text">{{ customizations.text }}</span>-->
+    <!-- <span class="brand-text" *ngIf="customizations?.text">{{ customizations.text }}</span> -->
   </div>
 
-<!--  // Desktop nav-->
-  <nav class="structure-header__menu" [ngStyle]="{'color': customizations?.textColor}" *ngIf="!isMobileLayout">
+  <!-- DESKTOP NAVIGATION -->
+  <nav class="structure-header__menu"
+       [ngStyle]="{'color': customizations?.textColor}"
+       *ngIf="!isMobileLayout"
+       aria-label="Main standard navigation">
     <ul>
       <li *ngFor="let item of customizations?.menuItems">
         <div class="nav-link-wrapper">
@@ -26,10 +31,19 @@
 
   <!-- MOBILE HAMBURGER MENU -->
   <div class="structure-header__mobile" *ngIf="isMobileLayout">
-    <button class="hamburger-btn" (click)="toggleMobileMenu()">
-      <img src="assets/standard-header/standard-menu-icon.svg" alt="Standard menu icon"/>
+    <button class="hamburger-btn" (click)="toggleMobileMenu()" aria-label="Toggle mobile menu"
+            [ngStyle]="{'color': getHamburgerIconColor()}">
+      <svg width="24" height="24" viewBox="0 0 24 24">
+        <path d="M3 6h18a1 1 0 000-2H3a1 1 0 000 2zm18 5H3a1 1 0 000 2h18a1 1 0 000-2zm0 7H3a1 1 0 000 2h18a1 1 0 000-2z" fill="currentColor"/>
+      </svg>
     </button>
-    <nav class="mobile-menu" [class.open]="isMobileMenuOpen()">
+    <nav class="mobile-menu"
+         [class.open]="isMobileMenuOpen()"
+         [ngStyle]="{
+           'background-color': customizations?.backgroundColor || 'rgba(0, 0, 0, 0.9)',
+           'color': customizations?.textColor || '#fff',
+           'font-family': fontFamily
+         }">
       <ul>
         <li *ngFor="let item of customizations?.menuItems">
           <a [href]="item.link" (click)="toggleMobileMenu()">
@@ -37,6 +51,12 @@
           </a>
         </li>
       </ul>
+      <!-- Optional Social Icons -->
+      <div class="mobile-social" *ngIf="customizations?.socialIcons">
+        <a *ngFor="let icon of customizations?.socialIcons" [href]="icon.link" target="_blank">
+          <img [src]="'/assets/icons/' + icon.platform + '.svg'" [alt]="icon.platform" />
+        </a>
+      </div>
     </nav>
   </div>
 </header>

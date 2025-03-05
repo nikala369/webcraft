@@ -59,7 +59,7 @@ export class ComponentCustomizerComponent {
   onFileChange(fieldKey: string, event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files?.[0]) {
-      const file = input.files[0];
+      const file = input?.files[0];
       this.handleImageUpload(fieldKey, file);
     }
   }

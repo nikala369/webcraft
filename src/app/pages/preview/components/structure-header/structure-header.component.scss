@@ -5,30 +5,32 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 3rem;
-  color: #fff;
+  color: #fff; // Fallback text color
   transition: height 0.25s ease;
 
-  .structure-header__logo {
+  /* LOGO Section */
+  &__logo {
     display: flex;
     align-items: center;
     justify-content: left;
-    height: 65px;       // fixed container height
-    width: 160px;       // fixed container width
+    height: 65px;
+    width: 160px;
     margin-right: 0.75rem;
 
     .logo {
       max-height: 100%;
       max-width: 100%;
-      object-fit: contain;      // scale the logo while preserving its aspect ratio
-      object-position: center;   // center the image within its container
+      object-fit: contain;
+      object-position: center;
     }
 
     @include m.breakpoint(md) {
-      width: 135px;      // adjust container width on medium screens
+      width: 135px;
     }
   }
 
-  .structure-header__menu {
+  /* Desktop Navigation */
+  &__menu {
     ul {
       display: flex;
       list-style: none;
@@ -41,21 +43,19 @@
         a {
           display: inline-block;
           text-decoration: none;
-          color: inherit;
-          font-weight: 500;  // lighter weight for a professional feel
+          color: inherit; /* inherits from parent's [ngStyle]="{'color': ...}" */
+          font-weight: 500;
           padding-bottom: 4px;
           transition: background-size 0.3s ease, filter 0.3s ease;
 
-          /* Use a linear gradient as an underline */
+          /* Underline effect using currentColor */
           background-image: linear-gradient(currentColor, currentColor);
           background-position: 0 100%;
           background-repeat: no-repeat;
-          background-size: 0% 2px;  // start with no underline
+          background-size: 0% 2px;
 
           &:hover {
-            /* Animate underline to full width */
             background-size: 100% 2px;
-            /* Darken the link using filter; adjust brightness value as needed */
             filter: brightness(0.9);
           }
         }
@@ -63,16 +63,15 @@
     }
   }
 
-
+  /* MOBILE MENU */
   &__mobile {
     position: relative;
 
     .hamburger-btn {
       background: none;
       border: none;
-      font-size: 1.5rem;
-      color: inherit;
       cursor: pointer;
+      padding: 0.5rem;
 
       img {
         width: 24px;
@@ -82,15 +81,27 @@
 
     .mobile-menu {
       position: absolute;
-      top: 3.5rem;
-      right: 1rem;
-      background: rgba(0, 0, 0, 0.9);
+      z-index: 1;
+
+      top: 3.9rem;
+      right: -16px;
+      width: 396px;
       padding: 1rem;
-      border-radius: 6px;
-      display: none;
+      border-radius: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transform: translateY(-100px);
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+
+      @include m.breakpoint(md) {
+        width: 326px;
+      }
 
       &.open {
-        display: block;
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
       }
 
       ul {
@@ -102,28 +113,46 @@
           margin: 0.5rem 0;
 
           a {
-            color: #fff;
+            color: inherit;
             text-decoration: none;
             font-weight: 500;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            line-height: 2rem;
 
-            &:hover {
+            &:hover,
+            &:focus {
+              background-color: rgba(255, 255, 255, 0.15);
               text-decoration: underline;
             }
+          }
+        }
+      }
+
+      /* Optional: Social icons on mobile */
+      .mobile-social {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+
+        a {
+          img {
+            width: 20px;
+            height: 20px;
           }
         }
       }
     }
   }
 
-  // Optional: for when isMobileLayout = true, you can style the entire header differently
+  /* If you want special styling for mobile layout overall */
   &--mobile {
-    // e.g. narrower padding or stacked layout
     padding: 0.5rem 1rem;
 
     .logo {
       max-width: 135px;
-
-
     }
   }
 }
