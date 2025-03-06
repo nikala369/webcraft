@@ -3,6 +3,7 @@ import {CommonModule} from '@angular/common';
 import {RouterOutlet} from '@angular/router';
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {ThemeService} from "./core/services/theme/theme.service";
+import {ScrollService} from "./core/services/shared/scroll/scroll.service";
 
 @Component({
   selector: 'app-root',
@@ -16,6 +17,7 @@ export class AppComponent {
   title = 'Auto Website Builder';
   themeService = inject(ThemeService)
   renderer = inject(Renderer2)
+  scrollService = inject(ScrollService)
 
 
   ngOnInit() {

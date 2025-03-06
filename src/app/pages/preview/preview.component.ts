@@ -1,13 +1,14 @@
 import { Component, Renderer2, inject, signal, computed } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { ThemeService } from '../../core/services/theme/theme.service';
-import { ThemeSwitcherComponent } from "./components/theme-switcher/theme-switcher.component";
-import { FontSelectorComponent } from "./components/font-selector/font-selector.component";
-import { PreviewViewToggleComponent } from "./components/preview-view-toggle/preview-view-toggle.component";
-import { ComponentCustomizerComponent } from "./components/component-customizer/component-customizer.component";
-import { PremiumStructureComponent } from "./premium-structure/premium-structure.component";
-import { StandardStructureComponent } from "./standard-structure/standard-structure.component";
-import { CommonModule, UpperCasePipe } from "@angular/common";
+import { ThemeSwitcherComponent } from './components/theme-switcher/theme-switcher.component';
+import { FontSelectorComponent } from './components/font-selector/font-selector.component';
+import { PreviewViewToggleComponent } from './components/preview-view-toggle/preview-view-toggle.component';
+import { ComponentCustomizerComponent } from './components/component-customizer/component-customizer.component';
+import { PremiumStructureComponent } from './premium-structure/premium-structure.component';
+import { StandardStructureComponent } from './standard-structure/standard-structure.component';
+import { CommonModule, UpperCasePipe } from '@angular/common';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-preview',
@@ -20,7 +21,7 @@ import { CommonModule, UpperCasePipe } from "@angular/common";
     PremiumStructureComponent,
     StandardStructureComponent,
     UpperCasePipe,
-    CommonModule
+    CommonModule,
   ],
   templateUrl: './preview.component.html',
   styleUrls: ['./preview.component.scss'],
@@ -29,13 +30,19 @@ export class PreviewComponent {
   themeService = inject(ThemeService);
   renderer = inject(Renderer2);
   route = inject(ActivatedRoute);
+  router = inject(Router);
 
   selectedFont = '';
   // Signals
   isMobileView = signal(window.innerWidth <= 768);
   viewMode = signal<'view-desktop' | 'view-mobile'>('view-desktop');
-  selectedComponent = signal<{ key: keyof Customizations; name: string } | null>(null);
+  selectedComponent = signal<{
+    key: keyof Customizations;
+    name: string;
+    path?: string;
+  } | null>(null);
   currentPlan = signal<'standard' | 'premium'>('standard');
+  currentPage = signal<string>('home');
 
   // Default Theme Id based on plan
   defaultThemeId = computed(() => (this.currentPlan() === 'standard' ? 1 : 4));
@@ -49,28 +56,77 @@ export class PreviewComponent {
       menuItems: [
         { id: 1, label: 'Home', link: '/' },
         { id: 2, label: 'About', link: '/about' },
-        { id: 3, label: 'Contact', link: '/contact' }
-      ]
+        { id: 3, label: 'Contact', link: '/contact' },
+      ],
     },
-    hero: {
-      backgroundImage: 'https://example.com/hero.jpg',
-      title: 'Your Perfect Website',
-      subtitle: 'Fast, beautiful, and easy to customize'
+    pages: {
+      home: {
+        hero1: {
+          backgroundImage: 'https://example.com/hero1.jpg',
+          title: 'Grow Your Business With Us',
+          subtitle: 'Professional solutions tailored to your business needs',
+          layout: 'center',
+          height: 'medium',
+          showLogo: true,
+          titleColor: '#ffffff',
+          subtitleColor: '#f0f0f0',
+          textShadow: 'medium',
+          showPrimaryButton: true,
+          primaryButtonText: 'Get Started',
+          primaryButtonColor: '#87a4ff',
+          primaryButtonTextColor: '#ffffff',
+          primaryButtonLink: '/contact',
+        },
+        hero2: {
+          backgroundImage: 'https://example.com/hero2.jpg',
+          title: 'Our Services',
+          subtitle: 'Discover what we can do for you',
+        },
+      },
+      about: {},
+      contact: {},
     },
     footer: {
       backgroundColor: '#1a1a1a',
       textColor: '#ffffff',
-      copyrightText: '© 2025 MyWebsite'
-    }
+      copyrightText: '© 2025 MyWebsite',
+    },
   });
 
   // Computed selected customization for the modal
   selectedCustomization = computed(() => {
-    const key = this.selectedComponent()?.key;
-    return key ? {
-      key,
-      data: this.customizations()[key]
-    } : null;
+    const selected = this.selectedComponent();
+    if (!selected) return null;
+
+    // If there's a path, use it to get the nested data
+    if (selected.path) {
+      const pathParts = selected.path.split('.');
+      let data = this.customizations() as any;
+
+      // Navigate through the path to get the data
+      for (const part of pathParts) {
+        if (data && data[part]) {
+          data = data[part];
+        } else {
+          data = {};
+          break;
+        }
+      }
+
+      return {
+        key: selected.key,
+        name: selected.name,
+        path: selected.path,
+        data: data,
+      };
+    }
+
+    // Otherwise use the key directly
+    return {
+      key: selected.key,
+      name: selected.name,
+      data: this.customizations()[selected.key],
+    };
   });
 
   constructor() {
@@ -82,6 +138,21 @@ export class PreviewComponent {
   }
 
   ngOnInit(): void {
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => {
+        const routeData = this.route.firstChild?.snapshot.data;
+        if (routeData && routeData['page']) {
+          this.currentPage.set(routeData['page']);
+        }
+      });
+
+    // Initial page setup from route
+    const initialPage = this.route.firstChild?.snapshot.data['page'];
+    if (initialPage) {
+      this.currentPage.set(initialPage);
+    }
+
     this.loadTheme(this.defaultThemeId());
     this.ensureValidViewMode();
   }
@@ -116,7 +187,9 @@ export class PreviewComponent {
 
   // Apply the theme styles by creating/updating a style tag
   applyGlobalStyles(cssContent: string): void {
-    let styleTag = document.getElementById('dynamic-theme-style') as HTMLStyleElement;
+    let styleTag = document.getElementById(
+      'dynamic-theme-style'
+    ) as HTMLStyleElement;
     if (!styleTag) {
       styleTag = this.renderer.createElement('style');
       this.renderer.setAttribute(styleTag, 'id', 'dynamic-theme-style');
@@ -126,29 +199,63 @@ export class PreviewComponent {
   }
 
   // Handler for selection coming from the child structure component
-  handleComponentSelection(selected: { key: keyof Customizations; name: string }) {
+  handleComponentSelection(selected: {
+    key: keyof Customizations;
+    name: string;
+    path?: string;
+  }) {
     this.selectedComponent.set(selected);
   }
 
   // Handler for updates coming from the modal (using selectedCustomization)
   handleComponentUpdate(update: any) {
-    const key = this.selectedComponent()?.key;
-    if (!key) return;
+    const selected = this.selectedComponent();
+    if (!selected) return;
 
-    this.customizations.update(current => ({
-      ...current,
-      [key]: {
-        ...current[key],
-        ...update
-      }
-    }));
+    // If there's a path, update the nested data
+    if (selected.path) {
+      const pathParts = selected.path.split('.');
+
+      this.customizations.update((current) => {
+        // Create a deep copy to avoid mutating the original
+        const updated = { ...current };
+
+        // Navigate to the parent object that contains the property to update
+        let target: any = updated;
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          const part = pathParts[i];
+          if (!target[part]) {
+            target[part] = {};
+          }
+          target = target[part];
+        }
+
+        // Update the property
+        const lastPart = pathParts[pathParts.length - 1];
+        target[lastPart] = { ...target[lastPart], ...update };
+
+        return updated;
+      });
+    } else {
+      // Original logic for top-level properties
+      this.customizations.update((current) => ({
+        ...current,
+        [selected.key]: {
+          ...current[selected.key],
+          ...update,
+        },
+      }));
+    }
   }
 
   // Handler for updates coming directly from the child structure
-  handleComponentUpdateFromChild(key: keyof Customizations, update: Partial<Customizations[keyof Customizations]>) {
-    this.customizations.update(current => ({
+  handleComponentUpdateFromChild(
+    key: keyof Customizations,
+    update: Partial<Customizations[keyof Customizations]>
+  ) {
+    this.customizations.update((current) => ({
       ...current,
-      [key]: { ...current[key], ...update }
+      [key]: { ...current[key], ...update },
     }));
   }
 
@@ -179,19 +286,41 @@ export class PreviewComponent {
         menuItems: [
           { id: 1, label: 'Home', link: '/' },
           { id: 2, label: 'About', link: '/about' },
-          { id: 3, label: 'Contact', link: '/contact' }
-        ]
+          { id: 3, label: 'Contact', link: '/contact' },
+        ],
       },
-      hero: {
-        backgroundImage: 'https://example.com/hero.jpg',
-        title: '',
-        subtitle: ''
+      pages: {
+        home: {
+          hero1: {
+            backgroundImage: 'https://example.com/hero1.jpg',
+            title: 'Grow Your Business With Us',
+            subtitle: 'Professional solutions tailored to your business needs',
+            layout: 'center',
+            height: 'medium',
+            showLogo: true,
+            titleColor: '#ffffff',
+            subtitleColor: '#f0f0f0',
+            textShadow: 'medium',
+            showPrimaryButton: true,
+            primaryButtonText: 'Get Started',
+            primaryButtonColor: '#ff5722',
+            primaryButtonTextColor: '#ffffff',
+            primaryButtonLink: '/contact',
+          },
+          hero2: {
+            backgroundImage: 'https://example.com/hero2.jpg',
+            title: 'Our Services',
+            subtitle: 'Discover what we can do for you',
+          },
+        },
+        about: {},
+        contact: {},
       },
       footer: {
         backgroundColor: '#1a1a1a',
         textColor: '#ffffff',
-        copyrightText: '© 2025 MyWebsite'
-      }
+        copyrightText: '© 2025 MyWebsite',
+      },
     };
   }
 }
@@ -203,10 +332,32 @@ export interface Customizations {
     logoUrl: string;
     menuItems: { id: number; label: string; link: string }[];
   };
-  hero: {
-    backgroundImage: string;
-    title: string;
-    subtitle: string;
+  pages: {
+    home?: {
+      hero1?: {
+        backgroundImage: string;
+        title: string;
+        subtitle: string;
+        layout?: 'center' | 'left' | 'right';
+        height?: 'tall' | 'medium' | 'compact';
+        showLogo?: boolean;
+        titleColor?: string;
+        subtitleColor?: string;
+        textShadow?: 'none' | 'light' | 'medium' | 'heavy';
+        showPrimaryButton?: boolean;
+        primaryButtonText?: string;
+        primaryButtonColor?: string;
+        primaryButtonTextColor?: string;
+        primaryButtonLink?: string;
+      };
+      hero2?: {
+        backgroundImage: string;
+        title: string;
+        subtitle: string;
+      };
+    };
+    about?: {};
+    contact?: {};
   };
   footer: {
     backgroundColor: string;

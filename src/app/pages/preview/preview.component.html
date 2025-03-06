@@ -3,7 +3,8 @@
   <div class="preview-intro">
     <h1 class="preview-main-title">Build Your Perfect Website</h1>
     <p class="preview-main-subtitle">
-      Explore different themes, choose fonts, and customize your design to perfection in a few minutes!
+      Explore different themes, choose fonts, and customize your design to
+      perfection in a few minutes!
     </p>
   </div>
 
@@ -15,28 +16,36 @@
   <!-- Preview Header -->
   <div class="preview-header">
     <!-- Theme Selector -->
-    <app-theme-switcher class="preview-header__left"
-                        (themeChange)="loadTheme($event)"
-                        [plan]="currentPlan()">
+    <app-theme-switcher
+      class="preview-header__left"
+      (themeChange)="loadTheme($event)"
+      [plan]="currentPlan()"
+    >
     </app-theme-switcher>
 
     <!-- View Toggle (Only on Desktop) -->
     <div class="preview-header__center" *ngIf="!isMobileView()">
-      <img src="assets/preview/desktop-icon.svg"
-           alt="Desktop View"
-           class="view-icon"
-           [class.active]="viewMode() === 'view-desktop'"
-           (click)="toggleView('view-desktop')">
-      <img src="assets/preview/mobile-icon.svg"
-           alt="Mobile View"
-           class="view-icon"
-           [class.active]="viewMode() === 'view-mobile'"
-           (click)="toggleView('view-mobile')">
+      <img
+        src="assets/preview/desktop-icon.svg"
+        alt="Desktop View"
+        class="view-icon"
+        [class.active]="viewMode() === 'view-desktop'"
+        (click)="toggleView('view-desktop')"
+      />
+      <img
+        src="assets/preview/mobile-icon.svg"
+        alt="Mobile View"
+        class="view-icon"
+        [class.active]="viewMode() === 'view-mobile'"
+        (click)="toggleView('view-mobile')"
+      />
     </div>
 
     <!-- Font Selector -->
-    <app-font-picker class="preview-header__right"
-                     (fontChange)="handleFontUpdate($event)">
+    <app-font-picker
+      class="preview-header__right"
+      (fontChange)="handleFontUpdate($event)"
+    >
     </app-font-picker>
   </div>
 
@@ -46,6 +55,7 @@
       <app-standard-structure
         [isMobileLayout]="viewMode() === 'view-mobile' || isMobileView()"
         [isMobileView]="viewMode()"
+        [currentPage]="currentPage()"
         [selectedFont]="selectedFont"
         [customizations]="customizations"
         (componentSelected)="handleComponentSelection($event)"
@@ -60,16 +70,23 @@
   <!-- Customization Modal (for updates via modal) -->
   <div class="modal-overlay" *ngIf="selectedCustomization()">
     <app-component-customizer
-      [componentKey]="selectedCustomization()!.key"
-      [initialData]="selectedCustomization()!.data"
+      *ngIf="selectedComponent()"
+      [componentKey]="selectedComponent()!.key"
+      [componentPath]="selectedComponent()?.path"
+      [initialData]="selectedCustomization()?.data"
       (update)="handleComponentUpdate($event)"
-      (close)="selectedComponent.set(null)">
+      (close)="selectedComponent.set(null)"
+    >
     </app-component-customizer>
   </div>
 
   <!-- Save and Reset Actions -->
   <div class="preview-footer">
-    <button class="btn btn--primary" (click)="saveAllChanges()">Save Changes</button>
-    <button class="btn btn--secondary" (click)="resetCustomizations()">Reset</button>
+    <button class="btn btn--primary" (click)="saveAllChanges()">
+      Save Changes
+    </button>
+    <button class="btn btn--secondary" (click)="resetCustomizations()">
+      Reset
+    </button>
   </div>
 </div>

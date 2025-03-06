@@ -1,4 +1,4 @@
-@use '../../../../../styles/mixins' as m;
+@use "../../../../../styles/mixins" as m;
 
 .structure-header {
   display: flex;
@@ -155,4 +155,27 @@
       max-width: 135px;
     }
   }
+}
+
+.nav-link-wrapper a {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &.active {
+    font-weight: 700;
+    color: currentColor;
+    filter: brightness(0.85);
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// Mobile menu active state
+.mobile-menu a.active {
+  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.1);
+  filter: brightness(0.85); // Darkens the text color when active
 }

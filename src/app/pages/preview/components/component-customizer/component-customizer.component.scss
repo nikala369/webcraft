@@ -1,5 +1,4 @@
-@use '../../../../../styles/mixins' as m;
-
+@use "../../../../../styles/mixins" as m;
 
 .customizer-modal {
   background-color: #1f1f2e;
@@ -31,7 +30,7 @@
       pointer-events: none;
     }
 
-    input[type='text'] {
+    input[type="text"] {
       width: 100%;
       padding: 0.6rem;
       border-radius: 6px;
@@ -41,7 +40,7 @@
     }
 
     /* Custom styles for color input */
-    input[type='color'] {
+    input[type="color"] {
       -webkit-appearance: none;
       border: 1px solid white;
       width: 100%;
@@ -49,11 +48,11 @@
       border-radius: 10px;
       cursor: pointer;
     }
-    input[type='color']::-webkit-color-swatch-wrapper {
+    input[type="color"]::-webkit-color-swatch-wrapper {
       padding: 0;
     }
 
-    input[type='color']::-webkit-color-swatch {
+    input[type="color"]::-webkit-color-swatch {
       border: 1px solid white;
       border-radius: 10px;
     }
@@ -70,6 +69,27 @@
       position: absolute;
       inset: 0; // shorthand for top, right, bottom, left: 0;
       border-radius: 10px;
+    }
+
+    // Styling for select fields
+    .select-control {
+      width: 100%;
+      padding: 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background-color: #2c2c3d;
+      color: #fff;
+      appearance: none; // Remove default arrow
+      background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23ffffff' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 8px 10px;
+      cursor: pointer;
+
+      option {
+        padding: 0.5rem;
+        background-color: #2c2c3d;
+      }
     }
 
     .placeholder-text {
@@ -93,7 +113,6 @@
       z-index: 2;
     }
 
-
     .file-field-container {
       display: flex;
       flex-direction: row;
@@ -107,7 +126,7 @@
       }
     }
 
-    input[type='file'] {
+    input[type="file"] {
       width: 100%;
       min-width: 50%;
       max-height: 40px;

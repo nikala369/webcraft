@@ -1,1 +1,565 @@
-<p>home-standard works!</p>
+<div class="home-standard-container">
+  <!-- Hero1 Section -->
+  <app-section-hover-wrapper
+    [isMobile]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    (onEdit)="handleSectionEdit('hero1')"
+  >
+    <section class="hero-section" [ngStyle]="getBackgroundStyle('hero1')">
+      <div
+        class="hero-content animate fade-in"
+        [ngClass]="'layout-' + (customizations()?.hero1?.layout || 'center')"
+      >
+        <div
+          class="business-logo"
+          *ngIf="customizations()?.hero1?.showLogo !== false"
+        >
+          <img [src]="getImageUrl('about', 'logo', 0)" alt="Business Logo" />
+        </div>
+        <h1
+          [style.color]="customizations()?.hero1?.titleColor || '#ffffff'"
+          [ngClass]="
+            'text-shadow-' + (customizations()?.hero1?.textShadow || 'medium')
+          "
+        >
+          {{ customizations()?.hero1?.title || "Your Business Name" }}
+        </h1>
+        <p
+          class="tagline"
+          [style.color]="customizations()?.hero1?.subtitleColor || '#f0f0f0'"
+          [ngClass]="
+            'text-shadow-' + (customizations()?.hero1?.textShadow || 'medium')
+          "
+        >
+          {{
+            customizations()?.hero1?.subtitle ||
+              "Professional services for your needs"
+          }}
+        </p>
+        <div class="cta-buttons">
+          <button
+            class="cta-button primary"
+            *ngIf="customizations()?.hero1?.showPrimaryButton !== false"
+            [style.background-color]="
+              customizations()?.hero1?.primaryButtonColor || '#ff5722'
+            "
+            [style.color]="
+              customizations()?.hero1?.primaryButtonTextColor || '#ffffff'
+            "
+          >
+            {{ customizations()?.hero1?.primaryButtonText || "Contact Us" }}
+          </button>
+          <button
+            class="cta-button secondary"
+            *ngIf="
+              customizations()?.hero1?.showSecondaryButton !== false &&
+              isPremiumPlan()
+            "
+            [style.background-color]="
+              customizations()?.hero1?.secondaryButtonColor || 'transparent'
+            "
+            [style.color]="
+              customizations()?.hero1?.secondaryButtonTextColor || '#ffffff'
+            "
+            [style.border-color]="
+              customizations()?.hero1?.secondaryButtonBorderColor || '#ffffff'
+            "
+          >
+            {{ customizations()?.hero1?.secondaryButtonText || "Our Services" }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick contact bar for desktop -->
+      <div class="quick-contact-bar" *ngIf="!isMobileView && isPremiumPlan()">
+        <div
+          class="contact-item animate fade-in"
+          [ngStyle]="getAnimationDelay(0)"
+        >
+          <i class="fas fa-phone-alt"></i>
+          <span>{{ getContactInfo("phone") }}</span>
+        </div>
+        <div
+          class="contact-item animate fade-in"
+          [ngStyle]="getAnimationDelay(1)"
+        >
+          <i class="fas fa-map-marker-alt"></i>
+          <span>{{ getContactInfo("address") }}</span>
+        </div>
+        <div
+          class="contact-item animate fade-in"
+          [ngStyle]="getAnimationDelay(2)"
+        >
+          <i class="fas fa-clock"></i>
+          <span>{{ getContactInfo("hours") }}</span>
+        </div>
+      </div>
+    </section>
+  </app-section-hover-wrapper>
+
+  <!-- Services Section -->
+  <app-section-hover-wrapper
+    [isMobile]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    (onEdit)="handleSectionEdit('services')"
+  >
+    <section
+      class="services-section"
+      [style.background-color]="
+        customizations()?.services?.backgroundColor || '#ffffff'
+      "
+    >
+      <div class="section-header">
+        <h2
+          [style.color]="customizations()?.services?.titleColor || '#333333'"
+          class="animate fade-in"
+        >
+          {{ customizations()?.services?.title || "Our Services" }}
+        </h2>
+        <p
+          [style.color]="customizations()?.services?.subtitleColor || '#666666'"
+          class="animate fade-in"
+        >
+          {{
+            customizations()?.services?.subtitle ||
+              "What we offer to our clients"
+          }}
+        </p>
+      </div>
+
+      <div class="services-grid">
+        <div
+          class="service-item animate fade-in"
+          *ngFor="let i of [0, 1, 2]; let idx = index"
+          [ngStyle]="getAnimationDelay(idx)"
+        >
+          <div
+            class="service-image"
+            [style.background-image]="
+              'url(' + getImageUrl('services', 'image' + i, i) + ')'
+            "
+          ></div>
+          <div class="service-content">
+            <h3
+              [style.color]="
+                customizations()?.services?.itemTitleColor || '#333333'
+              "
+            >
+              {{ customizations()?.services?.['title' + i] || 'Service ' + (i+1) }}
+            </h3>
+            <p
+              [style.color]="
+                customizations()?.services?.itemTextColor || '#666666'
+              "
+            >
+              {{ customizations()?.services?.['description' + i] || 'Description of service ' + (i+1) + ' that highlights its value to potential customers.' }}
+            </p>
+            <a
+              class="service-link"
+              [style.color]="customizations()?.services?.linkColor || '#ff5722'"
+              *ngIf="customizations()?.services?.showServiceLinks !== false"
+            >
+              Learn More <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </app-section-hover-wrapper>
+
+  <!-- About Section -->
+  <app-section-hover-wrapper
+    [isMobile]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    (onEdit)="handleSectionEdit('about')"
+  >
+    <section class="about-section" [ngStyle]="getBackgroundStyle('about')">
+      <div class="about-container">
+        <div
+          class="about-image animate fade-in"
+          *ngIf="customizations()?.about?.showImage !== false"
+        >
+          <img [src]="getImageUrl('about', 'mainImage', 0)" alt="About Us" />
+        </div>
+        <div class="about-content animate fade-in">
+          <h2 [style.color]="customizations()?.about?.titleColor || '#333333'">
+            {{ customizations()?.about?.title || "About Our Business" }}
+          </h2>
+          <p
+            class="about-intro"
+            [style.color]="customizations()?.about?.textColor || '#444444'"
+          >
+            {{
+              customizations()?.about?.intro ||
+                "Founded in [year], we have been serving the [location] area with quality [services/products]. Our mission is to provide excellent service and build lasting relationships with our clients."
+            }}
+          </p>
+          <p [style.color]="customizations()?.about?.textColor || '#444444'">
+            {{
+              customizations()?.about?.description ||
+                "We take pride in our work and strive for excellence in everything we do. Our team of professionals is dedicated to ensuring customer satisfaction through attention to detail and personalized service."
+            }}
+          </p>
+          <div
+            class="about-values"
+            *ngIf="customizations()?.about?.showValues !== false"
+          >
+            <h3
+              [style.color]="
+                customizations()?.about?.subtitleColor || '#555555'
+              "
+            >
+              {{ customizations()?.about?.valuesTitle || "Our Values" }}
+            </h3>
+            <ul>
+              <li
+                *ngFor="let i of [0, 1, 2]"
+                [style.color]="customizations()?.about?.textColor || '#444444'"
+              >
+                <strong
+                  >{{ customizations()?.about?.['valueTitle' + i] || 'Value ' + (i+1)
+
+
+
+
+
+
+
+
+
+
+
+                  }}:</strong
+                >
+                {{ customizations()?.about?.['valueText' + i] || 'Description of core value ' + (i+1) }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </app-section-hover-wrapper>
+
+  <!-- Testimonials Section -->
+  <app-section-hover-wrapper
+    [isMobile]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    (onEdit)="handleSectionEdit('testimonials')"
+  >
+    <section
+      class="testimonials-section"
+      [style.background-color]="
+        customizations()?.testimonials?.backgroundColor || '#f8f8f8'
+      "
+    >
+      <div class="section-header">
+        <h2
+          [style.color]="
+            customizations()?.testimonials?.titleColor || '#333333'
+          "
+          class="animate fade-in"
+        >
+          {{ customizations()?.testimonials?.title || "What Our Clients Say" }}
+        </h2>
+        <p
+          [style.color]="
+            customizations()?.testimonials?.subtitleColor || '#666666'
+          "
+          class="animate fade-in"
+        >
+          {{
+            customizations()?.testimonials?.subtitle ||
+              "Testimonials from satisfied customers"
+          }}
+        </p>
+      </div>
+
+      <div class="testimonials-container">
+        <div
+          class="testimonial-card animate fade-in"
+          *ngFor="let i of [0, 1]; let idx = index"
+          [ngStyle]="getAnimationDelay(idx)"
+        >
+          <div
+            class="quote-icon"
+            [style.color]="
+              customizations()?.testimonials?.quoteColor || '#ff5722'
+            "
+          >
+            <i class="fas fa-quote-left"></i>
+          </div>
+          <p
+            class="testimonial-text"
+            [style.color]="
+              customizations()?.testimonials?.textColor || '#444444'
+            "
+          >
+            {{ customizations()?.testimonials?.['text' + i] || 'This business exceeded my expectations. Their attention to detail and customer service is outstanding. I highly recommend their services to anyone looking for quality and professionalism.' }}
+          </p>
+          <div class="testimonial-author">
+            <h4
+              [style.color]="
+                customizations()?.testimonials?.authorColor || '#333333'
+              "
+            >
+              {{ customizations()?.testimonials?.['author' + i] || 'Client Name ' + (i+1) }}
+            </h4>
+            <p
+              [style.color]="
+                customizations()?.testimonials?.authorInfoColor || '#666666'
+              "
+            >
+              {{ customizations()?.testimonials?.['authorInfo' + i] || 'Satisfied Customer' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </app-section-hover-wrapper>
+
+  <!-- Call to Action Section -->
+  <app-section-hover-wrapper
+    [isMobile]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    (onEdit)="handleSectionEdit('cta')"
+  >
+    <section class="cta-section" [ngStyle]="getBackgroundStyle('cta')">
+      <div class="cta-content animate fade-in">
+        <h2 [style.color]="customizations()?.cta?.titleColor || '#ffffff'">
+          {{ customizations()?.cta?.title || "Ready to Get Started?" }}
+        </h2>
+        <p [style.color]="customizations()?.cta?.textColor || '#f0f0f0'">
+          {{
+            customizations()?.cta?.text ||
+              "Contact us today to discuss your project or schedule a consultation."
+          }}
+        </p>
+        <button
+          class="cta-button"
+          [style.background-color]="
+            customizations()?.cta?.buttonColor || '#ffffff'
+          "
+          [style.color]="customizations()?.cta?.buttonTextColor || '#333333'"
+        >
+          {{ customizations()?.cta?.buttonText || "Contact Us Now" }}
+        </button>
+      </div>
+    </section>
+  </app-section-hover-wrapper>
+
+  <!-- Contact Info Section -->
+  <app-section-hover-wrapper
+    [isMobile]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    (onEdit)="handleSectionEdit('contact')"
+  >
+    <section
+      class="contact-section"
+      [style.background-color]="
+        customizations()?.contact?.backgroundColor || '#ffffff'
+      "
+    >
+      <div class="contact-container">
+        <div class="contact-info">
+          <h2
+            [style.color]="customizations()?.contact?.titleColor || '#333333'"
+            class="animate fade-in"
+          >
+            {{ customizations()?.contact?.title || "Contact Information" }}
+          </h2>
+
+          <div class="contact-details">
+            <div
+              class="contact-item animate fade-in"
+              [ngStyle]="getAnimationDelay(0)"
+            >
+              <i
+                class="fas fa-map-marker-alt"
+                [style.color]="
+                  customizations()?.contact?.iconColor || '#ff5722'
+                "
+              ></i>
+              <div>
+                <h3
+                  [style.color]="
+                    customizations()?.contact?.subtitleColor || '#444444'
+                  "
+                >
+                  Address
+                </h3>
+                <p
+                  [style.color]="
+                    customizations()?.contact?.textColor || '#666666'
+                  "
+                >
+                  {{ getContactInfo("address") }}
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="contact-item animate fade-in"
+              [ngStyle]="getAnimationDelay(1)"
+            >
+              <i
+                class="fas fa-phone-alt"
+                [style.color]="
+                  customizations()?.contact?.iconColor || '#ff5722'
+                "
+              ></i>
+              <div>
+                <h3
+                  [style.color]="
+                    customizations()?.contact?.subtitleColor || '#444444'
+                  "
+                >
+                  Phone
+                </h3>
+                <p
+                  [style.color]="
+                    customizations()?.contact?.textColor || '#666666'
+                  "
+                >
+                  {{ getContactInfo("phone") }}
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="contact-item animate fade-in"
+              [ngStyle]="getAnimationDelay(2)"
+            >
+              <i
+                class="fas fa-envelope"
+                [style.color]="
+                  customizations()?.contact?.iconColor || '#ff5722'
+                "
+              ></i>
+              <div>
+                <h3
+                  [style.color]="
+                    customizations()?.contact?.subtitleColor || '#444444'
+                  "
+                >
+                  Email
+                </h3>
+                <p
+                  [style.color]="
+                    customizations()?.contact?.textColor || '#666666'
+                  "
+                >
+                  {{ getContactInfo("email") }}
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="contact-item animate fade-in"
+              [ngStyle]="getAnimationDelay(3)"
+            >
+              <i
+                class="fas fa-clock"
+                [style.color]="
+                  customizations()?.contact?.iconColor || '#ff5722'
+                "
+              ></i>
+              <div>
+                <h3
+                  [style.color]="
+                    customizations()?.contact?.subtitleColor || '#444444'
+                  "
+                >
+                  Business Hours
+                </h3>
+                <p
+                  [style.color]="
+                    customizations()?.contact?.textColor || '#666666'
+                  "
+                >
+                  {{ getContactInfo("hours") }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="social-links"
+            *ngIf="customizations()?.contact?.showSocial !== false"
+          >
+            <h3
+              [style.color]="
+                customizations()?.contact?.subtitleColor || '#444444'
+              "
+              class="animate fade-in"
+            >
+              Follow Us
+            </h3>
+            <div class="social-icons">
+              <a
+                [href]="getSocialLink('facebook')"
+                class="animate fade-in"
+                [ngStyle]="getAnimationDelay(0)"
+              >
+                <i
+                  class="fab fa-facebook-f"
+                  [style.color]="
+                    customizations()?.contact?.socialIconColor || '#3b5998'
+                  "
+                ></i>
+              </a>
+              <a
+                [href]="getSocialLink('instagram')"
+                class="animate fade-in"
+                [ngStyle]="getAnimationDelay(1)"
+              >
+                <i
+                  class="fab fa-instagram"
+                  [style.color]="
+                    customizations()?.contact?.socialIconColor || '#e1306c'
+                  "
+                ></i>
+              </a>
+              <a
+                [href]="getSocialLink('twitter')"
+                class="animate fade-in"
+                [ngStyle]="getAnimationDelay(2)"
+              >
+                <i
+                  class="fab fa-twitter"
+                  [style.color]="
+                    customizations()?.contact?.socialIconColor || '#1da1f2'
+                  "
+                ></i>
+              </a>
+              <a
+                [href]="getSocialLink('linkedin')"
+                class="animate fade-in"
+                [ngStyle]="getAnimationDelay(3)"
+              >
+                <i
+                  class="fab fa-linkedin-in"
+                  [style.color]="
+                    customizations()?.contact?.socialIconColor || '#0077b5'
+                  "
+                ></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="map-container animate fade-in"
+          *ngIf="customizations()?.contact?.showMap !== false"
+        >
+          <!-- Placeholder for map, would be replaced with actual map component -->
+          <div class="map-placeholder">
+            <img
+              [src]="getImageUrl('contact', 'mapImage', 0)"
+              alt="Business Location Map"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  </app-section-hover-wrapper>
+</div>

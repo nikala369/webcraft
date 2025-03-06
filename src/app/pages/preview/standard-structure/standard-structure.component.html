@@ -1,32 +1,74 @@
-<div class="structure-container" [style]="{'font-family': selectedFont}">
+<div class="structure-container" [style]="{ 'font-family': selectedFont }">
   <!-- Header Section -->
-  <app-section-hover-wrapper [isMobile]="isMobileLayout" [isMobileView]="isMobileView" (onEdit)="handleComponentSelection('header')">
+  <app-section-hover-wrapper
+    [isMobile]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    (onEdit)="handleComponentSelection('header')"
+  >
     <app-structure-header
       [isMobileLayout]="isMobileLayout"
-      [customizations]="customizations()?.header">
+      [customizations]="customizations()?.header"
+      [currentPage]="currentPage"
+      (pageChange)="navigateToPage($event)"
+    >
     </app-structure-header>
   </app-section-hover-wrapper>
 
+  <!-- Dynamic pages content -->
+  <!-- <app-section-hover-wrapper
+    [backgroundColor]="customizations()?.header?.backgroundColor"
+    [isMobile]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    (onEdit)="handleComponentSelection('hero')"
+  >
+    <section class="hero-section">
+      <h2>{{ customizations()?.hero?.title || "" }}</h2>
+      <p>{{ customizations()?.hero?.subtitle || "" }}</p>
+    </section>
+  </app-section-hover-wrapper> -->
 
-  <!-- Hero Section -->
-  <app-section-hover-wrapper [backgroundColor]="customizations()?.header?.backgroundColor" [isMobile]="isMobileLayout" [isMobileView]="isMobileView" (onEdit)="handleComponentSelection('hero')">
-  <section class="hero-section">
-    <h2>{{ customizations()?.hero?.title || '' }}</h2>
-    <p>{{ customizations()?.hero?.subtitle || '' }}</p>
-  </section>
-  </app-section-hover-wrapper>
+  <div class="dynamic-pages-content">
+    <!-- Conditionally render the current page based on route -->
+    <ng-container [ngSwitch]="currentPage">
+      <app-home-standard
+        *ngSwitchCase="'home'"
+        [customizations]="homeCustomizationsSignal"
+        [isMobileLayout]="isMobileLayout"
+        [isMobileView]="isMobileView"
+        (sectionSelected)="handlePageSectionEdit($event)"
+      ></app-home-standard>
 
-  <!-- Content Section -->
-  <section class="content-section" (click)="handleComponentSelection('hero')">
-    <h3>{{ customizations()?.hero?.title || 'About Us' }}</h3>
-    <p>{{ customizations()?.hero?.subtitle || 'This is where your content will appear.' }}</p>
-  </section>
+      <app-about-standard
+        *ngSwitchCase="'about'"
+        [customizations]="aboutCustomizationsSignal"
+        [isMobileLayout]="isMobileLayout"
+        [isMobileView]="isMobileView"
+        (sectionSelected)="handlePageSectionEdit($event)"
+      ></app-about-standard>
+
+      <!-- <app-contact-standard
+        *ngSwitchCase="'contact'"
+        [customizations]="contactCustomizationsSignal"
+        [isMobileLayout]="isMobileLayout"
+        [isMobileView]="isMobileView"
+        (sectionSelected)="handlePageSectionEdit($event)"
+      ></app-contact-standard> -->
+
+      <!-- Default case if page is not found -->
+      <div *ngSwitchDefault class="page-not-found">
+        <h2>Page Not Found</h2>
+        <p>The requested page does not exist.</p>
+      </div>
+    </ng-container>
+  </div>
 
   <!-- Footer Section -->
-  <!--
-  <app-structure-footer
-    [customizations]="customizations()?.footer"
-    (click)="handleComponentSelection('footer')">
-  </app-structure-footer>
-  -->
+  <!-- <app-section-hover-wrapper
+    [isMobile]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    (onEdit)="handleComponentSelection('footer')"
+  >
+    <app-structure-footer [customizations]="customizations()?.footer">
+    </app-structure-footer>
+  </app-section-hover-wrapper> -->
 </div>

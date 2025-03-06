@@ -1,7 +1,18 @@
-import { Component, EventEmitter, Input, Output, signal, computed, effect } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  signal,
+  computed,
+  effect,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CustomizationFormConfig, FieldConfig } from "./customizing-form-config";
-import { FormsModule } from "@angular/forms";
+import {
+  CustomizationFormConfig,
+  FieldConfig,
+} from './customizing-form-config';
+import { FormsModule } from '@angular/forms';
 
 export interface ComponentData {
   id: string;
@@ -13,10 +24,11 @@ export interface ComponentData {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './component-customizer.component.html',
-  styleUrls: ['./component-customizer.component.scss']
+  styleUrls: ['./component-customizer.component.scss'],
 })
 export class ComponentCustomizerComponent {
   @Input() componentKey!: string;
+  @Input() componentPath?: string;
   originalData: any;
 
   @Input() set initialData(value: any) {
@@ -28,7 +40,10 @@ export class ComponentCustomizerComponent {
       const mergedData: ComponentData = { id: this.componentKey, ...value };
 
       configFields.forEach((field: FieldConfig) => {
-        if (mergedData[field.key] === undefined && field.defaultValue !== undefined) {
+        if (
+          mergedData[field.key] === undefined &&
+          field.defaultValue !== undefined
+        ) {
           mergedData[field.key] = structuredClone(field.defaultValue);
         }
       });
@@ -42,7 +57,14 @@ export class ComponentCustomizerComponent {
 
   // Local state holding the component data.
   localData = signal<ComponentData>({ id: this.componentKey });
-  config = computed(() => CustomizationFormConfig[this.componentKey] || []);
+  config = computed(() => {
+    // If there's a path, use it to get the config
+    if (this.componentPath) {
+      return CustomizationFormConfig[this.componentPath] || [];
+    }
+    // Otherwise use the key
+    return CustomizationFormConfig[this.componentKey] || [];
+  });
   componentData = computed(() => this.localData());
 
   constructor() {
@@ -52,8 +74,9 @@ export class ComponentCustomizerComponent {
   }
 
   updateField(fieldKey: string, event: Event): void {
+    console.log(event, 'event received after update');
     const value = (event.target as HTMLInputElement).value;
-    this.localData.update(current => ({ ...current, [fieldKey]: value }));
+    this.localData.update((current) => ({ ...current, [fieldKey]: value }));
   }
 
   onFileChange(fieldKey: string, event: Event): void {
@@ -66,12 +89,14 @@ export class ComponentCustomizerComponent {
 
   handleImageUpload(fieldKey: string, file: File): void {
     const fileURL = URL.createObjectURL(file);
-    this.localData.update(current => ({ ...current, [fieldKey]: fileURL }));
+    this.localData.update((current) => ({ ...current, [fieldKey]: fileURL }));
   }
 
   updateListField(fieldKey: string, index: number, newValue: string): void {
-    this.localData.update(current => {
-      const list = Array.isArray(current[fieldKey]) ? [...current[fieldKey]] : [];
+    this.localData.update((current) => {
+      const list = Array.isArray(current[fieldKey])
+        ? [...current[fieldKey]]
+        : [];
       if (typeof list[index] === 'object') {
         list[index] = { ...list[index], label: newValue };
       } else {
