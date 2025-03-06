@@ -66,18 +66,6 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       ],
     },
     {
-      key: 'height',
-      label: 'Section Height',
-      type: 'select',
-      defaultValue: 'medium',
-      required: false,
-      options: [
-        { value: 'tall', label: 'Tall (Full Screen)' },
-        { value: 'medium', label: 'Medium' },
-        { value: 'compact', label: 'Compact' },
-      ],
-    },
-    {
       key: 'showLogo',
       label: 'Show Business Logo',
       type: 'select',
@@ -148,6 +136,18 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       required: false,
     },
     {
+      key: 'primaryButtonLink',
+      label: 'Primary Button Target',
+      type: 'select',
+      defaultValue: '/contact',
+      required: false,
+      options: [
+        { value: '/about', label: 'About Us Page' },
+        { value: '/services', label: 'Services Page' },
+        { value: '/contact', label: 'Contact Page' },
+      ],
+    },
+    {
       key: 'primaryButtonColor',
       label: 'Primary Button Color',
       type: 'color',
@@ -160,18 +160,6 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       type: 'color',
       defaultValue: '#ffffff',
       required: false,
-    },
-    {
-      key: 'primaryButtonLink',
-      label: 'Primary Button Target',
-      type: 'select',
-      defaultValue: '/contact',
-      required: false,
-      options: [
-        { value: '/about', label: 'About Us Page' },
-        { value: '/services', label: 'Services Page' },
-        { value: '/contact', label: 'Contact Page' },
-      ],
     },
   ],
   'pages.home.hero2': [

@@ -66,15 +66,14 @@ export class PreviewComponent {
           title: 'Grow Your Business With Us',
           subtitle: 'Professional solutions tailored to your business needs',
           layout: 'center',
-          height: 'medium',
           showLogo: true,
           titleColor: '#ffffff',
           subtitleColor: '#f0f0f0',
           textShadow: 'medium',
           showPrimaryButton: true,
-          primaryButtonText: 'Get Started',
-          primaryButtonColor: '#87a4ff',
-          primaryButtonTextColor: '#ffffff',
+          primaryButtonText: 'YOUR CUSTOM BUTTON',
+          primaryButtonColor: '#ffffff',
+          primaryButtonTextColor: '#000000',
           primaryButtonLink: '/contact',
         },
         hero2: {
@@ -233,7 +232,7 @@ export class PreviewComponent {
         // Update the property
         const lastPart = pathParts[pathParts.length - 1];
         target[lastPart] = { ...target[lastPart], ...update };
-
+        console.log(updated, 'updated content');
         return updated;
       });
     } else {
@@ -296,7 +295,6 @@ export class PreviewComponent {
             title: 'Grow Your Business With Us',
             subtitle: 'Professional solutions tailored to your business needs',
             layout: 'center',
-            height: 'medium',
             showLogo: true,
             titleColor: '#ffffff',
             subtitleColor: '#f0f0f0',
@@ -339,7 +337,6 @@ export interface Customizations {
         title: string;
         subtitle: string;
         layout?: 'center' | 'left' | 'right';
-        height?: 'tall' | 'medium' | 'compact';
         showLogo?: boolean;
         titleColor?: string;
         subtitleColor?: string;

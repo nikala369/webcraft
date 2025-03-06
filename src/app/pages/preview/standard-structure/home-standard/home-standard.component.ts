@@ -26,7 +26,7 @@ export class HomeStandardComponent implements OnInit {
 
   // Add default images aligned with small business needs
   defaultHeroImage = 'assets/images/placeholders/business-hero.jpg';
-  defaultLogoImage = 'assets/images/placeholders/business-logo.png';
+  defaultLogoImage = 'assets/header/webcraft-logo.svg';
   defaultServiceImages = [
     'assets/images/placeholders/service-1.jpg',
     'assets/images/placeholders/service-2.jpg',
@@ -73,25 +73,44 @@ export class HomeStandardComponent implements OnInit {
     imageKey: string,
     defaultIndex: number = 0
   ): string {
+    // First check if we have a custom image configured
     const sectionData = this.customizations()?.[section];
-    if (!sectionData?.[imageKey]) {
-      if (section === 'hero') return this.defaultHeroImage;
-      if (section === 'about' && imageKey === 'logo')
-        return this.defaultLogoImage;
-      if (section === 'services')
-        return this.defaultServiceImages[
-          defaultIndex % this.defaultServiceImages.length
-        ];
-      if (section === 'team')
-        return this.defaultTeamImages[
-          defaultIndex % this.defaultTeamImages.length
-        ];
-      if (section === 'gallery')
-        return this.defaultGalleryImages[
-          defaultIndex % this.defaultGalleryImages.length
-        ];
+    if (sectionData?.[imageKey]) {
+      return sectionData[imageKey];
     }
-    return sectionData?.[imageKey] || '';
+
+    // Extract base section type (e.g., 'hero1' -> 'hero')
+    const baseSection = section.replace(/\d+$/, '');
+
+    // Return appropriate default image based on section and key
+    if (baseSection === 'hero' && imageKey === 'backgroundImage') {
+      return this.defaultHeroImage;
+    }
+
+    if (imageKey === 'logo') {
+      return this.defaultLogoImage;
+    }
+
+    if (baseSection === 'services') {
+      return this.defaultServiceImages[
+        defaultIndex % this.defaultServiceImages.length
+      ];
+    }
+
+    if (baseSection === 'team') {
+      return this.defaultTeamImages[
+        defaultIndex % this.defaultTeamImages.length
+      ];
+    }
+
+    if (baseSection === 'gallery') {
+      return this.defaultGalleryImages[
+        defaultIndex % this.defaultGalleryImages.length
+      ];
+    }
+
+    // Return empty string if no default image applies
+    return '';
   }
 
   getBackgroundStyle(section: string): object {

@@ -67,17 +67,24 @@
           </ng-container>
 
           <!-- Select Field -->
-          <select
-            *ngSwitchCase="'select'"
-            [id]="field.key"
-            class="select-control"
-            [value]="componentData()[field.key]"
-            (change)="updateField(field.key, $event)"
-          >
-            <option *ngFor="let option of field.options" [value]="option.value">
-              {{ option.label }}
-            </option>
-          </select>
+          <ng-container *ngSwitchCase="'select'">
+            <div class="select-container">
+              <label [attr.for]="field.key">{{ field.label }}:</label>
+              <select
+                [id]="field.key"
+                class="select-control"
+                [ngModel]="getSelectValue(componentData()[field.key])"
+                (ngModelChange)="updateSelectField(field.key, $event)"
+              >
+                <option
+                  *ngFor="let option of field.options"
+                  [value]="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+          </ng-container>
 
           <!-- List Field (array of strings) using ngModel for two-way binding -->
           <div *ngSwitchCase="'list'" class="list-field-container">

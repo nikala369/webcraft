@@ -75,8 +75,38 @@ export class ComponentCustomizerComponent {
 
   updateField(fieldKey: string, event: Event): void {
     console.log(event, 'event received after update');
-    const value = (event.target as HTMLInputElement).value;
+    const input = event.target as HTMLInputElement | HTMLSelectElement;
+    let value: any = input.value;
+
+    // Handle boolean conversion for select fields with true/false values
+    if (value === 'true') {
+      value = true;
+    } else if (value === 'false') {
+      value = false;
+    }
+
     this.localData.update((current) => ({ ...current, [fieldKey]: value }));
+  }
+
+  updateSelectField(fieldKey: string, value: any): void {
+    // Handle boolean conversion for select fields with true/false values
+    if (value === 'true') {
+      value = true;
+    } else if (value === 'false') {
+      value = false;
+    }
+
+    this.localData.update((current) => ({ ...current, [fieldKey]: value }));
+  }
+
+  // Helper method to convert any value to string for select elements
+  getSelectValue(value: any): string {
+    if (value === true || value === 'true') {
+      return 'true';
+    } else if (value === false || value === 'false') {
+      return 'false';
+    }
+    return value?.toString() || '';
   }
 
   onFileChange(fieldKey: string, event: Event): void {
