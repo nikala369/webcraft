@@ -124,8 +124,8 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       defaultValue: true,
       required: false,
       options: [
-        { value: 'true', label: 'Yes' },
-        { value: 'false', label: 'No' },
+        { value: true, label: 'Yes' },
+        { value: false, label: 'No' },
       ],
     },
     {
@@ -187,5 +187,5 @@ export interface FieldConfig {
   type: 'text' | 'color' | 'file' | 'list' | 'select';
   defaultValue?: any;
   required?: boolean;
-  options?: Array<{ value: string; label: string }>;
+  options?: Array<{ value: any; label: string }>;
 }

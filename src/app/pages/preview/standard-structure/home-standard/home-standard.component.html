@@ -6,90 +6,75 @@
     (onEdit)="handleSectionEdit('hero1')"
   >
     <section class="hero-section" [ngStyle]="getBackgroundStyle('hero1')">
-      <div
-        class="hero-content animate fade-in"
-        [ngClass]="'layout-' + (customizations()?.hero1?.layout || 'center')"
-      >
+      <div class="hero-content-wrapper">
         <div
-          class="business-logo"
-          *ngIf="customizations()?.hero1?.showLogo !== false"
+          class="hero-content"
+          [ngClass]="'layout-' + (customizations()?.hero1?.layout || 'center')"
         >
-          <img [src]="getImageUrl('about', 'logo', 0)" alt="Business Logo" />
-        </div>
-        <h1
-          [style.color]="customizations()?.hero1?.titleColor || '#ffffff'"
-          [ngClass]="
-            'text-shadow-' + (customizations()?.hero1?.textShadow || 'medium')
-          "
-        >
-          {{ customizations()?.hero1?.title || "Your Business Name" }}
-        </h1>
-        <p
-          class="tagline"
-          [style.color]="customizations()?.hero1?.subtitleColor || '#f0f0f0'"
-          [ngClass]="
-            'text-shadow-' + (customizations()?.hero1?.textShadow || 'medium')
-          "
-        >
-          {{
-            customizations()?.hero1?.subtitle ||
-              "Professional services for your needs"
-          }}
-        </p>
-        <div class="cta-buttons">
-          <button
-            class="cta-button primary"
-            *ngIf="customizations()?.hero1?.showPrimaryButton !== false"
-            [style.background-color]="
-              customizations()?.hero1?.primaryButtonColor || '#ff5722'
-            "
-            [style.color]="
-              customizations()?.hero1?.primaryButtonTextColor || '#ffffff'
+          <div
+            class="business-logo"
+            *ngIf="customizations()?.hero1?.showLogo !== false"
+          >
+            <img
+              [src]="
+                wholeData()?.header?.logoUrl ||
+                wholeData()?.logoUrl ||
+                'assets/standard-header/default-logo.svg'
+              "
+              alt="Business Logo"
+              [style.max-height]="
+                customizations()?.hero1?.logoHeight || '100px'
+              "
+            />
+          </div>
+          <h1
+            [style.color]="customizations()?.hero1?.titleColor || '#ffffff'"
+            [ngClass]="
+              'text-shadow-' + (customizations()?.hero1?.textShadow || 'medium')
             "
           >
-            {{ customizations()?.hero1?.primaryButtonText || "Contact Us" }}
-          </button>
-          <button
-            class="cta-button secondary"
-            *ngIf="
-              customizations()?.hero1?.showSecondaryButton !== false &&
-              isPremiumPlan()
-            "
-            [style.background-color]="
-              customizations()?.hero1?.secondaryButtonColor || 'transparent'
-            "
-            [style.color]="
-              customizations()?.hero1?.secondaryButtonTextColor || '#ffffff'
-            "
-            [style.border-color]="
-              customizations()?.hero1?.secondaryButtonBorderColor || '#ffffff'
+            {{ customizations()?.hero1?.title || "Your Business Name" }}
+          </h1>
+          <p
+            class="hero-subtitle"
+            [style.color]="customizations()?.hero1?.subtitleColor || '#f0f0f0'"
+            [ngClass]="
+              'text-shadow-' + (customizations()?.hero1?.textShadow || 'medium')
             "
           >
-            {{ customizations()?.hero1?.secondaryButtonText || "Our Services" }}
-          </button>
+            {{
+              customizations()?.hero1?.subtitle ||
+                "Professional services for your needs"
+            }}
+          </p>
+          <div class="hero-buttons">
+            <button
+              class="hero-button primary"
+              *ngIf="customizations()?.hero1?.showPrimaryButton !== false"
+              [style.background-color]="
+                customizations()?.hero1?.primaryButtonColor || '#ff5722'
+              "
+              [style.color]="
+                customizations()?.hero1?.primaryButtonTextColor || '#ffffff'
+              "
+            >
+              {{ customizations()?.hero1?.primaryButtonText || "Contact Us" }}
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Quick contact bar for desktop -->
       <div class="quick-contact-bar" *ngIf="!isMobileView && isPremiumPlan()">
-        <div
-          class="contact-item animate fade-in"
-          [ngStyle]="getAnimationDelay(0)"
-        >
+        <div class="contact-item">
           <i class="fas fa-phone-alt"></i>
           <span>{{ getContactInfo("phone") }}</span>
         </div>
-        <div
-          class="contact-item animate fade-in"
-          [ngStyle]="getAnimationDelay(1)"
-        >
+        <div class="contact-item">
           <i class="fas fa-map-marker-alt"></i>
           <span>{{ getContactInfo("address") }}</span>
         </div>
-        <div
-          class="contact-item animate fade-in"
-          [ngStyle]="getAnimationDelay(2)"
-        >
+        <div class="contact-item">
           <i class="fas fa-clock"></i>
           <span>{{ getContactInfo("hours") }}</span>
         </div>
@@ -218,6 +203,16 @@
               >
                 <strong
                   >{{ customizations()?.about?.['valueTitle' + i] || 'Value ' + (i+1)
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -60,6 +60,8 @@ export class StandardStructureComponent implements OnInit {
   contactCustomizationsSignal = computed(
     () => this.customizations()?.pages?.contact || {}
   );
+  // Create a Signal from the customizations function
+  wholeDataSignal = computed(() => this.customizations());
 
   ngOnInit() {
     console.log(this.customizations(), 'main data in standard structure');

@@ -33,6 +33,7 @@
       <app-home-standard
         *ngSwitchCase="'home'"
         [customizations]="homeCustomizationsSignal"
+        [wholeData]="wholeDataSignal"
         [isMobileLayout]="isMobileLayout"
         [isMobileView]="isMobileView"
         (sectionSelected)="handlePageSectionEdit($event)"

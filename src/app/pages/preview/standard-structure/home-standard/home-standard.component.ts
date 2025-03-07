@@ -19,6 +19,7 @@ import { SectionHoverWrapperComponent } from '../../components/section-hover-wra
 })
 export class HomeStandardComponent implements OnInit {
   @Input() customizations!: Signal<any>;
+  @Input() wholeData!: Signal<any>;
   @Input() isMobileLayout!: boolean;
   @Input() isMobileView!: boolean;
   @Input() planType: string = 'standard';
@@ -61,6 +62,60 @@ export class HomeStandardComponent implements OnInit {
   ngOnInit() {
     this.currentBusinessType = this.customizations()?.businessType || 'other';
     console.log(this.customizations(), 'customizations loaded');
+
+    // Add scroll effects for hero section
+    setTimeout(() => {
+      this.initHeroScrollEffects();
+    }, 100);
+  }
+
+  // Initialize smooth parallax scroll effect for hero section
+  initHeroScrollEffects() {
+    if (typeof window !== 'undefined' && !this.isMobileView) {
+      const heroSection = document.querySelector(
+        '.hero-section'
+      ) as HTMLElement;
+
+      if (heroSection) {
+        // Initial background position setup
+        const bgStyle = getComputedStyle(heroSection).backgroundImage;
+        if (bgStyle && bgStyle !== 'none') {
+          // Store the original background position
+          const originalBgPos =
+            getComputedStyle(heroSection).backgroundPosition;
+
+          // Add scroll listener
+          window.addEventListener('scroll', () => {
+            const scrollPosition = window.scrollY;
+            const heroHeight = heroSection.offsetHeight;
+
+            // Only apply effect when hero is in view
+            if (scrollPosition <= heroHeight) {
+              // Calculate parallax position
+              const yPos = Math.round(scrollPosition * 0.4);
+
+              // Split the original position into x and y
+              const bgParts = originalBgPos.split(' ');
+              // Keep x position, change only y position
+              heroSection.style.backgroundPosition = `${bgParts[0]} calc(${bgParts[1]} + ${yPos}px)`;
+
+              // Subtle opacity effect for content while scrolling
+              const heroContent = heroSection.querySelector(
+                '.hero-content'
+              ) as HTMLElement;
+              if (heroContent) {
+                // Reduce opacity as user scrolls down
+                const opacity = Math.max(
+                  1 - scrollPosition / (heroHeight * 0.8),
+                  0.2
+                );
+                heroContent.style.opacity = opacity.toString();
+              }
+            }
+          });
+        }
+      }
+    }
   }
 
   handleSectionEdit(sectionKey: string) {
@@ -113,19 +168,19 @@ export class HomeStandardComponent implements OnInit {
     return '';
   }
 
+  // Enhanced background style method with better gradient overlay
   getBackgroundStyle(section: string): object {
     const sectionData = this.customizations()?.[section];
     let imageUrl;
 
-    if (section === 'hero') {
+    if (section === 'hero1') {
       imageUrl = sectionData?.backgroundImage || this.defaultHeroImage;
     } else {
       imageUrl = sectionData?.backgroundImage || '';
     }
 
-    const overlay = sectionData?.overlay
-      ? `rgba(0,0,0,${sectionData.overlay})`
-      : 'rgba(43, 43, 43, 0.3)';
+    const overlayOpacity = sectionData?.overlay || 0.4;
+    const overlay = `rgba(0,0,0,${overlayOpacity})`;
 
     if (!imageUrl) {
       return {
@@ -133,8 +188,13 @@ export class HomeStandardComponent implements OnInit {
       };
     }
 
+    // Enhanced gradient overlay for better text readability
     return {
-      'background-image': `linear-gradient(${overlay}, ${overlay}), url(${imageUrl})`,
+      'background-image': `linear-gradient(to bottom, 
+                        ${overlay} 0%, 
+                        rgba(0,0,0,${overlayOpacity - 0.1}) 50%,
+                        rgba(0,0,0,${overlayOpacity + 0.1}) 100%), 
+                       url(${imageUrl})`,
       'background-size': 'cover',
       'background-position': sectionData?.backgroundPosition || 'center',
     };
