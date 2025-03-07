@@ -4,12 +4,12 @@
   (mouseenter)="isHovered = true"
   (mouseleave)="isHovered = false"
 >
-  <div class="hover-effect" [class.active]="isHovered && !isMobile"></div>
+  <!-- Remove the separate hover-effect div as we'll use ::before pseudo-element -->
 
-  <!-- Smooth Minimalist Edit Button (Pencil Icon) -->
+  <!-- Improved Edit Button -->
   <button
     class="edit-button"
-    *ngIf="isHovered && !isMobile"
+    [class.visible]="isHovered && !isMobile"
     (click)="onEdit.emit(); $event.stopPropagation()"
   >
     <img src="assets/preview/logo-inside.svg" />

@@ -5,7 +5,7 @@
     [isMobileView]="isMobileView"
     (onEdit)="handleSectionEdit('hero1')"
   >
-    <section class="hero-section" [ngStyle]="getBackgroundStyle('hero1')">
+    <section class="hero-section" [ngStyle]="getBackgroundStyle('hero1')" [ngClass]="{ 'hero-section--mobile': isMobileLayout }">
       <div class="hero-content-wrapper">
         <div
           class="hero-content"
