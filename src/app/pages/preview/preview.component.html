@@ -1,5 +1,8 @@
-<div class="preview-container">
-  <!-- Main Introductory Text -->
+<div
+  class="preview-container"
+  [ngClass]="{ 'fullscreen-mode': isFullscreen() }"
+>
+  <!-- Main Introductory Text (hidden in fullscreen) -->
   <div class="preview-intro">
     <h1 class="preview-main-title">Build Your Perfect Website</h1>
     <p class="preview-main-subtitle">
@@ -8,12 +11,12 @@
     </p>
   </div>
 
-  <!-- Plan Title -->
+  <!-- Plan Title (hidden in fullscreen) -->
   <h2 class="preview-title">
     <span>{{ currentPlan() | uppercase }}</span> PLAN
   </h2>
 
-  <!-- Preview Header -->
+  <!-- Preview Header (fixed in fullscreen) -->
   <div class="preview-header">
     <!-- Theme Selector -->
     <app-theme-switcher
@@ -31,6 +34,7 @@
         class="view-icon"
         [class.active]="viewMode() === 'view-desktop'"
         (click)="toggleView('view-desktop')"
+        title="Desktop View"
       />
       <img
         src="assets/preview/mobile-icon.svg"
@@ -38,6 +42,7 @@
         class="view-icon"
         [class.active]="viewMode() === 'view-mobile'"
         (click)="toggleView('view-mobile')"
+        title="Mobile View"
       />
       <img
         [src]="
@@ -48,6 +53,7 @@
         [alt]="isFullscreen() ? 'Exit Fullscreen' : 'Enter Fullscreen'"
         class="view-icon fullscreen-icon"
         (click)="toggleFullscreen()"
+        title="Full Screen View"
       />
     </div>
 
@@ -59,7 +65,7 @@
     </app-font-picker>
   </div>
 
-  <!-- Main Preview Area -->
+  <!-- Main Preview Area (fullscreen when in fullscreen mode) -->
   <div class="preview-wrapper" [ngClass]="viewMode()">
     <ng-container *ngIf="currentPlan() === 'standard'">
       <app-standard-structure
@@ -90,7 +96,7 @@
     </app-component-customizer>
   </div>
 
-  <!-- Save and Reset Actions -->
+  <!-- Save and Reset Actions (fixed at bottom in fullscreen) -->
   <div class="preview-footer">
     <button class="btn btn--primary" (click)="saveAllChanges()">
       Save Changes

@@ -14,8 +14,13 @@ export class ScrollService {
         )
       )
       .subscribe((event) => {
-        // Don't scroll to top if it's a preview route
-        if (!event.url.includes('/preview')) {
+        // Scroll to top if navigating to a non-preview route
+        // or when initially navigating to the preview route
+        if (
+          !event.url.includes('/preview') ||
+          (event.url.includes('/preview') &&
+            !event.urlAfterRedirects.includes('/preview'))
+        ) {
           window.scrollTo(0, 0);
         }
       });

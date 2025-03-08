@@ -133,6 +133,7 @@
         cursor: pointer;
 
         &.fullscreen-icon {
+          width: 10%;
           margin-left: 10px;
         }
 
@@ -167,8 +168,9 @@
   .preview-footer {
     display: flex;
     justify-content: flex-end;
+    height: 72.5px;
     gap: 1rem;
-    padding: 1rem;
+    padding: 0.8rem;
     background: rgba(69, 73, 87, 0.85);
     border-radius: 0 0 10px 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -220,18 +222,60 @@
 
 // Fullscreen mode styles
 :host ::ng-deep .fullscreen-mode {
-  .preview-container {
-    min-height: 100vh;
-    padding: 1rem;
-  }
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2000;
+  background: linear-gradient(135deg, #0e0e1c, #111a33, #13171f, #0a0f1d);
+  overflow: hidden;
+  padding: 0;
 
   .preview-intro,
   .preview-title {
     display: none;
   }
 
+  .preview-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 2001;
+    border-radius: 0;
+    margin-bottom: 0;
+    backdrop-filter: blur(10px);
+  }
+
   .preview-wrapper {
-    height: calc(100vh - 150px);
+    position: fixed;
+    top: 72.5px; /* Height of the header */
+    left: 0;
+    width: 100% !important; /* Override any view-mode width settings */
+    height: calc(
+      100vh - 72.5px - 72.5px
+    ) !important; /* Subtract header and footer heights */
     max-height: none;
+    min-height: 0;
+    margin: 0;
+    overflow-y: auto;
+    border-radius: 0;
+
+    &.view-mobile {
+      width: 390px !important;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  }
+
+  .preview-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 2001;
+    border-radius: 0;
+    margin-top: 0;
   }
 }

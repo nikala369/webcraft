@@ -146,7 +146,16 @@ export class PreviewComponent {
       .subscribe(() => {
         const routeData = this.route.firstChild?.snapshot.data;
         if (routeData && routeData['page']) {
-          this.currentPage.set(routeData['page']);
+          const newPage = routeData['page'];
+          // Only scroll to top if the page actually changed
+          if (this.currentPage() !== newPage) {
+            this.currentPage.set(newPage);
+            // Scroll the preview area to top when changing pages
+            const previewWrapper = document.querySelector('.preview-wrapper');
+            if (previewWrapper) {
+              previewWrapper.scrollTop = 0;
+            }
+          }
         }
       });
 
@@ -156,10 +165,18 @@ export class PreviewComponent {
       this.currentPage.set(initialPage);
     }
 
+    // Scroll to top when initially entering preview page
+    window.scrollTo(0, 0);
+
     this.loadTheme(this.defaultThemeId());
     this.ensureValidViewMode();
+
     // Add fullscreen change event listener
     document.addEventListener('fullscreenchange', this.handleFullscreenChange);
+    // Initial class application
+    if (this.isFullscreen()) {
+      document.body.classList.add('fullscreen-mode');
+    }
   }
 
   ngOnDestroy() {
@@ -172,10 +189,20 @@ export class PreviewComponent {
 
   // Handle fullscreen change events from browser
   handleFullscreenChange = () => {
-    this.fullscreenState.set(!!document.fullscreenElement);
+    // If browser ESC key is used to exit fullscreen, make sure we update our state
+    if (!document.fullscreenElement && this.isFullscreen()) {
+      this.fullscreenState.set(false);
 
-    // Add or remove fullscreen class to body
-    if (document.fullscreenElement) {
+      // Restore main website header z-index
+      const mainHeader = document.querySelector('.header') as HTMLElement;
+      if (mainHeader) {
+        mainHeader.style.zIndex = '1000';
+        document.body.style.overflow = '';
+      }
+    }
+
+    // Add fullscreen class based on our internal state, not browser fullscreen
+    if (this.isFullscreen()) {
       document.body.classList.add('fullscreen-mode');
     } else {
       document.body.classList.remove('fullscreen-mode');
@@ -184,15 +211,27 @@ export class PreviewComponent {
 
   // Toggle fullscreen state
   toggleFullscreen() {
-    if (!document.fullscreenElement) {
+    if (!this.isFullscreen()) {
       // Enter fullscreen
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
+      this.fullscreenState.set(true);
+
+      // Lower main website header z-index
+      const mainHeader = document.querySelector('.header') as HTMLElement;
+      if (mainHeader) {
+        mainHeader.style.zIndex = '500';
+        document.body.style.overflow = 'hidden'; // Prevent scrolling of background
+      }
+
+      // No need for browser fullscreen API as we're doing our own implementation
     } else {
       // Exit fullscreen
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
+      this.fullscreenState.set(false);
+
+      // Restore main website header z-index
+      const mainHeader = document.querySelector('.header') as HTMLElement;
+      if (mainHeader) {
+        mainHeader.style.zIndex = '1000';
+        document.body.style.overflow = ''; // Restore scrolling
       }
     }
   }
