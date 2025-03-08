@@ -44,6 +44,10 @@ export class PreviewComponent {
   currentPlan = signal<'standard' | 'premium'>('standard');
   currentPage = signal<string>('home');
 
+  // Signal to track fullscreen state
+  private fullscreenState = signal(false);
+  isFullscreen = this.fullscreenState.asReadonly();
+
   // Default Theme Id based on plan
   defaultThemeId = computed(() => (this.currentPlan() === 'standard' ? 1 : 4));
 
@@ -62,7 +66,7 @@ export class PreviewComponent {
     pages: {
       home: {
         hero1: {
-          backgroundImage: 'https://example.com/hero1.jpg',
+          backgroundImage: 'assets/standard-hero1/background-image1.jpg',
           title: 'Grow Your Business With Us',
           subtitle: 'Professional solutions tailored to your business needs',
           layout: 'center',
@@ -154,6 +158,43 @@ export class PreviewComponent {
 
     this.loadTheme(this.defaultThemeId());
     this.ensureValidViewMode();
+    // Add fullscreen change event listener
+    document.addEventListener('fullscreenchange', this.handleFullscreenChange);
+  }
+
+  ngOnDestroy() {
+    // Remove event listener when component is destroyed
+    document.removeEventListener(
+      'fullscreenchange',
+      this.handleFullscreenChange
+    );
+  }
+
+  // Handle fullscreen change events from browser
+  handleFullscreenChange = () => {
+    this.fullscreenState.set(!!document.fullscreenElement);
+
+    // Add or remove fullscreen class to body
+    if (document.fullscreenElement) {
+      document.body.classList.add('fullscreen-mode');
+    } else {
+      document.body.classList.remove('fullscreen-mode');
+    }
+  };
+
+  // Toggle fullscreen state
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      // Enter fullscreen
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
   }
 
   // Ensure correct view mode when resizing

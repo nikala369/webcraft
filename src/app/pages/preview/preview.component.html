@@ -39,6 +39,16 @@
         [class.active]="viewMode() === 'view-mobile'"
         (click)="toggleView('view-mobile')"
       />
+      <img
+        [src]="
+          isFullscreen()
+            ? 'assets/preview/exit-fullscreen-icon.svg'
+            : 'assets/preview/fullscreen-icon.svg'
+        "
+        [alt]="isFullscreen() ? 'Exit Fullscreen' : 'Enter Fullscreen'"
+        class="view-icon fullscreen-icon"
+        (click)="toggleFullscreen()"
+      />
     </div>
 
     <!-- Font Selector -->

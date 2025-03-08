@@ -1,5 +1,5 @@
-@use '../../../styles/variables' as v;
-@use '../../../styles/mixins' as m;
+@use "../../../styles/variables" as v;
+@use "../../../styles/mixins" as m;
 
 .view-mobile,
 .view-desktop {
@@ -24,7 +24,6 @@
 }
 
 //-------
-
 
 .preview-container {
   position: relative;
@@ -59,8 +58,7 @@
 
       // Soft glowing shadow for a sleek effect
       text-shadow: 0 0 12px rgba(255, 255, 255, 0.7),
-      0 0 24px rgba(203, 203, 203, 0.6),
-      0 0 36px rgba(57, 52, 77, 0.5);
+        0 0 24px rgba(203, 203, 203, 0.6), 0 0 36px rgba(57, 52, 77, 0.5);
     }
 
     .preview-main-subtitle {
@@ -133,6 +131,15 @@
       .view-icon {
         width: 14%;
         cursor: pointer;
+
+        &.fullscreen-icon {
+          margin-left: 10px;
+        }
+
+        &.active {
+          opacity: 1;
+          filter: brightness(1.5);
+        }
       }
     }
 
@@ -176,12 +183,12 @@
       transition: all 0.3s ease;
 
       &--primary {
-        background: #2876FF;
+        background: #2876ff;
         color: #fff;
         border: none;
 
         &:hover {
-          background: darken(#2876FF, 10%);
+          background: darken(#2876ff, 10%);
           box-shadow: 0 4px 16px rgba(40, 118, 255, 0.5);
         }
       }
@@ -211,4 +218,20 @@
   }
 }
 
+// Fullscreen mode styles
+:host ::ng-deep .fullscreen-mode {
+  .preview-container {
+    min-height: 100vh;
+    padding: 1rem;
+  }
 
+  .preview-intro,
+  .preview-title {
+    display: none;
+  }
+
+  .preview-wrapper {
+    height: calc(100vh - 150px);
+    max-height: none;
+  }
+}
