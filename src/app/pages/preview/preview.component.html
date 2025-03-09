@@ -22,6 +22,7 @@
     <app-theme-switcher
       class="preview-header__left"
       (themeChange)="loadTheme($event)"
+      [defaultThemeId]="defaultThemeId()"
       [plan]="currentPlan()"
     >
     </app-theme-switcher>

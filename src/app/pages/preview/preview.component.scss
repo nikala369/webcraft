@@ -129,12 +129,20 @@
       justify-content: center;
 
       .view-icon {
-        width: 14%;
+        width: 12%;
         cursor: pointer;
 
+        @include m.breakpoint(lg) {
+          width: 16%;
+        }
+
         &.fullscreen-icon {
-          width: 10%;
-          margin-left: 10px;
+          width: 8%;
+          margin-left: 12px;
+
+          @include m.breakpoint(lg) {
+            width: 10%;
+          }
         }
 
         &.active {
