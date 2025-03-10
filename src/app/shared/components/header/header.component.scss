@@ -65,14 +65,16 @@
     align-items: center;
     text-decoration: none;
     transition: transform 0.3s ease;
-    width: 150px;
+    width: 190px;
+
+    @include m.breakpoint(md) {
+      width: 160px;
+    }
 
     &-icon {
-      width: 32.5%;
-      margin-right: 0.5rem;
-
+      width: 100%;
       @include m.breakpoint(md) {
-        width: 27.5%;
+        margin-left: -2px;
       }
     }
 
