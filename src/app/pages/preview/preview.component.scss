@@ -42,6 +42,8 @@
 
   .preview-intro {
     text-align: center;
+    margin-top: 25px;
+    margin-bottom: 25px;
 
     .preview-main-title {
       font-size: 2.5rem;
@@ -90,15 +92,74 @@
     }
   }
 
+  // ... existing code ...
+
   .preview-title {
+    /* Desktop Settings */
+    width: 225px;
+    text-align: center;
+    margin: 1rem 0;
+    font-size: 1.1rem;
+    letter-spacing: 2.5px;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border: 2px solid #0984e3;
+    border-radius: 8px;
+    animation: borderGlow 2s ease-in-out infinite alternate;
+    transition: all 0.3s ease-in-out;
+    user-select: none;
+
+    /* Mobile Adjustments */
     @include m.breakpoint(md) {
+      width: 100%;
       text-align: center;
+      margin: 1rem auto;
       font-size: 18px;
-      margin-top: 30px;
+    }
+
+    /* Premium Plan Styling */
+    &.premium-plan {
+      border: 2px solid #8c52ff;
+      background: linear-gradient(
+        rgba(140, 82, 255, 0.05),
+        rgba(140, 82, 255, 0.1)
+      );
+      animation: premiumBorderGlow 2s ease-in-out infinite alternate;
+
+      span {
+        color: #b388ff;
+        font-weight: 600;
+        text-shadow: 0 0 10px rgba(140, 82, 255, 0.5);
+      }
+    }
+  }
+
+  /* Glowing border animation */
+  @keyframes borderGlow {
+    0% {
+      box-shadow: 0 0 5px #0984e3, 0 0 10px #0984e3;
+    }
+    100% {
+      box-shadow: 0 0 20px #0984e3, 0 0 30px #0984e3;
+    }
+  }
+
+  /* Premium glowing border animation */
+  @keyframes premiumBorderGlow {
+    0% {
+      box-shadow: 0 0 5px #8c52ff, 0 0 10px #8c52ff;
+    }
+    100% {
+      box-shadow: 0 0 20px #8c52ff, 0 0 30px #8c52ff,
+        0 0 45px rgba(140, 82, 255, 0.3);
     }
   }
 
   // Header Controls
+  .fullscreen-mode-border-remove {
+    border-radius: 0px !important;
+  }
+
   .preview-header {
     position: relative;
     z-index: 1;

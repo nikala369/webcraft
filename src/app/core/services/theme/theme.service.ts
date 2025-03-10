@@ -81,8 +81,8 @@ export class ThemeService {
       {
         id: 1,
         name: 'Business Blue',
-        cssContent: `:root { 
-          --primary-color: #313d7a; 
+        cssContent: `:root {
+          --primary-color: #313d7a;
           --secondary-color: #ff5722;
           --header-bg: #313d7a;
           --header-text: #f5f5f5;
@@ -103,7 +103,7 @@ export class ThemeService {
           pages: {
             home: {
               hero1: {
-                backgroundImage: 'assets/themes/theme1/hero-bg.jpg',
+                backgroundImage: 'assets/standard-hero1/background-image2.jpg',
                 title: 'Grow Your Business With Us',
                 subtitle:
                   'Professional solutions tailored to your business needs',
@@ -114,8 +114,8 @@ export class ThemeService {
                 textShadow: 'medium' as 'none' | 'light' | 'medium' | 'heavy',
                 showPrimaryButton: true,
                 primaryButtonText: 'GET STARTED',
-                primaryButtonColor: '#ff5722',
-                primaryButtonTextColor: '#ffffff',
+                primaryButtonColor: '#fff',
+                primaryButtonTextColor: '#000',
                 primaryButtonLink: '/contact',
               },
               hero2: {
@@ -137,8 +137,8 @@ export class ThemeService {
       {
         id: 2,
         name: 'Modern Green',
-        cssContent: `:root { 
-          --primary-color: #2c8c4d; 
+        cssContent: `:root {
+          --primary-color: #2c8c4d;
           --secondary-color: #ffc107;
           --header-bg: #2c8c4d;
           --header-text: #ffffff;
@@ -160,7 +160,7 @@ export class ThemeService {
           pages: {
             home: {
               hero1: {
-                backgroundImage: 'assets/themes/theme2/hero-bg.jpg',
+                backgroundImage: 'assets/standard-hero1/background-image1.jpg',
                 title: 'Eco-Friendly Solutions',
                 subtitle: 'Sustainable approaches for a better tomorrow',
                 layout: 'left' as 'center' | 'left' | 'right',
@@ -193,8 +193,8 @@ export class ThemeService {
       {
         id: 7,
         name: 'Creative Purple',
-        cssContent: `:root { 
-          --primary-color: #5e2c8c; 
+        cssContent: `:root {
+          --primary-color: #5e2c8c;
           --secondary-color: #ff9800;
           --header-bg: #5e2c8c;
           --header-text: #ffffff;
@@ -216,7 +216,7 @@ export class ThemeService {
           pages: {
             home: {
               hero1: {
-                backgroundImage: 'assets/themes/theme3/hero-bg.jpg',
+                backgroundImage: 'assets/standard-hero1/background-image3.jpg',
                 title: 'Creative Design Studio',
                 subtitle: 'Bringing your ideas to life with innovative design',
                 layout: 'right' as 'center' | 'left' | 'right',
@@ -231,7 +231,7 @@ export class ThemeService {
                 primaryButtonLink: '/portfolio',
               },
               hero2: {
-                backgroundImage: 'assets/themes/theme3/services-bg.jpg',
+                backgroundImage: 'assets/themes.jpg',
                 title: 'Our Design Process',
                 subtitle: 'From concept to completion',
               },
@@ -250,8 +250,8 @@ export class ThemeService {
       {
         id: 4,
         name: 'Premium Corporate',
-        cssContent: `:root { 
-          --primary-color: #1a2942; 
+        cssContent: `:root {
+          --primary-color: #1a2942;
           --secondary-color: #00bcd4;
           --header-bg: #1a2942;
           --header-text: #ffffff;

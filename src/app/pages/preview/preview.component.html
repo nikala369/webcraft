@@ -11,13 +11,19 @@
     </p>
   </div>
 
-  <!-- Plan Title (hidden in fullscreen) -->
-  <h2 class="preview-title">
+  <!-- Plan Title (hidden in fullscreen if needed) -->
+  <h2
+    class="preview-title"
+    [ngClass]="{ 'premium-plan': currentPlan() === 'premium' }"
+  >
     <span>{{ currentPlan() | uppercase }}</span> PLAN
   </h2>
 
   <!-- Preview Header (fixed in fullscreen) -->
-  <div class="preview-header">
+  <div
+    class="preview-header"
+    [ngClass]="{ 'fullscreen-mode-border-remove': isFullscreen() }"
+  >
     <!-- Theme Selector -->
     <app-theme-switcher
       class="preview-header__left"
@@ -98,7 +104,10 @@
   </div>
 
   <!-- Save and Reset Actions (fixed at bottom in fullscreen) -->
-  <div class="preview-footer">
+  <div
+    class="preview-footer"
+    [ngClass]="{ 'fullscreen-mode-border-remove': isFullscreen() }"
+  >
     <button class="btn btn--primary" (click)="saveAllChanges()">
       Save Changes
     </button>
