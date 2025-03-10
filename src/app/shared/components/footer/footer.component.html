@@ -1,1 +1,68 @@
-<div style="height: 200px; background: black;"></div>
+<footer class="footer">
+  <div class="main-footer-container">
+    <!-- Company Info Section -->
+    <div class="company-info-wrapper">
+      <div class="logo-container">
+        <img
+          src="assets/header/webcraft-logo.svg"
+          alt="Company Logo"
+          class="footer-logo"
+        />
+      </div>
+      <p class="company-description">
+        Craft stunning websites effortlessly. <br />
+        webcraft75.com empowers you to launch landing pages, informational
+        sites, and more with instant deployment and unmatched simplicity.
+      </p>
+    </div>
+
+    <div class="footer-sections-wrapper">
+      <!-- Quick Links Section -->
+      <div class="footer-section quick-links">
+        <h3 class="footer-heading">Quick Links</h3>
+        <ul class="footer-links">
+          <li><a routerLink="/pricing" class="footer-link">Pricing</a></li>
+          <li><a routerLink="/about" class="footer-link">About Us</a></li>
+          <li>
+            <a routerLink="/learn-more" class="footer-link">Learn More</a>
+          </li>
+          <li><a routerLink="/contact" class="footer-link">Contact Us</a></li>
+          <li><a routerLink="/blog" class="footer-link">Blog</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact Section -->
+      <div class="footer-section contact-info">
+        <h3 class="footer-heading">Contact Us</h3>
+        <ul class="contact-list">
+          <li class="contact-item">
+            <i class="material-icons">Location</i>
+            <span>123 Web Avenue, Digital City</span>
+          </li>
+          <li class="contact-item">
+            <i class="material-icons">Email</i>
+            <span>info&#64;webcraft.com</span>
+          </li>
+          <li class="contact-item">
+            <i class="material-icons">Phone</i>
+            <span>+1 (555) 123-4567</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="footer-bottom">
+    <div class="footer-container">
+      <p class="copyright">
+        © {{ currentYear }} WebCraft75.com
+        <span style="color: white; font-weight: 700;">/</span> All Rights Reserved.
+      </p>
+      <div class="legal-links">
+        <a href="/privacy-policy" class="legal-link">Privacy Policy</a>
+        <a href="/terms-of-service" class="legal-link">Terms of Service</a>
+      </div>
+    </div>
+  </div>
+</footer>

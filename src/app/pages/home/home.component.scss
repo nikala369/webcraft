@@ -1,5 +1,5 @@
-@use '../../../styles/variables' as v;
-@use '../../../styles/mixins' as m;
+@use "../../../styles/variables" as v;
+@use "../../../styles/mixins" as m;
 
 .hero {
   position: relative;
@@ -7,11 +7,11 @@
   min-height: 100vh;
 
   background: linear-gradient(
-      135deg,
-      #0e0e1c 0%,
-      #111a33 30%,
-      #13171f 60%,
-      #0a0f1d 100%
+    135deg,
+    #0e0e1c 0%,
+    #111a33 30%,
+    #13171f 60%,
+    #0a0f1d 100%
   );
   background-size: 400% 400%;
   animation: gradientShift 25s ease infinite;
@@ -21,9 +21,9 @@
     inset: 0;
     pointer-events: none;
     background: radial-gradient(
-        circle at 20% 50%,
-        rgba(255, 255, 255, 0.03),
-        transparent 25%
+      circle at 20% 50%,
+      rgba(255, 255, 255, 0.03),
+      transparent 25%
     );
     z-index: 1;
   }
@@ -39,16 +39,16 @@
     padding: 0 1rem;
 
     @include m.breakpoint(md) {
-      min-height: 80vh;
+      min-height: 90vh;
     }
   }
 
   &__frame {
     border: 10px solid #000;
-    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     padding: 5rem 10rem;
     background: rgba(255, 255, 255, 0.05);
-    max-width: 900px;
+    max-width: 955px;
     margin: 0 auto;
     box-sizing: border-box;
 
@@ -72,7 +72,7 @@
     font-weight: 700;
     color: #fff;
     margin-bottom: 1rem;
-    max-width: 600px;
+    max-width: 620px;
     margin-left: auto;
     margin-right: auto;
     user-select: none;
@@ -84,7 +84,7 @@
       font-size: 2rem;
     }
     @media (max-width: 480px) {
-      font-size: 1.75rem;
+      font-size: 1.65rem;
     }
   }
 
@@ -99,7 +99,7 @@
       font-size: 1rem;
     }
     @media (max-width: 480px) {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
   }
 
@@ -150,15 +150,27 @@
 
 /* Keyframes */
 @keyframes gradientShift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes floatRotate {
-  0%   { transform: translateY(0) rotate(0deg); }
-  50%  { transform: translateY(-10px) rotate(15deg); }
-  100% { transform: translateY(-20px) rotate(-10deg); }
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(15deg);
+  }
+  100% {
+    transform: translateY(-20px) rotate(-10deg);
+  }
 }
 
 /* Buttons */
@@ -175,8 +187,7 @@
     width: 100%;
   }
 
-
-    &--primary {
+  &--primary {
     background: v.$secondary; /* from your SCSS variables */
     color: #fff;
 
