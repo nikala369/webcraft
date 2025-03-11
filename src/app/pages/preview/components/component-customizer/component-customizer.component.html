@@ -1,7 +1,12 @@
-<div class="modal-overlay">
+<div class="modal-overlay" (click)="handleOverlayClick($event)">
   <div class="customizer-modal">
-    <!-- Close button: visible only on mobile -->
-    <button class="close-btn" (click)="cancel()">×</button>
+    <!-- Professional close button (visible on all screens) -->
+    <button class="close-btn" (click)="cancel()" aria-label="Close modal">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 6L6 18M6 6L18 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    
     <h2>Customize {{ componentData().id }}</h2>
 
     <!-- Dynamically render form fields based on config -->

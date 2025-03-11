@@ -6,6 +6,7 @@ import {
   signal,
   computed,
   effect,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -67,10 +68,24 @@ export class ComponentCustomizerComponent {
   });
   componentData = computed(() => this.localData());
 
+  // Listen for ESC key to close modal
+  @HostListener('document:keydown.escape', ['$event'])
+  handleEscapeKey(event: KeyboardEvent) {
+    this.cancel();
+  }
+
   constructor() {
     effect(() => {
       console.log('Local data updated:', this.localData());
     });
+  }
+
+  // Handle clicks on the modal overlay
+  handleOverlayClick(event: MouseEvent): void {
+    // Only close if the click was directly on the overlay, not the modal itself
+    if (event.target === event.currentTarget) {
+      this.cancel();
+    }
   }
 
   updateField(fieldKey: string, event: Event): void {

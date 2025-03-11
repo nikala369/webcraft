@@ -188,27 +188,53 @@
       flex: 1;
       display: flex;
       justify-content: center;
+      align-items: center;
+      gap: 32px; // Increased spacing between icons
 
-      .view-icon {
-        width: 12%;
+      .icon-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
         cursor: pointer;
+        padding: 10px; // Increased padding
+        border-radius: 10px; // Slightly rounded corners
+        transition: all 0.25s ease;
+        color: rgba(255, 255, 255, 0.75);
 
-        @include m.breakpoint(lg) {
-          width: 16%;
-        }
-
-        &.fullscreen-icon {
-          width: 8%;
-          margin-left: 12px;
-
-          @include m.breakpoint(lg) {
-            width: 10%;
-          }
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.12);
+          color: rgba(255, 255, 255, 1);
+          transform: translateY(-1px);
         }
 
         &.active {
-          opacity: 1;
-          filter: brightness(1.5);
+          color: white;
+          background-color: rgba(255, 255, 255, 0.18);
+          box-shadow: 0 2px 12px rgba(255, 255, 255, 0.1);
+        }
+      }
+
+      .fullscreen-icon-container {
+        margin-left: 0px;
+      }
+
+      .view-icon {
+        width: 28px; // Increased base size
+        height: 28px;
+        transition: transform 0.2s ease;
+
+        @include m.breakpoint(lg) {
+          width: 30px; // Larger on bigger screens
+          height: 30px;
+        }
+
+        &.fullscreen-icon {
+          transition: all 0.2s ease;
+
+          @include m.breakpoint(lg) {
+            width: 28px; // Slightly smaller than the other icons
+            height: 28px;
+          }
         }
       }
     }
