@@ -1,5 +1,5 @@
-@use '../../../../../styles/mixins' as m;
+@use "../../../../../styles/mixins" as m;
 
 .font-picker {
-  @include m.dropdown-styles(200px, 100);
+  @include m.dropdown-styles(240px, 100);
 }

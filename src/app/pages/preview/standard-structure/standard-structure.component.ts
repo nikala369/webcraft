@@ -16,6 +16,7 @@ import { Router } from '@angular/router';
 import { HomeStandardComponent } from './home-standard/home-standard.component';
 import { AboutStandardComponent } from './about-standard/about-standard.component';
 import { ContactStandardComponent } from './contact-standard/contact-standard.component';
+import { FontOption } from '../components/font-selector/font-selector.component';
 
 @Component({
   selector: 'app-standard-structure',
@@ -37,7 +38,7 @@ export class StandardStructureComponent implements OnInit {
   @Input() customizations!: () => Customizations;
   @Input() isMobileLayout = false;
   @Input() isMobileView: any;
-  @Input() selectedFont: any;
+  @Input() selectedFont: FontOption | null = null;
   @Input() currentPage: string = 'home';
   @Input() currentPlan: string = 'standard';
 
@@ -67,6 +68,12 @@ export class StandardStructureComponent implements OnInit {
     console.log(this.customizations(), 'main data in standard structure');
     console.log('Current page in standard structure:', this.currentPage);
     console.log('Current plan in standard structure:', this.currentPlan);
+  }
+
+  // Add a convenience method
+  getFontFamily(): string {
+    if (!this.selectedFont) return '';
+    return `${this.selectedFont.family}, ${this.selectedFont.fallback}`;
   }
 
   handleComponentSelection(componentKey: keyof Customizations): void {

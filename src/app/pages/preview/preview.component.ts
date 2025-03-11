@@ -10,7 +10,10 @@ import {
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { ThemeService } from '../../core/services/theme/theme.service';
 import { ThemeSwitcherComponent } from './components/theme-switcher/theme-switcher.component';
-import { FontSelectorComponent } from './components/font-selector/font-selector.component';
+import {
+  FontOption,
+  FontSelectorComponent,
+} from './components/font-selector/font-selector.component';
 import { PreviewViewToggleComponent } from './components/preview-view-toggle/preview-view-toggle.component';
 import { ComponentCustomizerComponent } from './components/component-customizer/component-customizer.component';
 import { PremiumStructureComponent } from './premium-structure/premium-structure.component';
@@ -52,7 +55,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
   } | null>(null);
   currentPlan = signal<'standard' | 'premium'>('standard');
   currentPage = signal<string>('home');
-  selectedFont = signal<string>('');
+  selectedFont = signal<FontOption | null>(null);
 
   // Signal to track fullscreen state
   private fullscreenState = signal(false);
@@ -63,6 +66,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
   // Customizations from theme service or default
   customizations = signal<Customizations>({
+    fontConfig: {
+      fontId: 1,
+      family: 'Arial',
+      fallback: 'sans-serif',
+    },
     header: {
       backgroundColor: '#313d7a',
       textColor: '#f5f5f5',
@@ -285,6 +293,16 @@ export class PreviewComponent implements OnInit, OnDestroy {
       // Update customizations from theme data
       if (theme.customizations) {
         this.customizations.set(theme.customizations);
+
+        // Update selectedFont signal if fontConfig exists in the loaded theme
+        if (theme.customizations.fontConfig) {
+          const fontConfig = theme.customizations.fontConfig;
+          this.selectedFont.set({
+            id: fontConfig.fontId,
+            family: fontConfig.family,
+            fallback: fontConfig.fallback,
+          });
+        }
       }
     });
   }
@@ -367,9 +385,25 @@ export class PreviewComponent implements OnInit, OnDestroy {
     }));
   }
 
-  // Handle font update
-  handleFontUpdate(font: string): void {
+  // Update the handleFontUpdate method
+  handleFontUpdate(font: FontOption): void {
+    // Store the complete FontOption object instead of just the string
     this.selectedFont.set(font);
+
+    // Update customizations with minimal required data
+    this.customizations.update((current) => ({
+      ...current,
+      fontConfig: {
+        fontId: font.id,
+        family: font.family,
+        fallback: font.fallback,
+      },
+    }));
+  }
+
+  // Keep the getFontFamily method for other uses
+  getFontFamily(font: FontOption): string {
+    return `${font.family}, ${font.fallback}`;
   }
 
   // Save all customizations (e.g. send to backend)
@@ -388,6 +422,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
 }
 
 export interface Customizations {
+  fontConfig: {
+    fontId: number;
+    family: string;
+    fallback: string;
+  };
   header: {
     backgroundColor: string;
     textColor: string;

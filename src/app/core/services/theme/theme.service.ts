@@ -90,6 +90,11 @@ export class ThemeService {
           --footer-text: #ffffff;
         }`,
         customizations: {
+          fontConfig: {
+            fontId: 1,
+            family: 'Roboto',
+            fallback: 'sans-serif',
+          },
           header: {
             backgroundColor: '#313d7a',
             textColor: '#f5f5f5',
@@ -146,6 +151,11 @@ export class ThemeService {
           --footer-text: #ffffff;
         }`,
         customizations: {
+          fontConfig: {
+            fontId: 1,
+            family: 'Roboto',
+            fallback: 'sans-serif',
+          },
           header: {
             backgroundColor: '#2c8c4d',
             textColor: '#ffffff',
@@ -202,6 +212,11 @@ export class ThemeService {
           --footer-text: #ffffff;
         }`,
         customizations: {
+          fontConfig: {
+            fontId: 1,
+            family: 'Roboto',
+            fallback: 'sans-serif',
+          },
           header: {
             backgroundColor: '#5e2c8c',
             textColor: '#ffffff',
@@ -259,6 +274,11 @@ export class ThemeService {
           --footer-text: #ffffff;
         }`,
         customizations: {
+          fontConfig: {
+            fontId: 1,
+            family: 'Roboto',
+            fallback: 'sans-serif',
+          },
           header: {
             backgroundColor: '#1a2942',
             textColor: '#ffffff',
