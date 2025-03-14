@@ -216,8 +216,8 @@
             rgba(255, 255, 255, 0)
           );
           transform: skewX(-25deg);
-          transition: left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-            opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          transition: left 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+            opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
           pointer-events: none; /* Prevents hover state changes from this element */
           opacity: 0;
         }
@@ -231,7 +231,7 @@
           width: 0;
           height: 100%;
           background-color: rgba(255, 255, 255, 0.1);
-          transition: width 0.35s ease;
+          transition: width 0.55s ease;
           pointer-events: none; /* Prevents hover state changes from this element */
           border-radius: 50px;
           z-index: -1;
@@ -239,7 +239,7 @@
 
         /* Enhanced hover states */
         &:hover {
-          transform: translateY(-5px);
+          transform: translateY(-2.5px);
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 
           &::before {

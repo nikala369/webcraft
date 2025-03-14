@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
@@ -6,6 +6,12 @@ import { filter } from 'rxjs/operators';
   providedIn: 'root',
 })
 export class ScrollService {
+  modalOpen = signal(false);
+
+  setModalOpen(isOpen: boolean) {
+    this.modalOpen.set(isOpen);
+  }
+
   constructor(private router: Router) {
     this.router.events
       .pipe(

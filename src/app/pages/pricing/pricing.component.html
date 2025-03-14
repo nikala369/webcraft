@@ -4,7 +4,8 @@
     <div class="pricing__info">
       <h1 class="pricing__title">Transparent Pricing Plans</h1>
       <p class="pricing__subtitle">
-        Get a high-converting landing page, business site, or informational website — no hidden fees, no endless calls
+        Choose a plan that fits your business needs — instant deployment, no
+        hidden fees, no endless calls, no revisions
       </p>
     </div>
 
@@ -12,32 +13,92 @@
     <div class="pricing__cards">
       <!-- Standard Plan -->
       <div class="pricing__card standard">
-        <h2 class="pricing__plan-title">Standard</h2>
-        <p class="pricing__price">$250</p>
+        <div class="card__header">
+          <h2 class="pricing__plan-title">Standard</h2>
+          <p class="pricing__price">Free <span class="old-price">$250</span></p>
+          <p class="pricing__description">
+            Perfect for small businesses and personal brands
+          </p>
+        </div>
         <ul class="pricing__features">
-          <li><span class="checkmark standard-check"></span> 3 Pre-Built Themes</li>
-          <li><span class="checkmark standard-check"></span> Basic Customization</li>
-          <li><span class="checkmark standard-check"></span> 24-Hour Delivery</li>
-          <li><span class="checkmark standard-check"></span> Secure Hosting</li>
+          <li>
+            <span class="checkmark standard-check"></span> 3 Professional
+            Templates
+          </li>
+          <li>
+            <span class="checkmark standard-check"></span> Basic Customization
+            Options
+          </li>
+          <li>
+            <span class="checkmark standard-check"></span> Instant Deployment
+          </li>
+          <li>
+            <span class="checkmark standard-check"></span> Mobile Responsive
+            Design
+          </li>
+          <li>
+            <span class="checkmark standard-check"></span> Secure Hosting
+            Included
+          </li>
+          <li>
+            <span class="checkmark standard-check"></span> Basic SEO Settings
+          </li>
         </ul>
-        <button class="btn btn--primary" (click)="navigateToPreview('standard')">TRY STANDARD</button>
+        <button
+          class="btn btn--primary"
+          (click)="navigateToPreview('standard')"
+        >
+          TRY STANDARD
+        </button>
       </div>
 
       <!-- Premium Plan -->
       <div class="pricing__card premium">
         <div class="badge">Best Value</div>
-        <h2 class="pricing__plan-title">Premium</h2>
-        <p class="pricing__price">$599</p>
+        <div class="card__header">
+          <h2 class="pricing__plan-title">Premium</h2>
+          <p class="pricing__price">$399</p>
+          <p class="pricing__description">
+            Advanced features for growing businesses
+          </p>
+        </div>
         <ul class="pricing__features">
-          <li><span class="checkmark premium-check"></span> 5 Premium Themes</li>
-          <li><span class="checkmark premium-check"></span> Advanced Customization</li>
-          <li><span class="checkmark premium-check"></span> 12-Hour Priority Delivery</li>
-          <li><span class="checkmark premium-check"></span> Premium Hosting</li>
-          <li><span class="checkmark premium-check"></span> SEO Optimization</li>
-          <li><span class="checkmark premium-check"></span> Analytics Dashboard</li>
-          <li><span class="checkmark premium-check"></span> Dedicated Support</li>
+          <li>
+            <span class="checkmark premium-check"></span> 5 Premium Templates
+          </li>
+          <li>
+            <span class="checkmark premium-check"></span> Advanced Customization
+            Options
+          </li>
+          <li>
+            <span class="checkmark premium-check"></span> Priority Instant
+            Deployment
+          </li>
+          <li>
+            <span class="checkmark premium-check"></span> Booking System
+            Integration
+          </li>
+          <li>
+            <span class="checkmark premium-check"></span> Advanced Animations &
+            Effects
+          </li>
+          <li>
+            <span class="checkmark premium-check"></span> Premium Hosting & CDN
+          </li>
+          <li>
+            <span class="checkmark premium-check"></span> Complete SEO
+            Optimization
+          </li>
+          <li>
+            <span class="checkmark premium-check"></span> Analytics Dashboard
+          </li>
+          <li>
+            <span class="checkmark premium-check"></span> Dedicated Support
+          </li>
         </ul>
-        <button class="btn btn--premium" (click)="navigateToPreview('premium')">TRY PREMIUM</button>
+        <button class="btn btn--premium" (click)="navigateToPreview('premium')">
+          TRY PREMIUM
+        </button>
       </div>
     </div>
   </div>

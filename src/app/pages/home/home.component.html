@@ -1,22 +1,94 @@
 <section class="hero">
-  <!-- Optional overlay or background shapes remain the same -->
+  <!-- Enhanced contextual website elements -->
   <div class="hero__overlay"></div>
-  <!--  <div class="shape shape&#45;&#45;1"></div>-->
-  <div class="shape shape--2"></div>
-  <div class="shape shape--3"></div>
 
+  <!-- Template Selection Shape -->
+  <div class="shape template-selector shape--1">
+    <div class="editor-header">
+      <div class="title">Templates</div>
+    </div>
+    <div class="templates-grid">
+      <div class="template active"></div>
+      <div class="template"></div>
+      <div class="template"></div>
+      <div class="template"></div>
+    </div>
+  </div>
+
+  <!-- Drag Element Shape -->
+  <div class="shape element-editor shape--2">
+    <div class="editor-header">
+      <div class="title">Elements</div>
+    </div>
+    <div class="element-panel">
+      <div class="element-row">
+        <div class="element"></div>
+        <div class="element active">
+          <div class="dragging-element"></div>
+        </div>
+        <div class="element"></div>
+      </div>
+      <div class="element-row">
+        <div class="element"></div>
+        <div class="element"></div>
+        <div class="element"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Color Theme Editor Shape -->
+  <div class="shape color-editor shape--3">
+    <div class="editor-header">
+      <div class="title">Colors</div>
+    </div>
+    <div class="color-panel">
+      <div class="color-row">
+        <div class="color-swatch color-1"></div>
+        <div class="color-swatch color-2 active"></div>
+        <div class="color-swatch color-3"></div>
+      </div>
+      <div class="preview-area">
+        <div class="color-preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text Editor Shape -->
+  <div class="shape text-editor shape--4">
+    <div class="editor-header">
+      <div class="title">Text</div>
+    </div>
+    <div class="text-panel">
+      <div class="text-toolbar">
+        <div class="tool"></div>
+        <div class="tool"></div>
+        <div class="tool active"></div>
+      </div>
+      <div class="text-content">
+        <div class="text-line"></div>
+        <div class="text-line active"></div>
+        <div class="text-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- This is the main content container - fixed for proper centering -->
   <div class="hero__content">
-    <!-- BEGIN New Framed Box -->
     <div class="hero__frame">
       <h1 class="hero__title">
-        No Coding, No Hassle  <br />
-        No Hidden Fees <br />
+        <span class="static-text">No Coding, </span>
+        <span class="typing-container">
+          <span class="typing-text">{{ currentPhrase }}</span>
+          <span class="cursor" [class.blink]="!isDeleting"></span>
+        </span>
+        <br />
         Just Beautiful Websites Instantly.
       </h1>
       <p class="hero__subtitle">
-        Build professional, high-converting landing pages and websites
-        effortlessly. Select your theme, personalize your content, and deploy
-        instantly—experience seamless website creation without friction.
+        Launch professional, high-converting landing pages, informational sites,
+        and business websites effortlessly. Choose your ideal theme, customize
+        your content with ease, and deploy instantly—experience a seamless
+        website creation process designed for success.
       </p>
       <div class="hero__buttons">
         <button class="btn btn--primary" routerLink="/pricing">
@@ -27,6 +99,5 @@
         </button>
       </div>
     </div>
-    <!-- END New Framed Box -->
   </div>
 </section>

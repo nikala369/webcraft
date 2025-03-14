@@ -1,4 +1,7 @@
-<footer class="footer">
+<footer
+  class="footer"
+  [ngStyle]="{ 'z-index': modalStateService.modalOpen() ? -1 : 2 }"
+>
   <div class="main-footer-container">
     <!-- Company Info Section -->
     <div class="company-info-wrapper">
@@ -10,9 +13,13 @@
         />
       </div>
       <p class="company-description">
-        Craft stunning websites effortlessly. <br />
-        webcraft75.com empowers you to launch landing pages, informational
-        sites, and more with instant deployment and unmatched simplicity.
+        Craft beautiful websites in no time. <br />
+        webcraft75.com empowers you to spin up landing pages, business websites,
+        informational sites, and more
+        <span style="color: white; font-weight: 700">--</span> instantly and
+        without the usual hassle. Enjoy professional designs, seamless
+        customization, and frictionless deployment for a polished online
+        presence your audience will trust.
       </p>
     </div>
 
@@ -57,7 +64,8 @@
     <div class="footer-container">
       <p class="copyright">
         © {{ currentYear }} webcraft75.com
-        <span style="color: white; font-weight: 700;">/</span> All Rights Reserved.
+        <span style="color: white; font-weight: 700">/</span> All Rights
+        Reserved.
       </p>
       <div class="legal-links">
         <a href="/privacy-policy" class="legal-link">Privacy Policy</a>

@@ -6,6 +6,7 @@ import {
   computed,
   OnInit,
   OnDestroy,
+  effect,
 } from '@angular/core';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { ThemeService } from '../../core/services/theme/theme.service';
@@ -21,6 +22,7 @@ import { StandardStructureComponent } from './standard-structure/standard-struct
 import { CommonModule, UpperCasePipe } from '@angular/common';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import { ScrollService } from '../../core/services/shared/scroll/scroll.service';
 
 @Component({
   selector: 'app-preview',
@@ -43,6 +45,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
   private renderer = inject(Renderer2);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  modalStateService = inject(ScrollService);
   private destroy$ = new Subject<void>();
 
   // Signals
@@ -60,6 +63,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
   // Signal to track fullscreen state
   private fullscreenState = signal(false);
   isFullscreen = this.fullscreenState.asReadonly();
+  private preFullscreenScrollPosition = 0;
 
   // Default Theme Id based on plan
   defaultThemeId = computed(() => (this.currentPlan() === 'standard' ? 1 : 4));
@@ -150,6 +154,15 @@ export class PreviewComponent implements OnInit, OnDestroy {
     };
   });
 
+  constructor() {
+    effect(
+      () => {
+        this.modalStateService.setModalOpen(this.selectedComponent() !== null);
+      },
+      { allowSignalWrites: true }
+    );
+  }
+
   ngOnInit(): void {
     // Handle window resize
     window.addEventListener('resize', this.updateIsMobile.bind(this));
@@ -231,8 +244,16 @@ export class PreviewComponent implements OnInit, OnDestroy {
       const mainHeader = document.querySelector('.header') as HTMLElement;
       if (mainHeader) {
         mainHeader.style.zIndex = '1000';
-        document.body.style.overflow = '';
+        document.body.style.overflow = ''; // Restore scrolling
       }
+
+      // Restore scroll position when exiting via ESC key
+      setTimeout(() => {
+        window.scrollTo({
+          top: this.preFullscreenScrollPosition,
+          behavior: 'auto',
+        });
+      }, 0);
     }
 
     // Add fullscreen class based on our internal state, not browser fullscreen
@@ -246,6 +267,9 @@ export class PreviewComponent implements OnInit, OnDestroy {
   // Toggle fullscreen state
   toggleFullscreen(): void {
     if (!this.isFullscreen()) {
+      // Store current scroll position before entering fullscreen
+      this.preFullscreenScrollPosition = window.scrollY;
+
       // Enter fullscreen
       this.fullscreenState.set(true);
 
@@ -255,8 +279,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
         mainHeader.style.zIndex = '500';
         document.body.style.overflow = 'hidden'; // Prevent scrolling of background
       }
-
-      // No need for browser fullscreen API as we're doing our own implementation
     } else {
       // Exit fullscreen
       this.fullscreenState.set(false);
@@ -267,6 +289,14 @@ export class PreviewComponent implements OnInit, OnDestroy {
         mainHeader.style.zIndex = '1000';
         document.body.style.overflow = ''; // Restore scrolling
       }
+
+      // After UI updates have been processed, restore the scroll position
+      setTimeout(() => {
+        window.scrollTo({
+          top: this.preFullscreenScrollPosition,
+          behavior: 'auto', // Use 'auto' instead of 'smooth' to avoid visible scrolling
+        });
+      }, 0);
     }
   }
 

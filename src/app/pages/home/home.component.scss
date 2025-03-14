@@ -4,7 +4,11 @@
 .hero {
   position: relative;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   background: linear-gradient(
     135deg,
@@ -31,39 +35,73 @@
   &__content {
     position: relative;
     z-index: 2;
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    min-height: 100vh;
-    padding: 0 1rem;
-
-    @include m.breakpoint(md) {
-      min-height: 90vh;
-    }
+    height: 100%;
+    margin: 0 auto; /* Added for explicit centering */
+    box-sizing: border-box;
   }
 
   &__frame {
-    border: 10px solid #000;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-    padding: 5rem 10rem;
-    background: rgba(255, 255, 255, 0.05);
+    width: 100%;
+    border: 2px solid transparent; // Change to transparent for gradient border
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    padding: 4rem 5rem;
+    background: rgba(15, 20, 30, 0.6);
+    backdrop-filter: blur(10px);
     max-width: 955px;
     margin: 0 auto;
     box-sizing: border-box;
+    border-radius: 16px; // Slightly more rounded
+    position: relative;
+
+    // Better gradient border with smoother appearance
+    &:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 14px; // Match the rounded corners
+      padding: 2px; // Border thickness
+      background: linear-gradient(
+        135deg,
+        rgba(v.$primary, 0.7),
+        rgba(v.$secondary, 0.7) 25%,
+        rgba(255, 255, 255, 0.3) 50%,
+        rgba(v.$secondary, 0.7) 75%,
+        rgba(v.$primary, 0.7)
+      );
+      -webkit-mask: linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      animation: borderGlow 8s linear infinite;
+    }
+
+    // Add subtle inner shadow for depth
+    &:after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.3);
+      pointer-events: none;
+    }
 
     @media (max-width: 992px) {
-      padding: 4rem 5rem;
+      padding: 4rem 3rem;
     }
 
     @media (max-width: 768px) {
       padding: 3rem 2rem;
-      border: 8px solid #000;
     }
 
     @media (max-width: 480px) {
       padding: 2rem 1.5rem;
-      border: 6px solid #000;
     }
   }
 
@@ -71,20 +109,60 @@
     font-size: 2.5rem;
     font-weight: 700;
     color: #fff;
-    margin-bottom: 1rem;
-    max-width: 620px;
+    margin-bottom: 1.5rem;
+    max-width: 660px;
     margin-left: auto;
     margin-right: auto;
     user-select: none;
+    line-height: 1.3;
+    text-align: center;
 
-    /*
-      Example scaling for smaller screens
-    */
+    .static-text {
+      color: #fff;
+    }
+
+    .typing-container {
+      display: inline-block;
+      position: relative;
+      min-width: 200px; // Ensures consistent width
+      text-align: left;
+    }
+
+    .typing-text {
+      color: v.$secondary;
+      font-weight: 700;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 3px;
+      height: 1.2em;
+      background-color: v.$secondary;
+      margin-left: 2px;
+      vertical-align: middle;
+      position: relative;
+      top: -2px;
+    }
+
+    .cursor.blink {
+      animation: blink 0.75s step-end infinite;
+    }
+
     @media (max-width: 768px) {
       font-size: 2rem;
+      text-align: left;
+
+      .typing-container {
+        min-width: 160px;
+      }
     }
+
     @media (max-width: 480px) {
       font-size: 1.65rem;
+
+      .typing-container {
+        min-width: 130px;
+      }
     }
   }
 
@@ -94,6 +172,7 @@
     max-width: 550px;
     margin: 0 auto 2rem;
     line-height: 1.5;
+    text-align: center;
 
     @media (max-width: 768px) {
       font-size: 1rem;
@@ -110,45 +189,300 @@
     justify-content: center;
   }
 
+  // Common shape styles
   .shape {
     position: absolute;
-    width: 50px;
-    height: 50px;
-    background-color: #fff;
-    opacity: 0.2;
     z-index: 3;
-    animation: floatRotate 8s infinite ease-in-out alternate;
+    filter: blur(0.5px);
+    opacity: 0.3;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    border-radius: 8px;
+    background: rgba(24, 28, 35, 0.85);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
 
-    &--1 {
-      top: 22.5%;
-      left: 40%;
-      border-radius: 0;
-      animation-duration: 6s;
+    &:hover {
+      opacity: 0.45;
+      transform: scale(1.05);
+      z-index: 4;
     }
-    &--2 {
-      top: 42.5%;
-      left: 74.6%;
-      border-radius: 0px;
-      animation-duration: 6.5s;
 
-      @include m.breakpoint(md) {
-        top: 15%;
-      }
-    }
-    &--3 {
-      top: 70%;
-      left: 25%;
-      border-radius: 5px;
-      animation-duration: 9.5s;
+    .editor-header {
+      height: 24px;
+      background: rgba(40, 45, 55, 0.95);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
 
-      @include m.breakpoint(md) {
-        top: 85%;
+      .title {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
       }
     }
   }
+
+  // Template Selector Shape
+  .template-selector {
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-gap: 8px;
+      padding: 10px;
+
+      .template {
+        height: 40px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        position: relative;
+
+        &:before {
+          content: "";
+          position: absolute;
+          top: 6px;
+          left: 6px;
+          right: 6px;
+          height: 8px;
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 2px;
+        }
+
+        &:after {
+          content: "";
+          position: absolute;
+          bottom: 6px;
+          left: 6px;
+          right: 6px;
+          height: 16px;
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 2px;
+        }
+
+        &.active {
+          box-shadow: 0 0 0 2px rgba(v.$secondary, 0.8);
+          background: rgba(v.$secondary, 0.1);
+
+          &:before {
+            background: rgba(v.$secondary, 0.3);
+          }
+
+          &:after {
+            background: rgba(v.$secondary, 0.2);
+          }
+        }
+
+        &:nth-child(1) {
+          animation: templatePulse 3s infinite alternate;
+        }
+
+        &:nth-child(2) {
+          animation: templatePulse 3s infinite alternate 0.5s;
+        }
+
+        &:nth-child(3) {
+          animation: templatePulse 3s infinite alternate 1s;
+        }
+
+        &:nth-child(4) {
+          animation: templatePulse 3s infinite alternate 1.5s;
+        }
+      }
+    }
+  }
+
+  // Element Editor Shape
+  .element-editor {
+    .element-panel {
+      padding: 10px;
+
+      .element-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .element {
+          flex: 1;
+          height: 30px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+          position: relative;
+
+          &.active {
+            background: rgba(v.$primary, 0.2);
+            box-shadow: 0 0 0 1px rgba(v.$primary, 0.5);
+          }
+
+          .dragging-element {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(v.$primary, 0.9);
+            border-radius: 3px;
+            top: -15px;
+            right: -10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            z-index: 5;
+            animation: dragElement 3s ease-in-out infinite;
+          }
+        }
+      }
+    }
+  }
+
+  // Color Editor Shape
+  .color-editor {
+    .color-panel {
+      padding: 10px;
+
+      .color-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+
+        .color-swatch {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+
+          &.color-1 {
+            background: #4285f4;
+          }
+
+          &.color-2 {
+            background: #ea4335;
+          }
+
+          &.color-3 {
+            background: #fbbc05;
+          }
+
+          &.active {
+            box-shadow: 0 0 0 2px white;
+            transform: scale(1.1);
+          }
+        }
+      }
+
+      .preview-area {
+        height: 35px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        padding: 5px;
+
+        .color-preview {
+          height: 100%;
+          background: #ea4335;
+          border-radius: 2px;
+          animation: colorShift 5s infinite alternate;
+        }
+      }
+    }
+  }
+
+  // Text Editor Shape
+  .text-editor {
+    .text-panel {
+      padding: 10px;
+
+      .text-toolbar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+
+        .tool {
+          width: 24px;
+          height: 24px;
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 4px;
+
+          &.active {
+            background: rgba(v.$secondary, 0.6);
+          }
+        }
+      }
+
+      .text-content {
+        .text-line {
+          height: 8px;
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 2px;
+          margin-bottom: 8px;
+
+          &:nth-child(1) {
+            width: 90%;
+          }
+
+          &:nth-child(2) {
+            width: 75%;
+          }
+
+          &:nth-child(3) {
+            width: 60%;
+          }
+
+          &.active {
+            background: rgba(v.$secondary, 0.6);
+            position: relative;
+
+            &:after {
+              content: "";
+              position: absolute;
+              right: -2px;
+              top: 0;
+              width: 2px;
+              height: 100%;
+              background: white;
+              animation: blink 0.75s step-end infinite;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Position the shapes
+  .shape--1 {
+    top: 15%;
+    left: 8%;
+    width: 170px;
+    height: 135px;
+    animation: float 15s infinite ease-in-out;
+    transform: rotate(-5deg);
+  }
+
+  .shape--2 {
+    bottom: 18%;
+    left: 12%;
+    width: 160px;
+    height: 130px;
+    animation: float 18s infinite ease-in-out reverse;
+    transform: rotate(3deg);
+  }
+
+  .shape--3 {
+    top: 22%;
+    right: 10%;
+    width: 150px;
+    height: 120px;
+    animation: float 20s infinite ease-in-out 2s;
+    transform: rotate(-3deg);
+  }
+
+  .shape--4 {
+    bottom: 22%;
+    right: 12%;
+    width: 140px;
+    height: 120px;
+    animation: float 16s infinite ease-in-out 1s;
+    transform: rotate(4deg);
+  }
 }
 
-/* Keyframes */
+/* Keyframes for animations */
 @keyframes gradientShift {
   0% {
     background-position: 0% 50%;
@@ -161,15 +495,67 @@
   }
 }
 
-@keyframes floatRotate {
+@keyframes float {
   0% {
     transform: translateY(0) rotate(0deg);
   }
   50% {
-    transform: translateY(-10px) rotate(15deg);
+    transform: translateY(-15px) rotate(2deg);
   }
   100% {
-    transform: translateY(-20px) rotate(-10deg);
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes borderGlow {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
+@keyframes templatePulse {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes dragElement {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(20px, 20px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes colorShift {
+  0% {
+    background: #4285f4;
+  }
+  50% {
+    background: #ea4335;
+  }
+  100% {
+    background: #fbbc05;
   }
 }
 
@@ -184,24 +570,27 @@
   transition: all 0.3s ease;
 
   @include m.breakpoint(md) {
-    width: 100%;
+    width: auto; // Maintain width on mobile
   }
 
   &--primary {
-    background: v.$secondary; /* from your SCSS variables */
+    background: v.$secondary;
     color: #fff;
 
     &:hover {
       box-shadow: 0 4px 12px rgba(v.$secondary, 0.3);
+      transform: translateY(-2px);
     }
   }
 
   &--secondary {
     background: rgba(255, 255, 255, 0.1);
     color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 
     &:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
     }
   }
 
@@ -211,5 +600,67 @@
   &:focus {
     outline: 2px solid rgba(255, 255, 255, 0.4);
     outline-offset: 2px;
+  }
+}
+
+/* Media query adjustments for better mobile experience */
+@media (max-width: 768px) {
+  .hero {
+    &__content {
+      align-items: center;
+      padding-top: 0;
+      padding-bottom: 0;
+      z-index: 5;
+    }
+
+    &__frame {
+      padding: 3rem 2rem; // Slightly reduce padding
+
+      &:before {
+        padding: 1.5px; // Slightly thinner border on mobile
+      }
+    }
+
+    .shape {
+      opacity: 0.2; // Lower opacity on mobile
+    }
+
+    // Adjust shape positions for mobile
+    .shape--1 {
+      top: 10%;
+      left: 5%;
+      width: 120px;
+      height: 90px;
+    }
+
+    .shape--2 {
+      bottom: 15%;
+      left: 8%;
+      width: 100px;
+      height: 80px;
+    }
+
+    .shape--3 {
+      top: 18%;
+      right: 7%;
+      width: 100px;
+      height: 80px;
+    }
+
+    .shape--4 {
+      bottom: 18%;
+      right: 8%;
+      width: 90px;
+      height: 80px;
+    }
+
+    .hero__buttons {
+      flex-direction: column;
+      gap: 0.75rem;
+
+      .btn {
+        width: 100%;
+      }
+    }
   }
 }
