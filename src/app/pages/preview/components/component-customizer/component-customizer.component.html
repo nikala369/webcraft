@@ -1,85 +1,123 @@
-<div class="modal-overlay" (click)="handleOverlayClick($event)">
-  <div class="customizer-modal">
-    <!-- Professional close button (visible on all screens) -->
-    <button class="close-btn" (click)="cancel()" aria-label="Close modal">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 6L6 18M6 6L18 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    
-    <h2>Customize {{ componentData().id }}</h2>
-
-    <!-- Dynamically render form fields based on config -->
-    <ng-container *ngFor="let field of config()">
-      <div class="form-group">
-        <!-- For text and list fields, we associate the label with the input -->
-        <label
-          *ngIf="field.type === 'text' || field.type === 'list'"
-          [attr.for]="field.key"
+<div class="customizer-sidebar-container" [class.visible]="isVisible">
+  <div class="customizer-sidebar">
+    <!-- Header with title and close button -->
+    <div class="sidebar-header">
+      <h2>{{ getComponentTitle() }}</h2>
+      <button
+        class="close-btn"
+        (click)="cancel()"
+        aria-label="Close customizer"
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          {{ field.label }}:
-        </label>
-        <ng-container [ngSwitch]="field.type">
-          <!-- Text Field -->
-          <input
-            *ngSwitchCase="'text'"
-            [id]="field.key"
-            type="text"
-            [value]="componentData()[field.key]"
-            (input)="updateField(field.key, $event)"
+          <path
+            d="M18 6L6 18M6 6L18 18"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           />
+        </svg>
+      </button>
+    </div>
 
-          <!-- Color Field + Display of Label (centered) -->
-          <ng-container *ngSwitchCase="'color'">
-            <div class="custom-color-picker">
-              <!-- Background swatch with centered label -->
-              <div
-                class="color-swatch"
-                [style.background-color]="
-                  componentData()[field.key] || '#ffffff'
-                "
-              >
-                <span class="placeholder-text">
-                  {{ field.label }}
-                </span>
-              </div>
-              <!-- The actual color input on top (transparent) -->
-              <input
-                type="color"
-                [value]="componentData()[field.key]"
-                (input)="updateField(field.key, $event)"
-                class="actual-color-input"
-              />
-            </div>
-          </ng-container>
+    <!-- Preset Templates (Quick Actions) -->
+    <div class="presets-section" *ngIf="hasPresets()">
+      <h3>Quick Templates</h3>
+      <div class="preset-buttons">
+        <button
+          *ngFor="let preset of getPresets()"
+          class="preset-button"
+          (click)="applyPreset(preset.id)"
+        >
+          {{ preset.label }}
+        </button>
+      </div>
+    </div>
 
-          <!-- File Field + Display of Chosen File -->
-          <ng-container *ngSwitchCase="'file'">
-            <div class="file-field-container">
+    <!-- Tabbed Navigation for categories -->
+    <div class="sidebar-tabs">
+      <button
+        *ngFor="let category of getCategories()"
+        class="tab-button"
+        [class.active]="activeCategory === category.id"
+        (click)="setActiveCategory(category.id)"
+      >
+        {{ category.label }}
+      </button>
+    </div>
+
+    <!-- Fields organized by category -->
+    <div class="sidebar-content">
+      <div class="fields-container">
+        <ng-container
+          *ngFor="let field of getFieldsForCategory(); let i = index"
+        >
+          <div class="field-group" [style.--index]="i">
+            <label *ngIf="shouldShowLabel(field)" [for]="field.key">
+              {{ field.label }}
+            </label>
+
+            <ng-container [ngSwitch]="field.type">
+              <!-- Text Field -->
               <input
+                *ngSwitchCase="'text'"
                 [id]="field.key"
-                type="file"
-                (change)="onFileChange(field.key, $event)"
+                type="text"
+                [ngModel]="localData()[field.key]"
+                (ngModelChange)="updateTextField(field.key, $event)"
+                class="text-input"
+                placeholder="{{ field.label }}"
               />
-              <div class="file-info" *ngIf="componentData()[field.key]">
-                <img
-                  class="image-control"
-                  [src]="componentData()[field.key]"
-                  alt="Preview"
+
+              <!-- Color Field -->
+              <div *ngSwitchCase="'color'" class="color-field">
+                <input
+                  type="color"
+                  [id]="field.key"
+                  [ngModel]="localData()[field.key]"
+                  (ngModelChange)="updateColorField(field.key, $event)"
+                  class="color-input"
                 />
+                <div class="color-preview-wrapper">
+                  <div
+                    class="color-preview"
+                    [style.background-color]="
+                      localData()[field.key] || '#ffffff'
+                    "
+                  ></div>
+                  <span class="color-value">{{
+                    localData()[field.key] || "#ffffff"
+                  }}</span>
+                </div>
               </div>
-            </div>
-          </ng-container>
 
-          <!-- Select Field -->
-          <ng-container *ngSwitchCase="'select'">
-            <div class="select-container">
-              <label [attr.for]="field.key">{{ field.label }}:</label>
+              <!-- Add handling for boolean fields in the ngSwitch -->
+              <div *ngSwitchCase="'boolean'" class="boolean-field">
+                <label class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    [id]="field.key"
+                    [ngModel]="localData()[field.key]"
+                    (ngModelChange)="updateBooleanField(field.key, $event)"
+                    class="checkbox-input"
+                  />
+                  <span class="checkbox-text">{{ field.label }}</span>
+                </label>
+              </div>
+
+              <!-- Select Field -->
               <select
+                *ngSwitchCase="'select'"
                 [id]="field.key"
-                class="select-control"
-                [ngModel]="getSelectValue(componentData()[field.key])"
+                [ngModel]="localData()[field.key]"
                 (ngModelChange)="updateSelectField(field.key, $event)"
+                class="select-input"
               >
                 <option
                   *ngFor="let option of field.options"
@@ -88,40 +126,67 @@
                   {{ option.label }}
                 </option>
               </select>
-            </div>
-          </ng-container>
 
-          <!-- List Field (array of strings) using ngModel for two-way binding -->
-          <div *ngSwitchCase="'list'" class="list-field-container">
-            <div
-              class="mobile-li-text"
-              *ngFor="
-                let item of componentData()[field.key];
-                let i = index;
-                trackBy: trackByIndex
-              "
-            >
-              <input
-                [id]="field.key + i"
-                type="text"
-                [ngModel]="item.label || ''"
-                (ngModelChange)="updateListField(field.key, i, $event)"
-              />
-            </div>
+              <!-- File Field -->
+              <div *ngSwitchCase="'file'" class="file-field">
+                <input
+                  type="file"
+                  [id]="field.key"
+                  (change)="handleFileChange($event, field.key)"
+                  accept="image/*"
+                  class="file-input"
+                />
+                <div class="file-preview" *ngIf="localData()[field.key]">
+                  <img [src]="localData()[field.key]" alt="Preview" />
+                </div>
+              </div>
+
+              <!-- List Field -->
+              <div *ngSwitchCase="'list'" class="list-field">
+                <div
+                  *ngFor="
+                    let item of localData()[field.key];
+                    let i = index;
+                    trackBy: trackByIndex
+                  "
+                  class="list-item"
+                >
+                  <input
+                    [id]="field.key + i"
+                    type="text"
+                    [ngModel]="item.label || ''"
+                    (ngModelChange)="updateListField(field.key, i, $event)"
+                  />
+                  <button
+                    class="remove-item"
+                    (click)="removeListItem(field.key, i)"
+                  >
+                    ×
+                  </button>
+                </div>
+                <button class="add-item" (click)="addListItem(field.key)">
+                  + Add Item
+                </button>
+              </div>
+            </ng-container>
           </div>
         </ng-container>
       </div>
-    </ng-container>
+    </div>
 
-    <div class="modal-actions">
+    <!-- Action Buttons -->
+    <div class="sidebar-actions">
       <button
         class="apply-btn"
-        (click)="applyChanges()"
         [disabled]="!isValid()"
+        (click)="applyChanges()"
       >
         Apply Changes
       </button>
       <button class="cancel-btn" (click)="cancel()">Cancel</button>
     </div>
   </div>
+
+  <!-- Backdrop for closing -->
+  <div class="sidebar-backdrop" (click)="handleBackdropClick($event)"></div>
 </div>

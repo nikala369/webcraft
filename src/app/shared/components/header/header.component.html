@@ -1,18 +1,31 @@
-<header class="header" [class.scrolled]="scrolled">
+<header
+  class="header"
+  [class.scrolled]="scrolled"
+  [ngStyle]="{ 'z-index': modalStateService.modalOpen() ? -1 : 1000 }"
+>
   <div class="header__container">
     <!-- LEFT: Logo -->
     <div class="header__left">
-<!--      <a class="header__logo" routerLink="/" aria-label="Home" (click)="closeMenu()">-->
-<!--        <span class="header__logo-text">WebCraft</span>-->
-        <!-- Inline shapes container -->
-<!--        <div class="header__logo-shapes">-->
-<!--          <div class="shape shape&#45;&#45;1"></div>-->
-<!--          <div class="shape shape&#45;&#45;2"></div>-->
-<!--        </div>-->
-<!--      </a>-->
-      <a class="header__logo" routerLink="/" aria-label="Home" (click)="closeMenu()">
-        <img src="assets/header/webcraft75-logo.svg" alt="WebCraft Logo" class="header__logo-icon" />
-<!--        <span class="header__logo-text">WebCraft</span>-->
+      <!--      <a class="header__logo" routerLink="/" aria-label="Home" (click)="closeMenu()">-->
+      <!--        <span class="header__logo-text">WebCraft</span>-->
+      <!-- Inline shapes container -->
+      <!--        <div class="header__logo-shapes">-->
+      <!--          <div class="shape shape&#45;&#45;1"></div>-->
+      <!--          <div class="shape shape&#45;&#45;2"></div>-->
+      <!--        </div>-->
+      <!--      </a>-->
+      <a
+        class="header__logo"
+        routerLink="/"
+        aria-label="Home"
+        (click)="closeMenu()"
+      >
+        <img
+          src="assets/header/webcraft75-logo.svg"
+          alt="WebCraft Logo"
+          class="header__logo-icon"
+        />
+        <!--        <span class="header__logo-text">WebCraft</span>-->
       </a>
     </div>
 
@@ -21,9 +34,13 @@
       <nav class="header__nav" aria-label="Main navigation">
         <ul class="nav__list">
           <li class="nav__item" *ngFor="let link of navLinks">
-            <a class="nav__link" [routerLink]="link.path" routerLinkActive="active">
+            <a
+              class="nav__link"
+              [routerLink]="link.path"
+              routerLinkActive="active"
+            >
               <span class="nav__text">{{ link.label }}</span>
-<!--              <span class="nav__underline"></span>-->
+              <!--              <span class="nav__underline"></span>-->
             </a>
           </li>
         </ul>
@@ -35,14 +52,18 @@
       <!-- Desktop Auth -->
       <div class="header__auth">
         <a class="auth__link auth__link--login" routerLink="/login">Sign In</a>
-        <a class="auth__link auth__link--signup" routerLink="/signup">Sign Up</a>
+        <a class="auth__link auth__link--signup" routerLink="/signup"
+          >Sign Up</a
+        >
       </div>
 
       <!-- Mobile Hamburger -->
-      <button class="header__toggle"
-              (click)="toggleMenu()"
-              [attr.aria-expanded]="isMenuOpen()"
-              aria-label="Toggle navigation">
+      <button
+        class="header__toggle"
+        (click)="toggleMenu()"
+        [attr.aria-expanded]="isMenuOpen()"
+        aria-label="Toggle navigation"
+      >
         <div class="hamburger" [class.active]="isMenuOpen()">
           <span class="hamburger__line"></span>
           <span class="hamburger__line"></span>
@@ -52,14 +73,21 @@
   </div>
 
   <!-- Mobile Navigation / Sidebar -->
-  <nav class="mobile-nav" [class.active]="isMenuOpen()" [class.scrolled]="scrolled" aria-label="Mobile navigation">
+  <nav
+    class="mobile-nav"
+    [class.active]="isMenuOpen()"
+    [class.scrolled]="scrolled"
+    aria-label="Mobile navigation"
+  >
     <div class="mobile-nav__content">
       <ul class="mobile-nav__list">
         <li class="mobile-nav__item" *ngFor="let link of navLinks">
-          <a class="mobile-nav__link"
-             [routerLink]="link.path"
-             (click)="closeMenu()"
-             routerLinkActive="active">
+          <a
+            class="mobile-nav__link"
+            [routerLink]="link.path"
+            (click)="closeMenu()"
+            routerLinkActive="active"
+          >
             {{ link.label }}
           </a>
         </li>
@@ -67,8 +95,18 @@
 
       <!-- Auth (Mobile) -->
       <div class="mobile-nav__auth">
-        <a class="auth__link auth__link--login" routerLink="/login" (click)="closeMenu()">Sign In</a>
-        <a class="auth__link auth__link--signup" routerLink="/signup" (click)="closeMenu()">Get Started</a>
+        <a
+          class="auth__link auth__link--login"
+          routerLink="/login"
+          (click)="closeMenu()"
+          >Sign In</a
+        >
+        <a
+          class="auth__link auth__link--signup"
+          routerLink="/signup"
+          (click)="closeMenu()"
+          >Get Started</a
+        >
       </div>
     </div>
   </nav>

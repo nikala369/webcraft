@@ -5,7 +5,11 @@
     [isMobileView]="isMobileView"
     (onEdit)="handleSectionEdit('hero1')"
   >
-    <section class="hero-section" [ngStyle]="getBackgroundStyle('hero1')" [ngClass]="{ 'hero-section--mobile': isMobileLayout }">
+    <section
+      class="hero-section"
+      [ngStyle]="getBackgroundStyle('hero1')"
+      [ngClass]="{ 'hero-section--mobile': isMobileLayout }"
+    >
       <div class="hero-content-wrapper">
         <div
           class="hero-content"
@@ -86,7 +90,7 @@
   <app-section-hover-wrapper
     [isMobile]="isMobileLayout"
     [isMobileView]="isMobileView"
-    (onEdit)="handleSectionEdit('services')"
+    (onEdit)="handleSectionEdit('hero2')"
   >
     <section
       class="services-section"
@@ -115,7 +119,7 @@
       <div class="services-grid">
         <div
           class="service-item animate fade-in"
-          *ngFor="let i of [0, 1, 2]; let idx = index"
+          *ngFor="let i of getServiceIndexArray(); let idx = index"
           [ngStyle]="getAnimationDelay(idx)"
         >
           <div
@@ -203,6 +207,7 @@
               >
                 <strong
                   >{{ customizations()?.about?.['valueTitle' + i] || 'Value ' + (i+1)
+
 
 
 

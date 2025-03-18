@@ -225,4 +225,15 @@ export class HomeStandardComponent implements OnInit {
       'animation-delay': `${0.1 * index}s`,
     };
   }
+
+  // SECTION !!!
+  // Helper method to get array of indexes based on number of services
+  getServiceIndexArray(): number[] {
+    const numberOfItems = parseInt(
+      this.customizations()?.services?.numberOfItems || '3'
+    );
+    return Array(numberOfItems)
+      .fill(0)
+      .map((_, i) => i);
+  }
 }

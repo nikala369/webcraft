@@ -7,6 +7,7 @@ import {
   computed,
   effect,
   HostListener,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -15,11 +16,6 @@ import {
 } from './customizing-form-config';
 import { FormsModule } from '@angular/forms';
 
-export interface ComponentData {
-  id: string;
-  [key: string]: any;
-}
-
 @Component({
   selector: 'app-component-customizer',
   standalone: true,
@@ -27,158 +23,325 @@ export interface ComponentData {
   templateUrl: './component-customizer.component.html',
   styleUrls: ['./component-customizer.component.scss'],
 })
-export class ComponentCustomizerComponent {
+export class ComponentCustomizerComponent implements OnInit {
   @Input() componentKey!: string;
   @Input() componentPath?: string;
   originalData: any;
+  isVisible = false;
+  activeCategory = 'general';
 
   @Input() set initialData(value: any) {
     if (value) {
-      // Save a deep clone for cancel/revert logic.
+      // Store original for reset functionality
       this.originalData = structuredClone(value);
-      const configFields = CustomizationFormConfig[this.componentKey] || [];
-      // Merge provided data with defaults.
-      const mergedData: ComponentData = { id: this.componentKey, ...value };
 
+      // Get fields configuration
+      const configFields = this.getFieldsConfig();
+
+      // Start with component ID and existing data
+      const mergedData = { id: this.componentKey, ...value };
+
+      // Apply default values for fields that don't have data
       configFields.forEach((field: FieldConfig) => {
         if (
-          mergedData[field.key] === undefined &&
-          field.defaultValue !== undefined
+          field.defaultValue !== undefined &&
+          mergedData[field.key] === undefined
         ) {
-          mergedData[field.key] = structuredClone(field.defaultValue);
+          mergedData[field.key] = field.defaultValue;
         }
       });
 
+      // Set the local data signal
       this.localData.set(mergedData);
     }
   }
 
-  @Output() update = new EventEmitter<ComponentData>();
+  @Output() update = new EventEmitter<any>();
   @Output() close = new EventEmitter<void>();
 
-  // Local state holding the component data.
-  localData = signal<ComponentData>({ id: this.componentKey });
-  config = computed(() => {
-    // If there's a path, use it to get the config
-    if (this.componentPath) {
-      return CustomizationFormConfig[this.componentPath] || [];
-    }
-    // Otherwise use the key
-    return CustomizationFormConfig[this.componentKey] || [];
-  });
-  componentData = computed(() => this.localData());
+  // Component data handling
+  localData = signal<any>({});
 
-  // Listen for ESC key to close modal
-  @HostListener('document:keydown.escape', ['$event'])
-  handleEscapeKey(event: KeyboardEvent) {
-    this.cancel();
+  // Helper to get field config for this component
+  getFieldsConfig(): FieldConfig[] {
+    return CustomizationFormConfig[this.componentKey] || [];
   }
 
-  constructor() {
-    effect(() => {
-      console.log('Local data updated:', this.localData());
+  // Form validation signal
+  isValid = computed(() => {
+    const data = this.localData();
+    const requiredFields = this.getFieldsConfig().filter(
+      (field) => field.required === true
+    );
+
+    return requiredFields.every((field: FieldConfig) => {
+      if (field.type === 'text') {
+        return data[field.key]?.trim?.() !== '';
+      }
+      return data[field.key] !== undefined && data[field.key] !== null;
+    });
+  });
+
+  ngOnInit() {
+    // Show sidebar with animation after component is initialized
+    setTimeout(() => {
+      this.isVisible = true;
+    }, 50);
+  }
+
+  // Get formatted component title for display
+  getComponentTitle(): string {
+    const parts = this.componentKey.split('.');
+    const rawName = parts[parts.length - 1];
+    return (
+      rawName.charAt(0).toUpperCase() +
+      rawName.slice(1).replace(/([A-Z])/g, ' $1')
+    );
+  }
+
+  // Category management
+  getCategories() {
+    // Default categories for all components
+    const categories = [
+      { id: 'general', label: 'General' },
+      { id: 'styling', label: 'Styling' },
+    ];
+
+    // Add content category for components with content fields
+    if (this.hasContentFields()) {
+      categories.splice(1, 0, { id: 'content', label: 'Content' });
+    }
+
+    return categories;
+  }
+
+  hasContentFields(): boolean {
+    const config = this.getFieldsConfig();
+    return config.some(
+      (field) =>
+        field.type === 'text' || field.type === 'file' || field.type === 'list'
+    );
+  }
+
+  setActiveCategory(categoryId: string) {
+    this.activeCategory = categoryId;
+  }
+
+  getFieldsForCategory() {
+    const allFields = this.getFieldsConfig();
+
+    switch (this.activeCategory) {
+      case 'general':
+        // Basic settings, usually text, selects, and non-visual settings
+        return allFields.filter(
+          (field) =>
+            (field.type === 'text' || field.type === 'select') &&
+            !field.key.toLowerCase().includes('color') &&
+            !field.key.toLowerCase().includes('image') &&
+            !field.key.toLowerCase().includes('background') &&
+            !field.key.toLowerCase().includes('icon')
+        );
+
+      case 'content':
+        // Content, usually text fields, lists and media
+        return allFields.filter(
+          (field) =>
+            field.type === 'text' ||
+            field.type === 'file' ||
+            field.type === 'list'
+        );
+
+      case 'styling':
+        // Visual settings, usually colors, images, margins, etc.
+        return allFields.filter(
+          (field) =>
+            field.type === 'color' ||
+            field.key.toLowerCase().includes('color') ||
+            field.key.toLowerCase().includes('background') ||
+            field.key.toLowerCase().includes('image') ||
+            field.key.toLowerCase().includes('style') ||
+            field.key.toLowerCase().includes('size') ||
+            field.key.toLowerCase().includes('height') ||
+            field.key.toLowerCase().includes('width') ||
+            field.key.toLowerCase().includes('padding') ||
+            field.key.toLowerCase().includes('margin')
+        );
+
+      default:
+        return allFields;
+    }
+  }
+
+  // Check if we should show presets for this component
+  hasPresets(): boolean {
+    // Add component types that support presets
+    return ['header', 'services', 'hero1', 'footer'].includes(
+      this.componentKey
+    );
+  }
+
+  getPresets() {
+    if (this.componentKey === 'header') {
+      return [
+        { id: 'light', label: 'Light Theme' },
+        { id: 'dark', label: 'Dark Theme' },
+        { id: 'transparent', label: 'Transparent' },
+        { id: 'gradient', label: 'Gradient' },
+      ];
+    }
+
+    // Add presets for other components as needed
+    return [];
+  }
+
+  applyPreset(presetId: string) {
+    // Apply preset values based on selected template
+    if (this.componentKey === 'header') {
+      if (presetId === 'light') {
+        this.localData.update((data) => ({
+          ...data,
+          backgroundColor: '#ffffff',
+          textColor: '#333333',
+          position: 'fixed',
+        }));
+      } else if (presetId === 'dark') {
+        this.localData.update((data) => ({
+          ...data,
+          backgroundColor: '#222222',
+          textColor: '#ffffff',
+          position: 'fixed',
+        }));
+      } else if (presetId === 'transparent') {
+        this.localData.update((data) => ({
+          ...data,
+          backgroundColor: 'transparent',
+          textColor: '#ffffff',
+          position: 'absolute',
+        }));
+      } else if (presetId === 'gradient') {
+        this.localData.update((data) => ({
+          ...data,
+          backgroundColor: 'linear-gradient(135deg, #2876FF 0%, #1D4ED8 100%)',
+          textColor: '#ffffff',
+          position: 'fixed',
+        }));
+      }
+    }
+
+    // Add similar handling for other components
+  }
+
+  // Helper for displaying field labels
+  shouldShowLabel(field: FieldConfig | any): boolean {
+    return field.type !== 'boolean';
+  }
+
+  // Form field methods
+  updateField(fieldKey: string, event: any) {
+    const value = event.target.value;
+    this.localData.update((current) => {
+      return { ...current, [fieldKey]: value };
     });
   }
 
-  // Handle clicks on the modal overlay
-  handleOverlayClick(event: MouseEvent): void {
-    // Only close if the click was directly on the overlay, not the modal itself
-    if (event.target === event.currentTarget) {
-      this.cancel();
-    }
+  updateTextField(fieldKey: string, value: string): void {
+    this.localData.update((data) => ({ ...data, [fieldKey]: value }));
   }
 
-  updateField(fieldKey: string, event: Event): void {
-    console.log(event, 'event received after update');
-    const input = event.target as HTMLInputElement | HTMLSelectElement;
-    let value: any = input.value;
-
-    // Handle boolean conversion for select fields with true/false values
-    if (value === 'true') {
-      value = true;
-    } else if (value === 'false') {
-      value = false;
-    }
-
-    this.localData.update((current) => ({ ...current, [fieldKey]: value }));
+  updateSelectField(fieldKey: string, value: string): void {
+    this.localData.update((data) => ({ ...data, [fieldKey]: value }));
   }
 
-  updateSelectField(fieldKey: string, value: any): void {
-    // Handle boolean conversion for select fields with true/false values
-    if (value === 'true') {
-      value = true;
-    } else if (value === 'false') {
-      value = false;
-    }
-
-    this.localData.update((current) => ({ ...current, [fieldKey]: value }));
-  }
-
-  // Helper method to convert any value to string for select elements
-  getSelectValue(value: any): string {
-    if (value === true || value === 'true') {
-      return 'true';
-    } else if (value === false || value === 'false') {
-      return 'false';
-    }
-    return value?.toString() || '';
-  }
-
-  onFileChange(fieldKey: string, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.[0]) {
-      const file = input?.files[0];
-      this.handleImageUpload(fieldKey, file);
-    }
-  }
-
-  handleImageUpload(fieldKey: string, file: File): void {
-    const fileURL = URL.createObjectURL(file);
-    this.localData.update((current) => ({ ...current, [fieldKey]: fileURL }));
-  }
-
-  updateListField(fieldKey: string, index: number, newValue: string): void {
+  updateColorField(fieldKey: string, value: string) {
     this.localData.update((current) => {
-      const list = Array.isArray(current[fieldKey])
-        ? [...current[fieldKey]]
-        : [];
+      return { ...current, [fieldKey]: value };
+    });
+  }
+
+  updateListField(fieldKey: string, index: number, newValue: string) {
+    this.localData.update((current) => {
+      const list = current[fieldKey] ? [...current[fieldKey]] : [];
+
       if (typeof list[index] === 'object') {
         list[index] = { ...list[index], label: newValue };
       } else {
         list[index] = newValue;
       }
+
       return { ...current, [fieldKey]: list };
     });
   }
 
-  trackByIndex(index: number, item: any): number {
+  addListItem(fieldKey: string) {
+    this.localData.update((current) => {
+      const list = current[fieldKey] ? [...current[fieldKey]] : [];
+
+      // Check if list items are objects or simple values
+      if (list.length > 0 && typeof list[0] === 'object') {
+        // Generate a unique ID for the new item
+        const maxId = list.reduce(
+          (max, item) => (item.id > max ? item.id : max),
+          0
+        );
+
+        list.push({ id: maxId + 1, label: '', link: '/' });
+      } else {
+        list.push('');
+      }
+
+      return { ...current, [fieldKey]: list };
+    });
+  }
+
+  removeListItem(fieldKey: string, index: number) {
+    this.localData.update((current) => {
+      const list = [...current[fieldKey]];
+      list.splice(index, 1);
+      return { ...current, [fieldKey]: list };
+    });
+  }
+
+  handleFileChange(event: any, fieldKey: string) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.localData.update((current) => {
+          return { ...current, [fieldKey]: e.target?.result };
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  trackByIndex(index: number): number {
     return index;
   }
 
-  isValid = computed(() => {
-    const data = this.localData();
-    return this.config().every((field: FieldConfig) => {
-      if (field.type === 'text') {
-        // If not required, allow empty.
-        if (field.required === false) return true;
-        return !!data[field.key]?.trim();
-      }
-      if (field.type === 'file') {
-        return !!data[field.key];
-      }
-      // Additional validations for other field types can go here.
-      return true;
-    });
-  });
+  // Handle backdrop click
+  handleBackdropClick(event: MouseEvent) {
+    if ((event.target as HTMLElement).classList.contains('sidebar-backdrop')) {
+      this.cancel();
+    }
+  }
 
+  // Actions
   applyChanges(): void {
-    this.update.emit(this.localData());
+    const result = { ...this.localData() };
+    // Remove the ID field we added for internal tracking
+    if (result.id === this.componentKey) {
+      delete result.id;
+    }
+    this.update.emit(result);
     this.close.emit();
   }
 
   cancel(): void {
     if (this.originalData) {
-      this.localData.set(structuredClone(this.originalData));
+      this.localData.set({
+        id: this.componentKey,
+        ...structuredClone(this.originalData),
+      });
     }
     this.close.emit();
   }
