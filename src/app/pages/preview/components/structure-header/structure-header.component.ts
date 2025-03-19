@@ -91,6 +91,12 @@ export class StructureHeaderComponent implements OnInit {
     return this.currentPage === pageName;
   }
 
+  // Get the header position from customizations
+  getHeaderPosition(): string {
+    // Default to relative if not set
+    return this.customizations?.stickyHeader || 'relative';
+  }
+
   getHamburgerIconColor(): string {
     // 1. Get background color from correct path
     const rawColor = this.customizations?.backgroundColor || '#ffffff';

@@ -44,7 +44,7 @@ export class StandardStructureComponent implements OnInit {
 
   // When a section is clicked, we emit an event with the section key.
   @Output() componentSelected = new EventEmitter<{
-    key: keyof Customizations;
+    key: string;
     name: string;
     path?: string;
   }>();
@@ -87,19 +87,17 @@ export class StandardStructureComponent implements OnInit {
   }
 
   handlePageSectionEdit(fullPath: string) {
-    // Parse the path to get the component key
+    // Split the fullPath, e.g. "pages.home.hero1" → ["pages", "home", "hero1"]
     const pathParts = fullPath.split('.');
-
-    // Create a name for the section
+    // Create a friendly name from the parts: "Pages Home Hero1"
     const sectionName = pathParts
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join(' ');
-
-    // Emit the selection to the parent
+    // Emit the event with the full key so that dynamic sidebar can look up "pages.home.hero1"
     this.componentSelected.emit({
-      key: 'pages' as keyof Customizations, // Use 'pages' as the key
+      key: fullPath,
       name: sectionName,
-      path: fullPath, // Pass the full path for nested handling
+      path: fullPath,
     });
   }
 

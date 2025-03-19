@@ -119,7 +119,6 @@ export class HomeStandardComponent implements OnInit {
   }
 
   handleSectionEdit(sectionKey: string) {
-    console.log(`Editing section: ${sectionKey}`);
     this.sectionSelected.emit(`pages.home.${sectionKey}`);
   }
 

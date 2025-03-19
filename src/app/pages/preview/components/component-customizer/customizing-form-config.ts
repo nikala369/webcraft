@@ -1,24 +1,47 @@
 export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
   header: [
+    // {
+    //   key: 'stickyHeader',
+    //   label: 'Header scroll option',
+    //   type: 'select',
+    //   category: 'general',
+    //   defaultValue: 'relative',
+    //   description: 'Controls how the header behaves when scrolling the page',
+    //   options: [
+    //     { value: 'relative', label: 'Standard (Scrolls Away)' },
+    //     { value: 'sticky', label: 'Sticky (Follows Scroll)' },
+    //     { value: 'fixed', label: 'Fixed (Always Visible)' },
+    //   ],
+    // },
+    // Styling settings
     {
       key: 'backgroundColor',
-      label: 'BACKGROUND',
+      label: 'Background Color',
       type: 'color',
+      category: 'styling',
       defaultValue: '#2876FF',
       required: true,
     },
     {
       key: 'textColor',
-      label: 'TEXT COLOR',
+      label: 'Text Color',
       type: 'color',
+      category: 'styling',
       defaultValue: '#ffffff',
       required: true,
     },
-    { key: 'logoUrl', label: 'Logo', type: 'file' },
+    // Content settings
+    {
+      key: 'logoUrl',
+      label: 'Logo',
+      type: 'file',
+      category: 'content',
+    },
     {
       key: 'menuItems',
       label: 'Menu Items',
       type: 'list',
+      category: 'content',
       defaultValue: [
         { id: 1, label: 'Home', link: '/' },
         { id: 2, label: 'About', link: '/about' },
@@ -31,85 +54,131 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       key: 'backgroundColor',
       label: 'Background Color',
       type: 'color',
+      category: 'styling',
       defaultValue: '#1a1a1a',
     },
     {
       key: 'textColor',
       label: 'Text Color',
       type: 'color',
+      category: 'styling',
       defaultValue: '#ffffff',
     },
     {
       key: 'copyrightText',
       label: 'Copyright Text',
       type: 'text',
+      category: 'general',
       defaultValue: '© 2025 MyWebsite',
     },
   ],
   'pages.home.hero1': [
+    // CONTENT category
     {
       key: 'backgroundImage',
-      label: 'Background Image (Recommended: 1920x1080px)',
+      label: 'Background Image',
       type: 'file',
+      category: 'content',
       required: true,
-    },
-    {
-      key: 'layout',
-      label: 'Layout Style',
-      type: 'select',
-      defaultValue: 'center',
-      required: false,
-      options: [
-        { value: 'center', label: 'Centered Content' },
-        { value: 'left', label: 'Left-Aligned Content' },
-        { value: 'right', label: 'Right-Aligned Content' },
-      ],
-    },
-    {
-      key: 'showLogo',
-      label: 'Show Business Logo',
-      type: 'select',
-      defaultValue: true,
-      required: false,
-      options: [
-        { value: 'true', label: 'Yes' },
-        { value: 'false', label: 'No' },
-      ],
+      description:
+        'Recommended size: 1920x1080px. This image will appear behind your hero text.',
     },
     {
       key: 'title',
       label: 'Main Headline',
       type: 'text',
+      category: 'content',
       defaultValue: 'Grow Your Business With Us',
-      required: true,
-    },
-    {
-      key: 'titleColor',
-      label: 'Headline Color',
-      type: 'color',
-      defaultValue: '#ffffff',
-      required: false,
+      description: 'The primary headline that appears in the hero section.',
     },
     {
       key: 'subtitle',
       label: 'Supporting Tagline',
       type: 'text',
+      category: 'content',
       defaultValue: 'Professional solutions tailored to your business needs',
-      required: false,
+      description:
+        'A brief description or tagline that appears below the headline.',
+    },
+    {
+      key: 'primaryButtonText',
+      label: 'Button Text',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Get Started',
+      description:
+        'The text that appears on the primary call-to-action button.',
+    },
+
+    // STYLING category
+    {
+      key: 'titleColor',
+      label: 'Headline Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#ffffff',
+      description: 'The color of the main headline text.',
     },
     {
       key: 'subtitleColor',
       label: 'Tagline Color',
       type: 'color',
+      category: 'styling',
       defaultValue: '#f0f0f0',
-      required: false,
+      description: 'The color of the supporting tagline text.',
+    },
+    {
+      key: 'primaryButtonColor',
+      label: 'Button Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#ff5722',
+      description: 'The background color of the primary button.',
+    },
+    {
+      key: 'primaryButtonTextColor',
+      label: 'Button Text Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#ffffff',
+      description: 'The color of the text on the primary button.',
+    },
+
+    // GENERAL category
+    {
+      key: 'layout',
+      label: 'Content Alignment',
+      type: 'select',
+      category: 'general',
+      defaultValue: 'center',
+      description:
+        'Controls how the content is aligned within the hero section.',
+      options: [
+        { value: 'center', label: 'Centered' },
+        { value: 'left', label: 'Left-Aligned' },
+        { value: 'right', label: 'Right-Aligned' },
+      ],
+    },
+    {
+      key: 'showLogo',
+      label: 'Show Logo',
+      type: 'select',
+      category: 'general',
+      defaultValue: true,
+      description: 'Show or hide the business logo in the hero section.',
+      options: [
+        { value: true, label: 'Yes' },
+        { value: false, label: 'No' },
+      ],
     },
     {
       key: 'textShadow',
-      label: 'Text Shadow Effect',
+      label: 'Text Shadow',
       type: 'select',
+      category: 'general',
       defaultValue: 'medium',
-      required: false,
+      description:
+        'Adds a shadow behind text to make it more readable over background images.',
       options: [
         { value: 'none', label: 'None' },
         { value: 'light', label: 'Light' },
@@ -119,64 +188,29 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
     },
     {
       key: 'showPrimaryButton',
-      label: 'Show Primary Button',
+      label: 'Show Button',
       type: 'select',
+      category: 'general',
       defaultValue: true,
-      required: false,
+      description: 'Show or hide the call-to-action button.',
       options: [
         { value: true, label: 'Yes' },
         { value: false, label: 'No' },
       ],
     },
     {
-      key: 'primaryButtonText',
-      label: 'Primary Button Text',
-      type: 'text',
-      defaultValue: 'Get Started',
-      required: false,
-    },
-    {
       key: 'primaryButtonLink',
-      label: 'Primary Button Target',
+      label: 'Button Target',
       type: 'select',
+      category: 'general',
       defaultValue: '/contact',
-      required: false,
+      description:
+        'The page that users will navigate to when clicking the button.',
       options: [
         { value: '/about', label: 'About Us Page' },
         { value: '/services', label: 'Services Page' },
         { value: '/contact', label: 'Contact Page' },
       ],
-    },
-    {
-      key: 'primaryButtonColor',
-      label: 'Primary Button Color',
-      type: 'color',
-      defaultValue: '#ff5722',
-      required: false,
-    },
-    {
-      key: 'primaryButtonTextColor',
-      label: 'Primary Button Text Color',
-      type: 'color',
-      defaultValue: '#ffffff',
-      required: false,
-    },
-  ],
-  'pages.home.hero2': [
-    { key: 'backgroundImage', label: 'Background Image', type: 'file' },
-    {
-      key: 'title',
-      label: 'Title',
-      type: 'text',
-      defaultValue: 'Hero 2 Title',
-      required: false,
-    },
-    {
-      key: 'subtitle',
-      label: 'Subtitle',
-      type: 'text',
-      defaultValue: 'Hero 2 Subtitle',
-      required: false,
     },
   ],
 };
@@ -185,7 +219,9 @@ export interface FieldConfig {
   key: string;
   label: string;
   type: 'text' | 'color' | 'file' | 'list' | 'select';
+  category: string;
   defaultValue?: any;
   required?: boolean;
+  description?: string;
   options?: Array<{ value: any; label: string }>;
 }

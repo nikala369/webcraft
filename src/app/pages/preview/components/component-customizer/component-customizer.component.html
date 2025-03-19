@@ -59,9 +59,19 @@
           *ngFor="let field of getFieldsForCategory(); let i = index"
         >
           <div class="field-group" [style.--index]="i">
-            <label *ngIf="shouldShowLabel(field)" [for]="field.key">
-              {{ field.label }}
-            </label>
+            <div class="field-label-row">
+              <label *ngIf="shouldShowLabel(field)" [for]="field.key">
+                {{ field.label }}
+              </label>
+
+              <!-- Tooltip if description exists -->
+              <div class="tooltip-container" *ngIf="field.description">
+                <span class="tooltip-icon">?</span>
+                <div class="tooltip-content">
+                  {{ field.description }}
+                </div>
+              </div>
+            </div>
 
             <ng-container [ngSwitch]="field.type">
               <!-- Text Field -->
@@ -73,6 +83,7 @@
                 (ngModelChange)="updateTextField(field.key, $event)"
                 class="text-input"
                 placeholder="{{ field.label }}"
+                [name]="field.key"
               />
 
               <!-- Color Field -->
@@ -83,6 +94,7 @@
                   [ngModel]="localData()[field.key]"
                   (ngModelChange)="updateColorField(field.key, $event)"
                   class="color-input"
+                  [name]="field.key + '_picker'"
                 />
                 <div class="color-preview-wrapper">
                   <div
@@ -106,6 +118,7 @@
                     [ngModel]="localData()[field.key]"
                     (ngModelChange)="updateBooleanField(field.key, $event)"
                     class="checkbox-input"
+                    [name]="field.key"
                   />
                   <span class="checkbox-text">{{ field.label }}</span>
                 </label>
@@ -118,6 +131,7 @@
                 [ngModel]="localData()[field.key]"
                 (ngModelChange)="updateSelectField(field.key, $event)"
                 class="select-input"
+                [name]="field.key"
               >
                 <option
                   *ngFor="let option of field.options"
@@ -135,6 +149,7 @@
                   (change)="handleFileChange($event, field.key)"
                   accept="image/*"
                   class="file-input"
+                  [name]="'file_' + field.key"
                 />
                 <div class="file-preview" *ngIf="localData()[field.key]">
                   <img [src]="localData()[field.key]" alt="Preview" />
@@ -156,6 +171,7 @@
                     type="text"
                     [ngModel]="item.label || ''"
                     (ngModelChange)="updateListField(field.key, i, $event)"
+                    [name]="field.key + '_' + i"
                   />
                   <button
                     class="remove-item"

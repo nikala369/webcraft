@@ -1,9 +1,15 @@
 <header
   class="structure-header"
-  [ngClass]="{ 'structure-header--mobile': isMobileLayout }"
+  [ngClass]="{
+    'structure-header--mobile': isMobileLayout,
+    'structure-header--sticky': getHeaderPosition() === 'sticky',
+    'structure-header--fixed': getHeaderPosition() === 'fixed',
+    'structure-header--relative': getHeaderPosition() === 'relative'
+  }"
   [ngStyle]="{
     'background-color': customizations?.backgroundColor,
-    'font-family': fontFamily
+    'font-family': fontFamily,
+    width: getHeaderPosition() !== 'relative' ? '100%' : 'auto'
   }"
   role="banner"
   aria-label="Main website header"
@@ -12,7 +18,8 @@
   <div class="structure-header__logo">
     <img
       [src]="
-        customizations?.logoUrl || '/assets/standard-header/default-logo-white.svg'
+        customizations?.logoUrl ||
+        '/assets/standard-header/default-logo-white.svg'
       "
       alt="Logo"
       class="logo"

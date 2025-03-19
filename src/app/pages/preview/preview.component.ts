@@ -357,11 +357,16 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
   // Handler for selection coming from the child structure component
   handleComponentSelection(selected: {
-    key: keyof Customizations;
+    key: string;
     name: string;
     path?: string;
   }): void {
-    this.selectedComponent.set(selected);
+    // We know that the key being emitted should be one of the keys in Customizations,
+    this.selectedComponent.set({
+      key: selected.key as keyof Customizations,
+      name: selected.name,
+      path: selected.path,
+    });
   }
 
   // Handler for updates coming from the modal (using selectedCustomization)
@@ -404,17 +409,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Handler for updates coming directly from the child structure
-  handleComponentUpdateFromChild(
-    key: keyof Customizations,
-    update: Partial<Customizations[keyof Customizations]>
-  ): void {
-    this.customizations.update((current) => ({
-      ...current,
-      [key]: { ...current[key], ...update },
-    }));
-  }
-
   // Update the handleFontUpdate method
   handleFontUpdate(font: FontOption): void {
     // Store the complete FontOption object instead of just the string
@@ -429,11 +423,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
         fallback: font.fallback,
       },
     }));
-  }
-
-  // Keep the getFontFamily method for other uses
-  getFontFamily(font: FontOption): string {
-    return `${font.family}, ${font.fallback}`;
   }
 
   // Save all customizations (e.g. send to backend)

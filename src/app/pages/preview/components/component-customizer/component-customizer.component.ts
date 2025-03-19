@@ -86,6 +86,13 @@ export class ComponentCustomizerComponent implements OnInit {
     // Show sidebar with animation after component is initialized
     setTimeout(() => {
       this.isVisible = true;
+
+      // Debugging statements
+      console.log('Component Customizer Initialized');
+      console.log('Component Key:', this.componentKey);
+      console.log('Fields Config Available:', this.getFieldsConfig());
+      console.log('Fields for Category:', this.getFieldsForCategory());
+      console.log('Initial Data:', this.localData());
     }, 50);
   }
 
@@ -101,15 +108,48 @@ export class ComponentCustomizerComponent implements OnInit {
 
   // Category management
   getCategories() {
-    // Default categories for all components
-    const categories = [
-      { id: 'general', label: 'General' },
-      { id: 'styling', label: 'Styling' },
-    ];
+    // Get all available fields
+    const allFields = this.getFieldsConfig();
 
-    // Add content category for components with content fields
-    if (this.hasContentFields()) {
-      categories.splice(1, 0, { id: 'content', label: 'Content' });
+    // Check which categories have fields
+    const hasGeneralFields = allFields.some(
+      (field) => field.category === 'general'
+    );
+    const hasContentFields = allFields.some(
+      (field) => field.category === 'content'
+    );
+    const hasStylingFields = allFields.some(
+      (field) => field.category === 'styling'
+    );
+
+    // Only add categories that have fields
+    const categories: any = [];
+
+    if (hasGeneralFields) {
+      categories.push({ id: 'general', label: 'General' });
+    }
+
+    if (hasContentFields) {
+      categories.push({ id: 'content', label: 'Content' });
+    }
+
+    if (hasStylingFields) {
+      categories.push({ id: 'styling', label: 'Styling' });
+    }
+
+    // After constructing categories array, if empty, set a default
+    if (categories.length === 0) {
+      categories.push({ id: 'general', label: 'General' });
+    }
+
+    // Ensure active category is valid
+    if (
+      categories.length > 0 &&
+      !categories.some((cat: any) => cat.id === this.activeCategory)
+    ) {
+      setTimeout(() => {
+        this.activeCategory = categories[0].id;
+      });
     }
 
     return categories;
@@ -130,46 +170,8 @@ export class ComponentCustomizerComponent implements OnInit {
   getFieldsForCategory() {
     const allFields = this.getFieldsConfig();
 
-    switch (this.activeCategory) {
-      case 'general':
-        // Basic settings, usually text, selects, and non-visual settings
-        return allFields.filter(
-          (field) =>
-            (field.type === 'text' || field.type === 'select') &&
-            !field.key.toLowerCase().includes('color') &&
-            !field.key.toLowerCase().includes('image') &&
-            !field.key.toLowerCase().includes('background') &&
-            !field.key.toLowerCase().includes('icon')
-        );
-
-      case 'content':
-        // Content, usually text fields, lists and media
-        return allFields.filter(
-          (field) =>
-            field.type === 'text' ||
-            field.type === 'file' ||
-            field.type === 'list'
-        );
-
-      case 'styling':
-        // Visual settings, usually colors, images, margins, etc.
-        return allFields.filter(
-          (field) =>
-            field.type === 'color' ||
-            field.key.toLowerCase().includes('color') ||
-            field.key.toLowerCase().includes('background') ||
-            field.key.toLowerCase().includes('image') ||
-            field.key.toLowerCase().includes('style') ||
-            field.key.toLowerCase().includes('size') ||
-            field.key.toLowerCase().includes('height') ||
-            field.key.toLowerCase().includes('width') ||
-            field.key.toLowerCase().includes('padding') ||
-            field.key.toLowerCase().includes('margin')
-        );
-
-      default:
-        return allFields;
-    }
+    // Use the explicit category field
+    return allFields.filter((field) => field.category === this.activeCategory);
   }
 
   // Check if we should show presets for this component
@@ -236,6 +238,10 @@ export class ComponentCustomizerComponent implements OnInit {
     return field.type !== 'boolean';
   }
 
+  updateBooleanField(fieldKey: string, value: boolean): void {
+    this.localData.update((data) => ({ ...data, [fieldKey]: value }));
+  }
+
   // Form field methods
   updateField(fieldKey: string, event: any) {
     const value = event.target.value;
@@ -248,8 +254,27 @@ export class ComponentCustomizerComponent implements OnInit {
     this.localData.update((data) => ({ ...data, [fieldKey]: value }));
   }
 
-  updateSelectField(fieldKey: string, value: string): void {
-    this.localData.update((data) => ({ ...data, [fieldKey]: value }));
+  updateSelectField(fieldKey: string, value: string | boolean): void {
+    // Find field config to determine expected type
+    const field = this.getFieldsConfig().find((f) => f.key === fieldKey);
+
+    let typedValue: any = value;
+
+    // Convert string "true"/"false" to actual boolean if necessary
+    if (field?.options?.some((opt) => typeof opt.value === 'boolean')) {
+      if (value === 'true') typedValue = true;
+      if (value === 'false') typedValue = false;
+    }
+
+    // Handle numeric values
+    if (
+      field?.options?.some((opt) => typeof opt.value === 'number') &&
+      !isNaN(Number(value))
+    ) {
+      typedValue = Number(value);
+    }
+
+    this.localData.update((data) => ({ ...data, [fieldKey]: typedValue }));
   }
 
   updateColorField(fieldKey: string, value: string) {
@@ -328,6 +353,8 @@ export class ComponentCustomizerComponent implements OnInit {
   // Actions
   applyChanges(): void {
     const result = { ...this.localData() };
+    console.log(result, 'result data after update sidebar');
+
     // Remove the ID field we added for internal tracking
     if (result.id === this.componentKey) {
       delete result.id;
