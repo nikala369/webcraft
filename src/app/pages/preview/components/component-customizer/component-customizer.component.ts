@@ -359,17 +359,35 @@ export class ComponentCustomizerComponent implements OnInit {
     if (result.id === this.componentKey) {
       delete result.id;
     }
+
+    // Start closing animation
+    this.startClosingAnimation();
+
+    // Emit update event with the result
     this.update.emit(result);
-    this.close.emit();
   }
 
   cancel(): void {
+    // Start the closing animation
+    this.startClosingAnimation();
+
+    // Reset to original data
     if (this.originalData) {
       this.localData.set({
         id: this.componentKey,
         ...structuredClone(this.originalData),
       });
     }
-    this.close.emit();
+  }
+
+  startClosingAnimation(): void {
+    // Add closing class to trigger the exit animation
+    const container = document.querySelector('.customizer-sidebar-container');
+    container?.classList.add('closing');
+    container?.classList.remove('visible');
+
+    setTimeout(() => {
+      this.close.emit();
+    }, 400);
   }
 }

@@ -31,10 +31,25 @@ $transition-slow: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 
     .customizer-sidebar {
       transform: translateY(0);
+      opacity: 1;
     }
 
     .sidebar-backdrop {
       opacity: 1;
+    }
+  }
+
+  // Add closing animation class
+  &.closing {
+    pointer-events: all;
+
+    .customizer-sidebar {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+
+    .sidebar-backdrop {
+      opacity: 0;
     }
   }
 }
@@ -63,12 +78,15 @@ $transition-slow: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 10px 30px $shadow-color;
   border-bottom-left-radius: 15px;
   border-bottom-right-radius: 15px;
-  transform: translateY(-100%);
-  transition: $transition-slow;
   overflow: hidden;
+
   display: flex;
   flex-direction: column;
   z-index: 1001;
+
+  transform: translateY(-100%);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+  opacity: 0;
 
   // Header section
   .sidebar-header {
@@ -197,23 +215,25 @@ $transition-slow: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   .sidebar-content {
     flex: 1;
     overflow-y: auto;
+    height: calc(100% - 170px);
     padding: 20px 25px 10px;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    scroll-behavior: smooth;
 
     // Smooth scrollbar
     &::-webkit-scrollbar {
-      width: 8px;
+      width: 6px;
     }
 
     &::-webkit-scrollbar-track {
       background: rgba(0, 0, 0, 0.1);
-      border-radius: 4px;
+      border-radius: 3px;
     }
 
     &::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
+      border-radius: 3px;
 
       &:hover {
         background: rgba(255, 255, 255, 0.2);
@@ -449,12 +469,38 @@ $transition-slow: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
             border-radius: 8px;
             margin-top: 10px;
+            margin-bottom: 15px;
             border: 1px solid $input-border;
+            background-color: rgba(0, 0, 0, 0.15);
+
+            // Add checkerboard pattern for transparency visualization
+            background-image: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.05) 25%,
+                transparent 25%
+              ),
+              linear-gradient(
+                -45deg,
+                rgba(255, 255, 255, 0.05) 25%,
+                transparent 25%
+              ),
+              linear-gradient(
+                45deg,
+                transparent 75%,
+                rgba(255, 255, 255, 0.05) 75%
+              ),
+              linear-gradient(
+                -45deg,
+                transparent 75%,
+                rgba(255, 255, 255, 0.05) 75%
+              );
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0;
 
             img {
               width: 100%;
               height: 100%;
-              object-fit: contain;
+              object-fit: contain; // Use 'contain' for proper image display
             }
           }
         }
@@ -521,11 +567,16 @@ $transition-slow: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 
   // Action buttons
   .sidebar-actions {
-    display: flex;
-    justify-content: space-between;
-    padding: 18px 25px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px 25px;
     background-color: $darker-bg;
     border-top: 1px solid $border-color;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
 
     button {
       flex: 1;
