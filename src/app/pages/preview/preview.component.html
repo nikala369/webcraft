@@ -21,11 +21,13 @@
 
   <!-- Preview Header (fixed in fullscreen) -->
   <div
+    *ngIf="isFullscreen()"
     class="preview-header"
     [ngClass]="{ 'fullscreen-mode-border-remove': isFullscreen() }"
   >
     <!-- Theme Selector -->
     <app-theme-switcher
+      *ngIf="!this.isViewOnlyStateService.isOnlyViewMode()"
       class="preview-header__left"
       (themeChange)="loadTheme($event)"
       [defaultThemeId]="defaultThemeId()"
@@ -206,6 +208,7 @@
 
     <!-- Font Selector -->
     <app-font-picker
+      *ngIf="!this.isViewOnlyStateService.isOnlyViewMode()"
       class="preview-header__right"
       (fontChange)="handleFontUpdate($event)"
     >
@@ -213,7 +216,28 @@
   </div>
 
   <!-- Main Preview Area (fullscreen when in fullscreen mode) -->
-  <div class="preview-wrapper" [ngClass]="viewMode()">
+  <div
+    class="preview-wrapper"
+    [ngClass]="[viewMode(), this.isViewOnlyStateService.isOnlyViewMode() ? 'view-only-mode' : '']"
+  >
+    <!-- Overlays: Shown in non-fullscreen mode -->
+    <div class="preview-hover-overlay" *ngIf="!isFullscreen()">
+      <ng-container *ngIf="!hasStartedBuilding()">
+        <button class="start-fullscreen-btn" (click)="startBuilding()">
+          <!-- Icon and "Start Building" text -->
+          Start Building
+        </button>
+      </ng-container>
+      <ng-container *ngIf="hasStartedBuilding()">
+        <button class="continue-editing-btn" (click)="editBuilding()">
+          Continue Editing
+        </button>
+        <button class="view-mode-btn" (click)="openViewOnly()">
+          View Mode
+        </button>
+      </ng-container>
+    </div>
+
     <ng-container *ngIf="currentPlan() === 'standard'">
       <app-standard-structure
         [isMobileLayout]="viewMode() === 'view-mobile' || isMobileView()"
@@ -232,7 +256,7 @@
   </div>
 
   <!-- Customization Modal (for updates via modal) -->
-  <div class="modal-overlay" *ngIf="selectedCustomization()">
+  <div class="modal-overlay" *ngIf="selectedCustomization() && !this.isViewOnlyStateService.isOnlyViewMode()">
     <app-component-customizer
       *ngIf="selectedComponent()"
       [componentKey]="selectedComponent()!.key"
@@ -246,6 +270,7 @@
 
   <!-- Save and Reset Actions (fixed at bottom in fullscreen) -->
   <div
+    *ngIf="isFullscreen() && !this.isViewOnlyStateService.isOnlyViewMode()"
     class="preview-footer"
     [ngClass]="{ 'fullscreen-mode-border-remove': isFullscreen() }"
   >

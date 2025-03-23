@@ -189,10 +189,10 @@ export class HomeStandardComponent implements OnInit {
 
     // Enhanced gradient overlay for better text readability
     return {
-      'background-image': `linear-gradient(to bottom, 
-                        ${overlay} 0%, 
+      'background-image': `linear-gradient(to bottom,
+                        ${overlay} 0%,
                         rgba(0,0,0,${overlayOpacity - 0.1}) 50%,
-                        rgba(0,0,0,${overlayOpacity + 0.1}) 100%), 
+                        rgba(0,0,0,${overlayOpacity + 0.1}) 100%),
                        url(${imageUrl})`,
       'background-size': 'cover',
       'background-position': sectionData?.backgroundPosition || 'center',

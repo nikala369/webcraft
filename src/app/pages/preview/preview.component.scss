@@ -18,9 +18,9 @@
 
 .view-desktop {
   width: 100%;
-  height: 550px;
+  height: 600px;
   max-height: 900px;
-  min-height: 550px;
+  min-height: 600px;
 }
 
 //-------
@@ -91,8 +91,6 @@
       text-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
     }
   }
-
-  // ... existing code ...
 
   .preview-title {
     /* Desktop Settings */
@@ -248,15 +246,101 @@
 
   // Main Preview Area
   .preview-wrapper {
+    position: relative;
     padding: 0;
     //background: rgba(255, 255, 255, 0.03);
     background: #ffffff;
     border-radius: 0;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-    overflow-y: auto;
     //transition: box-shadow 0.4s ease-in-out;
     transition: width 0.5s ease-in-out, height 0.5s ease-in-out;
     margin: 0 auto;
+    overflow: hidden;
+
+    // Style the hover overlay
+    .preview-hover-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0);
+      transition: background 0.3s ease;
+      z-index: 50;
+      pointer-events: all;
+
+      // Show it on hover
+      &:hover {
+        background: rgba(0, 0, 0, 0.6);
+      }
+
+      // Start Building button
+      .start-fullscreen-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #2876ff;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+
+        &:hover {
+          background: #1a68e0;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+      }
+
+      // Continue Editing button
+      .continue-editing-btn {
+        margin-right: 10px;
+        background: #2876ff;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+
+        &:hover {
+          background: #1a68e0;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+      }
+
+      // View Mode button
+      .view-mode-btn {
+        background: rgba(62, 62, 62, 0.9);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        padding: 12px 20px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.85);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+        }
+      }
+    }
   }
 
   // Footer Actions
@@ -346,7 +430,7 @@
 
   .preview-wrapper {
     position: fixed;
-    top: 72.5px; /* Height of the header */
+    top: 0; /* Height of the header */
     left: 0;
     width: 100% !important; /* Override any view-mode width settings */
     height: calc(
@@ -355,13 +439,23 @@
     max-height: none;
     min-height: 0;
     margin: 0;
-    overflow-y: auto;
+    overflow-y: auto !important;
     border-radius: 0;
 
     &.view-mobile {
+      position: fixed !important; /* Ensure position is enforced */
       width: 390px !important;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 50% !important;
+      top: 72.5px !important;
+      transform: translateX(-50%) !important;
+      right: auto !important; /* Reset any right property */
+      margin-left: 0 !important; /* Reset any margins */
+      margin-right: 0 !important;
+    }
+
+    &.view-only-mode {
+      top: 0; /* Keep room for the header in view-only mode */
+      height: calc(100vh - 72.5px) !important; /* Only subtract header height */
     }
   }
 

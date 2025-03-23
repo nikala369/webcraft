@@ -1,5 +1,5 @@
 <div
-  class="hover-wrapper"
+  [ngClass]="!this.isViewOnlyStateService.isOnlyViewMode() ? 'hover-wrapper' : ''"
   [class.view-mobile]="isMobileView === 'view-mobile'"
   (mouseenter)="isHovered = true"
   (mouseleave)="isHovered = false"
@@ -8,6 +8,7 @@
 
   <!-- Improved Edit Button -->
   <button
+    *ngIf="!this.isViewOnlyStateService.isOnlyViewMode()"
     class="edit-button"
     [class.visible]="isHovered && !isMobile"
     (click)="onEdit.emit(); $event.stopPropagation()"

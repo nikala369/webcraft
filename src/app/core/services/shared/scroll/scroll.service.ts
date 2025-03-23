@@ -7,9 +7,14 @@ import { filter } from 'rxjs/operators';
 })
 export class ScrollService {
   modalOpen = signal(false);
+  isOnlyViewMode = signal(false);
 
   setModalOpen(isOpen: boolean) {
     this.modalOpen.set(isOpen);
+  }
+
+  setIsOnlyViewMode(isViewMode: boolean) {
+    this.isOnlyViewMode.set(isViewMode);
   }
 
   constructor(private router: Router) {

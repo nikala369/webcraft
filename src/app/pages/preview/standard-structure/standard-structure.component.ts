@@ -5,7 +5,7 @@ import {
   EventEmitter,
   OnInit,
   computed,
-  signal,
+  signal, inject,
 } from '@angular/core';
 import { StructureHeaderComponent } from '../components/structure-header/structure-header.component';
 import { StructureFooterComponent } from '../components/structure-footer/structure-footer.component';
@@ -17,6 +17,7 @@ import { HomeStandardComponent } from './home-standard/home-standard.component';
 import { AboutStandardComponent } from './about-standard/about-standard.component';
 import { ContactStandardComponent } from './contact-standard/contact-standard.component';
 import { FontOption } from '../components/font-selector/font-selector.component';
+import {ScrollService} from "../../../core/services/shared/scroll/scroll.service";
 
 @Component({
   selector: 'app-standard-structure',
@@ -38,6 +39,7 @@ export class StandardStructureComponent implements OnInit {
   @Input() customizations!: () => Customizations;
   @Input() isMobileLayout = false;
   @Input() isMobileView: any;
+  @Input() isViewOnly: any;
   @Input() selectedFont: FontOption | null = null;
   @Input() currentPage: string = 'home';
   @Input() currentPlan: string = 'standard';
@@ -77,6 +79,8 @@ export class StandardStructureComponent implements OnInit {
   }
 
   handleComponentSelection(componentKey: keyof Customizations): void {
+    if (this.isViewOnly) return;
+
     // Create a simple object with a key and name.
     const selectedData = {
       key: componentKey,

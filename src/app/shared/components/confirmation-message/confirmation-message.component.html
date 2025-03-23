@@ -1,0 +1,14 @@
+<div class="confirmation-container">
+  <div
+    class="confirmation-message"
+    *ngFor="let conf of confirmations()"
+    [ngClass]="conf.type"
+  >
+    <!-- Optionally add an icon based on conf.type -->
+    <span class="message-text">{{ conf.message }}</span>
+    <!-- Optional manual close button -->
+    <button class="close-btn" (click)="remove(conf.id)" aria-label="Close">
+      &times;
+    </button>
+  </div>
+</div>

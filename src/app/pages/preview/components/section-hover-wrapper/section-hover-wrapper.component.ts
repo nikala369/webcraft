@@ -2,12 +2,13 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
-  EventEmitter,
+  EventEmitter, inject,
   Input,
   Output,
   Renderer2,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {ScrollService} from "../../../../core/services/shared/scroll/scroll.service";
 
 @Component({
   selector: 'app-section-hover-wrapper',
@@ -21,6 +22,9 @@ export class SectionHoverWrapperComponent {
   @Input() isMobileView: any;
   @Input() backgroundColor: any = '';
   @Output() onEdit = new EventEmitter<void>();
+
+  isViewOnlyStateService = inject(ScrollService);
+
   isHovered = false;
 
   constructor(private el: ElementRef, private renderer: Renderer2) {}

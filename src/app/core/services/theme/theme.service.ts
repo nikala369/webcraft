@@ -96,7 +96,7 @@ export class ThemeService {
             fallback: 'sans-serif',
           },
           header: {
-            backgroundColor: '#313d7a',
+            backgroundColor: '#161b33',
             textColor: '#f5f5f5',
             logoUrl: '',
             menuItems: [
