@@ -274,7 +274,7 @@
 
       // Show it on hover
       &:hover {
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.4);
       }
 
       // Start Building button
@@ -323,9 +323,9 @@
 
       // View Mode button
       .view-mode-btn {
-        background: rgba(62, 62, 62, 0.9);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.8);
+        background: rgba(94, 94, 94, 0.7);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
         padding: 12px 20px;
         font-size: 15px;
         font-weight: 600;
@@ -335,7 +335,7 @@
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 
         &:hover {
-          background: rgba(255, 255, 255, 0.85);
+          background: rgba(255, 255, 255, 0.15);
           transform: translateY(-2px);
           box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
         }
@@ -381,7 +381,8 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
 
         &:hover {
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.15);
+          transform: translateY(-2px);
         }
       }
     }
