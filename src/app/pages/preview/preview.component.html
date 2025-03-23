@@ -3,21 +3,25 @@
   [ngClass]="{ 'fullscreen-mode': isFullscreen() }"
 >
   <!-- Main Introductory Text (hidden in fullscreen) -->
-  <div class="preview-intro">
-    <h1 class="preview-main-title">Build Your Perfect Website</h1>
+  <div class="preview-intro" *ngIf="!isFullscreen()">
+    <h1 class="preview-main-title">Customize Your Website</h1>
+
     <p class="preview-main-subtitle">
-      Explore different themes, choose fonts, and customize your design to
-      perfection in a few minutes!
+      Your {{ currentPlan() }} plan gives you access to powerful customization
+      tools. Make it uniquely yours in just a few minutes!
     </p>
+
+    <div class="plan-indicator" style="margin-top: 1.5rem; user-select: none">
+      <app-plan-badge [plan]="currentPlan()"></app-plan-badge>
+    </div>
   </div>
 
-  <!-- Plan Title (hidden in fullscreen if needed) -->
-  <h2
-    class="preview-title"
-    [ngClass]="{ 'premium-plan': currentPlan() === 'premium' }"
-  >
-    <span>{{ currentPlan() | uppercase }}</span> PLAN
-  </h2>
+  <!-- Progress Steps (hidden in fullscreen) -->
+  <app-build-steps
+    *ngIf="!isFullscreen()"
+    [currentStep]="currentStep()"
+    [steps]="['Select Plan', 'Customize Design', 'Publish Website']"
+  ></app-build-steps>
 
   <!-- Preview Header (fixed in fullscreen) -->
   <div
@@ -218,21 +222,59 @@
   <!-- Main Preview Area (fullscreen when in fullscreen mode) -->
   <div
     class="preview-wrapper"
-    [ngClass]="[viewMode(), this.isViewOnlyStateService.isOnlyViewMode() ? 'view-only-mode' : '']"
+    [ngClass]="[
+      viewMode(),
+      this.isViewOnlyStateService.isOnlyViewMode() ? 'view-only-mode' : ''
+    ]"
   >
     <!-- Overlays: Shown in non-fullscreen mode -->
     <div class="preview-hover-overlay" *ngIf="!isFullscreen()">
       <ng-container *ngIf="!hasStartedBuilding()">
         <button class="start-fullscreen-btn" (click)="startBuilding()">
-          <!-- Icon and "Start Building" text -->
-          Start Building
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+              fill="currentColor"
+            />
+          </svg>
+          Start Customizing
         </button>
       </ng-container>
       <ng-container *ngIf="hasStartedBuilding()">
         <button class="continue-editing-btn" (click)="editBuilding()">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25ZM20.71 7.04C21.1 6.65 21.1 6.02 20.71 5.63L18.37 3.29C17.98 2.9 17.35 2.9 16.96 3.29L15.13 5.12L18.88 8.87L20.71 7.04Z"
+              fill="currentColor"
+            />
+          </svg>
           Continue Editing
         </button>
         <button class="view-mode-btn" (click)="openViewOnly()">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12C7 9.24 9.24 7 12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12C15 10.34 13.66 9 12 9Z"
+              fill="currentColor"
+            />
+          </svg>
           View Mode
         </button>
       </ng-container>
@@ -256,7 +298,12 @@
   </div>
 
   <!-- Customization Modal (for updates via modal) -->
-  <div class="modal-overlay" *ngIf="selectedCustomization() && !this.isViewOnlyStateService.isOnlyViewMode()">
+  <div
+    class="modal-overlay"
+    *ngIf="
+      selectedCustomization() && !this.isViewOnlyStateService.isOnlyViewMode()
+    "
+  >
     <app-component-customizer
       *ngIf="selectedComponent()"
       [componentKey]="selectedComponent()!.key"
@@ -275,10 +322,50 @@
     [ngClass]="{ 'fullscreen-mode-border-remove': isFullscreen() }"
   >
     <button class="btn btn--primary" (click)="saveAllChanges()">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M17 3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V7L17 3ZM19 19H5V5H16.17L19 7.83V19ZM12 12C10.34 12 9 13.34 9 15C9 16.66 10.34 18 12 18C13.66 18 15 16.66 15 15C15 13.34 13.66 12 12 12ZM7 7H15V9H7V7Z"
+          fill="currentColor"
+        />
+      </svg>
       Save Changes
     </button>
     <button class="btn btn--secondary" (click)="resetCustomizations()">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4.01 7.58 4.01 12C4.01 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.83 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z"
+          fill="currentColor"
+        />
+      </svg>
       Reset
     </button>
   </div>
+
+  <!-- Post-Save Checkout Section (visible after saving) -->
+  <app-checkout-panel
+    *ngIf="
+      !isMobileView() &&
+      hasStartedBuilding() &&
+      !isFullscreen() &&
+      hasSavedChanges()
+    "
+    (checkoutClicked)="proceedToCheckout()"
+  ></app-checkout-panel>
+
+  <!-- Features Section (visible in non-fullscreen mode) -->
+  <app-features-section *ngIf="!isFullscreen()"></app-features-section>
+
+  <div style="height: 30px;"></div>
 </div>

@@ -24,6 +24,10 @@ import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { ScrollService } from '../../core/services/shared/scroll/scroll.service';
 import { ConfirmationService } from '../../core/services/shared/confirmation/confirmation.service';
+import { PlanBadgeComponent } from '../../shared/components/plan-badge/plan-badge.component';
+import { FeaturesSectionComponent } from '../../shared/components/features-section/features-section.component';
+import { CheckoutPanelComponent } from '../../shared/components/checkout-panel/checkout-panel.component';
+import { BuildStepsComponent } from '../../shared/components/build-steps/build-steps.component';
 
 /**
  * PreviewComponent is the main interface for the website builder.
@@ -42,6 +46,10 @@ import { ConfirmationService } from '../../core/services/shared/confirmation/con
     StandardStructureComponent,
     UpperCasePipe,
     CommonModule,
+    PlanBadgeComponent,
+    FeaturesSectionComponent,
+    CheckoutPanelComponent,
+    BuildStepsComponent,
   ],
   templateUrl: './preview.component.html',
   styleUrls: ['./preview.component.scss'],
@@ -69,6 +77,8 @@ export class PreviewComponent implements OnInit, OnDestroy {
   hasStartedBuilding = signal<boolean>(false);
   private lastSavedState = signal<Customizations | null>(null);
   private currentEditingState = signal<Customizations | null>(null);
+  currentStep = signal<number>(1); // Tracks progress in the website building flow
+  private hasSavedChangesFlag = signal<boolean>(false); // Tracks if changes were saved
 
   // UI state
   selectedComponent = signal<{
@@ -286,18 +296,33 @@ export class PreviewComponent implements OnInit, OnDestroy {
         // User has previously saved changes - set appropriate flags
         console.log('Found saved customizations - showing edit/view options');
         this.hasStartedBuilding.set(true);
+        this.hasSavedChangesFlag.set(true);
+        // Only set to step 3 if they've completed checkout, otherwise keep at step 2 (editing)
+        const hasCompletedCheckout =
+          sessionStorage.getItem('hasCompletedCheckout') === 'true';
+        this.currentStep.set(hasCompletedCheckout ? 3 : 2);
+
         // Load their saved configuration
         this.loadSavedCustomizations();
       } else {
         // New visitor - reset flags and load default theme
         console.log('No saved customizations - showing Start Building button');
         this.hasStartedBuilding.set(false);
+        this.hasSavedChangesFlag.set(false);
+        this.currentStep.set(1); // They're at the beginning
+
         sessionStorage.removeItem('savedCustomizations');
         sessionStorage.removeItem('hasStartedBuilding');
         sessionStorage.removeItem('currentCustomizations');
+        sessionStorage.removeItem('hasCompletedCheckout');
 
         this.loadTheme(this.defaultThemeId());
       }
+    } else {
+      // TODO: For authenticated users
+      // 1. Load their saved templates from the backend
+      // 2. If they have purchased a subscription, set appropriate flags
+      // 3. Show their most recent template as the default
     }
   }
 
@@ -533,6 +558,9 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
     // Set building flag (temporary until they save)
     this.hasStartedBuilding.set(true);
+
+    // Update progress step to customization
+    this.currentStep.set(2);
 
     // Check if there are saved customizations
     if (sessionStorage.getItem('savedCustomizations')) {
@@ -880,6 +908,68 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.currentEditingState.set(structuredClone(this.customizations()));
   }
 
+  // ======== PLAN SELECTION ========
+  /**
+   * Select a plan (standard or premium)
+   * @param plan The plan type to select
+   */
+  selectPlan(plan: 'standard' | 'premium'): void {
+    this.currentPlan.set(plan);
+
+    // If user changes plan after starting, we need to update the theme
+    if (this.hasStartedBuilding()) {
+      this.loadTheme(this.defaultThemeId());
+    }
+
+    // Update current step if we're just starting
+    if (this.currentStep() === 1) {
+      this.currentStep.set(2);
+    }
+
+    // Update URL to reflect plan change
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { plan },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  // ======== CHECKOUT PROCESS ========
+  /**
+   * Check if user has saved changes
+   */
+  hasSavedChanges(): boolean {
+    return this.hasSavedChangesFlag();
+  }
+
+  /**
+   * Proceed to checkout after saving website changes
+   */
+  proceedToCheckout(): void {
+    // TODO: Implement checkout flow with payment gateway integration
+    // For now, we'll just navigate to a placeholder checkout page
+    console.log('Proceeding to checkout');
+    this.confirmationService.showConfirmation(
+      'Redirecting to checkout...',
+      'info',
+      2000
+    );
+
+    // Set flag for completed checkout
+    sessionStorage.setItem('hasCompletedCheckout', 'true');
+    // Update step to 3 (final step)
+    this.currentStep.set(3);
+
+    // Simulate checkout redirect
+    setTimeout(() => {
+      // TODO: Replace with actual checkout route
+      alert('Checkout functionality will be implemented in the next phase');
+      // this.router.navigate(['/checkout'], {
+      //   queryParams: { plan: this.currentPlan() }
+      // });
+    }, 2000);
+  }
+
   // ======== SAVE & RESET ACTIONS ========
   /**
    * Save customizations
@@ -910,6 +1000,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
     // Set flags to indicate successful save
     sessionStorage.setItem('hasStartedBuilding', 'true');
     this.hasStartedBuilding.set(true);
+    this.hasSavedChangesFlag.set(true);
+
+    // Update progress step to the editing step (2)
+    // We only move to step 3 after checkout is complete
+    this.currentStep.set(2);
 
     // Update lastSavedState to track what was saved
     this.lastSavedState.set(structuredClone(this.customizations()));
@@ -938,10 +1033,15 @@ export class PreviewComponent implements OnInit, OnDestroy {
       // Remove all stored customizations
       sessionStorage.removeItem('currentCustomizations');
       sessionStorage.removeItem('savedCustomizations');
+      sessionStorage.removeItem('hasCompletedCheckout');
 
       // Reset hasStartedBuilding flag
       sessionStorage.removeItem('hasStartedBuilding');
       this.hasStartedBuilding.set(false);
+      this.hasSavedChangesFlag.set(false);
+
+      // Reset progress step
+      this.currentStep.set(1);
 
       // Reset in-memory states
       this.lastSavedState.set(null);
