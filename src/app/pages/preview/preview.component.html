@@ -176,36 +176,20 @@
           height="24"
           viewBox="0 0 24 24"
           fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <path
-            d="M8 3V6C8 7.10457 7.10457 8 6 8H3"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M16 3V6C16 7.10457 16.8954 8 18 8H21"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M8 21V18C8 16.8954 7.10457 16 6 16H3"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M16 21V18C16 16.8954 16.8954 16 18 16H21"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
+          <!-- Top arrow: points downward -->
+          <polyline points="16 4 12 8 8 4" />
+          <!-- Bottom arrow: points upward -->
+          <polyline points="16 20 12 16 8 20" />
+          <!-- Left arrow: points rightward -->
+          <polyline points="4 8 8 12 4 16" />
+          <!-- Right arrow: points leftward -->
+          <polyline points="20 8 16 12 20 16" />
         </svg>
       </div>
     </div>
@@ -321,21 +305,6 @@
     class="preview-footer"
     [ngClass]="{ 'fullscreen-mode-border-remove': isFullscreen() }"
   >
-    <button class="btn btn--primary" (click)="saveAllChanges()">
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M17 3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V7L17 3ZM19 19H5V5H16.17L19 7.83V19ZM12 12C10.34 12 9 13.34 9 15C9 16.66 10.34 18 12 18C13.66 18 15 16.66 15 15C15 13.34 13.66 12 12 12ZM7 7H15V9H7V7Z"
-          fill="currentColor"
-        />
-      </svg>
-      Save Changes
-    </button>
     <button class="btn btn--secondary" (click)="resetCustomizations()">
       <svg
         width="20"
@@ -351,6 +320,22 @@
       </svg>
       Reset
     </button>
+
+    <button class="btn btn--primary" (click)="saveAllChanges()">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M17 3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V7L17 3ZM19 19H5V5H16.17L19 7.83V19ZM12 12C10.34 12 9 13.34 9 15C9 16.66 10.34 18 12 18C13.66 18 15 16.66 15 15C15 13.34 13.66 12 12 12ZM7 7H15V9H7V7Z"
+          fill="currentColor"
+        />
+      </svg>
+      Save Changes
+    </button>
   </div>
 
   <!-- Post-Save Checkout Section (visible after saving) -->
@@ -364,8 +349,5 @@
     (checkoutClicked)="proceedToCheckout()"
   ></app-checkout-panel>
 
-  <!-- Features Section (visible in non-fullscreen mode) -->
-  <app-features-section *ngIf="!isFullscreen()"></app-features-section>
-
-  <div style="height: 30px;"></div>
+  <div style="height: 30px"></div>
 </div>

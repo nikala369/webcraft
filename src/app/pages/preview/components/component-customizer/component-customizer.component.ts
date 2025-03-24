@@ -187,7 +187,7 @@ export class ComponentCustomizerComponent implements OnInit {
       return [
         { id: 'light', label: 'Light Theme' },
         { id: 'dark', label: 'Dark Theme' },
-        { id: 'transparent', label: 'Transparent' },
+        { id: 'colorful', label: 'Colorful' },
         { id: 'gradient', label: 'Gradient' },
       ];
     }
@@ -196,41 +196,42 @@ export class ComponentCustomizerComponent implements OnInit {
     return [];
   }
 
-  applyPreset(presetId: string) {
-    // Apply preset values based on selected template
+  applyPreset(presetId: string): void {
     if (this.componentKey === 'header') {
       if (presetId === 'light') {
+        // A light theme with a soft light-gray background and dark text.
         this.localData.update((data) => ({
           ...data,
-          backgroundColor: '#ffffff',
-          textColor: '#333333',
+          backgroundColor: '#808080', // Soft light gray, not pure white
+          textColor: '#ffffff',
           position: 'fixed',
         }));
       } else if (presetId === 'dark') {
+        // A dark theme with a deep gray background and light text.
         this.localData.update((data) => ({
           ...data,
-          backgroundColor: '#222222',
+          backgroundColor: '#121212', // Deep gray
+          textColor: '#ffffff', // Near white text for contrast
+          position: 'fixed',
+        }));
+      } else if (presetId === 'colorful') {
+        // A transparent header with white text.
+        this.localData.update((data) => ({
+          ...data,
+          backgroundColor: '#ffb86d',
           textColor: '#ffffff',
           position: 'fixed',
         }));
-      } else if (presetId === 'transparent') {
-        this.localData.update((data) => ({
-          ...data,
-          backgroundColor: 'transparent',
-          textColor: '#ffffff',
-          position: 'absolute',
-        }));
       } else if (presetId === 'gradient') {
+        // A gradient header with modern blue tones and white text.
         this.localData.update((data) => ({
           ...data,
-          backgroundColor: 'linear-gradient(135deg, #2876FF 0%, #1D4ED8 100%)',
+          backgroundColor: 'linear-gradient(135deg, #3a8dff 0%, #0066ff 100%)',
           textColor: '#ffffff',
           position: 'fixed',
         }));
       }
     }
-
-    // Add similar handling for other components
   }
 
   // Helper for displaying field labels

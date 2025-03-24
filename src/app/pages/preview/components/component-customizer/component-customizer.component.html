@@ -192,6 +192,7 @@
 
     <!-- Action Buttons -->
     <div class="sidebar-actions">
+      <button class="cancel-btn" (click)="cancel()">Cancel</button>
       <button
         class="apply-btn"
         [disabled]="!isValid()"
@@ -199,7 +200,6 @@
       >
         Apply Changes
       </button>
-      <button class="cancel-btn" (click)="cancel()">Cancel</button>
     </div>
   </div>
 

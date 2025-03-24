@@ -30,8 +30,9 @@ interface Feature {
       .features-section {
         width: 100%;
         max-width: 1200px;
-        margin: 60px auto;
-        padding: 0 1rem;
+        margin: auto;
+        padding: 7rem 1rem;
+        background-color: rgb(5, 93, 161);
       }
 
       h2 {

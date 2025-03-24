@@ -603,9 +603,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
     const hasSavedCustomizations = !!savedCustomizationsRaw;
 
     if (hasSavedCustomizations) {
-      console.log(
-        '🔍 Found saved customizations, parsing and applying directly'
-      );
       try {
         // Parse the data before passing to any functions
         const parsedData = JSON.parse(savedCustomizationsRaw);
