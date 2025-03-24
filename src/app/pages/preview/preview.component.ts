@@ -28,6 +28,8 @@ import { PlanBadgeComponent } from '../../shared/components/plan-badge/plan-badg
 import { FeaturesSectionComponent } from '../../shared/components/features-section/features-section.component';
 import { CheckoutPanelComponent } from '../../shared/components/checkout-panel/checkout-panel.component';
 import { BuildStepsComponent } from '../../shared/components/build-steps/build-steps.component';
+import { FloatingCheckoutButtonComponent } from '../../shared/components/floating-checkout-button/floating-checkout-button.component';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 
 /**
  * PreviewComponent is the main interface for the website builder.
@@ -50,6 +52,8 @@ import { BuildStepsComponent } from '../../shared/components/build-steps/build-s
     FeaturesSectionComponent,
     CheckoutPanelComponent,
     BuildStepsComponent,
+    FloatingCheckoutButtonComponent,
+    IconComponent,
   ],
   templateUrl: './preview.component.html',
   styleUrls: ['./preview.component.scss'],
