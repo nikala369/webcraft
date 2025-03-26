@@ -40,7 +40,7 @@ import {
         (click)="checkoutClicked.emit()"
         [class.pulse]="pulsing"
       >
-        <app-icon name="cart" width="18" height="18"></app-icon>
+        <app-icon name="publish" width="20" height="20"></app-icon>
         {{ buttonText }}
       </button>
     </div>
@@ -116,7 +116,7 @@ import {
   ],
 })
 export class FloatingCheckoutButtonComponent {
-  @Input() buttonText: string = 'Proceed to Checkout';
+  @Input() buttonText: string = 'Publish Website';
   @Input() showTooltip: boolean = false; // Default to false
   @Input() pulsing: boolean = true;
   @Output() checkoutClicked = new EventEmitter<void>();

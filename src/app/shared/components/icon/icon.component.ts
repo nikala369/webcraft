@@ -9,6 +9,8 @@ import { CommonModule } from '@angular/common';
   styles: [
     `
       .icon-svg {
+        display: block;
+        vertical-align: middle;
         transition: transform 0.2s ease;
 
         @media (max-width: 1024px) {
@@ -18,6 +20,8 @@ import { CommonModule } from '@angular/common';
       }
 
       .fullscreen-icon {
+        display: block;
+        vertical-align: middle;
         transition: all 0.2s ease;
 
         @media (max-width: 1024px) {

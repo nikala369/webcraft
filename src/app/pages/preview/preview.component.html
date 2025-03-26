@@ -113,7 +113,7 @@
       <div class="preview-hover-overlay" *ngIf="!isFullscreen()">
         <ng-container *ngIf="!hasStartedBuilding()">
           <button class="start-fullscreen-btn" (click)="startBuilding()">
-            <app-icon name="star" width="20" height="20"></app-icon>
+            <app-icon name="startBuilding" width="20" height="20"></app-icon>
             Start Customizing
           </button>
         </ng-container>
@@ -171,12 +171,12 @@
       [ngClass]="{ 'fullscreen-mode-border-remove': isFullscreen() }"
     >
       <button class="btn btn--secondary" (click)="resetCustomizations()">
-        <app-icon name="reset" width="17" height="17"></app-icon>
+        <app-icon name="reset" width="18" height="18"></app-icon>
         Reset
       </button>
 
       <button class="btn btn--primary" (click)="saveAllChanges()">
-        <app-icon name="save" width="17" height="17"></app-icon>
+        <app-icon name="save" width="18" height="18"></app-icon>
         Save Changes
       </button>
     </div>

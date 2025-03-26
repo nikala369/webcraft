@@ -28,90 +28,90 @@ interface Feature {
   styles: [
     `
       .features-section {
-        width: 100%;
+        // Push content below the wave
+        padding-top: 6rem;
+        padding-bottom: 6rem;
+        margin: 0 auto;
         max-width: 1200px;
-        margin: auto;
-        padding: 7rem 1rem;
-        background-color: rgb(5, 93, 161);
-      }
-
-      h2 {
-        text-align: center;
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 2rem;
-        color: #ffffff;
         position: relative;
-      }
+        z-index: 4; // Above wave divider
 
-      h2:after {
-        content: '';
-        position: absolute;
-        bottom: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 60px;
-        height: 3px;
-        background: #2876ff;
-        border-radius: 3px;
-      }
+        h2 {
+          text-align: center;
+          font-size: 2.2rem;
+          font-weight: 700;
+          margin-bottom: 2.5rem;
+          color: #fff;
+          position: relative;
+          text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 
-      .features-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.5rem;
-      }
-
-      @media (max-width: 1024px) {
-        .features-grid {
-          grid-template-columns: repeat(2, 1fr);
+          &:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(135deg, #2876ff, #1a65e0);
+            border-radius: 2px;
+          }
         }
-      }
 
-      @media (max-width: 768px) {
         .features-grid {
-          grid-template-columns: 1fr;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1.5rem;
+
+          @media (max-width: 1024px) {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+          }
         }
-      }
 
-      .feature-card {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 1.5rem;
-        transition: all 0.3s ease;
-        text-align: center;
-      }
+        .feature-card {
+          background: rgba(15, 20, 30, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+          padding: 1.5rem;
+          text-align: center;
+          transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
 
-      .feature-card:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.07);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-      }
+          &:hover {
+            transform: translateY(-5px);
+            background: rgba(15, 20, 30, 0.85);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+          }
 
-      .feature-icon {
-        margin-bottom: 1rem;
-        display: flex;
-        justify-content: center;
-      }
+          .feature-icon {
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
 
-      .feature-icon svg {
-        width: 40px;
-        height: 40px;
-      }
+            svg {
+              width: 40px;
+              height: 40px;
+            }
+          }
 
-      h3 {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 0.75rem;
-        color: #ffffff;
-      }
+          h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #fff;
+          }
 
-      p {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.9rem;
-        line-height: 1.5;
-        margin-bottom: 0;
+          p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 0;
+          }
+        }
       }
     `,
   ],

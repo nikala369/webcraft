@@ -264,6 +264,7 @@ $z-layers: (
       // Start Building button
       .start-fullscreen-btn {
         display: flex;
+        justify-content: center;
         align-items: center;
         gap: 10px;
         background: #2876ff;
@@ -298,8 +299,9 @@ $z-layers: (
         transition: all 0.3s ease;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         display: flex;
+        justify-content: center;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
 
         &:hover {
           background: #1a68e0;
@@ -321,8 +323,9 @@ $z-layers: (
         transition: all 0.3s ease;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         display: flex;
+        justify-content: center;
         align-items: center;
-        gap: 0.5rem;
+        gap: 10px;
 
         &:hover {
           background: #3a3a3a; // A bit darker on hover for a clear interactive effect

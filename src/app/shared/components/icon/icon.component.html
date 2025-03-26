@@ -107,12 +107,35 @@
       <polyline points="20 8 16 12 20 16" />
     </ng-container>
 
-    <!-- Star icon -->
-    <ng-container *ngSwitchCase="'star'">
-      <path
-        d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+    <ng-container *ngSwitchCase="'startBuilding'">
+      <!-- Monitor Outline -->
+      <rect
+        x="2"
+        y="3"
+        width="20"
+        height="12"
+        rx="2"
+        ry="2"
+        stroke="currentColor"
+        stroke-width="2"
+        fill="none"
+      />
+      <!-- Monitor Base -->
+      <rect x="9" y="17" width="6" height="2" rx="1" fill="currentColor" />
+
+      <!-- Rocket Icon Inside Monitor -->
+      <!-- Rocket Tip -->
+      <polygon points="12,5 10.5,8 13.5,8" fill="currentColor" />
+      <!-- Rocket Body -->
+      <polygon
+        points="10.5,8 10.5,12 12,11 13.5,12 13.5,8"
         fill="currentColor"
       />
+      <!-- Rocket Fins -->
+      <polygon points="10.5,12 8,13 10.5,13" fill="currentColor" />
+      <polygon points="13.5,12 15,13 13.5,13" fill="currentColor" />
+      <!-- Rocket Flame -->
+      <polygon points="11,13 12,15 13,13" fill="currentColor" />
     </ng-container>
 
     <!-- Edit icon -->
@@ -152,6 +175,34 @@
       <path
         d="M7 18C5.9 18 5.01 18.9 5.01 20C5.01 21.1 5.9 22 7 22C8.1 22 9 21.1 9 20C9 18.9 8.1 18 7 18ZM17 18C15.9 18 15.01 18.9 15.01 20C15.01 21.1 15.9 22 17 22C18.1 22 19 21.1 19 20C19 18.9 18.1 18 17 18ZM7.17 14.75L7.2 14.63L8.1 13H15.55C16.3 13 16.96 12.59 17.3 11.97L21.16 4.96L19.42 4H19.41L18.31 6L15.55 11H8.53L8.4 10.73L6.16 6L5.21 4L4.27 2H1V4H3L6.6 11.59L5.25 14.04C5.09 14.32 5 14.65 5 15C5 16.1 5.9 17 7 17H19V15H7.42C7.29 15 7.17 14.89 7.17 14.75Z"
         fill="currentColor"
+      />
+    </ng-container>
+
+    <!-- Publish Website Icon -->
+    <ng-container *ngSwitchCase="'publish'">
+      <!-- Draw a circle to represent the globe -->
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      />
+      <!-- Draw an upward arrow through the globe -->
+      <path
+        d="M12 16V8"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+      <polyline
+        points="9,11 12,8 15,11"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
       />
     </ng-container>
   </ng-container>

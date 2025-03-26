@@ -5,7 +5,7 @@ import { IconComponent } from '../icon/icon.component';
 @Component({
   selector: 'app-checkout-panel',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, IconComponent, IconComponent],
   template: `
     <div class="checkout-section">
       <div class="checkout-card">
@@ -32,7 +32,7 @@ import { IconComponent } from '../icon/icon.component';
           class="checkout-button"
           (click)="checkoutClicked.emit()"
         >
-          <app-icon name="cart" width="18" height="18"></app-icon>
+          <app-icon name="publish" width="18" height="18"></app-icon>
           {{ buttonText }}
         </button>
       </div>
