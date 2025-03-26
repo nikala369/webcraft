@@ -13,16 +13,19 @@
     <div class="steps-container">
       <app-build-steps
         [currentStep]="currentStep()"
-        [steps]="['Select Plan', 'Customize Design', 'Publish Website']"
-        [vertical]="true"
+        [isVertical]="true"
+        [plan]="currentPlan()"
       ></app-build-steps>
     </div>
   </div>
 
   <!-- Main Content Area -->
   <div class="main-content">
-    <!-- Main Introductory Text (hidden in fullscreen) -->
-    <div class="preview-intro" *ngIf="!isFullscreen()">
+    <!-- Main Introductory Text (hidden in fullscreen or when showing business type selector) -->
+    <div
+      class="preview-intro"
+      *ngIf="!isFullscreen() && !showBusinessTypeSelector()"
+    >
       <h1 class="preview-main-title">Customize Your Website</h1>
 
       <p class="preview-main-subtitle">
@@ -31,8 +34,18 @@
       </p>
     </div>
 
+    <!-- Business Type Selector - shown on initial setup or in sidebar -->
+    <app-business-type-selector
+      *ngIf="showBusinessTypeSelector() && !isFullscreen()"
+      [currentPlan]="currentPlan()"
+      [selectedBusinessType]="businessType()"
+      (businessTypeSelected)="handleBusinessTypeSelection($event)"
+    ></app-business-type-selector>
+
     <div
-      *ngIf="!isFullscreen() && hasStartedBuilding()"
+      *ngIf="
+        !isFullscreen() && hasStartedBuilding() && !showBusinessTypeSelector()
+      "
       style="height: 10px"
     ></div>
 
@@ -49,8 +62,20 @@
         (themeChange)="loadTheme($event)"
         [defaultThemeId]="defaultThemeId()"
         [plan]="currentPlan()"
+        [businessType]="businessType()"
+        [availableThemes]="availableThemes()"
       >
       </app-theme-switcher>
+
+      <!-- Business Type Selector (Added to fullscreen mode) -->
+      <app-business-type-selector
+        *ngIf="!this.isViewOnlyStateService.isOnlyViewMode()"
+        class="preview-header__center-left"
+        [currentPlan]="currentPlan()"
+        [selectedBusinessType]="businessType()"
+        [compactMode]="true"
+        (businessTypeSelected)="handleBusinessTypeSelection($event)"
+      ></app-business-type-selector>
 
       <!-- View Toggle (Only on Desktop) -->
       <div class="preview-header__center" *ngIf="!isMobileView()">
@@ -106,11 +131,16 @@
         this.isViewOnlyStateService.isOnlyViewMode() ? 'view-only-mode' : ''
       ]"
       [ngStyle]="{
-        border: !isFullscreen() ? '1.5px solid #0984e3' : 'none'
+        border: !isFullscreen() ? '1.5px solid #0984e3' : 'none',
+        display:
+          showBusinessTypeSelector() && !isFullscreen() ? 'none' : 'block'
       }"
     >
       <!-- Overlays: Shown in non-fullscreen mode -->
-      <div class="preview-hover-overlay" *ngIf="!isFullscreen()">
+      <div
+        class="preview-hover-overlay"
+        *ngIf="!isFullscreen() && !showBusinessTypeSelector()"
+      >
         <ng-container *ngIf="!hasStartedBuilding()">
           <button class="start-fullscreen-btn" (click)="startBuilding()">
             <app-icon name="startBuilding" width="20" height="20"></app-icon>
@@ -129,19 +159,25 @@
         </ng-container>
       </div>
 
-      <ng-container *ngIf="currentPlan() === 'standard'">
+      <ng-container
+        *ngIf="currentPlan() === 'standard' && !showBusinessTypeSelector()"
+      >
         <app-standard-structure
           [isMobileLayout]="viewMode() === 'view-mobile' || isMobileView()"
           [isMobileView]="viewMode()"
           [currentPage]="currentPage()"
           [selectedFont]="selectedFont()"
           [customizations]="customizations"
+          [currentPlan]="currentPlan()"
+          [businessType]="businessType()"
           (componentSelected)="handleComponentSelection($event)"
         >
         </app-standard-structure>
       </ng-container>
 
-      <ng-container *ngIf="currentPlan() === 'premium'">
+      <ng-container
+        *ngIf="currentPlan() === 'premium' && !showBusinessTypeSelector()"
+      >
         <!-- Premium Structure Code (if applicable) -->
       </ng-container>
     </div>
@@ -158,6 +194,8 @@
         [componentKey]="selectedComponent()!.key"
         [componentPath]="selectedComponent()?.path"
         [initialData]="selectedCustomization()?.data"
+        [planType]="currentPlan()"
+        [businessType]="businessType()"
         (update)="handleComponentUpdate($event)"
         (close)="selectedComponent.set(null)"
       >

@@ -26,6 +26,8 @@ import { FormsModule } from '@angular/forms';
 export class ComponentCustomizerComponent implements OnInit {
   @Input() componentKey!: string;
   @Input() componentPath?: string;
+  @Input() planType: string = 'standard'; // Default to standard plan
+  @Input() businessType!: string;
   originalData: any;
   isVisible = false;
   activeCategory = 'general';
@@ -90,6 +92,7 @@ export class ComponentCustomizerComponent implements OnInit {
       // Debugging statements
       console.log('Component Customizer Initialized');
       console.log('Component Key:', this.componentKey);
+      console.log('Plan Type:', this.planType);
       console.log('Fields Config Available:', this.getFieldsConfig());
       console.log('Fields for Category:', this.getFieldsForCategory());
       console.log('Initial Data:', this.localData());
@@ -170,8 +173,24 @@ export class ComponentCustomizerComponent implements OnInit {
   getFieldsForCategory() {
     const allFields = this.getFieldsConfig();
 
-    // Use the explicit category field
-    return allFields.filter((field) => field.category === this.activeCategory);
+    // Filter fields by category
+    const categoryFields = allFields.filter(
+      (field) => field.category === this.activeCategory
+    );
+
+    // If this is the header component and we're editing menu items,
+    // filter based on plan type
+    if (this.componentKey === 'header' && this.activeCategory === 'content') {
+      return categoryFields.filter((field) => {
+        // For standard plan, hide the ability to add/remove menu items
+        if (this.planType === 'standard' && field.key === 'menuItems') {
+          return false;
+        }
+        return true;
+      });
+    }
+
+    return categoryFields;
   }
 
   // Check if we should show presets for this component
@@ -298,7 +317,64 @@ export class ComponentCustomizerComponent implements OnInit {
     });
   }
 
+  // Check if user can add/remove list items based on plan type and component
+  canModifyList(fieldKey: string): boolean {
+    // For header menuItems in standard plan, don't allow adding/removing
+    if (
+      this.componentKey === 'header' &&
+      fieldKey === 'menuItems' &&
+      this.planType === 'standard'
+    ) {
+      return false;
+    }
+
+    // For premium plan, allow adding up to 5 menu items
+    if (
+      this.componentKey === 'header' &&
+      fieldKey === 'menuItems' &&
+      this.planType === 'premium'
+    ) {
+      const currentItems = this.localData()[fieldKey] || [];
+      // Allow adding only if less than 5 items exist
+      return currentItems.length < 5;
+    }
+
+    // Default - allow modifications
+    return true;
+  }
+
+  // Check if user can remove list items based on plan type and component
+  canRemoveListItem(fieldKey: string): boolean {
+    // For header menuItems in standard plan, don't allow removing
+    if (
+      this.componentKey === 'header' &&
+      fieldKey === 'menuItems' &&
+      this.planType === 'standard'
+    ) {
+      return false;
+    }
+
+    // For premium plan, make sure at least 3 menu items remain
+    if (
+      this.componentKey === 'header' &&
+      fieldKey === 'menuItems' &&
+      this.planType === 'premium'
+    ) {
+      const currentItems = this.localData()[fieldKey] || [];
+      // Allow removing only if more than 3 items exist
+      return currentItems.length > 3;
+    }
+
+    // Default - allow removals
+    return true;
+  }
+
   addListItem(fieldKey: string) {
+    // Check if we can add items
+    if (!this.canModifyList(fieldKey)) {
+      return;
+    }
+
     this.localData.update((current) => {
       const list = current[fieldKey] ? [...current[fieldKey]] : [];
 
@@ -320,6 +396,11 @@ export class ComponentCustomizerComponent implements OnInit {
   }
 
   removeListItem(fieldKey: string, index: number) {
+    // Check if we can remove items
+    if (!this.canRemoveListItem(fieldKey)) {
+      return;
+    }
+
     this.localData.update((current) => {
       const list = [...current[fieldKey]];
       list.splice(index, 1);

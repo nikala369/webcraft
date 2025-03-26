@@ -1,6 +1,9 @@
 @use "../../../styles/variables" as v;
 @use "../../../styles/mixins" as m;
 
+// Premium color
+$premium-color: #9e6aff;
+
 // View mode classes
 .view-mobile,
 .view-desktop {
@@ -226,6 +229,10 @@ $z-layers: (
       flex: 1;
       display: flex;
       justify-content: flex-end;
+    }
+
+    &__center-left {
+      margin-right: 20px;
     }
   }
 
@@ -550,7 +557,7 @@ $z-layers: (
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: z(fullscreen);
+  z-index: 9000 !important;
   background: linear-gradient(135deg, #0e0e1c, #111a33, #13171f, #0a0f1d);
   overflow: hidden;
   padding: 0;
@@ -637,6 +644,20 @@ $z-layers: (
     border-radius: 0;
     margin: 0;
   }
+
+  // Fix edit mode access for section hover wrapper
+  .section-hover-overlay {
+    z-index: 9500;
+  }
+
+  // Update hover effect color to premium
+  .edit-section-btn {
+    background: rgba($premium-color, 0.9) !important;
+
+    &:hover {
+      background: $premium-color !important;
+    }
+  }
 }
 
 // Override floating checkout button styles to ensure it's always on top
@@ -650,5 +671,16 @@ $z-layers: (
     bottom: 20px;
     right: 15px;
     left: 15px;
+  }
+}
+
+// Fix section editing in fullscreen
+:host ::ng-deep {
+  .section-hover-wrapper {
+    &.hover-active {
+      .section-hover-overlay {
+        z-index: 9500 !important;
+      }
+    }
   }
 }

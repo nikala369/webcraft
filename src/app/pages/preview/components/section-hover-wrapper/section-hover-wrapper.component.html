@@ -1,20 +1,23 @@
 <div
-  [ngClass]="!this.isViewOnlyStateService.isOnlyViewMode() ? 'hover-wrapper' : ''"
+  class="section-hover-wrapper"
+  [class.hover-active]="
+    isHovered && !this.isViewOnlyStateService.isOnlyViewMode() && editable
+  "
   [class.view-mobile]="isMobileView === 'view-mobile'"
   (mouseenter)="isHovered = true"
   (mouseleave)="isHovered = false"
 >
-  <!-- Remove the separate hover-effect div as we'll use ::before pseudo-element -->
-
-  <!-- Improved Edit Button -->
-  <button
-    *ngIf="!this.isViewOnlyStateService.isOnlyViewMode()"
-    class="edit-button"
-    [class.visible]="isHovered && !isMobile"
-    (click)="onEdit.emit(); $event.stopPropagation()"
-  >
-    <img src="assets/preview/logo-inside.svg" />
-  </button>
-
+  <!-- Section content -->
   <ng-content></ng-content>
+
+  <!-- Edit button (no full overlay) -->
+  <button
+    *ngIf="!this.isViewOnlyStateService.isOnlyViewMode() && editable"
+    class="edit-button"
+    [class.visible]="isHovered"
+    (click)="handleEdit(); $event.stopPropagation()"
+  >
+    <span class="edit-icon">✎</span>
+    <span class="edit-text">Edit</span>
+  </button>
 </div>

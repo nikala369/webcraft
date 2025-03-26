@@ -12,5 +12,6 @@ export class AboutStandardComponent {
   @Input() customizations!: Signal<any>;
   @Input() isMobileLayout!: boolean;
   @Input() isMobileView!: boolean;
+  @Input() businessType!: string;
   @Output() sectionSelected = new EventEmitter<string>();
 }

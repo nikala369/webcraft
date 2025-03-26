@@ -5,7 +5,11 @@ import {
   EventEmitter,
   OnInit,
   computed,
-  signal, inject,
+  signal,
+  inject,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
 } from '@angular/core';
 import { StructureHeaderComponent } from '../components/structure-header/structure-header.component';
 import { StructureFooterComponent } from '../components/structure-footer/structure-footer.component';
@@ -17,7 +21,8 @@ import { HomeStandardComponent } from './home-standard/home-standard.component';
 import { AboutStandardComponent } from './about-standard/about-standard.component';
 import { ContactStandardComponent } from './contact-standard/contact-standard.component';
 import { FontOption } from '../components/font-selector/font-selector.component';
-import {ScrollService} from "../../../core/services/shared/scroll/scroll.service";
+import { ScrollService } from '../../../core/services/shared/scroll/scroll.service';
+import { BUSINESS_TYPE_SECTIONS } from '../../../core/models/business-types';
 
 @Component({
   selector: 'app-standard-structure',
@@ -34,7 +39,10 @@ import {ScrollService} from "../../../core/services/shared/scroll/scroll.service
   templateUrl: './standard-structure.component.html',
   styleUrls: ['./standard-structure.component.scss'],
 })
-export class StandardStructureComponent implements OnInit {
+export class StandardStructureComponent implements OnInit, AfterViewInit {
+  @ViewChild('structureContainer') structureContainer!: ElementRef;
+  @ViewChild(HomeStandardComponent) homeComponent!: HomeStandardComponent;
+
   // The parent passes in the customizations as a signal function for reactivity.
   @Input() customizations!: () => Customizations;
   @Input() isMobileLayout = false;
@@ -43,6 +51,7 @@ export class StandardStructureComponent implements OnInit {
   @Input() selectedFont: FontOption | null = null;
   @Input() currentPage: string = 'home';
   @Input() currentPlan: string = 'standard';
+  @Input() businessType: string = '';
 
   // When a section is clicked, we emit an event with the section key.
   @Output() componentSelected = new EventEmitter<{
@@ -51,7 +60,13 @@ export class StandardStructureComponent implements OnInit {
     path?: string;
   }>();
 
-  constructor(private router: Router) {}
+  // Track active section for highlighting in navigation
+  activeSection = signal<string>('hero');
+
+  // Section references for scrolling
+  sectionRefs: { [key: string]: HTMLElement } = {};
+
+  constructor(private router: Router, private el: ElementRef) {}
 
   // Create computed signals for each page's customizations
   homeCustomizationsSignal = computed(
@@ -66,10 +81,55 @@ export class StandardStructureComponent implements OnInit {
   // Create a Signal from the customizations function
   wholeDataSignal = computed(() => this.customizations());
 
+  // Computed signal for available sections based on business type
+  availableSections = computed(() => {
+    if (this.businessType && this.currentPlan) {
+      return (
+        BUSINESS_TYPE_SECTIONS[
+          this.businessType as keyof typeof BUSINESS_TYPE_SECTIONS
+        ]?.[this.currentPlan as 'standard' | 'premium'] || [
+          'hero',
+          'services',
+          'about',
+          'contact',
+        ]
+      );
+    }
+    return ['hero', 'services', 'about', 'contact']; // Default sections
+  });
+
   ngOnInit() {
     console.log(this.customizations(), 'main data in standard structure');
     console.log('Current page in standard structure:', this.currentPage);
     console.log('Current plan in standard structure:', this.currentPlan);
+    console.log('Business type in standard structure:', this.businessType);
+    console.log('Available sections:', this.availableSections());
+  }
+
+  ngAfterViewInit() {
+    // Find all sections in the home component for scrolling
+    setTimeout(() => {
+      this.findSectionElements();
+    }, 1000);
+  }
+
+  // Find all section elements for scrolling
+  findSectionElements() {
+    if (this.structureContainer) {
+      const container = this.structureContainer.nativeElement;
+
+      // Use the computed available sections from business type
+      const sections = this.availableSections();
+
+      sections.forEach((sectionId) => {
+        const sectionEl = container.querySelector(`#${sectionId}`);
+        if (sectionEl) {
+          this.sectionRefs[sectionId] = sectionEl;
+        }
+      });
+
+      console.log('Found section elements:', Object.keys(this.sectionRefs));
+    }
   }
 
   // Add a convenience method
@@ -105,7 +165,25 @@ export class StandardStructureComponent implements OnInit {
     });
   }
 
-  // Navigate to a different page while preserving the current plan
+  // Handle section scrolling (from header navigation)
+  handleSectionScroll(sectionId: string) {
+    console.log('Scrolling to section:', sectionId);
+
+    // Find the section element
+    const sectionEl = this.sectionRefs[sectionId];
+
+    if (sectionEl) {
+      // Scroll the section into view with smooth behavior
+      sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // Update active section
+      this.activeSection.set(sectionId);
+    } else {
+      console.warn(`Section with ID "${sectionId}" not found`);
+    }
+  }
+
+  // For premium structure only
   navigateToPage(page: string) {
     console.log('Navigating to page:', page);
 
@@ -115,7 +193,10 @@ export class StandardStructureComponent implements OnInit {
       return;
     }
 
-    const queryParams = { plan: this.currentPlan };
+    const queryParams = {
+      plan: this.currentPlan,
+      businessType: this.businessType,
+    };
     console.log('Using query params:', queryParams);
 
     // Use absolute path to ensure consistent navigation

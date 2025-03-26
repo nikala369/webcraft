@@ -13,6 +13,8 @@ $shadow-color: rgba(0, 0, 0, 0.3);
 $transition-fast: all 0.2s ease;
 $transition-medium: all 0.3s ease;
 $transition-slow: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+// Premium color
+$premium-color: #9e6aff;
 
 // Main container
 .customizer-sidebar-container {
@@ -678,4 +680,79 @@ $transition-slow: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   animation: fadeIn 0.3s ease-out forwards;
   animation-delay: calc(var(--index) * 0.05s);
   opacity: 0;
+}
+
+.customizer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 380px;
+  height: 100%;
+  background-color: #1e1e2f;
+  border-left: 1px solid #1e1e2f;
+  box-shadow: -10px 0 20px rgba(0, 0, 0, 0.3);
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 10000; // Increased z-index to be higher than fullscreen overlay
+  padding: 1rem;
+  transition: transform 0.3s ease-in-out;
+  transform: translateX(100%);
+
+  &.show {
+    transform: translateX(0);
+  }
+
+  // ... rest of existing code ...
+}
+
+// Component selection overlay
+.component-selection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999; // Increased z-index to be just below the sidebar
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  .overlay-message {
+    background-color: #1e1e2f;
+    padding: 1.5rem;
+    border-radius: 5px;
+    max-width: 90%;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+
+    h3 {
+      margin-top: 0;
+      color: #fff;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 1.5rem;
+    }
+
+    button {
+      background-color: $premium-color;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: lighten($premium-color, 10%);
+      }
+    }
+  }
 }

@@ -8,6 +8,7 @@ import {
   OnDestroy,
   effect,
 } from '@angular/core';
+import { Location } from '@angular/common';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { ThemeService } from '../../core/services/theme/theme.service';
 import { ThemeSwitcherComponent } from './components/theme-switcher/theme-switcher.component';
@@ -30,6 +31,9 @@ import { CheckoutPanelComponent } from '../../shared/components/checkout-panel/c
 import { BuildStepsComponent } from '../../shared/components/build-steps/build-steps.component';
 import { FloatingCheckoutButtonComponent } from '../../shared/components/floating-checkout-button/floating-checkout-button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { BusinessTypeSelectorComponent } from './components/business-type-selector/business-type-selector.component';
+import { BUSINESS_TYPE_MENU_ITEMS } from '../../core/models/business-types';
+import { ThemeColorsService } from '../../core/services/theme/theme-colors.service';
 
 /**
  * PreviewComponent is the main interface for the website builder.
@@ -54,6 +58,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
     BuildStepsComponent,
     FloatingCheckoutButtonComponent,
     IconComponent,
+    BusinessTypeSelectorComponent,
   ],
   templateUrl: './preview.component.html',
   styleUrls: ['./preview.component.scss'],
@@ -65,9 +70,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private confirmationService = inject(ConfirmationService);
+  private location = inject(Location);
   modalStateService = inject(ScrollService);
   isViewOnlyStateService = inject(ScrollService);
   private destroy$ = new Subject<void>();
+  private themeColorsService = inject(ThemeColorsService);
 
   // ======== CORE STATE SIGNALS ========
   // View state
@@ -93,8 +100,13 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
   // Product configuration
   currentPlan = signal<'standard' | 'premium'>('standard');
+  businessType = signal<string>(''); // NEW: Selected business type
+  showBusinessTypeSelector = signal<boolean>(false); // NEW: Control visibility of business type selector
   currentPage = signal<string>('home');
   selectedFont = signal<FontOption | null>(null);
+
+  // Themes based on business type
+  availableThemes = signal<any[]>([]);
 
   // Fullscreen state management
   private fullscreenState = signal(false);
@@ -204,6 +216,14 @@ export class PreviewComponent implements OnInit, OnDestroy {
       },
       { allowSignalWrites: true }
     );
+
+    // Effect to update theme colors when plan changes
+    effect(
+      () => {
+        this.themeColorsService.setPlan(this.currentPlan());
+      },
+      { allowSignalWrites: true }
+    );
   }
 
   ngOnInit(): void {
@@ -218,6 +238,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
       .subscribe((params) => {
         const plan = params['plan'] || 'standard';
         this.currentPlan.set(plan as 'standard' | 'premium');
+
+        // Check for business type parameter
+        if (params['businessType']) {
+          this.businessType.set(params['businessType']);
+        }
       });
 
     // Handle navigation events for page changes
@@ -304,29 +329,160 @@ export class PreviewComponent implements OnInit, OnDestroy {
         // Only set to step 3 if they've completed checkout, otherwise keep at step 2 (editing)
         const hasCompletedCheckout =
           sessionStorage.getItem('hasCompletedCheckout') === 'true';
-        this.currentStep.set(hasCompletedCheckout ? 3 : 2);
+
+        // Get the business type from saved data to determine the correct step
+        const savedData = JSON.parse(
+          sessionStorage.getItem('savedCustomizations') || '{}'
+        );
+
+        // If they have a business type set, they're at step 3 (Customize)
+        // Otherwise set to step 2 (Business Type selection)
+        if (savedData.businessType) {
+          this.businessType.set(savedData.businessType);
+          this.currentStep.set(hasCompletedCheckout ? 4 : 3);
+        } else {
+          this.currentStep.set(2); // Still need to select business type
+        }
 
         // Load their saved configuration
         this.loadSavedCustomizations();
       } else {
-        // New visitor - reset flags and load default theme
-        console.log('No saved customizations - showing Start Building button');
+        // New visitor - reset flags and prepare to select business type
+        console.log('No saved customizations - showing Business Type Selector');
         this.hasStartedBuilding.set(false);
         this.hasSavedChangesFlag.set(false);
-        this.currentStep.set(1); // They're at the beginning
+        this.currentStep.set(2); // They're at the business type selection step (2)
+        this.showBusinessTypeSelector.set(true);
 
         sessionStorage.removeItem('savedCustomizations');
         sessionStorage.removeItem('hasStartedBuilding');
         sessionStorage.removeItem('currentCustomizations');
         sessionStorage.removeItem('hasCompletedCheckout');
-
-        this.loadTheme(this.defaultThemeId());
       }
     } else {
       // TODO: For authenticated users
       // 1. Load their saved templates from the backend
       // 2. If they have purchased a subscription, set appropriate flags
       // 3. Show their most recent template as the default
+    }
+  }
+
+  // ======== BUSINESS TYPE HANDLING ========
+  /**
+   * Handle business type selection from the selector component
+   */
+  handleBusinessTypeSelection(type: string): void {
+    console.log('Business type selected:', type);
+
+    // If business type changed, update it
+    if (this.businessType() !== type) {
+      this.businessType.set(type);
+
+      // Clear the current theme cache to force reload of themes
+      this.availableThemes.set([]);
+
+      // Get themes for this business type
+      this.loadThemesForBusinessType(type);
+
+      // Update URL to reflect business type
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { businessType: type },
+        queryParamsHandling: 'merge',
+      });
+
+      // Apply default menu items based on business type
+      this.updateMenuItemsForBusinessType(type);
+
+      // Advance to step 3 (Customize) after selecting business type
+      this.currentStep.set(3);
+
+      // If in fullscreen mode, store the current state for editing
+      if (this.isFullscreen()) {
+        this.storeCurrentConfiguration();
+      } else {
+        // If not in fullscreen, hide selector after choosing
+        this.showBusinessTypeSelector.set(false);
+      }
+    } else if (!this.isFullscreen()) {
+      // If same type selected and not in fullscreen, just hide selector
+      this.showBusinessTypeSelector.set(false);
+    }
+  }
+
+  /**
+   * Load themes filtered by business type
+   */
+  loadThemesForBusinessType(businessType: string): void {
+    console.log(`Loading themes for business type: ${businessType}`);
+
+    // Always set loading state first
+    this.availableThemes.set([]);
+
+    this.themeService
+      .getThemesByBusinessType(businessType, this.currentPlan())
+      .subscribe({
+        next: (themes) => {
+          console.log(
+            `Received ${
+              themes.length
+            } themes for ${businessType} with plan ${this.currentPlan()}`
+          );
+
+          // Save themes to signal
+          this.availableThemes.set(themes);
+
+          // If we have themes, select the first one as default if no theme is currently selected
+          if (themes.length > 0) {
+            if (!this.defaultThemeId()) {
+              this.loadTheme(themes[0].id);
+            } else {
+              // Try to find the current theme in the new list
+              const currentTheme = themes.find(
+                (t) => t.id === this.defaultThemeId()
+              );
+              if (currentTheme) {
+                // If current theme exists in new list, keep it
+                this.loadTheme(currentTheme.id);
+              } else {
+                // Otherwise load the first theme
+                this.loadTheme(themes[0].id);
+              }
+            }
+          }
+        },
+        error: (err) => {
+          console.error('Error loading themes for business type:', err);
+          // Set empty array to avoid undefined errors
+          this.availableThemes.set([]);
+        },
+      });
+  }
+
+  /**
+   * Update menu items based on business type and plan
+   */
+  updateMenuItemsForBusinessType(businessType: string): void {
+    const plan = this.currentPlan();
+
+    // Check if we have predefined menu items for this business type and plan
+    if (
+      BUSINESS_TYPE_MENU_ITEMS[
+        businessType as keyof typeof BUSINESS_TYPE_MENU_ITEMS
+      ]?.[plan as 'standard' | 'premium']
+    ) {
+      this.customizations.update((current) => {
+        return {
+          ...current,
+          header: {
+            ...current.header,
+            menuItems:
+              BUSINESS_TYPE_MENU_ITEMS[
+                businessType as keyof typeof BUSINESS_TYPE_MENU_ITEMS
+              ][plan as 'standard' | 'premium'],
+          },
+        };
+      });
     }
   }
 
@@ -346,6 +502,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     const saveData = {
       customizations: this.customizations(),
       themeId: this.defaultThemeId(),
+      businessType: this.businessType(), // Add business type
     };
     sessionStorage.setItem('currentCustomizations', JSON.stringify(saveData));
 
@@ -377,6 +534,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
               fallback: fontConfig.fallback,
             });
           }
+        }
+
+        // Set business type if available
+        if (parsedData.businessType) {
+          this.businessType.set(parsedData.businessType);
         }
       } catch (e) {
         console.error('Error parsing stored customizations:', e);
@@ -563,8 +725,21 @@ export class PreviewComponent implements OnInit, OnDestroy {
     // Set building flag (temporary until they save)
     this.hasStartedBuilding.set(true);
 
-    // Update progress step to customization
-    this.currentStep.set(2);
+    // Make sure we load the themes for the current business type BEFORE entering fullscreen
+    // This ensures the theme dropdown has correct options immediately
+    const currentBusinessType = this.businessType();
+    if (currentBusinessType) {
+      console.log(
+        `Preloading themes for business type: ${currentBusinessType}`
+      );
+      this.loadThemesForBusinessType(currentBusinessType);
+
+      // Update the step to Customize (3) since we have a business type
+      this.currentStep.set(3);
+    } else {
+      // Still at business type selection (2)
+      this.currentStep.set(2);
+    }
 
     // Check if there are saved customizations
     if (sessionStorage.getItem('savedCustomizations')) {
@@ -582,8 +757,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
     // Also cache the current state for potential restore
     this.currentEditingState.set(structuredClone(this.customizations()));
 
-    // Enter fullscreen mode to start editing
-    this.toggleFullscreen();
+    // Give time for themes to load before entering fullscreen
+    setTimeout(() => {
+      // Enter fullscreen mode to start editing
+      this.toggleFullscreen();
+    }, 100);
   }
 
   /**
@@ -605,6 +783,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     console.log('🔍 Raw saved customizations:', savedCustomizationsRaw);
 
     const hasSavedCustomizations = !!savedCustomizationsRaw;
+    let businessTypeToLoad = this.businessType();
 
     if (hasSavedCustomizations) {
       try {
@@ -628,6 +807,12 @@ export class PreviewComponent implements OnInit, OnDestroy {
               fallback: fontConfig.fallback,
             });
           }
+
+          // Get business type from saved data
+          if (parsedData.businessType) {
+            businessTypeToLoad = parsedData.businessType;
+            this.businessType.set(parsedData.businessType);
+          }
         } else {
           console.log('🔍 Applying legacy customizations structure directly');
           // Handle legacy structure
@@ -642,6 +827,12 @@ export class PreviewComponent implements OnInit, OnDestroy {
               fallback: fontConfig.fallback,
             });
           }
+
+          // Get business type from saved data
+          if (parsedData.businessType) {
+            businessTypeToLoad = parsedData.businessType;
+            this.businessType.set(parsedData.businessType);
+          }
         }
 
         // Update currentEditingState with our applied data
@@ -655,6 +846,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
         const freshData = {
           customizations: this.customizations(),
           themeId: this.defaultThemeId(),
+          businessType: businessTypeToLoad,
         };
         sessionStorage.setItem(
           'currentCustomizations',
@@ -673,10 +865,20 @@ export class PreviewComponent implements OnInit, OnDestroy {
       this.loadTheme(this.defaultThemeId());
     }
 
-    // Enter fullscreen mode
-    if (!this.isFullscreen()) {
-      this.toggleFullscreen();
+    // Preload themes for the current business type before entering fullscreen
+    if (businessTypeToLoad) {
+      console.log(
+        `🔍 Preloading themes for business type: ${businessTypeToLoad}`
+      );
+      this.loadThemesForBusinessType(businessTypeToLoad);
     }
+
+    // Enter fullscreen mode after a short delay to allow theme loading
+    setTimeout(() => {
+      if (!this.isFullscreen()) {
+        this.toggleFullscreen();
+      }
+    }, 100);
 
     // Keep prevention active for a short time to ensure all theme load operations respect it
     setTimeout(() => {
@@ -958,8 +1160,8 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
     // Set flag for completed checkout
     sessionStorage.setItem('hasCompletedCheckout', 'true');
-    // Update step to 3 (final step)
-    this.currentStep.set(3);
+    // Update step to 4 (final step)
+    this.currentStep.set(4);
 
     // Simulate checkout redirect
     setTimeout(() => {
@@ -990,6 +1192,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     const savedData = {
       customizations: this.customizations(),
       themeId: this.defaultThemeId(),
+      businessType: this.businessType(), // Add business type to saved data
     };
 
     // Save to session storage
@@ -1005,7 +1208,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
     // Update progress step to the editing step (2)
     // We only move to step 3 after checkout is complete
-    this.currentStep.set(2);
+    this.currentStep.set(4);
 
     // Update lastSavedState to track what was saved
     this.lastSavedState.set(structuredClone(this.customizations()));
@@ -1042,7 +1245,9 @@ export class PreviewComponent implements OnInit, OnDestroy {
       this.hasSavedChangesFlag.set(false);
 
       // Reset progress step
-      this.currentStep.set(1);
+      this.currentStep.set(2);
+      this.showBusinessTypeSelector.set(true);
+      this.businessType.set('');
 
       // Reset in-memory states
       this.lastSavedState.set(null);
@@ -1055,6 +1260,15 @@ export class PreviewComponent implements OnInit, OnDestroy {
       // Exit fullscreen mode
       if (this.isFullscreen()) {
         this.toggleFullscreen();
+      }
+
+      // Remove 'businessType' from the URL without triggering navigation
+      const currentParams = { ...this.route.snapshot.queryParams };
+      if (currentParams['businessType']) {
+        delete currentParams['businessType'];
+        const baseUrl = this.router.url.split('?')[0];
+        const newQueryString = new URLSearchParams(currentParams).toString();
+        this.location.replaceState(baseUrl, newQueryString);
       }
 
       // Show confirmation message

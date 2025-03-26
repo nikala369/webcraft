@@ -1,0 +1,115 @@
+@mixin dropdown-styles($width: 200px, $zindex: 100) {
+  position: relative;
+  
+  // Use CSS variable with fallback color
+  $accent-color: var(--theme-accent-color, #4a8dff);
+
+  .selected-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 10px 15px;
+    cursor: pointer;
+    width: $width;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .item-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 0.9rem;
+    }
+
+    .dropdown-icon {
+      opacity: 0.7;
+      transition: transform 0.2s ease;
+      width: 16px;
+      height: 16px;
+    }
+
+    &.open .dropdown-icon {
+      transform: rotate(180deg);
+    }
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    width: $width;
+    background: #222;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: $zindex;
+    max-height: 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+
+    &.open {
+      max-height: 300px;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .dropdown-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      &.selected {
+        background: rgba($accent-color, 0.2);
+        position: relative;
+
+        &::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 3px;
+          background: $accent-color;
+        }
+      }
+
+      .item-name {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .selected-item {
+      width: 160px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
+
+    .dropdown-menu {
+      width: 160px;
+
+      .dropdown-item {
+        padding: 8px 12px;
+
+        .item-name {
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+} 

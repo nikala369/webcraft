@@ -36,7 +36,7 @@
     aria-label="Main standard navigation"
   >
     <ul>
-      <li *ngFor="let item of customizations?.menuItems">
+      <li *ngFor="let item of getMenuItems()">
         <div class="nav-link-wrapper">
           <a
             (click)="navigateTo(item.link)"
@@ -75,7 +75,7 @@
       }"
     >
       <ul>
-        <li *ngFor="let item of customizations?.menuItems">
+        <li *ngFor="let item of getMenuItems()">
           <a
             (click)="navigateTo(item.link)"
             [class.active]="isActive(item.link)"

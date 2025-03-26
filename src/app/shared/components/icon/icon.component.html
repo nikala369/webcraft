@@ -1,6 +1,6 @@
 <svg
-  class="icon-svg"
   [ngClass]="{
+    'icon-svg': true,
     'fullscreen-icon': name === 'enterFullscreen' || name === 'exitFullscreen'
   }"
   [attr.width]="width"
@@ -107,35 +107,12 @@
       <polyline points="20 8 16 12 20 16" />
     </ng-container>
 
+    <!-- Star/Start Building icon -->
     <ng-container *ngSwitchCase="'startBuilding'">
-      <!-- Monitor Outline -->
-      <rect
-        x="2"
-        y="3"
-        width="20"
-        height="12"
-        rx="2"
-        ry="2"
-        stroke="currentColor"
-        stroke-width="2"
-        fill="none"
-      />
-      <!-- Monitor Base -->
-      <rect x="9" y="17" width="6" height="2" rx="1" fill="currentColor" />
-
-      <!-- Rocket Icon Inside Monitor -->
-      <!-- Rocket Tip -->
-      <polygon points="12,5 10.5,8 13.5,8" fill="currentColor" />
-      <!-- Rocket Body -->
-      <polygon
-        points="10.5,8 10.5,12 12,11 13.5,12 13.5,8"
+      <path
+        d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
         fill="currentColor"
       />
-      <!-- Rocket Fins -->
-      <polygon points="10.5,12 8,13 10.5,13" fill="currentColor" />
-      <polygon points="13.5,12 15,13 13.5,13" fill="currentColor" />
-      <!-- Rocket Flame -->
-      <polygon points="11,13 12,15 13,13" fill="currentColor" />
     </ng-container>
 
     <!-- Edit icon -->
@@ -178,31 +155,73 @@
       />
     </ng-container>
 
-    <!-- Publish Website Icon -->
+    <!-- Publish/Release icon -->
     <ng-container *ngSwitchCase="'publish'">
-      <!-- Draw a circle to represent the globe -->
-      <circle
-        cx="12"
-        cy="12"
-        r="10"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      />
-      <!-- Draw an upward arrow through the globe -->
+      <path d="M5 4v2h14V4H5zm0 10h4v6h6v-6h4l-7-7-7 7z" fill="currentColor" />
+    </ng-container>
+
+    <!-- Business type: Restaurant -->
+    <ng-container *ngSwitchCase="'restaurant'">
       <path
-        d="M12 16V8"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
+        d="M8.1 13.34L3.91 9.16C2.35 7.59 2.35 5.06 3.91 3.5C5.48 1.94 8.01 1.94 9.57 3.5L13.75 7.68L8.1 13.34ZM14.83 11.17L16.24 12.58C16.62 12.96 16.62 13.6 16.24 13.97L13.11 17.1C12.73 17.47 12.1 17.47 11.72 17.1L10.31 15.69L14.83 11.17ZM21.18 4.59C22.34 5.75 22.34 7.62 21.18 8.79L15.17 14.79L12.75 12.37L18.77 6.35C19.31 5.81 19.31 4.94 18.77 4.4C18.23 3.86 17.36 3.86 16.82 4.4L10.81 10.41L8.39 7.99L14.4 1.98C15.56 0.81 17.44 0.81 18.6 1.98L20.51 0.0699997L21.93 1.48L21.18 2.23L21.18 4.59Z"
+        fill="currentColor"
       />
-      <polyline
-        points="9,11 12,8 15,11"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+    </ng-container>
+
+    <!-- Business type: Salon -->
+    <ng-container *ngSwitchCase="'salon'">
+      <path
+        d="M7 0C3.14 0 0 3.14 0 7C0 8.38 0.41 9.65 1.08 10.76C1.3 11.15 1.54 11.58 1.64 12.18C1.74 12.79 1.67 13.69 1.61 14.53C1.56 15.22 1.5 15.9 1.61 16.59C1.91 18.43 3.27 19.95 5.04 20.46C5.2 20.51 5.35 20.55 5.51 20.58C6.12 20.69 6.79 20.75 7.5 20.75C8.23 20.75 8.9 20.69 9.51 20.58C9.66 20.55 9.81 20.51 9.95 20.47C11.71 19.96 13.09 18.43 13.38 16.59C13.49 15.89 13.44 15.21 13.38 14.53C13.33 13.7 13.26 12.79 13.36 12.18C13.46 11.57 13.7 11.15 13.93 10.75C14.6 9.65 15.01 8.38 15.01 7C15.01 3.14 11.87 0 8.01 0H7ZM7 2C8.07 2 9.07 2.33 9.91 2.88C9.7 3.04 9.5 3.21 9.3 3.4C8.83 3.85 8.46 4.37 8.17 5H6.83C6.54 4.37 6.17 3.85 5.7 3.4C5.5 3.21 5.3 3.04 5.09 2.88C5.93 2.33 6.93 2 8 2H7ZM7.5 6.89H8.5V9.39H11V10.39H8.5V12.89H7.5V10.39H5V9.39H7.5V6.89ZM19 4.5V9.5H17V4.5H19ZM22 4.5H24V9.5H22V4.5ZM19 11.5H24V12.5C24 14.43 22.43 16 20.5 16C18.57 16 17 14.43 17 12.5V11.5H19Z"
+        fill="currentColor"
+      />
+    </ng-container>
+
+    <!-- Business type: Architecture -->
+    <ng-container *ngSwitchCase="'architecture'">
+      <path
+        d="M21.67 18.17L16.84 13.34C18.13 11.01 18.14 8.11 16.15 5.77V5.77L16.94 5.16L18.72 5.28L19.13 3.54L19.13 3.54L22 2L19.95 4.89L19.96 4.92L18.39 5.43L18.53 7.17L17.83 8.04V8.04C16.18 6.05 13.31 5.74 11.28 7L10.53 6.25C10.26 5.98 9.82 5.98 9.55 6.25L6.39 9.41C6.12 9.68 6.12 10.11 6.39 10.38L7.14 11.13C5.89 13.15 6.2 16.02 8.17 17.68V17.68L7.5 18.47L5.8 18.34L5.38 20.06L2.36 21.67L4.53 18.63V18.63L6.27 18.22L6.42 16.54L7.1 15.71V15.71C9.09 18.19 12.88 18.19 14.86 15.71L19.69 20.55C20.11 20.97 20.79 20.97 21.21 20.55L21.67 20.08C22.1 19.66 22.1 18.98 21.67 18.56L21.67 18.17Z"
+        fill="currentColor"
+      />
+    </ng-container>
+
+    <!-- Business type: Portfolio -->
+    <ng-container *ngSwitchCase="'portfolio'">
+      <path
+        d="M4 2C2.9 2 2 2.9 2 4V20C2 21.1 2.9 22 4 22H20C21.1 22 22 21.1 22 20V8.7C22 8.2 21.8 7.8 21.5 7.4L16.6 2.4C16.2 2.2 15.8 2 15.3 2H4ZM4 4H14V8H8L6 10H4V4ZM16 4.4L20 8.4V20H17V13H7V20H4V12H7L9 10H16V4.4ZM9 15H15V20H9V15Z"
+        fill="currentColor"
+      />
+    </ng-container>
+
+    <!-- Business type: Retail -->
+    <ng-container *ngSwitchCase="'retail'">
+      <path
+        d="M18 18.5V19.5C18 20.6 17.1 21.5 16 21.5H14V17.5H10V21.5H8C6.9 21.5 6 20.6 6 19.5V18.5H2V6.5C2 4.97 3.18 3.72 4.7 3.53L7.05 0.64C7.38 0.23 7.91 0 8.47 0H15.53C16.09 0 16.63 0.23 16.95 0.64L19.3 3.53C20.82 3.72 22 4.97 22 6.5V18.5H18ZM4 16.5H20V6.5H4V16.5ZM14 7.5C14 8.05 13.55 8.5 13 8.5V14.5C13.55 14.5 14 14.95 14 15.5C14 16.05 13.55 16.5 13 16.5H11C10.45 16.5 10 16.05 10 15.5C10 14.95 10.45 14.5 11 14.5V8.5C10.45 8.5 10 8.05 10 7.5C10 6.95 10.45 6.5 11 6.5H13C13.55 6.5 14 6.95 14 7.5ZM7.62 3.5L6.06 5.5H17.94L16.38 3.5H7.62Z"
+        fill="currentColor"
+      />
+    </ng-container>
+
+    <!-- Check icon for selection indicator -->
+    <ng-container *ngSwitchCase="'check'">
+      <path
+        d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+        fill="currentColor"
+      />
+    </ng-container>
+
+    <!-- Premium badge icon -->
+    <ng-container *ngSwitchCase="'premium'">
+      <path
+        d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+        fill="currentColor"
+      />
+    </ng-container>
+
+    <!-- Default/fallback icon -->
+    <ng-container *ngSwitchDefault>
+      <rect width="24" height="24" fill="none" stroke="none" />
+      <path
+        d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 7H13V13H11V7ZM11 15H13V17H11V15Z"
+        fill="currentColor"
       />
     </ng-container>
   </ng-container>

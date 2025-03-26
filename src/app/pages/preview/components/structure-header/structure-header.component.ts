@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
+import { BUSINESS_TYPE_MENU_ITEMS } from '../../../../core/models/business-types';
 
 @Component({
   selector: 'app-structure-header',
@@ -35,6 +36,16 @@ export class StructureHeaderComponent implements OnInit {
   @Input() currentPage: string = 'home';
 
   /**
+   * The current plan - standard or premium
+   */
+  @Input() plan: string = 'standard';
+
+  /**
+   * The business type (restaurant, salon, etc.)
+   */
+  @Input() businessType: string = '';
+
+  /**
    * The user-selected font family, passed from the parent
    * (e.g. "Roboto, sans-serif"). If none is provided, fallback to a default.
    */
@@ -45,8 +56,20 @@ export class StructureHeaderComponent implements OnInit {
    */
   @Output() pageChange = new EventEmitter<string>();
 
+  /**
+   * Event emitter for section navigation (for standard plan)
+   */
+  @Output() sectionScroll = new EventEmitter<string>();
+
   /** Signal for toggling the mobile menu overlay. */
   isMobileMenuOpen = signal(false);
+
+  // Default standard menu items - always exactly 3
+  private standardMenuItems = [
+    { id: 1, label: 'Home', link: '#hero' },
+    { id: 2, label: 'Services', link: '#services' },
+    { id: 3, label: 'About', link: '#about' },
+  ];
 
   // Inject the Router and ActivatedRoute
   constructor(private router: Router, private route: ActivatedRoute) {}
@@ -54,29 +77,115 @@ export class StructureHeaderComponent implements OnInit {
   ngOnInit() {
     console.log('Header customizations:', this.customizations);
     console.log('Current page:', this.currentPage);
+    console.log('Current plan:', this.plan);
+    console.log('Business type:', this.businessType);
+
+    // Ensure standard plan has exactly 3 menu items
+    if (
+      this.plan === 'standard' &&
+      (!this.customizations?.menuItems ||
+        this.customizations.menuItems.length !== 3)
+    ) {
+      // Apply default menu items if not set correctly
+      if (!this.customizations) {
+        this.customizations = {};
+      }
+
+      // Use business type menu items if available, otherwise use standard default
+      if (
+        this.businessType &&
+        BUSINESS_TYPE_MENU_ITEMS[
+          this.businessType as keyof typeof BUSINESS_TYPE_MENU_ITEMS
+        ]?.standard
+      ) {
+        this.customizations.menuItems =
+          BUSINESS_TYPE_MENU_ITEMS[
+            this.businessType as keyof typeof BUSINESS_TYPE_MENU_ITEMS
+          ].standard;
+      } else {
+        this.customizations.menuItems = this.standardMenuItems;
+      }
+    }
   }
 
-  // Add navigation method
-  navigateTo(path: string): void {
-    console.log('Header navigateTo called with path:', path);
+  // Get the currently displayed menu items
+  getMenuItems() {
+    // If business type is set, try to use predefined menu items for the plan
+    if (this.businessType && this.plan) {
+      try {
+        const businessTypeMenuItems =
+          BUSINESS_TYPE_MENU_ITEMS[
+            this.businessType as keyof typeof BUSINESS_TYPE_MENU_ITEMS
+          ]?.[this.plan as 'standard' | 'premium'];
 
-    // Extract the page name (removing leading slash)
-    let pageName = path === '/' ? 'home' : path.replace(/^\//, '');
-
-    // Handle any external links (if needed)
-    if (pageName.startsWith('http')) {
-      window.open(pageName, '_blank');
-      return;
+        if (businessTypeMenuItems) {
+          return businessTypeMenuItems;
+        }
+      } catch (error) {
+        console.error('Error getting business type menu items:', error);
+      }
     }
 
-    console.log('Emitting page change event with pageName:', pageName);
+    // Fallback to standard logic
+    if (this.plan === 'standard') {
+      // Always ensure exactly 3 menu items for standard plan
+      if (
+        !this.customizations?.menuItems ||
+        this.customizations.menuItems.length !== 3
+      ) {
+        return this.standardMenuItems;
+      }
 
-    // Emit the page change event to the parent component
-    this.pageChange.emit(pageName);
+      // Map the menu items to ensure they use hash links
+      return this.customizations.menuItems.map((item: any, index: number) => {
+        // Extract label from existing item or use default
+        const label = item.label || this.standardMenuItems[index % 3].label;
+
+        // For standard plan, ensure links are hash-based for section scrolling
+        const link = item.link || this.standardMenuItems[index % 3].link;
+
+        return { id: item.id || index + 1, label, link };
+      });
+    }
+
+    // For premium plan, return customizations or empty array
+    return this.customizations?.menuItems || [];
+  }
+
+  // Handle navigation based on plan type
+  navigateTo(path: string): void {
+    console.log('Header navigateTo called with path:', path);
 
     // Close mobile menu if open
     if (this.isMobileMenuOpen()) {
       this.toggleMobileMenu();
+    }
+
+    if (this.plan === 'standard') {
+      // For standard plan, handle section-based navigation
+      if (path.startsWith('#')) {
+        const sectionId = path.substring(1); // Remove the # character
+        console.log('Emitting section scroll event for:', sectionId);
+        this.sectionScroll.emit(sectionId);
+      } else {
+        // Handle any non-hash links (e.g., external links)
+        if (path.startsWith('http')) {
+          window.open(path, '_blank');
+          return;
+        }
+      }
+    } else {
+      // For premium plan, handle page-based navigation
+      let pageName = path === '/' ? 'home' : path.replace(/^\//, '');
+
+      // Handle external links
+      if (pageName.startsWith('http')) {
+        window.open(pageName, '_blank');
+        return;
+      }
+
+      console.log('Emitting page change event with pageName:', pageName);
+      this.pageChange.emit(pageName);
     }
   }
 
@@ -87,8 +196,14 @@ export class StructureHeaderComponent implements OnInit {
 
   // Check if a menu item is active
   isActive(link: string): boolean {
-    const pageName = link === '/' ? 'home' : link.replace(/^\//, '');
-    return this.currentPage === pageName;
+    if (this.plan === 'standard') {
+      // For standard plan, there's only one page, so all menu items are on "home"
+      return true;
+    } else {
+      // For premium plan, check current page
+      const pageName = link === '/' ? 'home' : link.replace(/^\//, '');
+      return this.currentPage === pageName;
+    }
   }
 
   // Get the header position from customizations

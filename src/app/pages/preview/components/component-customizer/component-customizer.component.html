@@ -175,12 +175,17 @@
                   />
                   <button
                     class="remove-item"
+                    *ngIf="canRemoveListItem(field.key)"
                     (click)="removeListItem(field.key, i)"
                   >
                     ×
                   </button>
                 </div>
-                <button class="add-item" (click)="addListItem(field.key)">
+                <button
+                  *ngIf="canModifyList(field.key)"
+                  class="add-item"
+                  (click)="addListItem(field.key)"
+                >
                   + Add Item
                 </button>
               </div>

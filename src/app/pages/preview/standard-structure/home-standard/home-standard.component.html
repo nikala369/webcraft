@@ -1,543 +1,402 @@
-<div class="home-standard-container">
-  <!-- Hero1 Section -->
-  <app-section-hover-wrapper
-    [isMobile]="isMobileLayout"
-    [isMobileView]="isMobileView"
-    (onEdit)="handleSectionEdit('hero1')"
-  >
-    <section
-      class="hero-section"
-      [ngStyle]="getBackgroundStyle('hero1')"
-      [ngClass]="{ 'hero-section--mobile': isMobileLayout }"
-    >
-      <div class="hero-content-wrapper">
+<div class="home-standard">
+  <!-- Dynamically render sections based on business type -->
+  <ng-container *ngFor="let section of availableSections()">
+    <!-- Hero Section -->
+    <ng-container *ngIf="section === 'hero'">
+      <app-section-hover-wrapper
+        [sectionKey]="'hero1'"
+        [sectionName]="'Hero Section'"
+        [editable]="true"
+        [currentPlan]="planType"
+        [sectionPath]="'pages.home.hero1'"
+        (sectionSelected)="handleSectionSelection($event)"
+        [zIndex]="9999"
+      >
         <div
-          class="hero-content"
-          [ngClass]="'layout-' + (customizations()?.hero1?.layout || 'center')"
+          class="hero-section"
+          [ngClass]="{ 'hero-section--mobile': isMobileLayout }"
+          [ngStyle]="{
+            'background-image':
+              'url(' +
+              (customizations?.pages?.home?.hero1?.backgroundImage ||
+                'assets/standard-hero1/background-image1.jpg') +
+              ')',
+            'background-size': 'cover',
+            'background-position': 'center'
+          }"
         >
-          <div
-            class="business-logo"
-            *ngIf="customizations()?.hero1?.showLogo !== false"
-          >
-            <img
-              [src]="
-                wholeData()?.header?.logoUrl ||
-                wholeData()?.logoUrl ||
-                'assets/standard-header/default-logo-white.svg'
-              "
-              alt="Business Logo"
-              [style.max-height]="
-                customizations()?.hero1?.logoHeight || '100px'
-              "
-            />
-          </div>
-          <h1
-            [style.color]="customizations()?.hero1?.titleColor || '#ffffff'"
-            [ngClass]="
-              'text-shadow-' + (customizations()?.hero1?.textShadow || 'medium')
-            "
-          >
-            {{ customizations()?.hero1?.title || "Your Business Name" }}
-          </h1>
-          <p
-            class="hero-subtitle"
-            [style.color]="customizations()?.hero1?.subtitleColor || '#f0f0f0'"
-            [ngClass]="
-              'text-shadow-' + (customizations()?.hero1?.textShadow || 'medium')
-            "
-          >
-            {{
-              customizations()?.hero1?.subtitle ||
-                "Professional services for your needs"
-            }}
-          </p>
-          <div class="hero-buttons">
-            <button
-              class="hero-button primary"
-              *ngIf="customizations()?.hero1?.showPrimaryButton !== false"
-              [style.background-color]="
-                customizations()?.hero1?.primaryButtonColor || '#ff5722'
-              "
-              [style.color]="
-                customizations()?.hero1?.primaryButtonTextColor || '#ffffff'
-              "
+          <div class="hero-content-wrapper">
+            <div
+              class="hero-content"
+              [ngClass]="'layout-' + customizations?.pages?.home?.hero1?.layout"
             >
-              {{ customizations()?.hero1?.primaryButtonText || "Contact Us" }}
-            </button>
+              <!-- Make logo editable with direct click -->
+              <div
+                *ngIf="customizations?.pages?.home?.hero1?.showLogo"
+                class="business-logo"
+                (click)="handleLogoClick($event)"
+              >
+                <img
+                  [src]="customizations?.header?.logoUrl || 'assets/logo.png'"
+                  alt="Business Logo"
+                />
+              </div>
+
+              <h1
+                class="hero-title"
+                [ngClass]="
+                  'text-shadow-' +
+                  customizations?.pages?.home?.hero1?.textShadow
+                "
+                [style.color]="customizations?.pages?.home?.hero1?.titleColor"
+              >
+                {{
+                  customizations?.pages?.home?.hero1?.title ||
+                    "Welcome to Our Website"
+                }}
+              </h1>
+              <p
+                class="hero-subtitle"
+                [ngClass]="
+                  'text-shadow-' +
+                  customizations?.pages?.home?.hero1?.textShadow
+                "
+                [style.color]="
+                  customizations?.pages?.home?.hero1?.subtitleColor
+                "
+              >
+                {{
+                  customizations?.pages?.home?.hero1?.subtitle ||
+                    "Discover what makes us special"
+                }}
+              </p>
+              <div
+                class="hero-cta"
+                *ngIf="customizations?.pages?.home?.hero1?.showPrimaryButton"
+              >
+                <a
+                  href="#"
+                  class="hero-button hero-button-primary"
+                  [style.background-color]="
+                    customizations?.pages?.home?.hero1?.primaryButtonColor
+                  "
+                  [style.color]="
+                    customizations?.pages?.home?.hero1?.primaryButtonTextColor
+                  "
+                >
+                  {{
+                    customizations?.pages?.home?.hero1?.primaryButtonText ||
+                      "LEARN MORE"
+                  }}
+                </a>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </app-section-hover-wrapper>
+    </ng-container>
 
-      <!-- Quick contact bar for desktop -->
-      <div class="quick-contact-bar" *ngIf="!isMobileView && isPremiumPlan()">
-        <div class="contact-item">
-          <i class="fas fa-phone-alt"></i>
-          <span>{{ getContactInfo("phone") }}</span>
-        </div>
-        <div class="contact-item">
-          <i class="fas fa-map-marker-alt"></i>
-          <span>{{ getContactInfo("address") }}</span>
-        </div>
-        <div class="contact-item">
-          <i class="fas fa-clock"></i>
-          <span>{{ getContactInfo("hours") }}</span>
-        </div>
-      </div>
-    </section>
-  </app-section-hover-wrapper>
+    <!-- Only render sections applicable to the selected business type -->
+    <!-- About Section -->
+    <ng-container *ngIf="section === 'about' && shouldDisplaySection('about')">
+      <app-section-hover-wrapper
+        [sectionKey]="'about'"
+        [sectionName]="'About Section'"
+        [editable]="true"
+        [currentPlan]="planType"
+        [sectionPath]="'pages.home.about'"
+        (sectionSelected)="handleSectionSelection($event)"
+      >
+        <section id="about" class="about-section">
+          <div class="section-container">
+            <div class="section-header">
+              <h2 class="section-title">About Us</h2>
+              <div class="title-underline"></div>
+            </div>
+            <div
+              class="about-content"
+              [ngClass]="{ 'about-content--mobile': isMobileLayout }"
+            >
+              <div class="about-image">
+                <img
+                  src="assets/standard-about/about-image.jpg"
+                  alt="About Us"
+                />
+              </div>
+              <div class="about-text">
+                <h3>Our Story</h3>
+                <p>
+                  We are a dedicated team of professionals committed to
+                  delivering exceptional value to our clients. With years of
+                  experience in the industry, we understand what it takes to
+                  help your business succeed.
+                </p>
+                <h3>Our Mission</h3>
+                <p>
+                  Our mission is to provide high-quality services that exceed
+                  our clients' expectations. We believe in building long-lasting
+                  relationships based on trust, integrity, and results.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </app-section-hover-wrapper>
+    </ng-container>
 
-  <!-- Services Section -->
-  <app-section-hover-wrapper
-    [isMobile]="isMobileLayout"
-    [isMobileView]="isMobileView"
-    (onEdit)="handleSectionEdit('hero2')"
-  >
-    <section
-      class="services-section"
-      [style.background-color]="
-        customizations()?.services?.backgroundColor || '#ffffff'
+    <!-- Services Section -->
+    <ng-container
+      *ngIf="section === 'services' && shouldDisplaySection('services')"
+    >
+      <app-section-hover-wrapper
+        [sectionKey]="'services'"
+        [sectionName]="'Services Section'"
+        [editable]="true"
+        [currentPlan]="planType"
+        [sectionPath]="'pages.home.services'"
+        (sectionSelected)="handleSectionSelection($event)"
+      >
+        <section id="services" class="services-section">
+          <div class="section-container">
+            <div class="section-header">
+              <h2 class="section-title">Our Services</h2>
+              <div class="title-underline"></div>
+            </div>
+            <div
+              class="services-grid"
+              [ngClass]="{ 'services-grid--mobile': isMobileLayout }"
+            >
+              <!-- Simplified service items -->
+              <div class="service-card" *ngFor="let i of [1, 2, 3]">
+                <div class="service-icon">
+                  <img
+                    src="assets/standard-services/service-icon{{ i }}.svg"
+                    alt="Service {{ i }}"
+                  />
+                </div>
+                <h3>Service {{ i }}</h3>
+                <p>
+                  Description for service {{ i }} would go here. Click edit to
+                  customize this section.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </app-section-hover-wrapper>
+    </ng-container>
+
+    <!-- Menu Section (For Restaurant) -->
+    <ng-container
+      *ngIf="
+        section === 'menu' ||
+        (section === 'menu' && shouldDisplaySection('menu'))
       "
     >
-      <div class="section-header">
-        <h2
-          [style.color]="customizations()?.services?.titleColor || '#333333'"
-          class="animate fade-in"
-        >
-          {{ customizations()?.services?.title || "Our Services" }}
-        </h2>
-        <p
-          [style.color]="customizations()?.services?.subtitleColor || '#666666'"
-          class="animate fade-in"
-        >
-          {{
-            customizations()?.services?.subtitle ||
-              "What we offer to our clients"
-          }}
-        </p>
-      </div>
-
-      <div class="services-grid">
-        <div
-          class="service-item animate fade-in"
-          *ngFor="let i of getServiceIndexArray(); let idx = index"
-          [ngStyle]="getAnimationDelay(idx)"
-        >
-          <div
-            class="service-image"
-            [style.background-image]="
-              'url(' + getImageUrl('services', 'image' + i, i) + ')'
-            "
-          ></div>
-          <div class="service-content">
-            <h3
-              [style.color]="
-                customizations()?.services?.itemTitleColor || '#333333'
-              "
-            >
-              {{ customizations()?.services?.['title' + i] || 'Service ' + (i+1) }}
-            </h3>
-            <p
-              [style.color]="
-                customizations()?.services?.itemTextColor || '#666666'
-              "
-            >
-              {{ customizations()?.services?.['description' + i] || 'Description of service ' + (i+1) + ' that highlights its value to potential customers.' }}
-            </p>
-            <a
-              class="service-link"
-              [style.color]="customizations()?.services?.linkColor || '#ff5722'"
-              *ngIf="customizations()?.services?.showServiceLinks !== false"
-            >
-              Learn More <i class="fas fa-arrow-right"></i>
-            </a>
+      <app-section-hover-wrapper
+        [sectionKey]="'menu'"
+        [sectionName]="'Menu Section'"
+        [editable]="true"
+        [currentPlan]="planType"
+        [sectionPath]="'pages.home.menu'"
+        (sectionSelected)="handleSectionSelection($event)"
+      >
+        <section id="menu" class="menu-section">
+          <div class="section-container">
+            <div class="section-header">
+              <h2 class="section-title">Our Menu</h2>
+              <div class="title-underline"></div>
+            </div>
+            <!-- Simplified menu content -->
+            <div class="menu-categories">
+              <div class="menu-category">
+                <h3>Menu Category</h3>
+                <div class="menu-items">
+                  <div class="menu-item" *ngFor="let i of [1, 2]">
+                    <div class="menu-item-header">
+                      <h4 class="menu-item-name">Menu Item {{ i }}</h4>
+                      <span class="menu-item-price">${{ i }}9.99</span>
+                    </div>
+                    <p class="menu-item-desc">
+                      Description for menu item {{ i }}. Click edit to
+                      customize.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </section>
-  </app-section-hover-wrapper>
+        </section>
+      </app-section-hover-wrapper>
+    </ng-container>
 
-  <!-- About Section -->
-  <app-section-hover-wrapper
-    [isMobile]="isMobileLayout"
-    [isMobileView]="isMobileView"
-    (onEdit)="handleSectionEdit('about')"
-  >
-    <section class="about-section" [ngStyle]="getBackgroundStyle('about')">
-      <div class="about-container">
-        <div
-          class="about-image animate fade-in"
-          *ngIf="customizations()?.about?.showImage !== false"
-        >
-          <img [src]="getImageUrl('about', 'mainImage', 0)" alt="About Us" />
-        </div>
-        <div class="about-content animate fade-in">
-          <h2 [style.color]="customizations()?.about?.titleColor || '#333333'">
-            {{ customizations()?.about?.title || "About Our Business" }}
-          </h2>
-          <p
-            class="about-intro"
-            [style.color]="customizations()?.about?.textColor || '#444444'"
-          >
-            {{
-              customizations()?.about?.intro ||
-                "Founded in [year], we have been serving the [location] area with quality [services/products]. Our mission is to provide excellent service and build lasting relationships with our clients."
-            }}
-          </p>
-          <p [style.color]="customizations()?.about?.textColor || '#444444'">
-            {{
-              customizations()?.about?.description ||
-                "We take pride in our work and strive for excellence in everything we do. Our team of professionals is dedicated to ensuring customer satisfaction through attention to detail and personalized service."
-            }}
-          </p>
-          <div
-            class="about-values"
-            *ngIf="customizations()?.about?.showValues !== false"
-          >
-            <h3
-              [style.color]="
-                customizations()?.about?.subtitleColor || '#555555'
-              "
-            >
-              {{ customizations()?.about?.valuesTitle || "Our Values" }}
-            </h3>
-            <ul>
-              <li
-                *ngFor="let i of [0, 1, 2]"
-                [style.color]="customizations()?.about?.textColor || '#444444'"
-              >
-                <strong
-                  >{{ customizations()?.about?.['valueTitle' + i] || 'Value ' + (i+1)
-                  }}:</strong
-                >
-                {{ customizations()?.about?.['valueText' + i] || 'Description of core value ' + (i+1) }}
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-  </app-section-hover-wrapper>
-
-  <!-- Testimonials Section -->
-  <app-section-hover-wrapper
-    [isMobile]="isMobileLayout"
-    [isMobileView]="isMobileView"
-    (onEdit)="handleSectionEdit('testimonials')"
-  >
-    <section
-      class="testimonials-section"
-      [style.background-color]="
-        customizations()?.testimonials?.backgroundColor || '#f8f8f8'
-      "
+    <!-- Projects Section (For Architecture/Portfolio) -->
+    <ng-container
+      *ngIf="section === 'projects' && shouldDisplaySection('projects')"
     >
-      <div class="section-header">
-        <h2
-          [style.color]="
-            customizations()?.testimonials?.titleColor || '#333333'
-          "
-          class="animate fade-in"
-        >
-          {{ customizations()?.testimonials?.title || "What Our Clients Say" }}
-        </h2>
-        <p
-          [style.color]="
-            customizations()?.testimonials?.subtitleColor || '#666666'
-          "
-          class="animate fade-in"
-        >
-          {{
-            customizations()?.testimonials?.subtitle ||
-              "Testimonials from satisfied customers"
-          }}
-        </p>
-      </div>
-
-      <div class="testimonials-container">
-        <div
-          class="testimonial-card animate fade-in"
-          *ngFor="let i of [0, 1]; let idx = index"
-          [ngStyle]="getAnimationDelay(idx)"
-        >
-          <div
-            class="quote-icon"
-            [style.color]="
-              customizations()?.testimonials?.quoteColor || '#ff5722'
-            "
-          >
-            <i class="fas fa-quote-left"></i>
-          </div>
-          <p
-            class="testimonial-text"
-            [style.color]="
-              customizations()?.testimonials?.textColor || '#444444'
-            "
-          >
-            {{ customizations()?.testimonials?.['text' + i] || 'This business exceeded my expectations. Their attention to detail and customer service is outstanding. I highly recommend their services to anyone looking for quality and professionalism.' }}
-          </p>
-          <div class="testimonial-author">
-            <h4
-              [style.color]="
-                customizations()?.testimonials?.authorColor || '#333333'
-              "
+      <app-section-hover-wrapper
+        [sectionKey]="'projects'"
+        [sectionName]="'Projects Section'"
+        [editable]="true"
+        [currentPlan]="planType"
+        [sectionPath]="'pages.home.projects'"
+        (sectionSelected)="handleSectionSelection($event)"
+      >
+        <section id="projects" class="projects-section">
+          <div class="section-container">
+            <div class="section-header">
+              <h2 class="section-title">Our Projects</h2>
+              <div class="title-underline"></div>
+            </div>
+            <!-- Simplified projects grid -->
+            <div
+              class="projects-grid"
+              [ngClass]="{ 'projects-grid--mobile': isMobileLayout }"
             >
-              {{ customizations()?.testimonials?.['author' + i] || 'Client Name ' + (i+1) }}
-            </h4>
-            <p
-              [style.color]="
-                customizations()?.testimonials?.authorInfoColor || '#666666'
-              "
-            >
-              {{ customizations()?.testimonials?.['authorInfo' + i] || 'Satisfied Customer' }}
-            </p>
+              <div class="project-card" *ngFor="let i of [1, 2, 3]">
+                <div class="project-image">
+                  <img
+                    src="assets/standard-projects/project{{ i }}.jpg"
+                    alt="Project {{ i }}"
+                  />
+                </div>
+                <div class="project-details">
+                  <h3>Project {{ i }}</h3>
+                  <p>
+                    Brief description for project {{ i }}. Click edit to
+                    customize this content.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </section>
-  </app-section-hover-wrapper>
+        </section>
+      </app-section-hover-wrapper>
+    </ng-container>
 
-  <!-- Call to Action Section -->
-  <app-section-hover-wrapper
-    [isMobile]="isMobileLayout"
-    [isMobileView]="isMobileView"
-    (onEdit)="handleSectionEdit('cta')"
-  >
-    <section class="cta-section" [ngStyle]="getBackgroundStyle('cta')">
-      <div class="cta-content animate fade-in">
-        <h2 [style.color]="customizations()?.cta?.titleColor || '#ffffff'">
-          {{ customizations()?.cta?.title || "Ready to Get Started?" }}
-        </h2>
-        <p [style.color]="customizations()?.cta?.textColor || '#f0f0f0'">
-          {{
-            customizations()?.cta?.text ||
-              "Contact us today to discuss your project or schedule a consultation."
-          }}
-        </p>
-        <button
-          class="cta-button"
-          [style.background-color]="
-            customizations()?.cta?.buttonColor || '#ffffff'
-          "
-          [style.color]="customizations()?.cta?.buttonTextColor || '#333333'"
-        >
-          {{ customizations()?.cta?.buttonText || "Contact Us Now" }}
-        </button>
-      </div>
-    </section>
-  </app-section-hover-wrapper>
-
-  <!-- Contact Info Section -->
-  <app-section-hover-wrapper
-    [isMobile]="isMobileLayout"
-    [isMobileView]="isMobileView"
-    (onEdit)="handleSectionEdit('contact')"
-  >
-    <section
-      class="contact-section"
-      [style.background-color]="
-        customizations()?.contact?.backgroundColor || '#ffffff'
-      "
+    <!-- Products Section (For Retail) -->
+    <ng-container
+      *ngIf="section === 'products' && shouldDisplaySection('products')"
     >
-      <div class="contact-container">
-        <div class="contact-info">
-          <h2
-            [style.color]="customizations()?.contact?.titleColor || '#333333'"
-            class="animate fade-in"
-          >
-            {{ customizations()?.contact?.title || "Contact Information" }}
-          </h2>
-
-          <div class="contact-details">
-            <div
-              class="contact-item animate fade-in"
-              [ngStyle]="getAnimationDelay(0)"
-            >
-              <i
-                class="fas fa-map-marker-alt"
-                [style.color]="
-                  customizations()?.contact?.iconColor || '#ff5722'
-                "
-              ></i>
-              <div>
-                <h3
-                  [style.color]="
-                    customizations()?.contact?.subtitleColor || '#444444'
-                  "
-                >
-                  Address
-                </h3>
-                <p
-                  [style.color]="
-                    customizations()?.contact?.textColor || '#666666'
-                  "
-                >
-                  {{ getContactInfo("address") }}
-                </p>
-              </div>
+      <app-section-hover-wrapper
+        [sectionKey]="'products'"
+        [sectionName]="'Products Section'"
+        [editable]="true"
+        [currentPlan]="planType"
+        [sectionPath]="'pages.home.products'"
+        (sectionSelected)="handleSectionSelection($event)"
+      >
+        <section id="products" class="products-section">
+          <div class="section-container">
+            <div class="section-header">
+              <h2 class="section-title">Our Products</h2>
+              <div class="title-underline"></div>
             </div>
-
+            <!-- Simplified products grid -->
             <div
-              class="contact-item animate fade-in"
-              [ngStyle]="getAnimationDelay(1)"
+              class="products-grid"
+              [ngClass]="{ 'products-grid--mobile': isMobileLayout }"
             >
-              <i
-                class="fas fa-phone-alt"
-                [style.color]="
-                  customizations()?.contact?.iconColor || '#ff5722'
-                "
-              ></i>
-              <div>
-                <h3
-                  [style.color]="
-                    customizations()?.contact?.subtitleColor || '#444444'
-                  "
-                >
-                  Phone
-                </h3>
-                <p
-                  [style.color]="
-                    customizations()?.contact?.textColor || '#666666'
-                  "
-                >
-                  {{ getContactInfo("phone") }}
-                </p>
-              </div>
-            </div>
-
-            <div
-              class="contact-item animate fade-in"
-              [ngStyle]="getAnimationDelay(2)"
-            >
-              <i
-                class="fas fa-envelope"
-                [style.color]="
-                  customizations()?.contact?.iconColor || '#ff5722'
-                "
-              ></i>
-              <div>
-                <h3
-                  [style.color]="
-                    customizations()?.contact?.subtitleColor || '#444444'
-                  "
-                >
-                  Email
-                </h3>
-                <p
-                  [style.color]="
-                    customizations()?.contact?.textColor || '#666666'
-                  "
-                >
-                  {{ getContactInfo("email") }}
-                </p>
-              </div>
-            </div>
-
-            <div
-              class="contact-item animate fade-in"
-              [ngStyle]="getAnimationDelay(3)"
-            >
-              <i
-                class="fas fa-clock"
-                [style.color]="
-                  customizations()?.contact?.iconColor || '#ff5722'
-                "
-              ></i>
-              <div>
-                <h3
-                  [style.color]="
-                    customizations()?.contact?.subtitleColor || '#444444'
-                  "
-                >
-                  Business Hours
-                </h3>
-                <p
-                  [style.color]="
-                    customizations()?.contact?.textColor || '#666666'
-                  "
-                >
-                  {{ getContactInfo("hours") }}
-                </p>
+              <div class="product-card" *ngFor="let i of [1, 2, 3]">
+                <div class="product-image">
+                  <img
+                    src="assets/standard-products/product{{ i }}.jpg"
+                    alt="Product {{ i }}"
+                  />
+                </div>
+                <div class="product-details">
+                  <h3>Product {{ i }}</h3>
+                  <p class="product-price">${{ i }}9.99</p>
+                  <p class="product-desc">
+                    Description for product {{ i }}. Click edit to customize.
+                  </p>
+                  <button class="product-button">Add to Cart</button>
+                </div>
               </div>
             </div>
           </div>
+        </section>
+      </app-section-hover-wrapper>
+    </ng-container>
 
-          <div
-            class="social-links"
-            *ngIf="customizations()?.contact?.showSocial !== false"
-          >
-            <h3
-              [style.color]="
-                customizations()?.contact?.subtitleColor || '#444444'
-              "
-              class="animate fade-in"
+    <!-- Contact Section -->
+    <ng-container
+      *ngIf="section === 'contact' && shouldDisplaySection('contact')"
+    >
+      <app-section-hover-wrapper
+        [sectionKey]="'contact'"
+        [sectionName]="'Contact Section'"
+        [editable]="true"
+        [currentPlan]="planType"
+        [sectionPath]="'pages.home.contact'"
+        (sectionSelected)="handleSectionSelection($event)"
+      >
+        <section id="contact" class="contact-section">
+          <div class="section-container">
+            <div class="section-header">
+              <h2 class="section-title">Contact Us</h2>
+              <div class="title-underline"></div>
+            </div>
+            <!-- Simplified contact content -->
+            <div
+              class="contact-content"
+              [ngClass]="{ 'contact-content--mobile': isMobileLayout }"
             >
-              Follow Us
-            </h3>
-            <div class="social-icons">
-              <a
-                [href]="getSocialLink('facebook')"
-                class="animate fade-in"
-                [ngStyle]="getAnimationDelay(0)"
-              >
-                <i
-                  class="fab fa-facebook-f"
-                  [style.color]="
-                    customizations()?.contact?.socialIconColor || '#3b5998'
-                  "
-                ></i>
-              </a>
-              <a
-                [href]="getSocialLink('instagram')"
-                class="animate fade-in"
-                [ngStyle]="getAnimationDelay(1)"
-              >
-                <i
-                  class="fab fa-instagram"
-                  [style.color]="
-                    customizations()?.contact?.socialIconColor || '#e1306c'
-                  "
-                ></i>
-              </a>
-              <a
-                [href]="getSocialLink('twitter')"
-                class="animate fade-in"
-                [ngStyle]="getAnimationDelay(2)"
-              >
-                <i
-                  class="fab fa-twitter"
-                  [style.color]="
-                    customizations()?.contact?.socialIconColor || '#1da1f2'
-                  "
-                ></i>
-              </a>
-              <a
-                [href]="getSocialLink('linkedin')"
-                class="animate fade-in"
-                [ngStyle]="getAnimationDelay(3)"
-              >
-                <i
-                  class="fab fa-linkedin-in"
-                  [style.color]="
-                    customizations()?.contact?.socialIconColor || '#0077b5'
-                  "
-                ></i>
-              </a>
+              <div class="contact-info">
+                <div class="contact-detail">
+                  <div class="contact-icon">
+                    <img
+                      src="assets/standard-contact/location-icon.svg"
+                      alt="Location"
+                    />
+                  </div>
+                  <div class="contact-text">
+                    <h3>Our Location</h3>
+                    <p>123 Business Street<br />Anytown, ST 12345</p>
+                  </div>
+                </div>
+                <div class="contact-detail">
+                  <div class="contact-icon">
+                    <img
+                      src="assets/standard-contact/phone-icon.svg"
+                      alt="Phone"
+                    />
+                  </div>
+                  <div class="contact-text">
+                    <h3>Phone Number</h3>
+                    <p>(123) 456-7890</p>
+                  </div>
+                </div>
+              </div>
+              <div class="contact-form-container">
+                <h3>Send us a Message</h3>
+                <!-- Simplified form -->
+                <form class="contact-form">
+                  <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" placeholder="Your Name" />
+                  </div>
+                  <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Your Email" />
+                  </div>
+                  <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea
+                      id="message"
+                      rows="4"
+                      placeholder="Your Message"
+                    ></textarea>
+                  </div>
+                  <button type="submit" class="submit-button">
+                    Send Message
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div
-          class="map-container animate fade-in"
-          *ngIf="customizations()?.contact?.showMap !== false"
-        >
-          <!-- Placeholder for map, would be replaced with actual map component -->
-          <div class="map-placeholder">
-            <img
-              [src]="getImageUrl('contact', 'mapImage', 0)"
-              alt="Business Location Map"
-            />
-          </div>
-        </div>
-      </div>
-    </section>
-  </app-section-hover-wrapper>
+        </section>
+      </app-section-hover-wrapper>
+    </ng-container>
+  </ng-container>
 </div>

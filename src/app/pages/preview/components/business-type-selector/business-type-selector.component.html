@@ -1,0 +1,481 @@
+<div class="business-type-selector" [class.compact-mode]="compactMode">
+  <!-- Regular mode (card selection) -->
+  <ng-container *ngIf="!compactMode">
+    <h3 class="selector-title">Select Your Business Type</h3>
+    <p class="selector-subtitle">
+      Choose the type that best matches your business to get optimized content
+      and sections.
+    </p>
+
+    <div class="business-types-grid">
+      <div
+        *ngFor="let type of businessTypes"
+        class="business-type-card"
+        [class.selected]="isSelected(type.id)"
+        (click)="selectBusinessType(type.id)"
+        [style.border-color]="isSelected(type.id) ? accentColor : ''"
+      >
+        <div class="business-type-icon">
+          <!-- Custom SVG icons for each business type -->
+          <svg
+            *ngIf="type.id === 'restaurant'"
+            class="type-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M8.1 13.34L4.4 9.63C3.8 9.03 3.8 8.05 4.4 7.46L7.7 4.16C8.3 3.56 9.28 3.56 9.88 4.16L13.58 7.86L8.1 13.34Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M14.26 13.59L21.18 6.67C22.14 5.71 22.14 4.15 21.18 3.19C20.22 2.23 18.66 2.23 17.7 3.19L10.78 10.11"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M2 22L12.39 11.61"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M18.51 15.83L19.92 17.24C20.32 17.64 20.32 18.31 19.92 18.71L18.71 19.92C18.31 20.32 17.64 20.32 17.24 19.92L15.83 18.51"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M5.47 8.14L7.29 10.05"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path d="M19.5 4.5L21 6" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+
+          <svg
+            *ngIf="type.id === 'salon'"
+            class="type-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M12 7L12 9"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M12 15L12 17"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M7 12L9 12"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M15 12L17 12"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+
+          <svg
+            *ngIf="type.id === 'architecture'"
+            class="type-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M2 22H22"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M3 22L3 11C3 9.89543 3.89543 9 5 9H8L11 4L14 9H19C20.1046 9 21 9.89543 21 11V22"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path d="M9 22V16H15V22" stroke="currentColor" stroke-width="1.5" />
+            <path
+              d="M8 12H16"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+
+          <svg
+            *ngIf="type.id === 'portfolio'"
+            class="type-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M12 10L16 7L12 4L8 7L12 10Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M16 12L20 9L16 6"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path d="M8 12L4 9L8 6" stroke="currentColor" stroke-width="1.5" />
+            <path
+              d="M12 20L16 17L12 14L8 17L12 20Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path d="M12 10L12 14" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+
+          <svg
+            *ngIf="type.id === 'retail'"
+            class="type-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M2 8.50488H22"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M6 16.5049H8"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M10.5 16.5049H18"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M6 12.5049H18"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M19 4.50488H5C3.89543 4.50488 3 5.40031 3 6.50488V17.5049C3 18.6095 3.89543 19.5049 5 19.5049H19C20.1046 19.5049 21 18.6095 21 17.5049V6.50488C21 5.40031 20.1046 4.50488 19 4.50488Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+          </svg>
+        </div>
+        <h4 class="business-type-name">{{ type.name }}</h4>
+        <p class="business-type-description">{{ type.description }}</p>
+
+        <div class="selected-indicator" *ngIf="isSelected(type.id)">
+          <svg class="check-icon" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M5 12L10 17L20 7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Premium Plan Upgrade Prompt (if in standard plan) -->
+    <div class="premium-upgrade-prompt" *ngIf="currentPlan === 'standard'">
+      <div class="upgrade-badge">
+        <svg class="premium-icon" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+            stroke="currentColor"
+            stroke-width="1.5"
+            fill="none"
+          />
+        </svg>
+        Premium
+      </div>
+      <p>
+        Unlock additional sections and advanced customization with our Premium
+        plan.
+      </p>
+      <button class="upgrade-button">Upgrade Now</button>
+    </div>
+  </ng-container>
+
+  <!-- Compact mode for fullscreen (dropdown) -->
+  <ng-container *ngIf="compactMode">
+    <div class="compact-selector">
+      <div class="selected-type" (click)="toggleDropdown()">
+        <div class="business-type-icon">
+          <!-- Custom SVG for selected business type -->
+          <svg
+            *ngIf="selectedBusinessType === 'restaurant'"
+            class="type-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M8.1 13.34L4.4 9.63C3.8 9.03 3.8 8.05 4.4 7.46L7.7 4.16C8.3 3.56 9.28 3.56 9.88 4.16L13.58 7.86L8.1 13.34Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M14.26 13.59L21.18 6.67C22.14 5.71 22.14 4.15 21.18 3.19C20.22 2.23 18.66 2.23 17.7 3.19L10.78 10.11"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+          </svg>
+
+          <svg
+            *ngIf="selectedBusinessType === 'salon'"
+            class="type-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+          </svg>
+
+          <svg
+            *ngIf="selectedBusinessType === 'architecture'"
+            class="type-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M3 22L3 11C3 9.89543 3.89543 9 5 9H8L11 4L14 9H19C20.1046 9 21 9.89543 21 11V22"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path d="M9 22V16H15V22" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+
+          <svg
+            *ngIf="selectedBusinessType === 'portfolio'"
+            class="type-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M12 10L16 7L12 4L8 7L12 10Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M12 20L16 17L12 14L8 17L12 20Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path d="M12 10L12 14" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+
+          <svg
+            *ngIf="selectedBusinessType === 'retail'"
+            class="type-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M19 4.50488H5C3.89543 4.50488 3 5.40031 3 6.50488V17.5049C3 18.6095 3.89543 19.5049 5 19.5049H19C20.1046 19.5049 21 18.6095 21 17.5049V6.50488C21 5.40031 20.1046 4.50488 19 4.50488Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M2 8.50488H22"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+
+          <!-- Default icon if no business type selected -->
+          <svg
+            *ngIf="!selectedBusinessType"
+            class="type-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M3 6L10 6"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M3 10H16"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M3 14H21"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <path
+              d="M3 18H12"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+        <span>{{ getSelectedBusinessTypeName() }}</span>
+        <div class="dropdown-arrow">
+          <svg class="arrow-icon" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M7 10L12 15L17 10"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Dropdown for compact mode -->
+      <div class="business-types-dropdown" *ngIf="dropdownOpen">
+        <div
+          *ngFor="let type of businessTypes"
+          class="dropdown-item"
+          [class.selected]="isSelected(type.id)"
+          (click)="selectBusinessType(type.id)"
+        >
+          <div class="business-type-icon">
+            <!-- Custom SVG icons for each business type in dropdown -->
+            <svg
+              *ngIf="type.id === 'restaurant'"
+              class="type-icon-small"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M8.1 13.34L4.4 9.63C3.8 9.03 3.8 8.05 4.4 7.46L7.7 4.16C8.3 3.56 9.28 3.56 9.88 4.16L13.58 7.86L8.1 13.34Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M14.26 13.59L21.18 6.67C22.14 5.71 22.14 4.15 21.18 3.19C20.22 2.23 18.66 2.23 17.7 3.19L10.78 10.11"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+            </svg>
+
+            <svg
+              *ngIf="type.id === 'salon'"
+              class="type-icon-small"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+            </svg>
+
+            <svg
+              *ngIf="type.id === 'architecture'"
+              class="type-icon-small"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M3 22L3 11C3 9.89543 3.89543 9 5 9H8L11 4L14 9H19C20.1046 9 21 9.89543 21 11V22"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M9 22V16H15V22"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+            </svg>
+
+            <svg
+              *ngIf="type.id === 'portfolio'"
+              class="type-icon-small"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M12 10L16 7L12 4L8 7L12 10Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M12 20L16 17L12 14L8 17L12 20Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path d="M12 10L12 14" stroke="currentColor" stroke-width="1.5" />
+            </svg>
+
+            <svg
+              *ngIf="type.id === 'retail'"
+              class="type-icon-small"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M19 4.50488H5C3.89543 4.50488 3 5.40031 3 6.50488V17.5049C3 18.6095 3.89543 19.5049 5 19.5049H19C20.1046 19.5049 21 18.6095 21 17.5049V6.50488C21 5.40031 20.1046 4.50488 19 4.50488Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M2 8.50488H22"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <span>{{ type.name }}</span>
+          <div class="selected-indicator" *ngIf="isSelected(type.id)">
+            <svg class="check-icon" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M5 12L10 17L20 7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

@@ -1,4 +1,8 @@
-<div class="structure-container" [style.fontFamily]="getFontFamily()">
+<div
+  class="structure-container"
+  [style.fontFamily]="getFontFamily()"
+  #structureContainer
+>
   <!-- Header Section -->
   <app-section-hover-wrapper
     [isMobile]="isMobileLayout"
@@ -9,20 +13,37 @@
       [isMobileLayout]="isMobileLayout"
       [customizations]="customizations()?.header"
       [currentPage]="currentPage"
+      [plan]="currentPlan"
+      [businessType]="businessType"
       (pageChange)="navigateToPage($event)"
+      (sectionScroll)="handleSectionScroll($event)"
     >
     </app-structure-header>
   </app-section-hover-wrapper>
 
   <div class="dynamic-pages-content">
-    <!-- Conditionally render the current page based on route -->
-    <ng-container [ngSwitch]="currentPage">
+    <!-- For standard plan, we only need the home page with all sections -->
+    <app-home-standard
+      *ngIf="currentPlan === 'standard'"
+      [customizations]="homeCustomizationsSignal"
+      [wholeData]="wholeDataSignal"
+      [isMobileLayout]="isMobileLayout"
+      [isMobileView]="isMobileView"
+      [planType]="currentPlan"
+      [businessType]="businessType"
+      (sectionSelected)="handlePageSectionEdit($event)"
+    ></app-home-standard>
+
+    <!-- For premium plan, conditionally render the current page based on route -->
+    <ng-container *ngIf="currentPlan === 'premium'" [ngSwitch]="currentPage">
       <app-home-standard
         *ngSwitchCase="'home'"
         [customizations]="homeCustomizationsSignal"
         [wholeData]="wholeDataSignal"
         [isMobileLayout]="isMobileLayout"
         [isMobileView]="isMobileView"
+        [planType]="currentPlan"
+        [businessType]="businessType"
         (sectionSelected)="handlePageSectionEdit($event)"
       ></app-home-standard>
 
@@ -31,6 +52,7 @@
         [customizations]="aboutCustomizationsSignal"
         [isMobileLayout]="isMobileLayout"
         [isMobileView]="isMobileView"
+        [businessType]="businessType"
         (sectionSelected)="handlePageSectionEdit($event)"
       ></app-about-standard>
 
@@ -39,6 +61,7 @@
         [customizations]="contactCustomizationsSignal"
         [isMobileLayout]="isMobileLayout"
         [isMobileView]="isMobileView"
+        [businessType]="businessType"
         (sectionSelected)="handlePageSectionEdit($event)"
       ></app-contact-standard> -->
 
@@ -51,12 +74,12 @@
   </div>
 
   <!-- Footer Section -->
-  <!-- <app-section-hover-wrapper
+  <app-section-hover-wrapper
     [isMobile]="isMobileLayout"
     [isMobileView]="isMobileView"
     (onEdit)="handleComponentSelection('footer')"
   >
     <app-structure-footer [customizations]="customizations()?.footer">
     </app-structure-footer>
-  </app-section-hover-wrapper> -->
+  </app-section-hover-wrapper>
 </div>

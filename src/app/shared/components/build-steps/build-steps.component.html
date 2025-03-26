@@ -1,0 +1,24 @@
+<div class="build-steps" [class.vertical]="isVertical">
+  <!-- Loop through steps to create each step indicator -->
+  <ng-container *ngFor="let step of steps; let i = index; let last = last">
+    <!-- Step indicator -->
+    <div
+      class="step"
+      [class.completed]="isCompleted(step.id)"
+      [class.active]="isActive(step.id)"
+    >
+      <div class="step-number">
+        <span>{{ step.id }}</span>
+      </div>
+      <div class="step-label">{{ step.name }}</div>
+    </div>
+
+    <!-- Step connector (except after the last step) -->
+    <div
+      class="step-connector"
+      *ngIf="!last"
+      [class.active]="step.id < currentStep"
+      [class.vertical]="isVertical"
+    ></div>
+  </ng-container>
+</div>
