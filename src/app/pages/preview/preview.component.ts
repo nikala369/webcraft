@@ -176,20 +176,52 @@ export class PreviewComponent implements OnInit, OnDestroy {
     const selected = this.selectedComponent();
     if (!selected) return null;
 
+    console.log('Computing selectedCustomization for:', selected);
+
     // If there's a path, use it to get the nested data
     if (selected.path) {
       const pathParts = selected.path.split('.');
       let data = this.customizations() as any;
+      let missingParts = false;
 
       // Navigate through the path to get the data
       for (const part of pathParts) {
-        if (data && data[part]) {
+        if (data && data[part] !== undefined) {
           data = data[part];
         } else {
-          data = {};
+          console.warn(
+            `Cannot find data at path part: "${part}" in path: "${selected.path}"`
+          );
+          missingParts = true;
           break;
         }
       }
+
+      // If we couldn't find the data, ensure the structure exists and add default values
+      if (missingParts) {
+        console.log(
+          'Creating default structure for missing path:',
+          selected.path
+        );
+        this.ensureCompleteCustomizationStructure();
+
+        // Try to get the data again
+        data = this.customizations() as any;
+        for (const part of pathParts) {
+          if (data && data[part] !== undefined) {
+            data = data[part];
+          } else {
+            console.error(
+              `Still missing data after initialization at: "${part}" in "${selected.path}"`
+            );
+            // Initialize with empty object as fallback
+            data = {};
+            break;
+          }
+        }
+      }
+
+      console.log('Selected component data for path:', selected.path, data);
 
       return {
         key: selected.key,
@@ -200,6 +232,12 @@ export class PreviewComponent implements OnInit, OnDestroy {
     }
 
     // Otherwise use the key directly
+    console.log(
+      'Selected component data for key:',
+      selected.key,
+      this.customizations()[selected.key]
+    );
+
     return {
       key: selected.key,
       name: selected.name,
@@ -228,6 +266,9 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('PreviewComponent initializing');
+
+    // Initialize default customization structure
+    this.ensureCompleteCustomizationStructure();
 
     // Handle window resize
     window.addEventListener('resize', this.updateIsMobile.bind(this));
@@ -1054,19 +1095,23 @@ export class PreviewComponent implements OnInit, OnDestroy {
     const selected = this.selectedComponent();
     if (!selected) return;
 
+    console.log('Updating component:', selected, 'with data:', update);
+
     // If there's a path, update the nested data
     if (selected.path) {
       const pathParts = selected.path.split('.');
 
       this.customizations.update((current) => {
         // Create a deep copy to avoid mutating the original
-        const updated = { ...current };
+        const updated = structuredClone(current);
 
         // Navigate to the parent object that contains the property to update
         let target: any = updated;
         for (let i = 0; i < pathParts.length - 1; i++) {
           const part = pathParts[i];
+          // Create objects along the path if they don't exist
           if (!target[part]) {
+            console.log(`Creating missing object at path part: ${part}`);
             target[part] = {};
           }
           target = target[part];
@@ -1074,18 +1119,36 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
         // Update the property
         const lastPart = pathParts[pathParts.length - 1];
+
+        // Use a merge approach to avoid overwriting existing properties
+        if (!target[lastPart]) {
+          console.log(
+            `Creating missing object at final path part: ${lastPart}`
+          );
+          target[lastPart] = {};
+        }
+
+        // Merge the update with the existing data
         target[lastPart] = { ...target[lastPart], ...update };
+
+        console.log('Updated customizations at path:', selected.path);
+        console.log('Updated data:', target[lastPart]);
+
         return updated;
       });
     } else {
       // Original logic for top-level properties
-      this.customizations.update((current) => ({
-        ...current,
-        [selected.key]: {
-          ...current[selected.key],
-          ...update,
-        },
-      }));
+      this.customizations.update((current) => {
+        const updated = {
+          ...current,
+          [selected.key]: {
+            ...current[selected.key],
+            ...update,
+          },
+        };
+        console.log('Updated top-level customizations:', updated);
+        return updated;
+      });
     }
 
     // Update currentEditingState with latest changes
@@ -1278,6 +1341,58 @@ export class PreviewComponent implements OnInit, OnDestroy {
         3000
       );
     }
+  }
+
+  /**
+   * Ensure the customization object has all the required nested objects
+   * This prevents "undefined" errors when accessing deeply nested properties
+   */
+  private ensureCompleteCustomizationStructure(): void {
+    this.customizations.update((current) => {
+      const updated = structuredClone(current);
+
+      // Ensure pages object exists
+      if (!updated.pages) {
+        updated.pages = {};
+      }
+
+      // Ensure home object exists
+      if (!updated.pages.home) {
+        updated.pages.home = {};
+      }
+
+      // Ensure hero1 object exists with default values if not set
+      if (!updated.pages.home.hero1) {
+        updated.pages.home.hero1 = {
+          backgroundImage: 'assets/standard-hero1/background-image1.jpg',
+          title: 'Grow Your Business With Us',
+          subtitle: 'Professional solutions tailored to your business needs',
+          layout: 'center',
+          showLogo: true,
+          titleColor: '#ffffff',
+          subtitleColor: '#f0f0f0',
+          textShadow: 'medium',
+          showPrimaryButton: true,
+          primaryButtonText: 'GET STARTED NOW',
+          primaryButtonColor: '#ffffff',
+          primaryButtonTextColor: '#000000',
+          primaryButtonLink: '/contact',
+        };
+      }
+
+      // Ensure about, menu, services, projects, contact objects exist
+      ['about', 'menu', 'services', 'projects', 'contact'].forEach(
+        (section) => {
+          // Use type assertion to handle dynamic property access
+          const homeObj = updated.pages.home as Record<string, any>;
+          if (!homeObj[section]) {
+            homeObj[section] = {};
+          }
+        }
+      );
+
+      return updated;
+    });
   }
 }
 

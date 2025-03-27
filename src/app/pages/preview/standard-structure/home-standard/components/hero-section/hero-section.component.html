@@ -1,0 +1,57 @@
+<app-section-hover-wrapper
+  [sectionKey]="'hero1'"
+  [sectionName]="'Hero Section'"
+  [editable]="true"
+  [currentPlan]="planType"
+  [sectionPath]="'pages.home.hero1'"
+  (sectionSelected)="handleSectionSelection($event)"
+  [zIndex]="9999"
+>
+  <div
+    class="hero-section"
+    [ngClass]="{ 'hero-section--mobile': isMobileLayout }"
+    [ngStyle]="{
+      'background-image': 'url(' + getHeroBackground() + ')',
+      'background-size': 'cover',
+      'background-position': 'center'
+    }"
+  >
+    <div class="hero-content-wrapper">
+      <div class="hero-content" [ngClass]="'layout-' + getLayout()">
+        <div *ngIf="shouldShowLogo()" class="business-logo">
+          <img [src]="getLogoUrl()" alt="Business Logo" />
+        </div>
+
+        <!-- Title -->
+        <h1
+          class="hero-title"
+          [ngClass]="getTextShadow()"
+          [style.color]="getTitleColor()"
+        >
+          {{ getHeroTitle() }}
+        </h1>
+
+        <!-- Subtitle -->
+        <p
+          class="hero-subtitle"
+          [ngClass]="getTextShadow()"
+          [style.color]="getSubtitleColor()"
+        >
+          {{ getHeroSubtitle() }}
+        </p>
+
+        <!-- Call-to-action button -->
+        <div class="hero-cta" *ngIf="shouldShowButton()">
+          <a
+            href="#"
+            class="hero-button hero-button-primary"
+            [style.background-color]="getButtonColor()"
+            [style.color]="getButtonTextColor()"
+          >
+            {{ getButtonText() }}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-section-hover-wrapper>

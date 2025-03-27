@@ -1,402 +1,90 @@
 <div class="home-standard">
   <!-- Dynamically render sections based on business type -->
-  <ng-container *ngFor="let section of availableSections()">
-    <!-- Hero Section -->
-    <ng-container *ngIf="section === 'hero'">
-      <app-section-hover-wrapper
-        [sectionKey]="'hero1'"
-        [sectionName]="'Hero Section'"
-        [editable]="true"
-        [currentPlan]="planType"
-        [sectionPath]="'pages.home.hero1'"
-        (sectionSelected)="handleSectionSelection($event)"
-        [zIndex]="9999"
-      >
-        <div
-          class="hero-section"
-          [ngClass]="{ 'hero-section--mobile': isMobileLayout }"
-          [ngStyle]="{
-            'background-image':
-              'url(' +
-              (customizations?.pages?.home?.hero1?.backgroundImage ||
-                'assets/standard-hero1/background-image1.jpg') +
-              ')',
-            'background-size': 'cover',
-            'background-position': 'center'
-          }"
+  <ng-container *ngIf="customizations">
+    <ng-container *ngFor="let section of availableSections()">
+      <!-- Hero Section -->
+      <ng-container *ngIf="section === 'hero'">
+        <app-hero-section
+          [customizations]="wholeData()"
+          [heroData]="
+            customizations?.hero1 || wholeData()?.pages?.home?.hero1 || {}
+          "
+          [isMobileLayout]="isMobileLayout"
+          [isMobileView]="isMobileView"
+          [planType]="planType"
+          [businessType]="businessType"
+          (sectionSelected)="handleSectionSelection($event)"
         >
-          <div class="hero-content-wrapper">
-            <div
-              class="hero-content"
-              [ngClass]="'layout-' + customizations?.pages?.home?.hero1?.layout"
-            >
-              <!-- Make logo editable with direct click -->
-              <div
-                *ngIf="customizations?.pages?.home?.hero1?.showLogo"
-                class="business-logo"
-                (click)="handleLogoClick($event)"
-              >
-                <img
-                  [src]="customizations?.header?.logoUrl || 'assets/logo.png'"
-                  alt="Business Logo"
-                />
-              </div>
+        </app-hero-section>
+      </ng-container>
 
-              <h1
-                class="hero-title"
-                [ngClass]="
-                  'text-shadow-' +
-                  customizations?.pages?.home?.hero1?.textShadow
-                "
-                [style.color]="customizations?.pages?.home?.hero1?.titleColor"
-              >
-                {{
-                  customizations?.pages?.home?.hero1?.title ||
-                    "Welcome to Our Website"
-                }}
-              </h1>
-              <p
-                class="hero-subtitle"
-                [ngClass]="
-                  'text-shadow-' +
-                  customizations?.pages?.home?.hero1?.textShadow
-                "
-                [style.color]="
-                  customizations?.pages?.home?.hero1?.subtitleColor
-                "
-              >
-                {{
-                  customizations?.pages?.home?.hero1?.subtitle ||
-                    "Discover what makes us special"
-                }}
-              </p>
-              <div
-                class="hero-cta"
-                *ngIf="customizations?.pages?.home?.hero1?.showPrimaryButton"
-              >
-                <a
-                  href="#"
-                  class="hero-button hero-button-primary"
-                  [style.background-color]="
-                    customizations?.pages?.home?.hero1?.primaryButtonColor
-                  "
-                  [style.color]="
-                    customizations?.pages?.home?.hero1?.primaryButtonTextColor
-                  "
-                >
-                  {{
-                    customizations?.pages?.home?.hero1?.primaryButtonText ||
-                      "LEARN MORE"
-                  }}
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </app-section-hover-wrapper>
-    </ng-container>
-
-    <!-- Only render sections applicable to the selected business type -->
-    <!-- About Section -->
-    <ng-container *ngIf="section === 'about' && shouldDisplaySection('about')">
-      <app-section-hover-wrapper
-        [sectionKey]="'about'"
-        [sectionName]="'About Section'"
-        [editable]="true"
-        [currentPlan]="planType"
-        [sectionPath]="'pages.home.about'"
-        (sectionSelected)="handleSectionSelection($event)"
+      <!-- About Section -->
+      <ng-container
+        *ngIf="section === 'about' && shouldDisplaySection('about')"
       >
-        <section id="about" class="about-section">
-          <div class="section-container">
-            <div class="section-header">
-              <h2 class="section-title">About Us</h2>
-              <div class="title-underline"></div>
-            </div>
-            <div
-              class="about-content"
-              [ngClass]="{ 'about-content--mobile': isMobileLayout }"
-            >
-              <div class="about-image">
-                <img
-                  src="assets/standard-about/about-image.jpg"
-                  alt="About Us"
-                />
-              </div>
-              <div class="about-text">
-                <h3>Our Story</h3>
-                <p>
-                  We are a dedicated team of professionals committed to
-                  delivering exceptional value to our clients. With years of
-                  experience in the industry, we understand what it takes to
-                  help your business succeed.
-                </p>
-                <h3>Our Mission</h3>
-                <p>
-                  Our mission is to provide high-quality services that exceed
-                  our clients' expectations. We believe in building long-lasting
-                  relationships based on trust, integrity, and results.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </app-section-hover-wrapper>
-    </ng-container>
+        <app-about-section
+          [customizations]="customizations"
+          [isMobileLayout]="isMobileLayout"
+          [planType]="planType"
+          [businessType]="businessType"
+          (sectionSelected)="handleSectionSelection($event)"
+        >
+        </app-about-section>
+      </ng-container>
 
-    <!-- Services Section -->
-    <ng-container
-      *ngIf="section === 'services' && shouldDisplaySection('services')"
-    >
-      <app-section-hover-wrapper
-        [sectionKey]="'services'"
-        [sectionName]="'Services Section'"
-        [editable]="true"
-        [currentPlan]="planType"
-        [sectionPath]="'pages.home.services'"
-        (sectionSelected)="handleSectionSelection($event)"
-      >
-        <section id="services" class="services-section">
-          <div class="section-container">
-            <div class="section-header">
-              <h2 class="section-title">Our Services</h2>
-              <div class="title-underline"></div>
-            </div>
-            <div
-              class="services-grid"
-              [ngClass]="{ 'services-grid--mobile': isMobileLayout }"
-            >
-              <!-- Simplified service items -->
-              <div class="service-card" *ngFor="let i of [1, 2, 3]">
-                <div class="service-icon">
-                  <img
-                    src="assets/standard-services/service-icon{{ i }}.svg"
-                    alt="Service {{ i }}"
-                  />
-                </div>
-                <h3>Service {{ i }}</h3>
-                <p>
-                  Description for service {{ i }} would go here. Click edit to
-                  customize this section.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </app-section-hover-wrapper>
-    </ng-container>
+      <!-- Menu Section (For Restaurant) -->
+      <ng-container *ngIf="section === 'menu' && shouldDisplaySection('menu')">
+        <app-menu-section
+          [customizations]="customizations"
+          [isMobileLayout]="isMobileLayout"
+          [planType]="planType"
+          [businessType]="businessType"
+          (sectionSelected)="handleSectionSelection($event)"
+        >
+        </app-menu-section>
+      </ng-container>
 
-    <!-- Menu Section (For Restaurant) -->
-    <ng-container
-      *ngIf="
-        section === 'menu' ||
-        (section === 'menu' && shouldDisplaySection('menu'))
-      "
-    >
-      <app-section-hover-wrapper
-        [sectionKey]="'menu'"
-        [sectionName]="'Menu Section'"
-        [editable]="true"
-        [currentPlan]="planType"
-        [sectionPath]="'pages.home.menu'"
-        (sectionSelected)="handleSectionSelection($event)"
+      <!-- Services Section (For Salon, Architecture) -->
+      <ng-container
+        *ngIf="section === 'services' && shouldDisplaySection('services')"
       >
-        <section id="menu" class="menu-section">
-          <div class="section-container">
-            <div class="section-header">
-              <h2 class="section-title">Our Menu</h2>
-              <div class="title-underline"></div>
-            </div>
-            <!-- Simplified menu content -->
-            <div class="menu-categories">
-              <div class="menu-category">
-                <h3>Menu Category</h3>
-                <div class="menu-items">
-                  <div class="menu-item" *ngFor="let i of [1, 2]">
-                    <div class="menu-item-header">
-                      <h4 class="menu-item-name">Menu Item {{ i }}</h4>
-                      <span class="menu-item-price">${{ i }}9.99</span>
-                    </div>
-                    <p class="menu-item-desc">
-                      Description for menu item {{ i }}. Click edit to
-                      customize.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </app-section-hover-wrapper>
-    </ng-container>
+        <app-services-section
+          [customizations]="customizations"
+          [isMobileLayout]="isMobileLayout"
+          [planType]="planType"
+          [businessType]="businessType"
+          (sectionSelected)="handleSectionSelection($event)"
+        >
+        </app-services-section>
+      </ng-container>
 
-    <!-- Projects Section (For Architecture/Portfolio) -->
-    <ng-container
-      *ngIf="section === 'projects' && shouldDisplaySection('projects')"
-    >
-      <app-section-hover-wrapper
-        [sectionKey]="'projects'"
-        [sectionName]="'Projects Section'"
-        [editable]="true"
-        [currentPlan]="planType"
-        [sectionPath]="'pages.home.projects'"
-        (sectionSelected)="handleSectionSelection($event)"
+      <!-- Projects Section (For Architecture/Portfolio) -->
+      <ng-container
+        *ngIf="section === 'projects' && shouldDisplaySection('projects')"
       >
-        <section id="projects" class="projects-section">
-          <div class="section-container">
-            <div class="section-header">
-              <h2 class="section-title">Our Projects</h2>
-              <div class="title-underline"></div>
-            </div>
-            <!-- Simplified projects grid -->
-            <div
-              class="projects-grid"
-              [ngClass]="{ 'projects-grid--mobile': isMobileLayout }"
-            >
-              <div class="project-card" *ngFor="let i of [1, 2, 3]">
-                <div class="project-image">
-                  <img
-                    src="assets/standard-projects/project{{ i }}.jpg"
-                    alt="Project {{ i }}"
-                  />
-                </div>
-                <div class="project-details">
-                  <h3>Project {{ i }}</h3>
-                  <p>
-                    Brief description for project {{ i }}. Click edit to
-                    customize this content.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </app-section-hover-wrapper>
-    </ng-container>
+        <app-projects-section
+          [customizations]="customizations"
+          [isMobileLayout]="isMobileLayout"
+          [planType]="planType"
+          [businessType]="businessType"
+          (sectionSelected)="handleSectionSelection($event)"
+        >
+        </app-projects-section>
+      </ng-container>
 
-    <!-- Products Section (For Retail) -->
-    <ng-container
-      *ngIf="section === 'products' && shouldDisplaySection('products')"
-    >
-      <app-section-hover-wrapper
-        [sectionKey]="'products'"
-        [sectionName]="'Products Section'"
-        [editable]="true"
-        [currentPlan]="planType"
-        [sectionPath]="'pages.home.products'"
-        (sectionSelected)="handleSectionSelection($event)"
+      <!-- Contact Section -->
+      <ng-container
+        *ngIf="section === 'contact' && shouldDisplaySection('contact')"
       >
-        <section id="products" class="products-section">
-          <div class="section-container">
-            <div class="section-header">
-              <h2 class="section-title">Our Products</h2>
-              <div class="title-underline"></div>
-            </div>
-            <!-- Simplified products grid -->
-            <div
-              class="products-grid"
-              [ngClass]="{ 'products-grid--mobile': isMobileLayout }"
-            >
-              <div class="product-card" *ngFor="let i of [1, 2, 3]">
-                <div class="product-image">
-                  <img
-                    src="assets/standard-products/product{{ i }}.jpg"
-                    alt="Product {{ i }}"
-                  />
-                </div>
-                <div class="product-details">
-                  <h3>Product {{ i }}</h3>
-                  <p class="product-price">${{ i }}9.99</p>
-                  <p class="product-desc">
-                    Description for product {{ i }}. Click edit to customize.
-                  </p>
-                  <button class="product-button">Add to Cart</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </app-section-hover-wrapper>
-    </ng-container>
-
-    <!-- Contact Section -->
-    <ng-container
-      *ngIf="section === 'contact' && shouldDisplaySection('contact')"
-    >
-      <app-section-hover-wrapper
-        [sectionKey]="'contact'"
-        [sectionName]="'Contact Section'"
-        [editable]="true"
-        [currentPlan]="planType"
-        [sectionPath]="'pages.home.contact'"
-        (sectionSelected)="handleSectionSelection($event)"
-      >
-        <section id="contact" class="contact-section">
-          <div class="section-container">
-            <div class="section-header">
-              <h2 class="section-title">Contact Us</h2>
-              <div class="title-underline"></div>
-            </div>
-            <!-- Simplified contact content -->
-            <div
-              class="contact-content"
-              [ngClass]="{ 'contact-content--mobile': isMobileLayout }"
-            >
-              <div class="contact-info">
-                <div class="contact-detail">
-                  <div class="contact-icon">
-                    <img
-                      src="assets/standard-contact/location-icon.svg"
-                      alt="Location"
-                    />
-                  </div>
-                  <div class="contact-text">
-                    <h3>Our Location</h3>
-                    <p>123 Business Street<br />Anytown, ST 12345</p>
-                  </div>
-                </div>
-                <div class="contact-detail">
-                  <div class="contact-icon">
-                    <img
-                      src="assets/standard-contact/phone-icon.svg"
-                      alt="Phone"
-                    />
-                  </div>
-                  <div class="contact-text">
-                    <h3>Phone Number</h3>
-                    <p>(123) 456-7890</p>
-                  </div>
-                </div>
-              </div>
-              <div class="contact-form-container">
-                <h3>Send us a Message</h3>
-                <!-- Simplified form -->
-                <form class="contact-form">
-                  <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="text" id="name" placeholder="Your Name" />
-                  </div>
-                  <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="Your Email" />
-                  </div>
-                  <div class="form-group">
-                    <label for="message">Message</label>
-                    <textarea
-                      id="message"
-                      rows="4"
-                      placeholder="Your Message"
-                    ></textarea>
-                  </div>
-                  <button type="submit" class="submit-button">
-                    Send Message
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </section>
-      </app-section-hover-wrapper>
+        <app-contact-section
+          [customizations]="customizations"
+          [isMobileLayout]="isMobileLayout"
+          [planType]="planType"
+          [businessType]="businessType"
+          (sectionSelected)="handleSectionSelection($event)"
+        >
+        </app-contact-section>
+      </ng-container>
     </ng-container>
   </ng-container>
 </div>

@@ -1,0 +1,116 @@
+<app-section-hover-wrapper
+  [sectionKey]="'projects'"
+  [sectionName]="'Projects Section'"
+  [editable]="true"
+  [currentPlan]="planType"
+  [sectionPath]="'pages.home.projects'"
+  (sectionSelected)="handleSectionSelection()"
+>
+  <section id="projects" class="projects-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">{{ getSectionTitle() }}</h2>
+        <div class="title-underline"></div>
+        <p *ngIf="getSectionSubtitle()" class="section-subtitle">
+          {{ getSectionSubtitle() }}
+        </p>
+      </div>
+
+      <!-- Project Categories Filter (Premium Only) -->
+      <div
+        class="project-categories"
+        *ngIf="showCategories() && getProjectCategories().length > 1"
+      >
+        <button class="category-button active">All</button>
+        <button
+          *ngFor="let category of getProjectCategories()"
+          class="category-button"
+        >
+          {{ category }}
+        </button>
+      </div>
+
+      <!-- Projects Grid -->
+      <div
+        class="projects-grid"
+        [ngClass]="{ 'projects-grid--mobile': isMobileLayout }"
+      >
+        <div
+          *ngFor="let project of getProjects(); let i = index"
+          class="project-card"
+          [ngClass]="{ 'project-card--featured': isProjectFeatured(project) }"
+          [ngStyle]="getAnimationDelay(i)"
+        >
+          <!-- Featured badge (Premium Only) -->
+          <div
+            class="featured-badge"
+            *ngIf="isProjectFeatured(project) && planType === 'premium'"
+          >
+            Featured
+          </div>
+
+          <!-- Project Image -->
+          <div class="project-image">
+            <img [src]="project.image" [alt]="project.title" />
+
+            <!-- Overlay with details for hover -->
+            <div class="project-overlay">
+              <!-- Category badge -->
+              <span class="project-category" *ngIf="hasCategory(project)">
+                {{ project.category }}
+              </span>
+
+              <!-- View project button -->
+              <a
+                *ngIf="planType === 'premium' && project.link"
+                [href]="project.link"
+                class="view-project"
+              >
+                View Project
+              </a>
+            </div>
+          </div>
+
+          <!-- Project Details -->
+          <div class="project-details">
+            <h3 class="project-title">{{ project.title }}</h3>
+            <p class="project-description">{{ project.description }}</p>
+
+            <!-- Additional info (Premium Only) -->
+            <div
+              class="project-info"
+              *ngIf="
+                planType === 'premium' &&
+                (hasClient(project) || hasDate(project))
+              "
+            >
+              <div class="info-item" *ngIf="hasClient(project)">
+                <span class="info-label">Client:</span>
+                <span class="info-value">{{ project.client }}</span>
+              </div>
+
+              <div class="info-item" *ngIf="hasDate(project)">
+                <span class="info-label">Year:</span>
+                <span class="info-value">{{ project.date }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View All Projects Button (Premium Only) -->
+      <div class="view-all-projects" *ngIf="planType === 'premium'">
+        <a href="#" class="view-all-button">View All Projects</a>
+      </div>
+
+      <!-- Premium call-to-action (standard plan users) -->
+      <div class="projects-cta" *ngIf="planType === 'standard'">
+        <p>
+          Want to showcase more projects with filtering and detailed project
+          pages?
+        </p>
+        <button class="upgrade-button">Upgrade to Premium</button>
+      </div>
+    </div>
+  </section>
+</app-section-hover-wrapper>

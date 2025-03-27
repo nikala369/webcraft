@@ -1,0 +1,51 @@
+<app-section-hover-wrapper
+  [sectionKey]="'about'"
+  [sectionName]="'About Section'"
+  [editable]="true"
+  [currentPlan]="planType"
+  [sectionPath]="'pages.home.about'"
+  (sectionSelected)="handleSectionSelection()"
+>
+  <section id="about" class="about-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">{{ getAboutContent().title }}</h2>
+        <div class="title-underline"></div>
+        <p *ngIf="getAboutContent().subtitle" class="section-subtitle">
+          {{ getAboutContent().subtitle }}
+        </p>
+      </div>
+
+      <div
+        class="about-content"
+        [ngClass]="{ 'about-content--mobile': isMobileLayout }"
+      >
+        <!-- About Image -->
+        <div class="about-image">
+          <img [src]="getAboutImage()" alt="About Us" />
+        </div>
+
+        <!-- About Text -->
+        <div class="about-text">
+          <h3>{{ getAboutContent().storyTitle }}</h3>
+          <p>{{ getAboutContent().storyText }}</p>
+
+          <h3>{{ getAboutContent().missionTitle }}</h3>
+          <p>{{ getAboutContent().missionText }}</p>
+
+          <!-- Additional content for premium users -->
+          <ng-container *ngIf="planType === 'premium'">
+            <div class="about-values" *ngIf="getAboutContent().values">
+              <h3>{{ getAboutContent().valuesTitle || "Our Values" }}</h3>
+              <ul>
+                <li *ngFor="let value of getAboutContent().values">
+                  {{ value }}
+                </li>
+              </ul>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </section>
+</app-section-hover-wrapper>

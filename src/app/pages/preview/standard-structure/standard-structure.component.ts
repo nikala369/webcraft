@@ -50,7 +50,7 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
   @Input() isViewOnly: any;
   @Input() selectedFont: FontOption | null = null;
   @Input() currentPage: string = 'home';
-  @Input() currentPlan: string = 'standard';
+  @Input() currentPlan: any;
   @Input() businessType: string = '';
 
   // When a section is clicked, we emit an event with the section key.
@@ -78,8 +78,20 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
   contactCustomizationsSignal = computed(
     () => this.customizations()?.pages?.contact || {}
   );
+
   // Create a Signal from the customizations function
-  wholeDataSignal = computed(() => this.customizations());
+  // This is the complete data structure for components that need it
+  wholeDataSignal = computed(() => {
+    const fullData = this.customizations();
+    console.log('Full customization data in standard-structure:', fullData);
+
+    // Ensure complete structure with necessary defaults
+    if (!fullData.pages?.home?.hero1) {
+      console.log('Hero1 section not found, may need initialization');
+    }
+
+    return fullData;
+  });
 
   // Computed signal for available sections based on business type
   availableSections = computed(() => {
@@ -151,12 +163,22 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
   }
 
   handlePageSectionEdit(fullPath: string) {
+    console.log(
+      `Standard-structure: handling page section edit for path: ${fullPath}`
+    );
+
     // Split the fullPath, e.g. "pages.home.hero1" → ["pages", "home", "hero1"]
     const pathParts = fullPath.split('.');
+
     // Create a friendly name from the parts: "Pages Home Hero1"
     const sectionName = pathParts
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join(' ');
+
+    console.log(
+      `Standard-structure: emitting component selected with key:${fullPath}, name:${sectionName}`
+    );
+
     // Emit the event with the full key so that dynamic sidebar can look up "pages.home.hero1"
     this.componentSelected.emit({
       key: fullPath,

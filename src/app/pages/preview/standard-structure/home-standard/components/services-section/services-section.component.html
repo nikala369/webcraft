@@ -1,0 +1,104 @@
+<app-section-hover-wrapper
+  [sectionKey]="'services'"
+  [sectionName]="'Services Section'"
+  [editable]="true"
+  [currentPlan]="planType"
+  [sectionPath]="'pages.home.services'"
+  (sectionSelected)="handleSectionSelection()"
+>
+  <section id="services" class="services-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">{{ getSectionTitle() }}</h2>
+        <div class="title-underline"></div>
+        <p *ngIf="getSectionSubtitle()" class="section-subtitle">
+          {{ getSectionSubtitle() }}
+        </p>
+      </div>
+
+      <!-- Services Grid -->
+      <div
+        class="services-grid"
+        [ngClass]="{ 'services-grid--mobile': isMobileLayout }"
+      >
+        <div
+          *ngFor="let service of getServices(); let i = index"
+          class="service-card"
+          [ngClass]="{
+            'service-card--premium': planType === 'premium',
+            'service-card--with-image': hasImage(service)
+          }"
+          [ngStyle]="getAnimationDelay(i)"
+        >
+          <!-- Service Image (Premium Only) -->
+          <div class="service-image" *ngIf="hasImage(service)">
+            <img [src]="service.image" [alt]="service.title" />
+          </div>
+
+          <!-- Service Content -->
+          <div class="service-content">
+            <!-- Service Icon -->
+            <div class="service-icon" *ngIf="hasIcon(service) || true">
+              <img
+                [src]="getServiceIcon(service, i)"
+                [alt]="service.title + ' icon'"
+              />
+            </div>
+
+            <!-- Service Title -->
+            <h3 class="service-title">{{ service.title }}</h3>
+
+            <!-- Service Description -->
+            <p class="service-description">{{ service.description }}</p>
+
+            <!-- Service Details (Price & Duration) - For salon business type -->
+            <div
+              class="service-details"
+              *ngIf="hasPrice(service) || hasDuration(service)"
+            >
+              <div class="service-price" *ngIf="hasPrice(service)">
+                <span class="price-label">Price:</span>
+                <span class="price-value">{{ service.price }}</span>
+              </div>
+
+              <div class="service-duration" *ngIf="hasDuration(service)">
+                <span class="duration-label">Duration:</span>
+                <span class="duration-value">{{ service.duration }}</span>
+              </div>
+            </div>
+
+            <!-- Book Now Button (Premium Only) -->
+            <button
+              class="book-button"
+              *ngIf="planType === 'premium' && businessType === 'salon'"
+            >
+              Book Now
+            </button>
+
+            <!-- Learn More Link (For architecture & portfolio) -->
+            <a
+              href="#"
+              class="learn-more"
+              *ngIf="
+                planType === 'premium' &&
+                (businessType === 'architecture' ||
+                  businessType === 'portfolio')
+              "
+            >
+              Learn More
+              <span class="arrow-icon">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Premium call-to-action (standard plan users) -->
+      <div class="services-cta" *ngIf="planType === 'standard'">
+        <p>
+          Want to showcase more services with booking options and custom images?
+        </p>
+        <button class="upgrade-button">Upgrade to Premium</button>
+      </div>
+    </div>
+  </section>
+</app-section-hover-wrapper>

@@ -1,0 +1,353 @@
+/* Define color schemes via CSS variables */
+:host {
+  --primary-accent-color: #4a8dff; /* Default, will be overridden by component */
+  --section-bg-color: #f9f9f9;
+  --text-color: #333;
+  --heading-color: #222;
+  --card-bg-color: #ffffff;
+  --card-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  --featured-bg: rgba(252, 186, 3, 0.1);
+  --featured-color: #f39c12;
+
+  /* Tag colors */
+  --vegetarian-color: #4caf50;
+  --vegan-color: #2e7d32;
+  --gluten-free-color: #795548;
+  --spicy-color: #f44336;
+  --new-color: #2196f3;
+  --popular-color: #9c27b0;
+}
+
+.menu-section {
+  background-color: var(--section-bg-color);
+  padding: 6rem 0;
+  color: var(--text-color);
+  position: relative;
+
+  // Section container
+  .section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  // Section header with title and subtitle
+  .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin-bottom: 1rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .title-underline {
+      width: 60px;
+      height: 3px;
+      background-color: var(--primary-accent-color);
+      margin: 0 auto 1.5rem;
+      border-radius: 2px;
+    }
+
+    .section-subtitle {
+      font-size: 1.1rem;
+      max-width: 700px;
+      margin: 0 auto;
+      color: #666;
+      line-height: 1.6;
+    }
+  }
+
+  // Menu categories
+  .menu-categories {
+    max-width: 900px;
+    margin: 0 auto;
+
+    .menu-category {
+      margin-bottom: 3.5rem;
+
+      .category-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--heading-color);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .category-description {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        color: #666;
+        font-style: italic;
+      }
+    }
+  }
+
+  // Menu items
+  .menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    // Grid layout for premium users
+    &--premium {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 2rem;
+    }
+  }
+
+  // Individual menu item
+  .menu-item {
+    background-color: var(--card-bg-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    // Featured menu item
+    &--featured {
+      border-left: 3px solid var(--featured-color);
+      background-color: var(--featured-bg);
+    }
+
+    // Item with image (premium)
+    &--with-image {
+      display: flex;
+      gap: 1.5rem;
+      padding: 0;
+      overflow: hidden;
+
+      .menu-item-content {
+        padding: 1.5rem;
+        flex: 1;
+      }
+
+      .menu-item-image {
+        width: 150px;
+        min-height: 100%;
+        flex-shrink: 0;
+        overflow: hidden;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.5s ease;
+
+          &:hover {
+            transform: scale(1.05);
+          }
+        }
+      }
+    }
+
+    // Featured badge
+    .featured-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: var(--featured-color);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      z-index: 2;
+    }
+
+    // Menu item header with name and price
+    .menu-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.75rem;
+
+      .menu-item-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--heading-color);
+        margin: 0;
+      }
+
+      .menu-item-price {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary-accent-color);
+      }
+    }
+
+    // Menu item description
+    .menu-item-desc {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+
+    // Menu item tags
+    .menu-item-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+
+      .menu-tag {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+        text-transform: uppercase;
+
+        // Different tag types
+        &.tag-vegetarian {
+          background-color: rgba(76, 175, 80, 0.1);
+          color: var(--vegetarian-color);
+        }
+
+        &.tag-vegan {
+          background-color: rgba(46, 125, 50, 0.1);
+          color: var(--vegan-color);
+        }
+
+        &.tag-gluten-free {
+          background-color: rgba(121, 85, 72, 0.1);
+          color: var(--gluten-free-color);
+        }
+
+        &.tag-spicy {
+          background-color: rgba(244, 67, 54, 0.1);
+          color: var(--spicy-color);
+        }
+
+        &.tag-new {
+          background-color: rgba(33, 150, 243, 0.1);
+          color: var(--new-color);
+        }
+
+        &.tag-popular {
+          background-color: rgba(156, 39, 176, 0.1);
+          color: var(--popular-color);
+        }
+
+        &.tag-default {
+          background-color: rgba(74, 141, 255, 0.1);
+          color: var(--primary-accent-color);
+        }
+      }
+    }
+  }
+
+  // CTA for upgrade
+  .menu-cta {
+    margin-top: 4rem;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+
+    p {
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      color: #555;
+    }
+
+    .upgrade-button {
+      background: linear-gradient(135deg, #ff9800, #ff5722);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(255, 87, 34, 0.3);
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 992px) {
+  .menu-section {
+    padding: 5rem 0;
+
+    .section-header {
+      .section-title {
+        font-size: 2.2rem;
+      }
+    }
+
+    .menu-items--premium {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .menu-section {
+    padding: 4rem 0;
+
+    .section-header {
+      margin-bottom: 3rem;
+
+      .section-title {
+        font-size: 2rem;
+      }
+
+      .section-subtitle {
+        font-size: 1rem;
+      }
+    }
+
+    .menu-category {
+      .category-title {
+        font-size: 1.75rem;
+      }
+    }
+
+    .menu-item {
+      &--with-image {
+        flex-direction: column;
+
+        .menu-item-image {
+          width: 100%;
+          height: 180px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-section {
+    .menu-item {
+      .menu-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+
+        .menu-item-name {
+          margin-bottom: 0.5rem;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,226 @@
+/* Define color schemes via CSS variables */
+:host {
+  --primary-accent-color: #4a8dff; /* Default, will be overridden by component */
+  --section-bg-color: #ffffff;
+  --text-color: #333;
+  --heading-color: #222;
+}
+
+.about-section {
+  background-color: var(--section-bg-color);
+  padding: 6rem 0;
+  color: var(--text-color);
+  position: relative;
+
+  // Optional subtle background pattern
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(
+        circle at 25px 25px,
+        rgba(0, 0, 0, 0.02) 2%,
+        transparent 2%
+      ),
+      radial-gradient(
+        circle at 75px 75px,
+        rgba(0, 0, 0, 0.02) 2%,
+        transparent 2%
+      );
+    background-size: 100px 100px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  // Section container
+  .section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  // Section header with title and subtitle
+  .section-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin-bottom: 1rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .title-underline {
+      width: 60px;
+      height: 3px;
+      background-color: var(--primary-accent-color);
+      margin: 0 auto 1.5rem;
+      border-radius: 2px;
+    }
+
+    .section-subtitle {
+      font-size: 1.1rem;
+      max-width: 700px;
+      margin: 0 auto;
+      color: #666;
+      line-height: 1.6;
+    }
+  }
+
+  // Main about content with image and text
+  .about-content {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+
+    // Image container
+    .about-image {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      img {
+        width: 100%;
+        max-width: 500px;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.5s ease, box-shadow 0.5s ease;
+
+        &:hover {
+          transform: translateY(-10px);
+          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+      }
+    }
+
+    // Text content
+    .about-text {
+      flex: 1;
+
+      h3 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: var(--heading-color);
+        margin-bottom: 1.25rem;
+        position: relative;
+        padding-bottom: 0.75rem;
+
+        &::after {
+          content: "";
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 40px;
+          height: 2px;
+          background-color: var(--primary-accent-color);
+        }
+      }
+
+      p {
+        font-size: 1rem;
+        line-height: 1.7;
+        margin-bottom: 2rem;
+        color: #555;
+      }
+
+      // Special styling for values list
+      .about-values {
+        margin-top: 0.5rem;
+
+        ul {
+          list-style: none;
+          padding-left: 0;
+
+          li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+
+            &::before {
+              content: "✓";
+              position: absolute;
+              left: 0;
+              color: var(--primary-accent-color);
+              font-weight: bold;
+            }
+          }
+        }
+      }
+    }
+
+    // Mobile layout
+    &--mobile {
+      flex-direction: column;
+
+      .about-image {
+        margin-bottom: 2rem;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 992px) {
+  .about-section {
+    padding: 5rem 0;
+
+    .section-header {
+      .section-title {
+        font-size: 2.2rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .about-section {
+    padding: 4rem 0;
+
+    .section-header {
+      margin-bottom: 2.5rem;
+
+      .section-title {
+        font-size: 2rem;
+      }
+
+      .section-subtitle {
+        font-size: 1rem;
+      }
+    }
+
+    .about-content {
+      flex-direction: column;
+      gap: 2rem;
+
+      .about-image {
+        margin-bottom: 2rem;
+
+        img {
+          max-width: 100%;
+        }
+      }
+
+      .about-text {
+        h3 {
+          font-size: 1.5rem;
+        }
+
+        p {
+          font-size: 0.95rem;
+        }
+      }
+    }
+  }
+}

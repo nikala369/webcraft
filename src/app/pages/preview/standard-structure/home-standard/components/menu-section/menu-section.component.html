@@ -1,0 +1,91 @@
+<app-section-hover-wrapper
+  [sectionKey]="'menu'"
+  [sectionName]="'Menu Section'"
+  [editable]="true"
+  [currentPlan]="planType"
+  [sectionPath]="'pages.home.menu'"
+  (sectionSelected)="handleSectionSelection()"
+>
+  <section id="menu" class="menu-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">{{ getMenuTitle() }}</h2>
+        <div class="title-underline"></div>
+        <p *ngIf="getMenuSubtitle()" class="section-subtitle">
+          {{ getMenuSubtitle() }}
+        </p>
+      </div>
+
+      <!-- Menu Categories -->
+      <div class="menu-categories">
+        <ng-container *ngFor="let category of getMenuCategories()">
+          <div class="menu-category">
+            <h3 class="category-title">{{ category.name }}</h3>
+            <p *ngIf="category.description" class="category-description">
+              {{ category.description }}
+            </p>
+
+            <!-- Menu Items -->
+            <div
+              class="menu-items"
+              [ngClass]="{ 'menu-items--premium': isPremium() }"
+            >
+              <div
+                *ngFor="let item of category.items"
+                class="menu-item"
+                [ngClass]="{
+                  'menu-item--featured': isFeatured(item),
+                  'menu-item--with-image': hasImage(item) && isPremium()
+                }"
+              >
+                <!-- Featured badge for premium users -->
+                <div
+                  class="featured-badge"
+                  *ngIf="isFeatured(item) && isPremium()"
+                >
+                  Featured
+                </div>
+
+                <!-- Menu item image (premium only) -->
+                <div
+                  class="menu-item-image"
+                  *ngIf="hasImage(item) && isPremium()"
+                >
+                  <img [src]="item.image" [alt]="item.name" />
+                </div>
+
+                <div class="menu-item-content">
+                  <div class="menu-item-header">
+                    <h4 class="menu-item-name">{{ item.name }}</h4>
+                    <span class="menu-item-price">{{ item.price }}</span>
+                  </div>
+
+                  <p class="menu-item-desc">{{ item.description }}</p>
+
+                  <!-- Item tags (dietary restrictions, special badges) -->
+                  <div class="menu-item-tags" *ngIf="hasTags(item)">
+                    <span
+                      *ngFor="let tag of item.tags"
+                      class="menu-tag"
+                      [ngClass]="getTagClass(tag)"
+                    >
+                      {{ getTagLabel(tag) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Premium call-to-action to add custom menu (standard plan users) -->
+      <div class="menu-cta" *ngIf="planType === 'standard'">
+        <p>
+          Want to showcase more of your menu with food images and special tags?
+        </p>
+        <button class="upgrade-button">Upgrade to Premium</button>
+      </div>
+    </div>
+  </section>
+</app-section-hover-wrapper>

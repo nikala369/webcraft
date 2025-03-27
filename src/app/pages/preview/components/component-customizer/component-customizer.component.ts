@@ -34,6 +34,8 @@ export class ComponentCustomizerComponent implements OnInit {
 
   @Input() set initialData(value: any) {
     if (value) {
+      console.log('Component customizer received initial data:', value);
+
       // Store original for reset functionality
       this.originalData = structuredClone(value);
 
@@ -44,17 +46,33 @@ export class ComponentCustomizerComponent implements OnInit {
       const mergedData = { id: this.componentKey, ...value };
 
       // Apply default values for fields that don't have data
-      configFields.forEach((field: FieldConfig) => {
-        if (
-          field.defaultValue !== undefined &&
-          mergedData[field.key] === undefined
-        ) {
-          mergedData[field.key] = field.defaultValue;
-        }
-      });
+      if (configFields && configFields.length > 0) {
+        console.log(
+          `Applying defaults from field config for ${this.componentKey} where missing`
+        );
+        configFields.forEach((field: FieldConfig) => {
+          if (
+            field.defaultValue !== undefined &&
+            (mergedData[field.key] === undefined ||
+              mergedData[field.key] === null)
+          ) {
+            console.log(
+              `Setting default for ${field.key}: ${field.defaultValue}`
+            );
+            mergedData[field.key] = field.defaultValue;
+          }
+        });
+      } else {
+        console.log('No field config found for:', this.componentKey);
+      }
 
       // Set the local data signal
       this.localData.set(mergedData);
+      console.log('Final merged data for customizer:', mergedData);
+    } else {
+      console.warn('Component customizer received null/undefined initial data');
+      // Initialize with empty object and component ID
+      this.localData.set({ id: this.componentKey });
     }
   }
 
@@ -66,6 +84,21 @@ export class ComponentCustomizerComponent implements OnInit {
 
   // Helper to get field config for this component
   getFieldsConfig(): FieldConfig[] {
+    // Handle aliases: if we don't find config for the exact key, check for aliases
+    if (
+      this.componentKey === 'hero1' &&
+      !CustomizationFormConfig[this.componentKey]?.length
+    ) {
+      return CustomizationFormConfig['pages.home.hero1'] || [];
+    }
+
+    if (
+      this.componentKey === 'pages.home.hero1' &&
+      !CustomizationFormConfig[this.componentKey]?.length
+    ) {
+      return CustomizationFormConfig['hero1'] || [];
+    }
+
     return CustomizationFormConfig[this.componentKey] || [];
   }
 
@@ -435,7 +468,6 @@ export class ComponentCustomizerComponent implements OnInit {
   // Actions
   applyChanges(): void {
     const result = { ...this.localData() };
-    console.log(result, 'result data after update sidebar');
 
     // Remove the ID field we added for internal tracking
     if (result.id === this.componentKey) {

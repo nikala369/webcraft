@@ -11,13 +11,29 @@ import {
 import { CommonModule } from '@angular/common';
 import { Customizations } from '../../preview.component';
 import { SectionHoverWrapperComponent } from '../../components/section-hover-wrapper/section-hover-wrapper.component';
-import { BUSINESS_TYPE_SECTIONS } from '../../../../core/models/business-types';
 import { ThemeColorsService } from '../../../../core/services/theme/theme-colors.service';
+
+// Import all section components
+import { HeroSectionComponent } from './components/hero-section/hero-section.component';
+import { AboutSectionComponent } from './components/about-section/about-section.component';
+import { MenuSectionComponent } from './components/menu-section/menu-section.component';
+import { ServicesSectionComponent } from './components/services-section/services-section.component';
+import { ProjectsSectionComponent } from './components/projects-section/projects-section.component';
+import { ContactSectionComponent } from './components/contact-section/contact-section.component';
 
 @Component({
   selector: 'app-home-standard',
   standalone: true,
-  imports: [CommonModule, SectionHoverWrapperComponent],
+  imports: [
+    CommonModule,
+    SectionHoverWrapperComponent,
+    HeroSectionComponent,
+    AboutSectionComponent,
+    MenuSectionComponent,
+    ServicesSectionComponent,
+    ProjectsSectionComponent,
+    ContactSectionComponent,
+  ],
   templateUrl: './home-standard.component.html',
   styleUrl: './home-standard.component.scss',
 })
@@ -26,41 +42,12 @@ export class HomeStandardComponent implements OnInit {
   @Input() wholeData: any;
   @Input() isMobileLayout: boolean = false;
   @Input() isMobileView: any;
-  @Input() planType: string = 'standard';
+  @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = 'restaurant';
   @Output() sectionSelected = new EventEmitter<string>();
 
   private themeColorsService = inject(ThemeColorsService);
   primaryColor = signal<string>('');
-
-  // Add default images aligned with small business needs
-  defaultHeroImage = 'assets/images/placeholders/business-hero.jpg';
-  defaultLogoImage = 'assets/header/webcraft-logo.svg';
-  defaultServiceImages = [
-    'assets/images/placeholders/service-1.jpg',
-    'assets/images/placeholders/service-2.jpg',
-    'assets/images/placeholders/service-3.jpg',
-  ];
-  defaultTeamImages = [
-    'assets/images/placeholders/team-1.jpg',
-    'assets/images/placeholders/team-2.jpg',
-  ];
-  defaultGalleryImages = [
-    'assets/images/placeholders/gallery-1.jpg',
-    'assets/images/placeholders/gallery-2.jpg',
-    'assets/images/placeholders/gallery-3.jpg',
-    'assets/images/placeholders/gallery-4.jpg',
-  ];
-
-  // For business-type specific content
-  businessTypes = [
-    'restaurant',
-    'lawFirm',
-    'architecture',
-    'realEstate',
-    'other',
-  ];
-  currentBusinessType = 'other';
 
   // Computed signal for available sections based on business type
   availableSections = computed(() => {
@@ -70,18 +57,10 @@ export class HomeStandardComponent implements OnInit {
 
     // Define base sections for all business types
     const baseBusinessSections = {
-      restaurant: ['hero', 'about', 'menu', 'gallery', 'contact'],
-      salon: ['hero', 'about', 'services', 'stylists', 'gallery', 'contact'],
-      portfolio: ['hero', 'about', 'projects', 'skills', 'contact'],
-      retail: ['hero', 'about', 'products', 'categories', 'offers', 'contact'],
-      architecture: [
-        'hero',
-        'about',
-        'projects',
-        'team',
-        'philosophy',
-        'contact',
-      ],
+      restaurant: ['hero', 'about', 'menu', 'contact'],
+      salon: ['hero', 'about', 'services', 'contact'],
+      portfolio: ['hero', 'about', 'projects', 'contact'],
+      architecture: ['hero', 'about', 'projects', 'services', 'contact'],
     };
 
     // Check if we have predefined sections for this business type
@@ -95,19 +74,7 @@ export class HomeStandardComponent implements OnInit {
     return ['hero', 'about', 'services', 'contact'];
   });
 
-  // Add this method to check if user has premium plan
-  isPremiumPlan(): boolean {
-    return this.planType === 'premium';
-  }
-
   ngOnInit(): void {
-    console.log('Home standard component initialized');
-    console.log('Business type:', this.businessType);
-    console.log('Plan type:', this.planType);
-    console.log('Available sections:', this.availableSections());
-    this.currentBusinessType = this.customizations?.businessType || 'other';
-    console.log(this.customizations, 'customizations loaded');
-
     // Set the appropriate color based on plan
     this.primaryColor.set(
       this.themeColorsService.getPrimaryColor(
@@ -121,246 +88,80 @@ export class HomeStandardComponent implements OnInit {
       this.primaryColor()
     );
 
-    // Add scroll effects for hero section
-    setTimeout(() => {
-      this.initHeroScrollEffects();
-    }, 100);
+    // Set RGB version of primary color for rgba usage
+    const hexToRgb = (hex: string) => {
+      const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+      hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result
+        ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(
+            result[3],
+            16
+          )}`
+        : '74, 141, 255'; // Default RGB
+    };
+
+    document.documentElement.style.setProperty(
+      '--primary-accent-color-rgb',
+      hexToRgb(this.primaryColor())
+    );
   }
 
-  // Initialize smooth parallax scroll effect for hero section
-  initHeroScrollEffects() {
-    if (typeof window !== 'undefined' && !this.isMobileView) {
-      const heroSection = document.querySelector(
-        '.hero-section'
-      ) as HTMLElement;
-
-      if (heroSection) {
-        // Initial background position setup
-        const bgStyle = getComputedStyle(heroSection).backgroundImage;
-        if (bgStyle && bgStyle !== 'none') {
-          // Store the original background position
-          const originalBgPos =
-            getComputedStyle(heroSection).backgroundPosition;
-
-          // Add scroll listener
-          window.addEventListener('scroll', () => {
-            const scrollPosition = window.scrollY;
-            const heroHeight = heroSection.offsetHeight;
-
-            // Only apply effect when hero is in view
-            if (scrollPosition <= heroHeight) {
-              // Calculate parallax position
-              const yPos = Math.round(scrollPosition * 0.4);
-
-              // Split the original position into x and y
-              const bgParts = originalBgPos.split(' ');
-              // Keep x position, change only y position
-              heroSection.style.backgroundPosition = `${bgParts[0]} calc(${bgParts[1]} + ${yPos}px)`;
-
-              // Subtle opacity effect for content while scrolling
-              const heroContent = heroSection.querySelector(
-                '.hero-content'
-              ) as HTMLElement;
-              if (heroContent) {
-                // Reduce opacity as user scrolls down
-                const opacity = Math.max(
-                  1 - scrollPosition / (heroHeight * 0.8),
-                  0.2
-                );
-                heroContent.style.opacity = opacity.toString();
-              }
-            }
-          });
-        }
-      }
-    }
-  }
-
-  // Helper method to check if a section is available
+  /**
+   * Check if a section is available for the current business type
+   */
   isSectionAvailable(sectionId: string): boolean {
     return this.availableSections().includes(sectionId);
   }
 
-  // Dummy method to handle edit - just emits the section key.
-  handleSectionEdit(sectionKey: string): void {
-    console.log('Home component - section selected:', sectionKey);
-    this.sectionSelected.emit(`pages.home.${sectionKey}`);
-  }
-
-  getImageUrl(
-    section: string,
-    imageKey: string,
-    defaultIndex: number = 0
-  ): string {
-    // First check if we have a custom image configured
-    const sectionData = this.customizations?.[section];
-    if (sectionData?.[imageKey]) {
-      return sectionData[imageKey];
-    }
-
-    // Extract base section type (e.g., 'hero1' -> 'hero')
-    const baseSection = section.replace(/\d+$/, '');
-
-    // Return appropriate default image based on section and key
-    if (baseSection === 'hero' && imageKey === 'backgroundImage') {
-      return this.defaultHeroImage;
-    }
-
-    if (imageKey === 'logo') {
-      return this.defaultLogoImage;
-    }
-
-    if (baseSection === 'services') {
-      return this.defaultServiceImages[
-        defaultIndex % this.defaultServiceImages.length
-      ];
-    }
-
-    if (baseSection === 'team') {
-      return this.defaultTeamImages[
-        defaultIndex % this.defaultTeamImages.length
-      ];
-    }
-
-    if (baseSection === 'gallery') {
-      return this.defaultGalleryImages[
-        defaultIndex % this.defaultGalleryImages.length
-      ];
-    }
-
-    // Return empty string if no default image applies
-    return '';
-  }
-
-  // Helper to get styling for background images
-  getBackgroundStyle(sectionKey: string): Record<string, string> {
-    try {
-      const bgImage = this.customizations()[sectionKey]?.backgroundImage;
-      if (bgImage) {
-        return {
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        };
-      }
-    } catch (error) {
-      console.error('Error getting background style', error);
-    }
-    return {};
-  }
-
-  // Get the layout for a section
-  getLayout(sectionKey: string): string {
-    return this.customizations()[sectionKey]?.layout || 'center';
-  }
-
-  // For contact info
-  getContactInfo(field: string): string {
-    const contactInfo = this.customizations?.contactInfo || {};
-    const defaults: { [key: string]: string } = {
-      phone: '(123) 456-7890',
-      email: 'contact@yourbusiness.com',
-      address: '123 Business St, City, State',
-      hours: 'Mon-Fri: 9AM-5PM, Sat-Sun: Closed',
-    };
-
-    return contactInfo[field] || defaults[field] || '';
-  }
-
-  // Get social media links
-  getSocialLink(platform: string): string {
-    const social = this.customizations?.social || {};
-    return social[platform] || '#';
-  }
-
-  // Animation helper
-  getAnimationDelay(index: number): object {
-    return {
-      'animation-delay': `${0.1 * index}s`,
-    };
-  }
-
-  // SECTION !!!
-  // Helper method to get array of indexes based on number of services
-  getServiceIndexArray(): number[] {
-    const numberOfItems = parseInt(
-      this.customizations?.services?.numberOfItems || '3'
-    );
-    return Array(numberOfItems)
-      .fill(0)
-      .map((_, i) => i);
-  }
-
-  // Custom methods for specific business sections
-  hasBusinessTypeSection(sectionName: string): boolean {
-    // Map business types to their sections
-    const businessSections: Record<string, string[]> = {
-      restaurant: ['menu', 'reservations', 'location'],
-      salon: ['services', 'stylists', 'gallery'],
-      portfolio: ['projects', 'skills', 'testimonials'],
-      retail: ['products', 'categories', 'offers'],
-      architecture: ['projects', 'team', 'philosophy'],
-    };
-
-    return businessSections[this.businessType]?.includes(sectionName) || false;
-  }
-
-  // Add a method to handle section selection from section-hover-wrapper
+  /**
+   * Forward section selection to parent component
+   */
   handleSectionSelection(data: { key: string; name: string; path?: string }) {
-    console.log('Section selected:', data);
-
-    // Emit event to parent component with full path information
-    this.sectionSelected.emit(data.path || data.key);
-  }
-
-  // Add or update the method to check if a section should be displayed
-  shouldDisplaySection(sectionKey: string): boolean {
-    // Direct mapping of business types to their sections
-    const businessSections: Record<string, string[]> = {
-      restaurant: ['hero1', 'about', 'menu', 'gallery', 'contact'],
-      salon: ['hero1', 'about', 'services', 'stylists', 'gallery', 'contact'],
-      portfolio: ['hero1', 'about', 'projects', 'skills', 'contact'],
-      retail: ['hero1', 'about', 'products', 'categories', 'offers', 'contact'],
-      architecture: [
-        'hero1',
-        'about',
-        'projects',
-        'team',
-        'philosophy',
-        'contact',
-      ],
-    };
-
-    console.log(
-      `Checking if section '${sectionKey}' should display for business type: ${this.businessType}`
-    );
-
-    // First check if we have a specific mapping for this business type
-    if (this.businessType && businessSections[this.businessType]) {
-      const shouldDisplay =
-        businessSections[this.businessType].includes(sectionKey);
-      console.log(
-        `Section ${sectionKey} display for ${this.businessType}: ${shouldDisplay}`
-      );
-      return shouldDisplay;
+    // Ensure we have the full path
+    if (data.path) {
+      // If we already have a path, use it directly
+      this.sectionSelected.emit(data.path);
+    } else {
+      // If no path, construct one based on the section key
+      const fullPath = `pages.home.${data.key}`;
+      this.sectionSelected.emit(fullPath);
     }
-
-    // Fallback to default sections
-    const defaultSections = ['hero1', 'about', 'services', 'contact'];
-    return defaultSections.includes(sectionKey);
   }
 
   /**
-   * Handle direct click on logo to edit it
+   * Check if a section should be displayed based on business type and plan
    */
-  handleLogoClick(event: MouseEvent): void {
-    // Prevent event propagation
-    event.preventDefault();
-    event.stopPropagation();
+  shouldDisplaySection(sectionKey: string): boolean {
+    // First check if the section is in the available sections for this business type
+    if (!this.isSectionAvailable(sectionKey)) {
+      return false;
+    }
 
-    console.log('Logo clicked for editing');
+    // Business type specific sections
+    const businessSpecificSections: Record<string, string[]> = {
+      restaurant: ['menu'],
+      salon: ['services'],
+      architecture: ['projects'],
+      portfolio: ['projects'],
+    };
 
-    // Emit the logo selection event
-    this.sectionSelected.emit('header.logoUrl');
+    // If it's a business-specific section, only show for the appropriate business type
+    const isBusinessSpecific = Object.values(businessSpecificSections).some(
+      (sections) => sections.includes(sectionKey)
+    );
+
+    if (isBusinessSpecific) {
+      // Find business types that include this section
+      const validBusinessTypes = Object.entries(businessSpecificSections)
+        .filter(([_, sections]) => sections.includes(sectionKey))
+        .map(([type, _]) => type);
+
+      // Check if current business type is valid for this section
+      return validBusinessTypes.includes(this.businessType);
+    }
+
+    // If we got here, the section is generally available for all business types
+    return true;
   }
 }
