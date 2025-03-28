@@ -184,7 +184,15 @@
         <h4 class="business-type-name">{{ type.name }}</h4>
         <p class="business-type-description">{{ type.description }}</p>
 
-        <div class="selected-indicator" *ngIf="isSelected(type.id)">
+        <div
+          class="selected-indicator"
+          [style.background-color]="
+            isSelected(type.id) && this.currentPlan === 'premium'
+              ? accentColor
+              : ''
+          "
+          *ngIf="isSelected(type.id)"
+        >
           <svg class="check-icon" viewBox="0 0 24 24" fill="none">
             <path
               d="M5 12L10 17L20 7"

@@ -1,0 +1,20 @@
+<div class="pricing__card" [ngClass]="type">
+  <div class="badge" *ngIf="badge">{{ badge }}</div>
+  <div class="card__header">
+    <h2 class="pricing__plan-title">{{ title }}</h2>
+    <p class="pricing__price">
+      {{ price }}
+      <span class="old-price" *ngIf="oldPrice">{{ oldPrice }}</span>
+    </p>
+    <p class="pricing__description">{{ description }}</p>
+  </div>
+  <ul class="pricing__features">
+    <li *ngFor="let feature of features">
+      <span class="checkmark" [ngClass]="type + '-check'"></span>
+      {{ feature.text }}
+    </li>
+  </ul>
+  <button class="btn" [ngClass]="'btn--' + type" (click)="onButtonClick()">
+    {{ buttonText }}
+  </button>
+</div>

@@ -1,11 +1,11 @@
 .pricing {
   padding: 6rem 2rem;
   background: linear-gradient(
-      135deg,
-      #0e0e1c 0%,
-      #111a33 30%,
-      #13171f 60%,
-      #0a0f1d 100%
+    135deg,
+    #0e0e1c 0%,
+    #111a33 30%,
+    #13171f 60%,
+    #0a0f1d 100%
   );
   background-size: 400% 400%;
   animation: gradientShift 40s ease infinite; // Slowed down animation
@@ -20,9 +20,9 @@
     position: absolute;
     inset: 0;
     background: radial-gradient(
-        circle at 20% 50%,
-        rgba(255, 255, 255, 0.03),
-        transparent 25%
+      circle at 20% 50%,
+      rgba(255, 255, 255, 0.03),
+      transparent 25%
     );
     z-index: 1;
     pointer-events: none;
@@ -60,250 +60,9 @@
     gap: 2.5rem;
     flex-wrap: wrap;
   }
-
-  &__card {
-    background: rgba(15, 20, 30, 0.6);
-    backdrop-filter: blur(5px); // Reduced blur for performance
-    padding: 2rem;
-    border-radius: 16px;
-    width: 400px;
-    text-align: left;
-    border: 2px solid transparent;
-    transition: all 0.4s ease;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-    will-change: transform, box-shadow; // GPU hint for smoother transitions
-    transform: translateZ(0); // Force hardware acceleration
-
-    // Remove floating animation if it's causing issues (commented out)
-     animation: floatCard 7s infinite ease-in-out;
-
-    .card__header {
-      margin-bottom: 1.5rem;
-      .pricing__plan-title {
-        font-size: 1.8rem;
-        margin-bottom: 0.5rem;
-        font-weight: 700;
-      }
-      .pricing__price {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 0.75rem;
-        background: linear-gradient(135deg, #ffffff, #cccccc);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        .old-price {
-          font-size: 1.5rem;
-          text-decoration: line-through;
-          opacity: 0.7;
-          margin-left: 8px;
-          -webkit-text-fill-color: white;
-        }
-      }
-      .pricing__description {
-        font-size: 1rem;
-        color: rgba(255, 255, 255, 0.8);
-        margin-top: 0.5rem;
-      }
-    }
-
-    // Generate gradient border for all cards (kept as is)
-    &:before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 14px;
-      padding: 2px;
-      -webkit-mask: linear-gradient(0deg, #fff 0%, #fff 100%) content-box,
-      linear-gradient(0deg, #fff 0%, #fff 100%);
-      -webkit-mask-composite: destination-out;
-      mask-composite: exclude;
-      pointer-events: none;
-    }
-
-    // Standard card specific styling
-    &.standard {
-      animation-delay: 0.5s;
-      &:before {
-        background: linear-gradient(
-            135deg,
-            rgba(40, 118, 255, 0.7),
-            rgba(100, 158, 255, 0.7) 50%,
-            rgba(40, 118, 255, 0.7)
-        );
-        //animation: borderGlow 8s linear infinite;
-      }
-    }
-
-    // Premium card specific styling
-    &.premium {
-      animation-delay: 0s;
-      &:before {
-        background: linear-gradient(
-            135deg,
-            rgba(140, 82, 255, 0.7),
-            rgba(180, 122, 255, 0.7) 50%,
-            rgba(140, 82, 255, 0.7)
-        );
-        //animation: borderGlow 8s linear infinite;
-      }
-      .badge {
-        position: absolute;
-        top: -15px;
-        right: 20px;
-        background: linear-gradient(135deg, #8c52ff, #6c63ff);
-        padding: 0.5rem 1.2rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        color: #fff;
-        font-weight: 600;
-        box-shadow: 0 2px 10px rgba(140, 82, 255, 0.4);
-        z-index: 3;
-      }
-      &:hover {
-        box-shadow: 0 15px 35px rgba(140, 82, 255, 0.3);
-      }
-    }
-  }
-
-  &__features {
-    list-style: none;
-    padding: 0;
-    margin: 1.5rem 0;
-    flex-grow: 1;
-    li {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-      margin: 0.85rem 0;
-      color: rgba(255, 255, 255, 0.95);
-      font-size: 1rem;
-      line-height: 1.4;
-    }
-  }
-
-  // Enhanced checkbox design
-  .checkmark {
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(5px);
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    margin-top: 2px;
-
-    &::before {
-      content: "";
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
-      transition: opacity 0.3s ease-in-out;
-    }
-
-    &.standard-check::before {
-      background-color: #2876ff;
-      box-shadow: 0 0 8px rgba(40, 118, 255, 0.4);
-      opacity: 1;
-    }
-
-    &.premium-check::before {
-      background-color: #8c52ff;
-      box-shadow: 0 0 8px rgba(140, 82, 255, 0.4);
-      opacity: 1;
-    }
-  }
-
-  // Enhanced buttons
-  .btn {
-    margin-top: auto;
-    width: 100%;
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    text-align: center;
-    border: none;
-    position: relative;
-    overflow: hidden;
-
-    &--primary {
-      background: linear-gradient(135deg, #2876ff, #1a65e0);
-      color: #fff;
-      box-shadow: 0 4px 15px rgba(40, 118, 255, 0.3);
-
-      &:hover {
-        box-shadow: 0 6px 20px rgba(40, 118, 255, 0.5);
-        transform: translateY(-2px);
-      }
-
-      &::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent 0%,
-          rgba(255, 255, 255, 0.2) 50%,
-          transparent 100%
-        );
-        transform: skewX(-15deg);
-      }
-
-      // &:hover::before {
-      //   animation: shimmer 1.5s infinite;
-      // }
-    }
-
-    &--premium {
-      background: linear-gradient(135deg, #8c52ff, #6c63ff);
-      color: #fff;
-      box-shadow: 0 4px 15px rgba(140, 82, 255, 0.4);
-
-      &:hover {
-        box-shadow: 0 6px 20px rgba(140, 82, 255, 0.6);
-        transform: translateY(-2px);
-      }
-
-      &::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent 0%,
-          rgba(255, 255, 255, 0.2) 50%,
-          transparent 100%
-        );
-        transform: skewX(-15deg);
-      }
-
-      &:hover::before {
-        animation: shimmer 1.5s infinite;
-      }
-    }
-
-    &:active {
-      transform: scale(0.98);
-    }
-  }
 }
 
-/* Keyframe animations to match home page */
+/* Keyframe animations for background */
 @keyframes gradientShift {
   0% {
     background-position: 0% 50%;
@@ -316,45 +75,10 @@
   }
 }
 
-//@keyframes borderGlow {
-//  0% {
-//    background-position: 0% 0%;
-//  }
-//  100% {
-//    background-position: 200% 0%;
-//  }
-//}
-
-@keyframes floatCard {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 100%;
-  }
-}
-
 /* Media queries for responsive design */
 @media (max-width: 992px) {
   .pricing {
     padding: 5rem 2rem;
-
-    &__card {
-      width: 340px;
-      padding: 2.5rem 1.75rem;
-    }
   }
 }
 
@@ -373,42 +97,11 @@
     &__cards {
       gap: 2rem;
     }
-
-    &__card {
-      width: 100%;
-      max-width: 380px;
-      animation: none;
-
-      &.standard,
-      &.premium {
-        &:hover {
-          transform: none;
-        }
-      }
-    }
   }
 }
 
 @media (max-width: 480px) {
   .pricing {
     padding: 2rem 1rem;
-
-    &__card {
-      padding: 1.5rem 1.5rem;
-
-      .card__header {
-        .pricing__plan-title {
-          font-size: 1.6rem;
-        }
-
-        .pricing__price {
-          font-size: 2.2rem;
-        }
-      }
-    }
-
-    &__features li {
-      font-size: 0.95rem;
-    }
   }
 }

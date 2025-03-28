@@ -131,7 +131,12 @@
         this.isViewOnlyStateService.isOnlyViewMode() ? 'view-only-mode' : ''
       ]"
       [ngStyle]="{
-        border: !isFullscreen() ? '1.5px solid #0984e3' : 'none',
+        border:
+          !isFullscreen() && currentPlan() === 'standard'
+            ? '1.5px solid #0984e3'
+            : !isFullscreen() && currentPlan() === 'premium'
+            ? '1.5px solid #9e6aff'
+            : '',
         display:
           showBusinessTypeSelector() && !isFullscreen() ? 'none' : 'block'
       }"
