@@ -1,7 +1,7 @@
 .confirmation-container {
   position: fixed;
-  bottom: 1.5rem;
-  left: 1.5rem;
+  bottom: 0rem;
+  left: 0rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -10,11 +10,11 @@
 
 .confirmation-message {
   min-width: 240px;
-  padding: 1rem 1.25rem;
-  border-radius: 6px;
+  padding: 0.9rem 1.15rem;
+  border-radius: 0px;
   color: #fff;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: space-between;

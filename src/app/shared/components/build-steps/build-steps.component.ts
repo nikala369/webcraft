@@ -1,4 +1,12 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThemeColorsService } from '../../../core/services/theme/theme-colors.service';
 
@@ -10,12 +18,25 @@ import { ThemeColorsService } from '../../../core/services/theme/theme-colors.se
   styleUrls: ['./build-steps.component.scss'],
 })
 export class BuildStepsComponent implements OnInit {
-  @Input() currentStep = 1;
-  @Input() isVertical = false;
-  @Input() plan: 'standard' | 'premium' = 'standard';
+  // Convert the input plan into a signal.
+  private _plan = signal<'standard' | 'premium'>('standard');
+
+  @Input() set plan(value: 'standard' | 'premium') {
+    this._plan.set(value);
+  }
+  get plan() {
+    return this._plan();
+  }
+
+  @Input() currentStep: number = 1;
+  @Input() isVertical: boolean = false;
 
   private themeColorsService = inject(ThemeColorsService);
-  accentColor = '';
+
+  // Create a computed signal that derives the accent color based on the current plan.
+  accentColor = computed(() =>
+    this.themeColorsService.getPrimaryColor(this._plan())
+  );
 
   steps = [
     { id: 1, name: 'Plan Selected', completed: true },
@@ -24,22 +45,19 @@ export class BuildStepsComponent implements OnInit {
     { id: 4, name: 'Publish' },
   ];
 
-  ngOnInit() {
-    // Set accent color based on plan
-    this.accentColor = this.themeColorsService.getPrimaryColor(this.plan);
-
-    // Apply CSS variable for accent color
+  // Use a field initializer to run an effect in the injection context
+  private _initEffect = effect(() => {
     document.documentElement.style.setProperty(
       '--steps-accent-color',
-      this.accentColor
+      this.accentColor()
     );
+  });
 
-    // Mark first step as always completed since plan is already selected when component loads
-    this.steps[0].completed = true;
+  ngOnInit(): void {
+    // Other initialization logic can go here.
   }
 
   isCompleted(step: number): boolean {
-    // First step is always completed, for other steps check against currentStep
     if (step === 1) return true;
     return step < this.currentStep || this.steps[step - 1].completed === true;
   }

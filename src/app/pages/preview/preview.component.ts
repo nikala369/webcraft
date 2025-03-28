@@ -1200,6 +1200,10 @@ export class PreviewComponent implements OnInit, OnDestroy {
     });
   }
 
+  upgradeNow(): void {
+    this.selectPlan('premium');
+  }
+
   // ======== CHECKOUT PROCESS ========
   /**
    * Check if user has saved changes
@@ -1281,7 +1285,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.confirmationService.showConfirmation(
       'Your website changes have been saved successfully!',
       'success',
-      3000
+      4000
     );
 
     // Exit fullscreen mode

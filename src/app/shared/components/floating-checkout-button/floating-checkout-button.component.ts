@@ -59,7 +59,7 @@ import {
       }
 
       .floating-checkout-button {
-        background: #4caf50;
+        background: rgb(8, 90, 167);
         color: white;
         border: none;
         padding: 14px 26px;
@@ -76,24 +76,27 @@ import {
       }
 
       .floating-checkout-button:hover {
-        background: #43a047;
+        background: rgb(8, 102, 191);
         transform: translateY(-3px);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
       }
 
       .floating-checkout-button.pulse {
-        animation: pulse 2s infinite;
+        animation: pulse 1.8s infinite;
       }
 
       @keyframes pulse {
         0% {
-          box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+          /* Initial ring at full opacity */
+          box-shadow: 0 0 0 0 rgba(8, 102, 191, 0.7);
         }
         70% {
-          box-shadow: 0 0 0 15px rgba(76, 175, 80, 0);
+          /* Expand and fade out */
+          box-shadow: 0 0 0 20px rgba(8, 102, 191, 0);
         }
         100% {
-          box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+          /* Reset to no ring */
+          box-shadow: 0 0 0 0 rgba(8, 102, 191, 0);
         }
       }
 

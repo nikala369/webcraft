@@ -17,6 +17,15 @@
         [plan]="currentPlan()"
       ></app-build-steps>
     </div>
+
+    <div
+      class="upgrade-container"
+      *ngIf="currentPlan() === 'standard' && businessType() !== ''"
+    >
+      <button class="btn btn--premium" (click)="upgradeNow()">
+        UPGRADE NOW
+      </button>
+    </div>
   </div>
 
   <!-- Main Content Area -->
@@ -148,17 +157,24 @@
       >
         <ng-container *ngIf="!hasStartedBuilding()">
           <button class="start-fullscreen-btn" (click)="startBuilding()">
-            <app-icon name="startBuilding" width="20" height="20"></app-icon>
-            Start Customizing
+            <!-- <app-icon name="startBuilding" width="20" height="20"></app-icon> -->
+            <img src="assets/header/webcraft-logo.svg" width="22" height="22" />
+            Start Crafting
           </button>
         </ng-container>
         <ng-container *ngIf="hasStartedBuilding()">
           <button class="continue-editing-btn" (click)="editBuilding()">
-            <app-icon name="edit" width="18" height="18"></app-icon>
+            <!-- <app-icon name="edit" width="18" height="18"></app-icon> -->
+            <img
+              width="26px"
+              height="26px"
+              src="assets/header/webcraft-logo.svg"
+            />
             Continue Editing
           </button>
           <button class="view-mode-btn" (click)="openViewOnly()">
-            <app-icon name="view" width="18" height="18"></app-icon>
+            <img width="22px" height="22px" src="assets/preview/eye-icon.svg" />
+            <!-- <app-icon name="view" width="18" height="18"></app-icon> -->
             View Mode
           </button>
         </ng-container>
