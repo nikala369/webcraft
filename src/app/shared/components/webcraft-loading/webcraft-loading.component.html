@@ -1,0 +1,13 @@
+<!-- Loading Overlay -->
+<div class="start-overlay" *ngIf="showLoadingOverlay" [ngClass]="overlayClass">
+  <div class="start-overlay-backdrop"></div>
+  <div class="start-overlay-content">
+    <img
+      class="logo-pulse"
+      src="assets/header/webcraft-logo.svg"
+      alt="Loading..."
+      width="60"
+      height="60"
+    />
+  </div>
+</div>

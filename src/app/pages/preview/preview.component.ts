@@ -34,6 +34,7 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 import { BusinessTypeSelectorComponent } from './components/business-type-selector/business-type-selector.component';
 import { BUSINESS_TYPE_MENU_ITEMS } from '../../core/models/business-types';
 import { ThemeColorsService } from '../../core/services/theme/theme-colors.service';
+import { WebcraftLoadingComponent } from '../../shared/components/webcraft-loading/webcraft-loading.component';
 
 /**
  * PreviewComponent is the main interface for the website builder.
@@ -59,6 +60,7 @@ import { ThemeColorsService } from '../../core/services/theme/theme-colors.servi
     FloatingCheckoutButtonComponent,
     IconComponent,
     BusinessTypeSelectorComponent,
+    WebcraftLoadingComponent,
   ],
   templateUrl: './preview.component.html',
   styleUrls: ['./preview.component.scss'],
@@ -104,6 +106,10 @@ export class PreviewComponent implements OnInit, OnDestroy {
   showBusinessTypeSelector = signal<boolean>(false); // NEW: Control visibility of business type selector
   currentPage = signal<string>('home');
   selectedFont = signal<FontOption | null>(null);
+
+  // Loading state
+  showLoadingOverlay = signal<boolean>(false);
+  loadingOverlayClass = signal<string>('');
 
   // Themes based on business type
   availableThemes = signal<any[]>([]);
@@ -757,8 +763,14 @@ export class PreviewComponent implements OnInit, OnDestroy {
   /**
    * Enter fullscreen edit mode (Start Building)
    */
+  onLoadingOverlayFinished(): void {
+    // Remove the overlay by setting the controlling signal to false
+    this.showLoadingOverlay.set(false);
+  }
+
   startBuilding(): void {
     console.log('Starting building process');
+    this.showLoadingOverlay.set(true);
 
     // Set view mode to editing
     this.isViewOnlyStateService.setIsOnlyViewMode(false);
@@ -782,27 +794,31 @@ export class PreviewComponent implements OnInit, OnDestroy {
       this.currentStep.set(2);
     }
 
-    // Check if there are saved customizations
-    if (sessionStorage.getItem('savedCustomizations')) {
-      console.log('Found saved customizations, loading them');
-      this.loadSavedCustomizations();
-    } else {
-      console.log('No saved customizations, using default theme');
-      // Load default theme for the selected plan
-      this.loadTheme(this.defaultThemeId());
-    }
-
-    // Store default state before any edits
-    this.lastSavedState.set(structuredClone(this.customizations()));
-
-    // Also cache the current state for potential restore
-    this.currentEditingState.set(structuredClone(this.customizations()));
-
     // Give time for themes to load before entering fullscreen
     setTimeout(() => {
-      // Enter fullscreen mode to start editing
+      console.log('3 seconds passed, now toggling fullscreen');
+
+      // Check if there are saved customizations
+      if (sessionStorage.getItem('savedCustomizations')) {
+        console.log('Found saved customizations, loading them');
+        this.loadSavedCustomizations();
+      } else {
+        console.log('No saved customizations, using default theme');
+        // Load default theme for the selected plan
+        this.loadTheme(this.defaultThemeId());
+      }
+
+      // Store default state before any edits
+      this.lastSavedState.set(structuredClone(this.customizations()));
+
+      // Also cache the current state for potential restore
+      this.currentEditingState.set(structuredClone(this.customizations()));
+
+      this.loadingOverlayClass.set('fade-out');
+
+      this.showLoadingOverlay.set(false);
       this.toggleFullscreen();
-    }, 100);
+    }, 2100);
   }
 
   /**
@@ -1310,6 +1326,10 @@ export class PreviewComponent implements OnInit, OnDestroy {
       sessionStorage.removeItem('hasStartedBuilding');
       this.hasStartedBuilding.set(false);
       this.hasSavedChangesFlag.set(false);
+
+      // remove loading overlay
+      this.showLoadingOverlay.set(false);
+      this.loadingOverlayClass.set('');
 
       // Reset progress step
       this.currentStep.set(2);

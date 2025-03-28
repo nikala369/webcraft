@@ -162,7 +162,7 @@
             Start Crafting
           </button>
         </ng-container>
-        <ng-container *ngIf="hasStartedBuilding()">
+        <ng-container *ngIf="hasStartedBuilding() && !showLoadingOverlay()">
           <button class="continue-editing-btn" (click)="editBuilding()">
             <!-- <app-icon name="edit" width="18" height="18"></app-icon> -->
             <img
@@ -263,3 +263,12 @@
     (checkoutClicked)="proceedToCheckout()"
   ></app-floating-checkout-button>
 </div>
+
+<!-- The loading overlay component -->
+<app-webcraft-loading
+  *ngIf="showLoadingOverlay()"
+  [overlayClass]="loadingOverlayClass()"
+  [showLoadingOverlay]="showLoadingOverlay()"
+  [delay]="2200"
+  (finished)="onLoadingOverlayFinished()"
+></app-webcraft-loading>
