@@ -698,6 +698,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
       }
 
       // Restore main page scroll position
+      if(!this.showBusinessTypeSelector())
       setTimeout(() => {
         window.scrollTo({
           top: this.preFullscreenScrollPosition,
