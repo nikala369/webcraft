@@ -210,6 +210,22 @@ $premium-color: #9e6aff;
           border-radius: 3px 3px 0 0;
         }
       }
+
+      &.invalid {
+        &:after {
+          content: "";
+          position: absolute;
+          bottom: 0;
+          left: 20%;
+          width: 60%;
+          height: 3px;
+          background-color: #e53935; // Error red color
+          border-radius: 3px 3px 0 0;
+        }
+
+        // Subtle pulsing animation to draw attention
+        animation: pulse-error 2s infinite;
+      }
     }
   }
 
@@ -359,6 +375,30 @@ $premium-color: #9e6aff;
           }
         }
 
+        // Textarea inputs
+        .textarea-input {
+          width: 100%;
+          padding: 12px 15px;
+          border-radius: 8px;
+          border: 1px solid $input-border;
+          background-color: $input-bg;
+          color: $light-text;
+          font-size: 0.95rem;
+          transition: $transition-fast;
+          resize: vertical;
+          min-height: 120px;
+
+          &:focus {
+            border-color: rgba($primary-color, 0.5);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba($primary-color, 0.15);
+          }
+
+          &::placeholder {
+            color: rgba($muted-text, 0.6);
+          }
+        }
+
         // Select inputs
         .select-input {
           width: 100%;
@@ -441,6 +481,10 @@ $premium-color: #9e6aff;
 
         // File upload field
         .file-field {
+          .file-controls {
+            margin-bottom: 10px;
+          }
+
           .file-input {
             width: 100%;
             padding: 10px;
@@ -462,6 +506,24 @@ $premium-color: #9e6aff;
               &:hover {
                 background-color: rgba(255, 255, 255, 0.2);
               }
+            }
+
+            // Highlight animation for required fields
+            &.highlight-required {
+              animation: highlight-pulse 1.5s ease;
+              border-color: #f44336;
+            }
+          }
+
+          .file-info {
+            font-size: 0.8rem;
+            color: $muted-text;
+            margin-top: 5px;
+            margin-bottom: 10px;
+
+            .required-notice {
+              color: #f44336;
+              font-weight: 600;
             }
           }
 
@@ -503,6 +565,14 @@ $premium-color: #9e6aff;
               width: 100%;
               height: 100%;
               object-fit: contain; // Use 'contain' for proper image display
+            }
+
+            &.video-preview {
+              video {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+              }
             }
           }
         }
@@ -753,6 +823,132 @@ $premium-color: #9e6aff;
       &:hover {
         background-color: lighten($premium-color, 10%);
       }
+    }
+  }
+}
+
+// Background type selector
+.background-type-selector {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 5px;
+
+  .type-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 15px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid $input-border;
+    border-radius: 8px;
+    color: $muted-text;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: $transition-fast;
+
+    svg {
+      stroke: $muted-text;
+      transition: $transition-fast;
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: lighten($muted-text, 15%);
+
+      svg {
+        stroke: lighten($muted-text, 15%);
+      }
+    }
+
+    &.active {
+      background-color: rgba($primary-color, 0.15);
+      border-color: rgba($primary-color, 0.4);
+      color: $light-text;
+
+      svg {
+        stroke: $primary-color;
+      }
+    }
+  }
+}
+
+// Add keyframes for pulsing animation
+@keyframes pulse-error {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+// Add keyframes for highlight pulse
+@keyframes highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(244, 67, 54, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+  }
+}
+
+// Video upgrade message
+.video-upgrade-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 25px;
+  padding: 15px;
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  margin-top: 15px;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  span {
+    color: $light-text;
+    font-size: 0.85rem;
+    line-height: 1.4;
+
+    strong {
+      color: #f59e0b;
+    }
+
+    a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// Warning text in file fields
+.file-info {
+  .warning {
+    display: block;
+    margin-top: 5px;
+    color: #f59e0b;
+    font-size: 0.8rem;
+
+    .warning-highlight {
+      font-weight: 600;
     }
   }
 }

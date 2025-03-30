@@ -11,6 +11,10 @@ import {
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
 import { ThemeColorsService } from '../../../../../../core/services/theme/theme-colors.service';
+import {
+  Customizations,
+  HeroData,
+} from '../../../../../../core/models/website-customizations';
 
 @Component({
   selector: 'app-hero-section',
@@ -20,8 +24,8 @@ import { ThemeColorsService } from '../../../../../../core/services/theme/theme-
   styleUrls: ['./hero-section.component.scss'],
 })
 export class HeroSectionComponent implements OnInit, OnDestroy {
-  @Input() customizations: any; // Full customizations object for global data like header
-  @Input() heroData: any = {}; // Hero section specific data
+  @Input() customizations!: Customizations; // ! operator indicates definite assignment
+  @Input() heroData: Partial<HeroData> = {}; // Partial allows for empty or partial implementations
   @Input() isMobileLayout: boolean = false;
   @Input() isMobileView: any;
   @Input() planType: 'standard' | 'premium' = 'standard';
@@ -36,8 +40,9 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   private el = inject(ElementRef);
   private scrollHandler: (() => void) | null = null;
 
-  // Default background image for when none is specified
+  // Default assets
   defaultHeroImage = 'assets/standard-hero1/background-image1.jpg';
+  defaultHeroVideo = 'assets/standard-hero1/background-video.mp4';
 
   ngOnInit() {
     // Set scroll effects for parallax
@@ -57,10 +62,22 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
    * Handle section selection
    */
   handleSectionSelection(event: { key: string; name: string; path?: string }) {
+    console.log(
+      'Hero section - handling section selection with heroData:',
+      this.heroData
+    );
+    console.log(
+      'Current heroData:',
+      JSON.stringify(this.heroData || {}, null, 2)
+    );
+
+    // Ensure we have the correct path
+    const path = event.path || 'pages.home.hero1';
+
     this.sectionSelected.emit({
       key: event.key,
       name: event.name,
-      path: event.path || 'pages.home.hero1',
+      path: path,
     });
   }
 
@@ -77,17 +94,13 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Initial background position setup
-    const bgStyle = getComputedStyle(heroSection).backgroundImage;
-    if (!bgStyle || bgStyle === 'none') {
-      return;
-    }
+    // Check if we're dealing with image or video background
+    const isVideo = this.getBackgroundType() === 'video';
+    let bgElement = isVideo
+      ? heroSection.querySelector('.hero-background-video')
+      : heroSection.querySelector('.hero-background-image');
 
-    // Store the original background position
-    const originalBgPos = getComputedStyle(heroSection).backgroundPosition;
-    const heroContent = heroSection.querySelector(
-      '.hero-content'
-    ) as HTMLElement;
+    if (!bgElement) return;
 
     // Create the scroll handler
     this.scrollHandler = () => {
@@ -99,12 +112,22 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
         // Calculate parallax position
         const yPos = Math.round(scrollPosition * 0.4);
 
-        // Split the original position into x and y
-        const bgParts = originalBgPos.split(' ');
-        // Keep x position, change only y position
-        heroSection.style.backgroundPosition = `${bgParts[0]} calc(${bgParts[1]} + ${yPos}px)`;
+        // Apply parallax effect
+        if (isVideo) {
+          // For video, we can only translate
+          (
+            bgElement as HTMLElement
+          ).style.transform = `translateX(-50%) translateY(calc(-50% + ${yPos}px))`;
+        } else {
+          // For images we can use background-position or transform
+          (bgElement as HTMLElement).style.transform = `translateY(${yPos}px)`;
+        }
 
-        // Subtle opacity effect for content while scrolling
+        // Adjust opacity of hero content
+        const heroContent = heroSection.querySelector(
+          '.hero-content'
+        ) as HTMLElement;
+
         if (heroContent) {
           // Reduce opacity as user scrolls down
           const opacity = Math.max(
@@ -121,17 +144,87 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get background type (image or video)
+   */
+  getBackgroundType(): 'image' | 'video' {
+    // If explicitly set to video AND we have a video, use video
+    if (
+      this.heroData?.backgroundType === 'video' &&
+      this.heroData?.backgroundVideo
+    ) {
+      return 'video';
+    }
+
+    // If explicitly set to image OR we have an image (or no explicit setting), use image
+    if (
+      this.heroData?.backgroundType === 'image' ||
+      this.heroData?.backgroundImage ||
+      !this.heroData?.backgroundType
+    ) {
+      return 'image';
+    }
+
+    // Fallback - if video is specified but we don't have one, still use video
+    return this.heroData?.backgroundType || 'image';
+  }
+
+  /**
    * Get hero background image or fallback to default
    */
   getHeroBackground(): string {
+    // If it's explicitly set to video background, don't use image
+    if (this.heroData?.backgroundType === 'video') {
+      return '';
+    }
+
     return this.heroData?.backgroundImage || this.defaultHeroImage;
+  }
+
+  /**
+   * Get hero background video or fallback to default
+   */
+  getHeroBackgroundVideo(): string {
+    // If it's explicitly set to image background, don't use video
+    if (
+      this.heroData?.backgroundType === 'image' ||
+      !this.heroData?.backgroundType
+    ) {
+      return '';
+    }
+
+    return this.heroData?.backgroundVideo || this.defaultHeroVideo;
+  }
+
+  /**
+   * Get overlay opacity class
+   */
+  getOverlayOpacity(): string {
+    return this.heroData?.overlayOpacity || 'medium';
+  }
+
+  /**
+   * Get overlay color with transparency
+   */
+  getOverlayColor(): string {
+    // Return the overlay color or default to black
+    return this.heroData?.overlayColor || '#000000';
+  }
+
+  /**
+   * Check if content text should be displayed
+   */
+  shouldShowContentText(): boolean {
+    return this.heroData?.showContentText !== false;
   }
 
   /**
    * Get business logo or fallback
    */
   getLogoUrl(): string {
-    return this.customizations?.header?.logoUrl || 'assets/logo.png';
+    return (
+      this.customizations?.header?.logoUrl ||
+      'assets/standard-header/default-logo-white.svg'
+    );
   }
 
   /**
@@ -187,14 +280,14 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
    * Get button color or fallback
    */
   getButtonColor(): string {
-    return this.heroData?.primaryButtonColor || '#ffffff';
+    return this.heroData?.primaryButtonColor || '#ff5722';
   }
 
   /**
    * Get button text color or fallback
    */
   getButtonTextColor(): string {
-    return this.heroData?.primaryButtonTextColor || '#000000';
+    return this.heroData?.primaryButtonTextColor || '#ffffff';
   }
 
   /**

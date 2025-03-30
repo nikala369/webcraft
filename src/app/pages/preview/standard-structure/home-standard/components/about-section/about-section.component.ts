@@ -45,7 +45,9 @@ export class AboutSectionComponent {
     const customContent = this.customizations?.pages?.home?.about || {};
 
     // Merge default with custom, prioritizing custom values
-    return { ...defaultContent, ...customContent };
+    const mergedContent = { ...defaultContent, ...customContent };
+
+    return mergedContent;
   }
 
   /**
@@ -60,18 +62,21 @@ export class AboutSectionComponent {
   /**
    * Handle section selection
    */
-  handleSectionSelection() {
-    this.sectionSelected.emit({
-      key: 'about',
-      name: 'About Section',
-      path: 'pages.home.about',
-    });
+  handleSectionSelection(event: { key: string; name: string; path?: string }) {
+    console.log('About section selected with event:', event);
+    const selectionData = {
+      key: event.key,
+      name: event.name,
+      path: event.path || 'pages.home.about',
+    };
+    console.log('Emitting selection data:', selectionData);
+    this.sectionSelected.emit(selectionData);
   }
 
   /**
    * Get default title based on business type
    */
-  private getDefaultTitle(): string {
+  getDefaultTitle(): string {
     const titles = {
       restaurant: 'About Our Restaurant',
       salon: 'About Our Salon',
@@ -85,7 +90,7 @@ export class AboutSectionComponent {
   /**
    * Get default subtitle based on business type
    */
-  private getDefaultSubtitle(): string {
+  getDefaultSubtitle(): string {
     const subtitles = {
       restaurant: 'The story behind our culinary passion',
       salon: 'Where beauty meets expertise',
@@ -102,7 +107,7 @@ export class AboutSectionComponent {
   /**
    * Get default story title based on business type
    */
-  private getDefaultStoryTitle(): string {
+  getDefaultStoryTitle(): string {
     const titles = {
       restaurant: 'Our Culinary Journey',
       salon: 'Our Beginnings',
@@ -116,7 +121,7 @@ export class AboutSectionComponent {
   /**
    * Get default story text based on business type
    */
-  private getDefaultStoryText(): string {
+  getDefaultStoryText(): string {
     const texts = {
       restaurant:
         'Founded in 2015, our restaurant brings together the finest ingredients and culinary expertise. Our chefs are dedicated to creating memorable dining experiences with innovative flavors and traditional techniques.',
@@ -137,7 +142,7 @@ export class AboutSectionComponent {
   /**
    * Get default mission title based on business type
    */
-  private getDefaultMissionTitle(): string {
+  getDefaultMissionTitle(): string {
     const titles = {
       restaurant: 'Our Food Philosophy',
       salon: 'Our Approach',
@@ -151,7 +156,7 @@ export class AboutSectionComponent {
   /**
    * Get default mission text based on business type
    */
-  private getDefaultMissionText(): string {
+  getDefaultMissionText(): string {
     const texts = {
       restaurant:
         'We believe in sustainable, locally-sourced ingredients that support our community while delivering exceptional flavor. Every dish is crafted with care, creating a dining experience that honors culinary traditions while embracing innovation.',
@@ -167,5 +172,16 @@ export class AboutSectionComponent {
       texts[this.businessType as keyof typeof texts] ||
       'Our mission is to provide high-quality services that exceed our clients expectations. We believe in building long-lasting relationships based on trust, integrity, and results.'
     );
+  }
+
+  /**
+   * Check if we need to use direct attribute access (emergency solution)
+   */
+  checkDirectAttributeAccess(attribute: string, defaultValue: string): string {
+    const directAccess = this.customizations?.pages?.home?.about?.[attribute];
+    if (directAccess !== undefined) {
+      return directAccess;
+    }
+    return defaultValue;
   }
 }

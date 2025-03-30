@@ -4,15 +4,23 @@
   [editable]="true"
   [currentPlan]="planType"
   [sectionPath]="'pages.home.about'"
-  (sectionSelected)="handleSectionSelection()"
+  (sectionSelected)="handleSectionSelection($event)"
 >
   <section id="about" class="about-section">
     <div class="section-container">
       <div class="section-header">
-        <h2 class="section-title">{{ getAboutContent().title }}</h2>
+        <h2 class="section-title">
+          {{
+            getAboutContent().title ||
+              checkDirectAttributeAccess("title", getDefaultTitle())
+          }}
+        </h2>
         <div class="title-underline"></div>
-        <p *ngIf="getAboutContent().subtitle" class="section-subtitle">
-          {{ getAboutContent().subtitle }}
+        <p class="section-subtitle">
+          {{
+            getAboutContent().subtitle ||
+              checkDirectAttributeAccess("subtitle", getDefaultSubtitle())
+          }}
         </p>
       </div>
 
@@ -27,11 +35,37 @@
 
         <!-- About Text -->
         <div class="about-text">
-          <h3>{{ getAboutContent().storyTitle }}</h3>
-          <p>{{ getAboutContent().storyText }}</p>
+          <h3>
+            {{
+              getAboutContent().storyTitle ||
+                checkDirectAttributeAccess("storyTitle", getDefaultStoryTitle())
+            }}
+          </h3>
+          <p>
+            {{
+              getAboutContent().storyText ||
+                checkDirectAttributeAccess("storyText", getDefaultStoryText())
+            }}
+          </p>
 
-          <h3>{{ getAboutContent().missionTitle }}</h3>
-          <p>{{ getAboutContent().missionText }}</p>
+          <h3>
+            {{
+              getAboutContent().missionTitle ||
+                checkDirectAttributeAccess(
+                  "missionTitle",
+                  getDefaultMissionTitle()
+                )
+            }}
+          </h3>
+          <p>
+            {{
+              getAboutContent().missionText ||
+                checkDirectAttributeAccess(
+                  "missionText",
+                  getDefaultMissionText()
+                )
+            }}
+          </p>
 
           <!-- Additional content for premium users -->
           <ng-container *ngIf="planType === 'premium'">

@@ -1,5 +1,5 @@
 import { Component, Input, Signal, Output, EventEmitter } from '@angular/core';
-import { Customizations } from '../../preview.component';
+import { Customizations } from '../../../../core/models/website-customizations';
 
 @Component({
   selector: 'app-about-standard',

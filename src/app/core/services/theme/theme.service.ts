@@ -3,7 +3,7 @@ import { Observable, of } from 'rxjs';
 import { ThemeStyleDto, ThemeData, ThemeListItem } from './theme';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { Customizations } from '../../../pages/preview/preview.component';
+import { Customizations } from '../../models/website-customizations';
 import { catchError, map } from 'rxjs/operators';
 
 @Injectable({

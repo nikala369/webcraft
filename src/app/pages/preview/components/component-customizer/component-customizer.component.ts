@@ -8,6 +8,7 @@ import {
   effect,
   HostListener,
   OnInit,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -15,6 +16,7 @@ import {
   FieldConfig,
 } from './customizing-form-config';
 import { FormsModule } from '@angular/forms';
+import { ToastService } from '../../../../core/services/toast/toast.service';
 
 @Component({
   selector: 'app-component-customizer',
@@ -32,9 +34,33 @@ export class ComponentCustomizerComponent implements OnInit {
   isVisible = false;
   activeCategory = 'general';
 
+  // Inject the toast service
+  private toastService = inject(ToastService);
+
+  // Data structure for storing video placeholder metadata
+  videoPlaceholders: Record<string, { fileName: string; timestamp: string }> =
+    {};
+
   @Input() set initialData(value: any) {
     if (value) {
       console.log('Component customizer received initial data:', value);
+      console.log('Component key:', this.componentKey);
+
+      // Check specifically for image and video data
+      if (this.componentKey.includes('hero')) {
+        console.log(
+          'Hero section data - backgroundImage:',
+          value.backgroundImage
+        );
+        console.log(
+          'Hero section data - backgroundType:',
+          value.backgroundType
+        );
+        console.log(
+          'Hero section data - backgroundVideo:',
+          value.backgroundVideo ? 'Video data present' : 'No video data'
+        );
+      }
 
       // Store original for reset functionality
       this.originalData = structuredClone(value);
@@ -84,21 +110,8 @@ export class ComponentCustomizerComponent implements OnInit {
 
   // Helper to get field config for this component
   getFieldsConfig(): FieldConfig[] {
-    // Handle aliases: if we don't find config for the exact key, check for aliases
-    if (
-      this.componentKey === 'hero1' &&
-      !CustomizationFormConfig[this.componentKey]?.length
-    ) {
-      return CustomizationFormConfig['pages.home.hero1'] || [];
-    }
-
-    if (
-      this.componentKey === 'pages.home.hero1' &&
-      !CustomizationFormConfig[this.componentKey]?.length
-    ) {
-      return CustomizationFormConfig['hero1'] || [];
-    }
-
+    // No longer need backward compatibility aliases
+    // Use only the exact component key provided
     return CustomizationFormConfig[this.componentKey] || [];
   }
 
@@ -109,6 +122,20 @@ export class ComponentCustomizerComponent implements OnInit {
       (field) => field.required === true
     );
 
+    // Special validation for hero section with background type
+    if (this.componentKey.includes('hero') && data.backgroundType) {
+      // For video background, require backgroundVideo
+      if (data.backgroundType === 'video') {
+        return !!data.backgroundVideo;
+      }
+
+      // For image background, require backgroundImage
+      if (data.backgroundType === 'image') {
+        return !!data.backgroundImage;
+      }
+    }
+
+    // Regular validation for other components
     return requiredFields.every((field: FieldConfig) => {
       if (field.type === 'text') {
         return data[field.key]?.trim?.() !== '';
@@ -129,7 +156,33 @@ export class ComponentCustomizerComponent implements OnInit {
       console.log('Fields Config Available:', this.getFieldsConfig());
       console.log('Fields for Category:', this.getFieldsForCategory());
       console.log('Initial Data:', this.localData());
+
+      // Check validation status and auto-select category with errors if any
+      const validationStatus = this.getCategoryValidationStatus();
+      console.log('Initial validation status:', validationStatus);
+
+      // Find the first category with validation errors
+      const invalidCategory = Object.entries(validationStatus).find(
+        ([category, isValid]) => !isValid
+      )?.[0];
+
+      // If there's an invalid category, switch to it
+      if (invalidCategory) {
+        console.log(`Selecting category with errors: ${invalidCategory}`);
+        this.activeCategory = invalidCategory;
+      }
     }, 50);
+
+    // Load video placeholders from session storage if they exist
+    const savedPlaceholders = sessionStorage.getItem('videoPlaceholders');
+    if (savedPlaceholders) {
+      try {
+        this.videoPlaceholders = JSON.parse(savedPlaceholders);
+        console.log('Loaded video placeholders:', this.videoPlaceholders);
+      } catch (error) {
+        console.error('Error parsing video placeholders:', error);
+      }
+    }
   }
 
   // Get formatted component title for display
@@ -195,7 +248,10 @@ export class ComponentCustomizerComponent implements OnInit {
     const config = this.getFieldsConfig();
     return config.some(
       (field) =>
-        field.type === 'text' || field.type === 'file' || field.type === 'list'
+        field.type === 'text' ||
+        field.type === 'textarea' ||
+        field.type === 'file' ||
+        field.type === 'list'
     );
   }
 
@@ -291,6 +347,29 @@ export class ComponentCustomizerComponent implements OnInit {
     return field.type !== 'boolean';
   }
 
+  // Helper to determine if the entire field label row should be displayed
+  shouldShowFieldLabel(field: FieldConfig | any): boolean {
+    // Hide backgroundImage label when video is selected
+    if (
+      field.key === 'backgroundImage' &&
+      this.localData()['backgroundType'] === 'video'
+    ) {
+      return false;
+    }
+
+    // Hide backgroundVideo label when image is selected or no type is specified
+    if (
+      field.key === 'backgroundVideo' &&
+      (this.localData()['backgroundType'] === 'image' ||
+        !this.localData()['backgroundType'])
+    ) {
+      return false;
+    }
+
+    // Show all other field labels
+    return true;
+  }
+
   updateBooleanField(fieldKey: string, value: boolean): void {
     this.localData.update((data) => ({ ...data, [fieldKey]: value }));
   }
@@ -307,6 +386,11 @@ export class ComponentCustomizerComponent implements OnInit {
     this.localData.update((data) => ({ ...data, [fieldKey]: value }));
   }
 
+  /**
+   * Handle select field changes with special handling for background type
+   * @param fieldKey The field key being updated
+   * @param value The new value
+   */
   updateSelectField(fieldKey: string, value: string | boolean): void {
     // Find field config to determine expected type
     const field = this.getFieldsConfig().find((f) => f.key === fieldKey);
@@ -327,7 +411,51 @@ export class ComponentCustomizerComponent implements OnInit {
       typedValue = Number(value);
     }
 
+    // Update the field value
     this.localData.update((data) => ({ ...data, [fieldKey]: typedValue }));
+
+    // Special handling for hero section background type
+    if (fieldKey === 'backgroundType') {
+      console.log(`Background type changed to: ${typedValue}`);
+
+      // Switching between image and video modes
+      const currentData = this.localData();
+
+      // If switching to video mode
+      if (typedValue === 'video') {
+        // If we don't have a video yet, scroll to the video input
+        if (!currentData['backgroundVideo']) {
+          setTimeout(() => {
+            const fileInput = document.getElementById('backgroundVideo');
+            if (fileInput) {
+              fileInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Add flashing highlight to draw attention
+              fileInput.classList.add('highlight-required');
+              setTimeout(() => {
+                fileInput.classList.remove('highlight-required');
+              }, 2000);
+            }
+          }, 100);
+        }
+      }
+      // If switching to image mode
+      else if (typedValue === 'image') {
+        // If we don't have an image yet, scroll to the image input
+        if (!currentData['backgroundImage']) {
+          setTimeout(() => {
+            const fileInput = document.getElementById('backgroundImage');
+            if (fileInput) {
+              fileInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Add flashing highlight to draw attention
+              fileInput.classList.add('highlight-required');
+              setTimeout(() => {
+                fileInput.classList.remove('highlight-required');
+              }, 2000);
+            }
+          }, 100);
+        }
+      }
+    }
   }
 
   updateColorField(fieldKey: string, value: string) {
@@ -441,21 +569,124 @@ export class ComponentCustomizerComponent implements OnInit {
     });
   }
 
-  handleFileChange(event: any, fieldKey: string) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.localData.update((current) => {
-          return { ...current, [fieldKey]: e.target?.result };
-        });
-      };
-      reader.readAsDataURL(file);
+  /**
+   * Handle file upload with validation
+   * @param event File input change event
+   * @param fieldKey Field key to update
+   */
+  handleFileUpload(event: Event, fieldKey: string): void {
+    console.log(`Handling file upload for ${fieldKey}`);
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+
+    if (!files || files.length === 0) {
+      console.log('No file selected');
+      return;
     }
+
+    const file = files[0];
+    console.log(
+      'File selected:',
+      file.name,
+      'Size:',
+      file.size,
+      'Type:',
+      file.type
+    );
+
+    // Get max file size based on file type
+    let maxSize = 1024 * 1024 * 2; // Default 2MB for images
+    if (file.type.includes('video')) {
+      maxSize = 1024 * 1024 * 10; // 10MB for videos
+    }
+
+    // Check file size
+    if (file.size > maxSize) {
+      const maxSizeMB = Math.round(maxSize / (1024 * 1024));
+      this.toastService.error(
+        `File size exceeds ${maxSizeMB}MB limit. Please choose a smaller file.`
+      );
+      // Reset the input to clear the invalid selection
+      input.value = '';
+      return;
+    }
+
+    // Read file as data URL
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      if (readerEvent.target?.result) {
+        const result = readerEvent.target.result as string;
+
+        // Update local data with the new file
+        const updatedData = { ...this.localData() };
+        updatedData[fieldKey] = result;
+
+        // For video uploads, also check if we need to save a placeholder
+        if (file.type.includes('video')) {
+          // Store a placeholder for videos to avoid storage quota issues
+          this.storeVideoPlaceholder(fieldKey, file.name);
+        }
+
+        this.localData.set(updatedData);
+        console.log(`Updated ${fieldKey} with file data`);
+      }
+    };
+
+    reader.onerror = (error) => {
+      console.error('Error reading file:', error);
+      this.toastService.error('Error uploading file. Please try again.');
+    };
+
+    reader.readAsDataURL(file);
   }
 
-  trackByIndex(index: number): number {
-    return index;
+  /**
+   * Store a placeholder for video files to avoid storage quota issues
+   */
+  private storeVideoPlaceholder(fieldKey: string, fileName: string): void {
+    // Update stored data with placeholder
+    this.videoPlaceholders = {
+      ...this.videoPlaceholders,
+      [fieldKey]: {
+        fileName: fileName,
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    // Update session storage for persistence
+    sessionStorage.setItem(
+      'videoPlaceholders',
+      JSON.stringify(this.videoPlaceholders)
+    );
+    console.log('Stored video placeholder:', this.videoPlaceholders);
+  }
+
+  /**
+   * Check if a field is required
+   */
+  isFieldRequired(fieldKey: string): boolean {
+    const field = this.getFieldsConfig().find((f) => f.key === fieldKey);
+    if (!field) return false;
+
+    // Check field.required property first
+    if (field.required !== undefined) {
+      return field.required;
+    }
+
+    // For backward compatibility, check validation if defined
+    if (
+      field &&
+      typeof field === 'object' &&
+      'validation' in field &&
+      field.validation
+    ) {
+      const validation = field.validation as Record<string, unknown>;
+      if ('required' in validation) {
+        return !!validation['required'];
+      }
+    }
+
+    return false;
   }
 
   // Handle backdrop click
@@ -503,5 +734,75 @@ export class ComponentCustomizerComponent implements OnInit {
     setTimeout(() => {
       this.close.emit();
     }, 400);
+  }
+
+  // Check which categories have required but invalid fields
+  getCategoryValidationStatus(): Record<string, boolean> {
+    const data = this.localData();
+    const result: Record<string, boolean> = {};
+
+    // Get all available categories
+    const categories = this.getCategories().map((cat: any) => cat.id as string);
+
+    // Initialize all categories as valid
+    categories.forEach((cat: string) => {
+      result[cat] = true;
+    });
+
+    // Special case for hero section
+    if (this.componentKey.includes('hero')) {
+      const contentValid = this.isContentCategoryValid();
+      result['content'] = contentValid;
+      return result;
+    }
+
+    // For other components, check each required field
+    const requiredFields = this.getFieldsConfig().filter(
+      (field) => field.required === true
+    );
+
+    requiredFields.forEach((field) => {
+      const isValid =
+        field.type === 'text'
+          ? data[field.key]?.trim?.() !== ''
+          : data[field.key] !== undefined && data[field.key] !== null;
+
+      if (!isValid) {
+        result[field.category] = false;
+      }
+    });
+
+    return result;
+  }
+
+  // Special validation for content category in hero section
+  isContentCategoryValid(): boolean {
+    const data = this.localData();
+
+    if (data.backgroundType === 'video') {
+      return !!data.backgroundVideo;
+    }
+
+    if (data.backgroundType === 'image' || !data.backgroundType) {
+      return !!data.backgroundImage;
+    }
+
+    return true;
+  }
+
+  /**
+   * Legacy handler for backwards compatibility
+   * @deprecated Use handleFileUpload instead
+   */
+  handleFileChange(event: Event, fieldKey: string): void {
+    // Forward to the new method
+    this.handleFileUpload(event, fieldKey);
+  }
+
+  /**
+   * Helper method for tracking by index in ngFor loops
+   */
+  trackByIndex(index: number): number {
+    return index;
   }
 }

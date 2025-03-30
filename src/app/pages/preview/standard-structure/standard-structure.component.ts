@@ -14,7 +14,7 @@ import {
 import { StructureHeaderComponent } from '../components/structure-header/structure-header.component';
 import { StructureFooterComponent } from '../components/structure-footer/structure-footer.component';
 import { CommonModule } from '@angular/common';
-import { Customizations } from '../preview.component';
+import { Customizations } from '../../../core/models/website-customizations';
 import { SectionHoverWrapperComponent } from '../components/section-hover-wrapper/section-hover-wrapper.component';
 import { Router } from '@angular/router';
 import { HomeStandardComponent } from './home-standard/home-standard.component';
@@ -166,6 +166,11 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
     console.log(
       `Standard-structure: handling page section edit for path: ${fullPath}`
     );
+
+    // Special debug for about section
+    if (fullPath.includes('about')) {
+      console.log('DEBUG: Handling ABOUT section edit!');
+    }
 
     // Split the fullPath, e.g. "pages.home.hero1" → ["pages", "home", "hero1"]
     const pathParts = fullPath.split('.');

@@ -35,6 +35,11 @@ import { BusinessTypeSelectorComponent } from './components/business-type-select
 import { BUSINESS_TYPE_MENU_ITEMS } from '../../core/models/business-types';
 import { ThemeColorsService } from '../../core/services/theme/theme-colors.service';
 import { WebcraftLoadingComponent } from '../../shared/components/webcraft-loading/webcraft-loading.component';
+import {
+  Customizations,
+  ThemeData,
+} from '../../core/models/website-customizations';
+import { BusinessConfigService } from '../../core/services/business-config/business-config.service';
 
 /**
  * PreviewComponent is the main interface for the website builder.
@@ -77,6 +82,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
   isViewOnlyStateService = inject(ScrollService);
   private destroy$ = new Subject<void>();
   private themeColorsService = inject(ThemeColorsService);
+  private businessConfigService = inject(BusinessConfigService);
 
   // ======== CORE STATE SIGNALS ========
   // View state
@@ -160,11 +166,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
           primaryButtonTextColor: '#000000',
           primaryButtonLink: '/contact',
         },
-        hero2: {
-          backgroundImage: 'assets/themes/theme1/services-bg.jpg',
-          title: 'Our Services',
-          subtitle: 'Discover what we can do for you',
-        },
       },
       about: {},
       contact: {},
@@ -191,16 +192,18 @@ export class PreviewComponent implements OnInit, OnDestroy {
       let missingParts = false;
 
       // Navigate through the path to get the data
-      for (const part of pathParts) {
-        if (data && data[part] !== undefined) {
-          data = data[part];
-        } else {
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const part = pathParts[i];
+        // Create objects along the path if they don't exist
+        if (!data || data[part] === undefined) {
           console.warn(
-            `Cannot find data at path part: "${part}" in path: "${selected.path}"`
+            `Cannot find data at path part: "${part}" in path: "${selected.path}". Current data:`,
+            data
           );
           missingParts = true;
           break;
         }
+        data = data[part];
       }
 
       // If we couldn't find the data, ensure the structure exists and add default values
@@ -213,7 +216,8 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
         // Try to get the data again
         data = this.customizations() as any;
-        for (const part of pathParts) {
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          const part = pathParts[i];
           if (data && data[part] !== undefined) {
             data = data[part];
           } else {
@@ -227,13 +231,50 @@ export class PreviewComponent implements OnInit, OnDestroy {
         }
       }
 
-      console.log('Selected component data for path:', selected.path, data);
+      // Get the final part of the path
+      const lastPart = pathParts[pathParts.length - 1];
+
+      // Make sure we have an object to return
+      if (!data[lastPart]) {
+        console.log('Creating empty object for last path part:', lastPart);
+        data[lastPart] = {};
+      }
+
+      // Special handling for hero section
+      if (lastPart === 'hero1') {
+        console.log(
+          'Hero section selected. Data before potentially fixing:',
+          data[lastPart]
+        );
+
+        // Check if we have a backgroundImage in custom or default state
+        const heroData = this.customizations()?.pages?.home?.hero1;
+        if (heroData && heroData.backgroundImage) {
+          console.log(
+            'Found backgroundImage in nested customizations, ensuring it is passed to editor'
+          );
+          if (!data[lastPart].backgroundImage) {
+            data[lastPart].backgroundImage = heroData.backgroundImage;
+          }
+        }
+
+        // Ensure background type is set
+        if (!data[lastPart].backgroundType) {
+          data[lastPart].backgroundType = 'image';
+        }
+      }
+
+      console.log(
+        'Selected component data for path:',
+        selected.path,
+        data[lastPart]
+      );
 
       return {
         key: selected.key,
         name: selected.name,
         path: selected.path,
-        data: data,
+        data: data[lastPart],
       };
     }
 
@@ -512,25 +553,22 @@ export class PreviewComponent implements OnInit, OnDestroy {
   updateMenuItemsForBusinessType(businessType: string): void {
     const plan = this.currentPlan();
 
-    // Check if we have predefined menu items for this business type and plan
-    if (
-      BUSINESS_TYPE_MENU_ITEMS[
-        businessType as keyof typeof BUSINESS_TYPE_MENU_ITEMS
-      ]?.[plan as 'standard' | 'premium']
-    ) {
-      this.customizations.update((current) => {
-        return {
-          ...current,
-          header: {
-            ...current.header,
-            menuItems:
-              BUSINESS_TYPE_MENU_ITEMS[
-                businessType as keyof typeof BUSINESS_TYPE_MENU_ITEMS
-              ][plan as 'standard' | 'premium'],
-          },
-        };
-      });
-    }
+    // Use business config service to get menu items
+    const menuItems = this.businessConfigService.getMenuItemsForBusinessType(
+      businessType,
+      plan
+    );
+
+    // Update the customizations with the new menu items
+    this.customizations.update((current) => {
+      return {
+        ...current,
+        header: {
+          ...current.header,
+          menuItems: menuItems,
+        },
+      };
+    });
   }
 
   // ======== SESSION STATE MANAGEMENT ========
@@ -698,13 +736,13 @@ export class PreviewComponent implements OnInit, OnDestroy {
       }
 
       // Restore main page scroll position
-      if(!this.showBusinessTypeSelector())
-      setTimeout(() => {
-        window.scrollTo({
-          top: this.preFullscreenScrollPosition,
-          behavior: 'auto',
-        });
-      }, 0);
+      if (!this.showBusinessTypeSelector())
+        setTimeout(() => {
+          window.scrollTo({
+            top: this.preFullscreenScrollPosition,
+            behavior: 'auto',
+          });
+        }, 0);
     }
   }
 
@@ -1049,16 +1087,60 @@ export class PreviewComponent implements OnInit, OnDestroy {
         const parsedData = JSON.parse(savedCustomizations);
         console.log('🔍 Parsed saved data:', parsedData);
 
+        let customizationsData;
+
         // Check if data is in the new format with nested customizations
         if (parsedData.customizations) {
           console.log('🔍 Setting customizations from nested structure');
-          // Use direct application for nested structure
-          this.applyCustomizations(parsedData.customizations);
+          customizationsData = parsedData.customizations;
+
+          // Check for video placeholder and restore if needed
+          if (customizationsData.pages?.home?.hero1) {
+            const heroData = customizationsData.pages.home.hero1;
+
+            // If there's a video placeholder, we need to reconstruct the real data
+            if (heroData._videoPlaceholder === 'VIDEO_DATA_PLACEHOLDER') {
+              console.log(
+                '🔍 Found video placeholder - checking if real video exists in memory'
+              );
+
+              // Check if we have the video in current state
+              const currentVideo =
+                this.customizations()?.pages?.home?.hero1?.backgroundVideo;
+              if (
+                currentVideo &&
+                typeof currentVideo === 'string' &&
+                currentVideo.startsWith('data:video')
+              ) {
+                console.log('🔍 Restoring video from memory');
+                heroData.backgroundVideo = currentVideo;
+              } else {
+                console.log(
+                  '🔍 No video found in memory - removing placeholder'
+                );
+              }
+
+              // Remove the placeholder property
+              delete heroData._videoPlaceholder;
+            }
+
+            // Same for _videoRemoved flag
+            if (heroData._videoRemoved) {
+              delete heroData._videoRemoved;
+            }
+          }
         } else {
           // Handle legacy format (direct customizations object)
           console.log('🔍 Setting customizations from legacy structure');
-          // Use direct application for legacy format too
-          this.applyCustomizations(parsedData);
+          customizationsData = parsedData;
+        }
+
+        // Use direct application to apply the customizations
+        this.applyCustomizations(customizationsData);
+
+        // Also update the business type if available
+        if (parsedData.businessType) {
+          this.businessType.set(parsedData.businessType);
         }
 
         console.log('🔍 Successfully loaded saved customizations');
@@ -1272,38 +1354,122 @@ export class PreviewComponent implements OnInit, OnDestroy {
       // this.userTemplateService.saveTemplate(this.customizations());
     }
 
-    // Prepare data for saving with proper structure
-    const savedData = {
-      customizations: this.customizations(),
-      themeId: this.defaultThemeId(),
-      businessType: this.businessType(), // Add business type to saved data
-    };
+    // Create a deep copy of customizations to modify before saving
+    const customizationsToSave = structuredClone(this.customizations());
 
-    // Save to session storage
-    sessionStorage.setItem('savedCustomizations', JSON.stringify(savedData));
+    // Handle video data which might exceed localStorage quota
+    try {
+      // Find any video data in the hero sections and create a placeholder
+      if (customizationsToSave.pages?.home?.hero1?.backgroundVideo) {
+        const videoSrc = customizationsToSave.pages.home.hero1.backgroundVideo;
+        // If it's a data URL (usually very large), replace with a flag
+        if (videoSrc.startsWith('data:video')) {
+          console.log('Replacing video data URL with placeholder for storage');
+          // Store only the first 100 chars as reference and a flag
+          (customizationsToSave.pages.home.hero1 as any)._videoPlaceholder =
+            'VIDEO_DATA_PLACEHOLDER';
+          delete customizationsToSave.pages.home.hero1.backgroundVideo;
+        }
+      }
 
-    // Also update currentCustomizations to match the saved state
-    sessionStorage.setItem('currentCustomizations', JSON.stringify(savedData));
+      // Prepare data for saving with proper structure
+      const savedData = {
+        customizations: customizationsToSave,
+        themeId: this.defaultThemeId(),
+        businessType: this.businessType(),
+      };
 
-    // Set flags to indicate successful save
-    sessionStorage.setItem('hasStartedBuilding', 'true');
-    this.hasStartedBuilding.set(true);
-    this.hasSavedChangesFlag.set(true);
+      // Try to save to session storage
+      sessionStorage.setItem('savedCustomizations', JSON.stringify(savedData));
 
-    // Update progress step to the editing step (2)
-    // We only move to step 3 after checkout is complete
-    this.currentStep.set(4);
+      // Also update currentCustomizations to match the saved state
+      sessionStorage.setItem(
+        'currentCustomizations',
+        JSON.stringify(savedData)
+      );
 
-    // Update lastSavedState to track what was saved
-    this.lastSavedState.set(structuredClone(this.customizations()));
-    this.currentEditingState.set(structuredClone(this.customizations()));
+      // Set flags to indicate successful save
+      sessionStorage.setItem('hasStartedBuilding', 'true');
+      this.hasStartedBuilding.set(true);
+      this.hasSavedChangesFlag.set(true);
 
-    // Show confirmation message
-    this.confirmationService.showConfirmation(
-      'Your website changes have been saved successfully!',
-      'success',
-      4000
-    );
+      // Update progress step to the editing step (2)
+      // We only move to step 3 after checkout is complete
+      this.currentStep.set(4);
+
+      // Update lastSavedState to track what was saved
+      this.lastSavedState.set(structuredClone(this.customizations()));
+      this.currentEditingState.set(structuredClone(this.customizations()));
+
+      // Show confirmation message
+      this.confirmationService.showConfirmation(
+        'Your website changes have been saved successfully!',
+        'success',
+        4000
+      );
+    } catch (error: any) {
+      console.error('Error saving customizations:', error);
+
+      // If it's a quota error, try a more aggressive approach by removing all video data
+      if (error.name === 'QuotaExceededError') {
+        try {
+          console.log(
+            'Storage quota exceeded. Removing video data completely.'
+          );
+
+          // Remove all video data from customizations
+          if (customizationsToSave.pages?.home?.hero1) {
+            delete customizationsToSave.pages.home.hero1.backgroundVideo;
+            // Set a flag indicating video was removed
+            (customizationsToSave.pages.home.hero1 as any)._videoRemoved = true;
+          }
+
+          // Try again with reduced data
+          const reducedSavedData = {
+            customizations: customizationsToSave,
+            themeId: this.defaultThemeId(),
+            businessType: this.businessType(),
+          };
+
+          sessionStorage.setItem(
+            'savedCustomizations',
+            JSON.stringify(reducedSavedData)
+          );
+          sessionStorage.setItem(
+            'currentCustomizations',
+            JSON.stringify(reducedSavedData)
+          );
+
+          // Set all the same flags as before
+          sessionStorage.setItem('hasStartedBuilding', 'true');
+          this.hasStartedBuilding.set(true);
+          this.hasSavedChangesFlag.set(true);
+          this.currentStep.set(4);
+
+          // Show a different confirmation message
+          this.confirmationService.showConfirmation(
+            'Changes saved successfully, but video data was removed due to size limitations',
+            'warning',
+            5000
+          );
+        } catch (secondError) {
+          // If it still fails, show an error message
+          console.error('Failed to save even with reduced data:', secondError);
+          this.confirmationService.showConfirmation(
+            'Failed to save changes: storage quota exceeded',
+            'error',
+            5000
+          );
+        }
+      } else {
+        // For other errors, just show the error message
+        this.confirmationService.showConfirmation(
+          'Failed to save changes: ' + error.message,
+          'error',
+          5000
+        );
+      }
+    }
 
     // Exit fullscreen mode
     if (this.isFullscreen()) {
@@ -1374,97 +1540,49 @@ export class PreviewComponent implements OnInit, OnDestroy {
    */
   private ensureCompleteCustomizationStructure(): void {
     this.customizations.update((current) => {
-      const updated = structuredClone(current);
-
-      // Ensure pages object exists
-      if (!updated.pages) {
-        updated.pages = {};
-      }
-
-      // Ensure home object exists
-      if (!updated.pages.home) {
-        updated.pages.home = {};
-      }
-
-      // Ensure hero1 object exists with default values if not set
-      if (!updated.pages.home.hero1) {
-        updated.pages.home.hero1 = {
-          backgroundImage: 'assets/standard-hero1/background-image1.jpg',
-          title: 'Grow Your Business With Us',
-          subtitle: 'Professional solutions tailored to your business needs',
-          layout: 'center',
-          showLogo: true,
-          titleColor: '#ffffff',
-          subtitleColor: '#f0f0f0',
-          textShadow: 'medium',
-          showPrimaryButton: true,
-          primaryButtonText: 'GET STARTED NOW',
-          primaryButtonColor: '#ffffff',
-          primaryButtonTextColor: '#000000',
-          primaryButtonLink: '/contact',
-        };
-      }
-
-      // Ensure about, menu, services, projects, contact objects exist
-      ['about', 'menu', 'services', 'projects', 'contact'].forEach(
-        (section) => {
-          // Use type assertion to handle dynamic property access
-          const homeObj = updated.pages.home as Record<string, any>;
-          if (!homeObj[section]) {
-            homeObj[section] = {};
-          }
-        }
+      // Use the business config service to ensure all required objects exist
+      return this.businessConfigService.ensureCompleteCustomizationStructure(
+        current,
+        this.businessType(),
+        this.currentPlan()
       );
-
-      return updated;
     });
   }
-}
 
-/**
- * Interface defining the structure of website customizations
- */
-export interface Customizations {
-  fontConfig: {
-    fontId: number;
-    family: string;
-    fallback: string;
-  };
-  header: {
-    backgroundColor: string;
-    textColor: string;
-    logoUrl: string;
-    menuItems: { id: number; label: string; link: string }[];
-  };
-  pages: {
-    home?: {
-      hero1?: {
-        backgroundImage: string;
-        title: string;
-        subtitle: string;
-        layout?: 'center' | 'left' | 'right';
-        showLogo?: boolean;
-        titleColor?: string;
-        subtitleColor?: string;
-        textShadow?: 'none' | 'light' | 'medium' | 'heavy';
-        showPrimaryButton?: boolean;
-        primaryButtonText?: string;
-        primaryButtonColor?: string;
-        primaryButtonTextColor?: string;
-        primaryButtonLink?: string;
-      };
-      hero2?: {
-        backgroundImage: string;
-        title: string;
-        subtitle: string;
-      };
+  private generateDefaultTheme(businessType: string, planType: string): any {
+    return {
+      id: 1,
+      name: 'Default theme',
+      cssContent: '',
+      businessType: businessType,
+      customizations: this.businessConfigService.generateDefaultCustomizations(
+        businessType,
+        planType as 'standard' | 'premium'
+      ),
     };
-    about?: {};
-    contact?: {};
-  };
-  footer: {
-    backgroundColor: string;
-    textColor: string;
-    copyrightText: string;
-  };
+  }
+
+  private applyTheme(theme: ThemeData): void {
+    // Process customizations
+    if (theme.customizations) {
+      // Update global customizations signal
+      this.customizations.set(theme.customizations);
+    }
+
+    console.log('Applied theme:', theme.name);
+  }
+
+  /**
+   * Initialize menu items based on business type
+   */
+  private initializeMenuItemsByBusinessType(): Array<{
+    id: number;
+    label: string;
+    link: string;
+  }> {
+    return this.businessConfigService.getMenuItemsForBusinessType(
+      this.businessType(),
+      this.currentPlan()
+    );
+  }
 }

@@ -46,6 +46,7 @@
         *ngFor="let category of getCategories()"
         class="tab-button"
         [class.active]="activeCategory === category.id"
+        [class.invalid]="!getCategoryValidationStatus()[category.id]"
         (click)="setActiveCategory(category.id)"
       >
         {{ category.label }}
@@ -59,7 +60,7 @@
           *ngFor="let field of getFieldsForCategory(); let i = index"
         >
           <div class="field-group" [style.--index]="i">
-            <div class="field-label-row">
+            <div class="field-label-row" *ngIf="shouldShowFieldLabel(field)">
               <label *ngIf="shouldShowLabel(field)" [for]="field.key">
                 {{ field.label }}
               </label>
@@ -85,6 +86,18 @@
                 placeholder="{{ field.label }}"
                 [name]="field.key"
               />
+
+              <!-- Textarea Field -->
+              <textarea
+                *ngSwitchCase="'textarea'"
+                [id]="field.key"
+                [ngModel]="localData()[field.key]"
+                (ngModelChange)="updateTextField(field.key, $event)"
+                class="textarea-input"
+                placeholder="{{ field.label }}"
+                [name]="field.key"
+                rows="5"
+              ></textarea>
 
               <!-- Color Field -->
               <div *ngSwitchCase="'color'" class="color-field">
@@ -124,36 +137,220 @@
                 </label>
               </div>
 
-              <!-- Select Field -->
-              <select
-                *ngSwitchCase="'select'"
-                [id]="field.key"
-                [ngModel]="localData()[field.key]"
-                (ngModelChange)="updateSelectField(field.key, $event)"
-                class="select-input"
-                [name]="field.key"
-              >
-                <option
-                  *ngFor="let option of field.options"
-                  [value]="option.value"
+              <!-- Add a more intuitive background type selector for hero section -->
+              <ng-container *ngIf="field.key === 'backgroundType'">
+                <div class="background-type-selector">
+                  <button
+                    class="type-btn"
+                    [ngClass]="{ active: localData()[field.key] === 'image' }"
+                    (click)="updateSelectField(field.key, 'image')"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <path d="M21 15l-5-5L5 21" />
+                    </svg>
+                    <span>Image</span>
+                  </button>
+                  <button
+                    class="type-btn"
+                    [ngClass]="{ active: localData()[field.key] === 'video' }"
+                    (click)="updateSelectField(field.key, 'video')"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <rect x="2" y="2" width="20" height="20" rx="2.18" />
+                      <path d="M10 8l6 4-6 4V8z" />
+                    </svg>
+                    <span>Video</span>
+                  </button>
+                </div>
+              </ng-container>
+
+              <!-- Standard select for other fields -->
+              <ng-container *ngIf="field.key !== 'backgroundType'">
+                <select
+                  *ngSwitchCase="'select'"
+                  [id]="field.key"
+                  [ngModel]="localData()[field.key]"
+                  (ngModelChange)="updateSelectField(field.key, $event)"
+                  class="select-input"
+                  [name]="field.key"
                 >
-                  {{ option.label }}
-                </option>
-              </select>
+                  <option
+                    *ngFor="let option of field.options"
+                    [value]="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </ng-container>
 
               <!-- File Field -->
               <div *ngSwitchCase="'file'" class="file-field">
-                <input
-                  type="file"
-                  [id]="field.key"
-                  (change)="handleFileChange($event, field.key)"
-                  accept="image/*"
-                  class="file-input"
-                  [name]="'file_' + field.key"
-                />
-                <div class="file-preview" *ngIf="localData()[field.key]">
-                  <img [src]="localData()[field.key]" alt="Preview" />
-                </div>
+                <!-- Special handling for background type dependent files -->
+                <ng-container *ngIf="field.key === 'backgroundImage'">
+                  <!-- Only show if backgroundType is 'image' or not specified -->
+                  <ng-container
+                    *ngIf="
+                      localData()['backgroundType'] === 'image' ||
+                      !localData()['backgroundType']
+                    "
+                  >
+                    <div class="file-controls">
+                      <input
+                        type="file"
+                        [id]="field.key"
+                        (change)="handleFileUpload($event, field.key)"
+                        class="file-input"
+                        [ngClass]="{
+                          'highlight-required':
+                            isFieldRequired(field.key) &&
+                            !localData()[field.key]
+                        }"
+                        accept="image/*"
+                      />
+                    </div>
+                    <div class="file-info">
+                      <span
+                        *ngIf="isFieldRequired(field.key)"
+                        class="required-notice"
+                      >
+                        Required:
+                        <span *ngIf="!localData()[field.key]"
+                          >Please upload a file.</span
+                        >
+                        <span *ngIf="localData()[field.key]"
+                          >✓ File uploaded</span
+                        >
+                      </span>
+                      <span *ngIf="field.label" class="hint"
+                        >Image file, max 2MB</span
+                      >
+                    </div>
+                    <!-- Show image preview if image has been uploaded -->
+                    <div class="file-preview" *ngIf="localData()[field.key]">
+                      <img [src]="localData()[field.key]" alt="File preview" />
+                    </div>
+                  </ng-container>
+                </ng-container>
+
+                <!-- Special handling for background video -->
+                <ng-container *ngIf="field.key === 'backgroundVideo'">
+                  <!-- Only show if backgroundType is 'video' -->
+                  <ng-container
+                    *ngIf="localData()['backgroundType'] === 'video'"
+                  >
+                    <div class="file-controls">
+                      <input
+                        type="file"
+                        [id]="field.key"
+                        (change)="handleFileUpload($event, field.key)"
+                        class="file-input"
+                        [ngClass]="{
+                          'highlight-required':
+                            isFieldRequired(field.key) &&
+                            !localData()[field.key]
+                        }"
+                        accept="video/*"
+                      />
+                    </div>
+                    <div class="file-info">
+                      <span
+                        *ngIf="isFieldRequired(field.key)"
+                        class="required-notice"
+                      >
+                        Required:
+                        <span *ngIf="!localData()[field.key]"
+                          >Please upload a video.</span
+                        >
+                        <span *ngIf="localData()[field.key]"
+                          >✓ Video uploaded</span
+                        >
+                      </span>
+                      <span *ngIf="field.label" class="hint"
+                        >Video file, max 10MB, MP4 format recommended</span
+                      >
+                      <span
+                        class="warning"
+                        *ngIf="field.key === 'backgroundVideo'"
+                      >
+                        <strong>Note:</strong> Videos require server storage.
+                        <span class="warning-highlight"
+                          >Upgrade to save video backgrounds.</span
+                        >
+                      </span>
+                    </div>
+                    <!-- Show video preview if video has been uploaded -->
+                    <div class="file-preview" *ngIf="localData()[field.key]">
+                      <video controls>
+                        <source
+                          [src]="localData()[field.key]"
+                          type="video/mp4"
+                        />
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  </ng-container>
+                </ng-container>
+
+                <!-- Regular file uploads for non-background fields -->
+                <ng-container
+                  *ngIf="
+                    field.key !== 'backgroundImage' &&
+                    field.key !== 'backgroundVideo'
+                  "
+                >
+                  <div class="file-controls">
+                    <input
+                      type="file"
+                      [id]="field.key"
+                      (change)="handleFileUpload($event, field.key)"
+                      class="file-input"
+                      [ngClass]="{
+                        'highlight-required':
+                          isFieldRequired(field.key) && !localData()[field.key]
+                      }"
+                      accept="image/*"
+                    />
+                  </div>
+                  <div class="file-info">
+                    <span
+                      *ngIf="isFieldRequired(field.key)"
+                      class="required-notice"
+                    >
+                      Required:
+                      <span *ngIf="!localData()[field.key]"
+                        >Please upload a file.</span
+                      >
+                      <span *ngIf="localData()[field.key]"
+                        >✓ File uploaded</span
+                      >
+                    </span>
+                    <span *ngIf="field.label" class="hint"
+                      >Image file, max 2MB</span
+                    >
+                  </div>
+                  <!-- Show image preview if image has been uploaded -->
+                  <div class="file-preview" *ngIf="localData()[field.key]">
+                    <img [src]="localData()[field.key]" alt="File preview" />
+                  </div>
+                </ng-container>
               </div>
 
               <!-- List Field -->
@@ -205,6 +402,32 @@
       >
         Apply Changes
       </button>
+    </div>
+
+    <!-- Video upgrade message if video background is selected -->
+    <div
+      class="video-upgrade-message"
+      *ngIf="localData()['backgroundType'] === 'video'"
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#f59e0b"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>
+        Video backgrounds require account registration to save properly.
+        <strong>Consider trying image backgrounds</strong> first, or
+        <a href="#">sign up</a> to unlock all features.
+      </span>
     </div>
   </div>
 

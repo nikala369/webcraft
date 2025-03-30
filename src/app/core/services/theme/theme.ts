@@ -1,4 +1,4 @@
-import { Customizations } from '../../../pages/preview/preview.component';
+import { Customizations } from '../../models/website-customizations';
 
 export interface ThemeStyleDto {
   id: number;

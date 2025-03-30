@@ -1,0 +1,221 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Website Builder Customization Schema",
+  "description": "Schema for the standard website customization structure",
+  "type": "object",
+  "properties": {
+    "fontConfig": {
+      "type": "object",
+      "properties": {
+        "fontId": { "type": "number" },
+        "family": { "type": "string" },
+        "fallback": { "type": "string" }
+      },
+      "required": ["fontId", "family", "fallback"]
+    },
+    "header": {
+      "type": "object",
+      "properties": {
+        "backgroundColor": { "type": "string", "format": "color" },
+        "textColor": { "type": "string", "format": "color" },
+        "logoUrl": { "type": "string" },
+        "menuItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "number" },
+              "label": { "type": "string" },
+              "link": { "type": "string" }
+            },
+            "required": ["id", "label", "link"]
+          }
+        }
+      }
+    },
+    "pages": {
+      "type": "object",
+      "properties": {
+        "home": {
+          "type": "object",
+          "properties": {
+            "hero1": {
+              "type": "object",
+              "properties": {
+                "backgroundType": {
+                  "type": "string",
+                  "enum": ["image", "video"]
+                },
+                "backgroundImage": {
+                  "type": "string",
+                  "description": "URL or Base64 encoded image data"
+                },
+                "backgroundVideo": {
+                  "type": "string",
+                  "description": "URL or Base64 encoded video data"
+                },
+                "title": { "type": "string" },
+                "subtitle": { "type": "string" },
+                "overlayOpacity": {
+                  "type": "string",
+                  "enum": ["none", "light", "medium", "heavy"]
+                },
+                "overlayColor": { "type": "string", "format": "color" },
+                "showContentText": { "type": "boolean" },
+                "layout": {
+                  "type": "string",
+                  "enum": ["center", "left", "right"]
+                },
+                "showLogo": { "type": "boolean" },
+                "titleColor": { "type": "string", "format": "color" },
+                "subtitleColor": { "type": "string", "format": "color" },
+                "textShadow": {
+                  "type": "string",
+                  "enum": ["none", "light", "medium", "heavy"]
+                },
+                "showPrimaryButton": { "type": "boolean" },
+                "primaryButtonText": { "type": "string" },
+                "primaryButtonColor": { "type": "string", "format": "color" },
+                "primaryButtonTextColor": {
+                  "type": "string",
+                  "format": "color"
+                },
+                "primaryButtonLink": { "type": "string" }
+              },
+              "required": ["backgroundImage", "title", "subtitle"]
+            },
+            "about": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "subtitle": { "type": "string" },
+                "content": { "type": "string" },
+                "imageUrl": { "type": "string" },
+                "backgroundColor": { "type": "string", "format": "color" },
+                "textColor": { "type": "string", "format": "color" }
+              }
+            },
+            "services": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "subtitle": { "type": "string" },
+                "services": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "number" },
+                      "title": { "type": "string" },
+                      "description": { "type": "string" },
+                      "icon": { "type": "string" },
+                      "price": { "type": "string" }
+                    },
+                    "required": ["id", "title", "description"]
+                  }
+                },
+                "backgroundColor": { "type": "string", "format": "color" },
+                "textColor": { "type": "string", "format": "color" }
+              }
+            },
+            "menu": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "subtitle": { "type": "string" },
+                "categories": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "number" },
+                      "name": { "type": "string" },
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "number" },
+                            "name": { "type": "string" },
+                            "description": { "type": "string" },
+                            "price": { "type": "string" },
+                            "featured": { "type": "boolean" }
+                          },
+                          "required": ["id", "name", "description", "price"]
+                        }
+                      }
+                    },
+                    "required": ["id", "name", "items"]
+                  }
+                },
+                "backgroundColor": { "type": "string", "format": "color" },
+                "textColor": { "type": "string", "format": "color" }
+              }
+            },
+            "projects": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "subtitle": { "type": "string" },
+                "projects": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "number" },
+                      "title": { "type": "string" },
+                      "description": { "type": "string" },
+                      "imageUrl": { "type": "string" },
+                      "link": { "type": "string" }
+                    },
+                    "required": ["id", "title", "description", "imageUrl"]
+                  }
+                },
+                "backgroundColor": { "type": "string", "format": "color" },
+                "textColor": { "type": "string", "format": "color" }
+              }
+            },
+            "contact": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "subtitle": { "type": "string" },
+                "address": { "type": "string" },
+                "phone": { "type": "string" },
+                "email": { "type": "string", "format": "email" },
+                "showMap": { "type": "boolean" },
+                "mapLocation": { "type": "string" },
+                "backgroundColor": { "type": "string", "format": "color" },
+                "textColor": { "type": "string", "format": "color" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "footer": {
+      "type": "object",
+      "properties": {
+        "backgroundColor": { "type": "string", "format": "color" },
+        "textColor": { "type": "string", "format": "color" },
+        "copyrightText": { "type": "string" },
+        "showSocialLinks": { "type": "boolean" },
+        "socialLinks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "platform": {
+                "type": "string",
+                "enum": ["facebook", "twitter", "instagram", "linkedin"]
+              },
+              "url": { "type": "string", "format": "uri" }
+            },
+            "required": ["platform", "url"]
+          }
+        }
+      },
+      "required": ["backgroundColor", "textColor", "copyrightText"]
+    }
+  }
+}

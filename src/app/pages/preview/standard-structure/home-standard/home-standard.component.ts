@@ -9,9 +9,13 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Customizations } from '../../preview.component';
+import {
+  Customizations,
+  HeroData,
+} from '../../../../core/models/website-customizations';
 import { SectionHoverWrapperComponent } from '../../components/section-hover-wrapper/section-hover-wrapper.component';
 import { ThemeColorsService } from '../../../../core/services/theme/theme-colors.service';
+import { BusinessConfigService } from '../../../../core/services/business-config/business-config.service';
 
 // Import all section components
 import { HeroSectionComponent } from './components/hero-section/hero-section.component';
@@ -47,6 +51,7 @@ export class HomeStandardComponent implements OnInit {
   @Output() sectionSelected = new EventEmitter<string>();
 
   private themeColorsService = inject(ThemeColorsService);
+  private businessConfigService = inject(BusinessConfigService);
   primaryColor = signal<string>('');
 
   // Computed signal for available sections based on business type
@@ -55,24 +60,35 @@ export class HomeStandardComponent implements OnInit {
       `Computing available sections for business type: ${this.businessType}`
     );
 
-    // Define base sections for all business types
-    const baseBusinessSections = {
-      restaurant: ['hero', 'about', 'menu', 'contact'],
-      salon: ['hero', 'about', 'services', 'contact'],
-      portfolio: ['hero', 'about', 'projects', 'contact'],
-      architecture: ['hero', 'about', 'projects', 'services', 'contact'],
-    };
+    // Get sections from the business config service
+    return this.businessConfigService.getAvailableSectionsForBusinessType(
+      this.businessType,
+      this.planType
+    );
+  });
 
-    // Check if we have predefined sections for this business type
-    if (this.businessType && this.businessType in baseBusinessSections) {
-      return baseBusinessSections[
-        this.businessType as keyof typeof baseBusinessSections
-      ];
+  /**
+   * Get hero section data from customizations with fallbacks
+   */
+  getHeroData(): Partial<HeroData> {
+    // First check for direct hero1 property (for backward compatibility)
+    if (this.customizations?.hero1) {
+      console.log(
+        'Returning direct hero1 property:',
+        this.customizations.hero1
+      );
+      return this.customizations.hero1;
     }
 
-    // Default sections if business type is not defined or not recognized
-    return ['hero', 'about', 'services', 'contact'];
-  });
+    // Then check for the proper nested path
+    if (this.wholeData()?.pages?.home?.hero1) {
+      return this.wholeData().pages.home.hero1;
+    }
+
+    // Finally, if no data exists, return empty object (component has defaults)
+    console.log('No hero data found, returning empty object');
+    return {};
+  }
 
   ngOnInit(): void {
     // Set the appropriate color based on plan
@@ -118,15 +134,20 @@ export class HomeStandardComponent implements OnInit {
    * Forward section selection to parent component
    */
   handleSectionSelection(data: { key: string; name: string; path?: string }) {
+    console.log('Home component - section selected:', data);
+
     // Ensure we have the full path
-    if (data.path) {
-      // If we already have a path, use it directly
-      this.sectionSelected.emit(data.path);
-    } else {
-      // If no path, construct one based on the section key
-      const fullPath = `pages.home.${data.key}`;
-      this.sectionSelected.emit(fullPath);
+    const fullPath = data.path || `pages.home.${data.key}`;
+    console.log(
+      `Home component - emitting sectionSelected with path: ${fullPath}`
+    );
+
+    // If this is the hero section, log the relevant data
+    if (data.key === 'hero1' || fullPath.includes('hero1')) {
+      console.log('Hero data being passed to customize:', this.getHeroData());
     }
+
+    this.sectionSelected.emit(fullPath);
   }
 
   /**

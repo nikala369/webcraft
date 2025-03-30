@@ -10,35 +10,63 @@
   <div
     class="hero-section"
     [ngClass]="{ 'hero-section--mobile': isMobileLayout }"
-    [ngStyle]="{
-      'background-image': 'url(' + getHeroBackground() + ')',
-      'background-size': 'cover',
-      'background-position': 'center'
-    }"
   >
+    <!-- Background media container -->
+    <div class="hero-background">
+      <!-- Image background (shown only when backgroundType is 'image' or not specified) -->
+      <div
+        *ngIf="getBackgroundType() === 'image'"
+        class="hero-background-image"
+        [style.background-image]="
+          getHeroBackground() ? 'url(' + getHeroBackground() + ')' : 'none'
+        "
+      ></div>
+
+      <!-- Video background (shown only when backgroundType is 'video') -->
+      <video
+        *ngIf="getBackgroundType() === 'video' && getHeroBackgroundVideo()"
+        class="hero-background-video"
+        [src]="getHeroBackgroundVideo()"
+        autoplay
+        loop
+        muted
+        playsinline
+      ></video>
+
+      <!-- Background overlay with customizable opacity and color -->
+      <div
+        class="hero-overlay"
+        [ngClass]="'overlay-' + getOverlayOpacity()"
+        [ngStyle]="{ 'background-color': getOverlayColor() }"
+      ></div>
+    </div>
+
     <div class="hero-content-wrapper">
       <div class="hero-content" [ngClass]="'layout-' + getLayout()">
         <div *ngIf="shouldShowLogo()" class="business-logo">
           <img [src]="getLogoUrl()" alt="Business Logo" />
         </div>
 
-        <!-- Title -->
-        <h1
-          class="hero-title"
-          [ngClass]="getTextShadow()"
-          [style.color]="getTitleColor()"
-        >
-          {{ getHeroTitle() }}
-        </h1>
+        <!-- Text content (can be hidden) -->
+        <ng-container *ngIf="shouldShowContentText()">
+          <!-- Title -->
+          <h1
+            class="hero-title"
+            [ngClass]="getTextShadow()"
+            [style.color]="getTitleColor()"
+          >
+            {{ getHeroTitle() }}
+          </h1>
 
-        <!-- Subtitle -->
-        <p
-          class="hero-subtitle"
-          [ngClass]="getTextShadow()"
-          [style.color]="getSubtitleColor()"
-        >
-          {{ getHeroSubtitle() }}
-        </p>
+          <!-- Subtitle -->
+          <p
+            class="hero-subtitle"
+            [ngClass]="getTextShadow()"
+            [style.color]="getSubtitleColor()"
+          >
+            {{ getHeroSubtitle() }}
+          </p>
+        </ng-container>
 
         <!-- Call-to-action button -->
         <div class="hero-cta" *ngIf="shouldShowButton()">

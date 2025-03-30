@@ -6,9 +6,7 @@
       <ng-container *ngIf="section === 'hero'">
         <app-hero-section
           [customizations]="wholeData()"
-          [heroData]="
-            customizations?.hero1 || wholeData()?.pages?.home?.hero1 || {}
-          "
+          [heroData]="getHeroData()"
           [isMobileLayout]="isMobileLayout"
           [isMobileView]="isMobileView"
           [planType]="planType"
