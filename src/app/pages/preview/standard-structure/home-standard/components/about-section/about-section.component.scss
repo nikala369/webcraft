@@ -1,14 +1,27 @@
 /* Define color schemes via CSS variables */
 :host {
-  --primary-accent-color: #4a8dff; /* Default, will be overridden by component */
+  --primary-accent-color: var(
+    --theme-primary-color,
+    #4a8dff
+  ); /* Use theme primary color with fallback */
+  --primary-accent-color-rgb: var(
+    --theme-primary-color-rgb,
+    74,
+    141,
+    255
+  ); /* RGB version for rgba() usage */
   --section-bg-color: #ffffff;
-  --text-color: #333;
-  --heading-color: #222;
+  --text-color: #333333;
+  --text-color-rgb: 51, 51, 51; /* RGB version for rgba() usage */
+  --heading-color: var(--text-color);
+  --underline-color: var(
+    --text-color
+  ); /* Use text color for underlines by default */
 }
 
 .about-section {
   background-color: var(--section-bg-color);
-  padding: 6rem 0;
+  padding: 5rem 0;
   color: var(--text-color);
   position: relative;
 
@@ -22,12 +35,12 @@
     bottom: 0;
     background-image: radial-gradient(
         circle at 25px 25px,
-        rgba(0, 0, 0, 0.02) 2%,
+        rgba(var(--text-color-rgb), 0.02) 2%,
         transparent 2%
       ),
       radial-gradient(
         circle at 75px 75px,
-        rgba(0, 0, 0, 0.02) 2%,
+        rgba(var(--text-color-rgb), 0.02) 2%,
         transparent 2%
       );
     background-size: 100px 100px;
@@ -47,12 +60,12 @@
   // Section header with title and subtitle
   .section-header {
     text-align: center;
-    margin-bottom: 3.5rem;
+    margin-bottom: 3rem;
 
     .section-title {
       font-size: 2.5rem;
       font-weight: 700;
-      color: var(--heading-color);
+      color: var(--text-color);
       margin-bottom: 1rem;
       position: relative;
       display: inline-block;
@@ -61,16 +74,18 @@
     .title-underline {
       width: 60px;
       height: 3px;
-      background-color: var(--primary-accent-color);
-      margin: 0 auto 1.5rem;
+      background-color: var(--underline-color);
+      opacity: 0.7;
+      margin: 0 auto 0.5rem;
       border-radius: 2px;
+      transition: background-color 0.3s ease;
     }
 
     .section-subtitle {
       font-size: 1.1rem;
       max-width: 700px;
       margin: 0 auto;
-      color: #666;
+      color: rgba(var(--text-color-rgb), 0.85);
       line-height: 1.6;
     }
   }
@@ -78,14 +93,14 @@
   // Main about content with image and text
   .about-content {
     display: flex;
-    align-items: center;
-    gap: 4rem;
+    align-items: flex-start;
+    gap: 3.5rem;
 
     // Image container
     .about-image {
       flex: 1;
+      position: relative;
       display: flex;
-      align-items: center;
       justify-content: center;
 
       img {
@@ -95,11 +110,8 @@
         border-radius: 8px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         transition: transform 0.5s ease, box-shadow 0.5s ease;
-
-        &:hover {
-          transform: translateY(-10px);
-          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-        }
+        object-fit: cover; /* Ensure consistent sizing */
+        aspect-ratio: 4/3; /* Maintain aspect ratio */
       }
     }
 
@@ -107,10 +119,16 @@
     .about-text {
       flex: 1;
 
+      // Add some visual elevation to the text content
+      padding: 1.5rem;
+      border-radius: 8px;
+      background-color: rgba(var(--text-color-rgb), 0.02);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+
       h3 {
         font-size: 1.8rem;
         font-weight: 600;
-        color: var(--heading-color);
+        color: var(--text-color);
         margin-bottom: 1.25rem;
         position: relative;
         padding-bottom: 0.75rem;
@@ -122,7 +140,9 @@
           left: 0;
           width: 40px;
           height: 2px;
-          background-color: var(--primary-accent-color);
+          background-color: var(--underline-color);
+          opacity: 0.7;
+          transition: background-color 0.3s ease;
         }
       }
 
@@ -130,29 +150,40 @@
         font-size: 1rem;
         line-height: 1.7;
         margin-bottom: 2rem;
-        color: #555;
+        color: rgba(var(--text-color-rgb), 0.9);
       }
 
       // Special styling for values list
       .about-values {
-        margin-top: 0.5rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(var(--text-color-rgb), 0.1);
+
+        h3 {
+          margin-bottom: 1rem;
+        }
 
         ul {
           list-style: none;
           padding-left: 0;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          margin-top: 1rem;
 
           li {
             position: relative;
-            padding-left: 1.5rem;
-            margin-bottom: 0.75rem;
-            font-size: 1rem;
-            line-height: 1.5;
+            padding: 0.5rem 1rem 0.5rem 1.8rem;
+            background-color: rgba(var(--text-color-rgb), 0.05);
+            border-radius: 4px;
+            font-size: 0.95rem;
+            font-weight: 500;
 
             &::before {
               content: "✓";
               position: absolute;
-              left: 0;
-              color: var(--primary-accent-color);
+              left: 0.6rem;
+              color: var(--text-color);
               font-weight: bold;
             }
           }
@@ -165,7 +196,15 @@
       flex-direction: column;
 
       .about-image {
+        position: relative;
+        top: 0;
         margin-bottom: 2rem;
+        width: 100%;
+
+        img {
+          max-width: 100%;
+          width: 100%;
+        }
       }
     }
   }
@@ -174,25 +213,29 @@
 // Responsive adjustments
 @media (max-width: 992px) {
   .about-section {
-    padding: 5rem 0;
+    padding: 4rem 0;
 
     .section-header {
       .section-title {
         font-size: 2.2rem;
       }
     }
+
+    .about-content {
+      gap: 2.5rem;
+    }
   }
 }
 
 @media (max-width: 768px) {
   .about-section {
-    padding: 4rem 0;
+    padding: 3rem 0;
 
     .section-header {
-      margin-bottom: 2.5rem;
+      margin-bottom: 2rem;
 
       .section-title {
-        font-size: 2rem;
+        font-size: 1.8rem;
       }
 
       .section-subtitle {
@@ -205,21 +248,63 @@
       gap: 2rem;
 
       .about-image {
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
 
         img {
           max-width: 100%;
+          border-radius: 6px;
         }
       }
 
       .about-text {
+        padding: 1.25rem;
+
         h3 {
           font-size: 1.5rem;
+          margin-bottom: 1rem;
+          padding-bottom: 0.5rem;
         }
 
         p {
           font-size: 0.95rem;
+          margin-bottom: 1.5rem;
         }
+
+        .about-values ul {
+          gap: 0.75rem;
+
+          li {
+            padding: 0.4rem 0.75rem 0.4rem 1.5rem;
+            font-size: 0.9rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Small mobile screens
+@media (max-width: 480px) {
+  .about-section {
+    padding: 2.5rem 0;
+
+    .section-header {
+      .section-title {
+        font-size: 1.6rem;
+      }
+
+      .title-underline {
+        width: 50px;
+        margin-bottom: 1rem;
+      }
+    }
+
+    .about-text {
+      box-shadow: none;
+      padding: 0.75rem;
+
+      h3 {
+        font-size: 1.3rem;
       }
     }
   }

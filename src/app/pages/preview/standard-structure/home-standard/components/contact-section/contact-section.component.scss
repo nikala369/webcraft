@@ -1,34 +1,62 @@
 /* Define color schemes via CSS variables */
 :host {
-  --primary-accent-color: #4a8dff; /* Default, will be overridden by component */
-  --section-bg-color: #f8f8f8;
-  --text-color: #333;
-  --heading-color: #222;
+  --primary-accent-color: var(--theme-primary-color, #4a8dff);
+  --primary-accent-color-rgb: var(--theme-primary-color-rgb, 74, 141, 255);
+  --section-bg-color: var(--section-bg-color, #f8f8f8);
+  --text-color: var(--text-color, #333);
+  --heading-color: var(--heading-color, #222);
   --card-bg-color: #ffffff;
   --form-bg-color: #ffffff;
-  --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  --card-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
   --input-border: 1px solid #e0e0e0;
   --input-focus-border: 1px solid var(--primary-accent-color);
   --input-bg: #ffffff;
   --input-focus-bg: #f9f9f9;
+  --success-color: #4caf50;
+  --error-color: #f44336;
 }
 
 .contact-section {
   background-color: var(--section-bg-color);
-  padding: 6rem 0;
+  padding: 5rem 0;
   color: var(--text-color);
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(
+        circle at 25px 25px,
+        rgba(var(--primary-accent-color-rgb), 0.02) 2%,
+        transparent 2%
+      ),
+      radial-gradient(
+        circle at 75px 75px,
+        rgba(var(--primary-accent-color-rgb), 0.02) 2%,
+        transparent 2%
+      );
+    background-size: 100px 100px;
+    opacity: 0.3;
+    pointer-events: none;
+  }
 
   // Section container
   .section-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 1.5rem;
+    position: relative;
+    z-index: 1;
   }
 
   // Section header with title and subtitle
   .section-header {
     text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 3.5rem;
 
     .section-title {
       font-size: 2.5rem;
@@ -51,7 +79,7 @@
       font-size: 1.1rem;
       max-width: 700px;
       margin: 0 auto;
-      color: #666;
+      color: rgba(var(--text-color), 0.85);
       line-height: 1.6;
     }
   }
@@ -65,17 +93,28 @@
     // Mobile layout
     &--mobile {
       flex-direction: column;
+      gap: 2rem;
     }
 
     // Contact info section
     .contact-info {
       flex: 1;
+      max-width: 400px;
+      background-color: var(--card-bg-color);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: var(--card-shadow);
+      height: fit-content;
 
       // Individual contact detail
       .contact-detail {
         display: flex;
         align-items: flex-start;
-        margin-bottom: 2rem;
+        margin-bottom: 1.75rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
 
         // Icon container
         .contact-icon {
@@ -86,11 +125,9 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          background-color: rgba(
-            var(--primary-accent-color-rgb, 74, 141, 255),
-            0.1
-          );
+          background-color: rgba(var(--primary-accent-color-rgb), 0.1);
           border-radius: 50%;
+          transition: transform 0.2s ease;
 
           img {
             width: 20px;
@@ -99,86 +136,50 @@
           }
         }
 
+        &:hover .contact-icon {
+          transform: scale(1.1);
+        }
+
         // Text content
         .contact-text {
           h3 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
             color: var(--heading-color);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
+            margin-top: 0;
           }
 
           p {
-            font-size: 1rem;
+            font-size: 0.95rem;
             line-height: 1.6;
-            color: #666;
-          }
-        }
-      }
+            color: rgba(var(--text-color), 0.85);
+            margin: 0;
 
-      // Social media links section
-      .social-links {
-        margin-top: 3rem;
+            .email-link {
+              color: var(--primary-accent-color);
+              text-decoration: none;
+              transition: all 0.2s ease;
+              position: relative;
 
-        h3 {
-          font-size: 1.2rem;
-          font-weight: 600;
-          color: var(--heading-color);
-          margin-bottom: 1rem;
-        }
-
-        // Icons container
-        .social-icons {
-          display: flex;
-          gap: 1rem;
-
-          // Individual social icon
-          .social-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #f5f5f5;
-            color: #666;
-            transition: all 0.3s ease;
-            text-decoration: none;
-
-            &:hover {
-              transform: translateY(-3px);
-              box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-
-              &.facebook {
-                background-color: #3b5998;
-                color: white;
+              &::after {
+                content: "";
+                position: absolute;
+                width: 0;
+                height: 1px;
+                bottom: -2px;
+                left: 0;
+                background-color: var(--primary-accent-color);
+                transition: width 0.3s ease;
               }
 
-              &.instagram {
-                background: linear-gradient(
-                  45deg,
-                  #f09433,
-                  #e6683c,
-                  #dc2743,
-                  #cc2366,
-                  #bc1888
-                );
-                color: white;
-              }
+              &:hover {
+                opacity: 0.9;
 
-              &.twitter {
-                background-color: #1da1f2;
-                color: white;
+                &::after {
+                  width: 100%;
+                }
               }
-
-              &.linkedin {
-                background-color: #0077b5;
-                color: white;
-              }
-            }
-
-            i {
-              font-size: 1.2rem;
             }
           }
         }
@@ -187,23 +188,91 @@
 
     // Contact form container
     .contact-form-container {
-      flex: 1;
+      flex: 1.5;
       background-color: var(--form-bg-color);
-      border-radius: 8px;
-      padding: 2.5rem;
+      border-radius: 12px;
+      padding: 2rem;
       box-shadow: var(--card-shadow);
 
       h3 {
         font-size: 1.5rem;
         font-weight: 600;
         color: var(--heading-color);
+        margin-top: 0;
         margin-bottom: 1.5rem;
-        text-align: center;
+        position: relative;
+
+        &::after {
+          content: "";
+          position: absolute;
+          bottom: -8px;
+          left: 0;
+          width: 40px;
+          height: 2px;
+          background-color: var(--primary-accent-color);
+          opacity: 0.7;
+        }
       }
 
       // Form styling
       .contact-form {
-        // Form row (for date/time fields)
+        .form-group {
+          margin-bottom: 1.5rem;
+
+          label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--heading-color);
+          }
+
+          input[type="text"],
+          input[type="email"],
+          input[type="tel"],
+          input[type="date"],
+          input[type="time"],
+          select,
+          textarea {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: var(--input-border);
+            border-radius: 6px;
+            background-color: var(--input-bg);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            color: var(--text-color);
+
+            &::placeholder {
+              color: rgba(var(--text-color), 0.5);
+            }
+
+            &:focus {
+              outline: none;
+              border: var(--input-focus-border);
+              background-color: var(--input-focus-bg);
+              box-shadow: 0 0 0 3px rgba(var(--primary-accent-color-rgb), 0.1);
+            }
+          }
+
+          textarea {
+            resize: vertical;
+            min-height: 120px;
+          }
+
+          select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            padding-right: 30px;
+          }
+        }
+
+        // Form layout for multiple columns
         .form-row {
           display: flex;
           gap: 1rem;
@@ -213,72 +282,61 @@
           }
         }
 
-        // Form group (label + input)
-        .form-group {
-          margin-bottom: 1.5rem;
-
-          label {
-            display: block;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--heading-color);
-            margin-bottom: 0.5rem;
-          }
-
-          // Input styling
-          input,
-          select,
-          textarea {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: var(--input-border);
-            border-radius: 6px;
-            font-size: 1rem;
-            color: #333;
-            background-color: var(--input-bg);
-            transition: all 0.3s ease;
-
-            &:focus {
-              outline: none;
-              border: var(--input-focus-border);
-              background-color: var(--input-focus-bg);
-              box-shadow: 0 0 0 3px
-                rgba(var(--primary-accent-color-rgb, 74, 141, 255), 0.1);
-            }
-
-            &::placeholder {
-              color: #aaa;
-            }
-          }
-
-          // Specific styling for textarea
-          textarea {
-            resize: vertical;
-            min-height: 120px;
-          }
-        }
-
         // Submit button
         .submit-button {
-          width: 100%;
-          padding: 1rem;
           background-color: var(--primary-accent-color);
           color: white;
           border: none;
           border-radius: 6px;
+          padding: 0.85rem 1.5rem;
           font-size: 1rem;
-          font-weight: 600;
+          font-weight: 500;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.2s ease;
+          margin-top: 0.5rem;
+          width: 100%; // Make button full width
 
           &:hover {
-            background-color: darken(#4a8dff, 10%);
+            filter: brightness(1.1);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(74, 141, 255, 0.3);
+            box-shadow: 0 4px 8px rgba(var(--primary-accent-color-rgb), 0.25);
           }
 
           &:active {
             transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(var(--primary-accent-color-rgb), 0.25);
+          }
+
+          &:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(var(--primary-accent-color-rgb), 0.3);
+          }
+        }
+
+        // Form status messages
+        .form-status {
+          margin-top: 1.5rem;
+          padding: 0.75rem 1rem;
+          border-radius: 6px;
+          font-size: 0.95rem;
+
+          p {
+            margin: 0;
+            line-height: 1.5;
+
+            &.success {
+              color: var(--success-color);
+              background-color: rgba(76, 175, 80, 0.1);
+              padding: 0.75rem 1rem;
+              border-radius: 4px;
+            }
+
+            &.error {
+              color: var(--error-color);
+              background-color: rgba(244, 67, 54, 0.1);
+              padding: 0.75rem 1rem;
+              border-radius: 4px;
+            }
           }
         }
       }
@@ -313,9 +371,11 @@
 // Responsive adjustments
 @media (max-width: 992px) {
   .contact-section {
-    padding: 5rem 0;
+    padding: 4rem 0;
 
     .section-header {
+      margin-bottom: 3rem;
+
       .section-title {
         font-size: 2.2rem;
       }
@@ -323,12 +383,13 @@
 
     .contact-content {
       flex-direction: column;
+      gap: 2rem;
 
-      .contact-form-container,
       .contact-info {
-        max-width: 650px;
-        margin-left: auto;
-        margin-right: auto;
+        max-width: 100%;
+      }
+
+      .contact-form-container {
         width: 100%;
       }
     }
@@ -337,10 +398,10 @@
 
 @media (max-width: 768px) {
   .contact-section {
-    padding: 4rem 0;
+    padding: 3rem 0;
 
     .section-header {
-      margin-bottom: 3rem;
+      margin-bottom: 2.5rem;
 
       .section-title {
         font-size: 2rem;
@@ -352,6 +413,10 @@
     }
 
     .contact-content {
+      .contact-info {
+        padding: 1.5rem;
+      }
+
       .contact-form-container {
         padding: 1.5rem;
 
@@ -359,15 +424,69 @@
           font-size: 1.3rem;
         }
       }
+    }
+  }
+}
 
-      .form-row {
-        flex-direction: column;
-        gap: 1rem;
+@media (max-width: 480px) {
+  .contact-section {
+    padding: 2.5rem 0;
+
+    .section-header {
+      .section-title {
+        font-size: 1.8rem;
       }
     }
 
-    .map-container {
-      height: 300px;
+    .contact-content {
+      .contact-info {
+        padding: 1.25rem;
+
+        .contact-detail {
+          .contact-icon {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+
+            img {
+              width: 18px;
+              height: 18px;
+            }
+          }
+
+          .contact-text {
+            h3 {
+              font-size: 1rem;
+            }
+
+            p {
+              font-size: 0.9rem;
+            }
+          }
+        }
+      }
+
+      .contact-form-container {
+        padding: 1.25rem;
+
+        .contact-form {
+          .form-group {
+            margin-bottom: 1.25rem;
+
+            input,
+            select,
+            textarea {
+              padding: 0.75rem 0.85rem;
+              font-size: 0.9rem;
+            }
+          }
+
+          .submit-button {
+            padding: 0.75rem 1.25rem;
+            font-size: 0.95rem;
+          }
+        }
+      }
     }
   }
 }

@@ -1,99 +1,220 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Website Builder Customization Schema",
-  "description": "Schema for the standard website customization structure",
+  "title": "Website Builder Standard Structure Schema",
+  "description": "Schema for standard website customization with all available sections and properties",
   "type": "object",
   "properties": {
     "fontConfig": {
       "type": "object",
+      "description": "Font configuration for the entire website",
       "properties": {
-        "fontId": { "type": "number" },
-        "family": { "type": "string" },
-        "fallback": { "type": "string" }
+        "fontId": {
+          "type": "number",
+          "description": "ID of the selected font"
+        },
+        "family": { "type": "string", "description": "Font family name" },
+        "fallback": { "type": "string", "description": "Fallback font family" }
       },
       "required": ["fontId", "family", "fallback"]
     },
     "header": {
       "type": "object",
+      "description": "Header section configuration",
       "properties": {
-        "backgroundColor": { "type": "string", "format": "color" },
-        "textColor": { "type": "string", "format": "color" },
-        "logoUrl": { "type": "string" },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "description": "Background color of the header"
+        },
+        "textColor": {
+          "type": "string",
+          "format": "color",
+          "description": "Text color for the header"
+        },
+        "logoUrl": { "type": "string", "description": "URL to the logo image" },
         "menuItems": {
           "type": "array",
+          "description": "Navigation menu items",
           "items": {
             "type": "object",
             "properties": {
-              "id": { "type": "number" },
-              "label": { "type": "string" },
-              "link": { "type": "string" }
+              "id": {
+                "type": "number",
+                "description": "Unique identifier for the menu item"
+              },
+              "label": {
+                "type": "string",
+                "description": "Display text for the menu item"
+              },
+              "link": {
+                "type": "string",
+                "description": "URL path for the menu item"
+              }
             },
             "required": ["id", "label", "link"]
           }
         }
-      }
+      },
+      "required": ["backgroundColor", "textColor"]
     },
     "pages": {
       "type": "object",
+      "description": "All pages with their corresponding sections",
       "properties": {
         "home": {
           "type": "object",
+          "description": "Home page sections",
           "properties": {
             "hero1": {
               "type": "object",
+              "description": "Hero section (first section on the page)",
               "properties": {
                 "backgroundType": {
                   "type": "string",
-                  "enum": ["image", "video"]
+                  "enum": ["image", "video"],
+                  "description": "Type of background media to display"
                 },
                 "backgroundImage": {
                   "type": "string",
-                  "description": "URL or Base64 encoded image data"
+                  "description": "URL to background image (used when backgroundType is 'image')"
                 },
                 "backgroundVideo": {
                   "type": "string",
-                  "description": "URL or Base64 encoded video data"
+                  "description": "URL to background video (used when backgroundType is 'video')"
                 },
-                "title": { "type": "string" },
-                "subtitle": { "type": "string" },
+                "title": {
+                  "type": "string",
+                  "description": "Main headline text"
+                },
+                "subtitle": {
+                  "type": "string",
+                  "description": "Supporting text below headline"
+                },
                 "overlayOpacity": {
                   "type": "string",
-                  "enum": ["none", "light", "medium", "heavy"]
+                  "enum": ["none", "light", "medium", "heavy"],
+                  "description": "Opacity level of the background overlay"
                 },
-                "overlayColor": { "type": "string", "format": "color" },
-                "showContentText": { "type": "boolean" },
+                "overlayColor": {
+                  "type": "string",
+                  "format": "color",
+                  "description": "Color of the background overlay"
+                },
+                "showContentText": {
+                  "type": "boolean",
+                  "description": "Whether to display the text content"
+                },
                 "layout": {
                   "type": "string",
-                  "enum": ["center", "left", "right"]
+                  "enum": ["center", "left", "right"],
+                  "description": "Alignment of content within the hero section"
                 },
-                "showLogo": { "type": "boolean" },
-                "titleColor": { "type": "string", "format": "color" },
-                "subtitleColor": { "type": "string", "format": "color" },
+                "showLogo": {
+                  "type": "boolean",
+                  "description": "Whether to display the logo in the hero section"
+                },
+                "titleColor": {
+                  "type": "string",
+                  "format": "color",
+                  "description": "Color of the headline text"
+                },
+                "subtitleColor": {
+                  "type": "string",
+                  "format": "color",
+                  "description": "Color of the subtitle text"
+                },
                 "textShadow": {
                   "type": "string",
-                  "enum": ["none", "light", "medium", "heavy"]
+                  "enum": ["none", "light", "medium", "heavy"],
+                  "description": "Shadow effect on text for better readability on background images"
                 },
-                "showPrimaryButton": { "type": "boolean" },
-                "primaryButtonText": { "type": "string" },
-                "primaryButtonColor": { "type": "string", "format": "color" },
+                "showPrimaryButton": {
+                  "type": "boolean",
+                  "description": "Whether to display the call-to-action button"
+                },
+                "primaryButtonText": {
+                  "type": "string",
+                  "description": "Text displayed on the call-to-action button"
+                },
+                "primaryButtonColor": {
+                  "type": "string",
+                  "format": "color",
+                  "description": "Background color of the call-to-action button"
+                },
                 "primaryButtonTextColor": {
                   "type": "string",
-                  "format": "color"
+                  "format": "color",
+                  "description": "Text color of the call-to-action button"
                 },
-                "primaryButtonLink": { "type": "string" }
+                "primaryButtonLink": {
+                  "type": "string",
+                  "description": "URL path that the button links to"
+                }
               },
               "required": ["backgroundImage", "title", "subtitle"]
             },
             "about": {
               "type": "object",
+              "description": "About section configuration",
               "properties": {
-                "title": { "type": "string" },
-                "subtitle": { "type": "string" },
-                "content": { "type": "string" },
-                "imageUrl": { "type": "string" },
-                "backgroundColor": { "type": "string", "format": "color" },
-                "textColor": { "type": "string", "format": "color" }
-              }
+                "title": {
+                  "type": "string",
+                  "description": "Main section title"
+                },
+                "subtitle": {
+                  "type": "string",
+                  "description": "Section subtitle or tagline"
+                },
+                "storyTitle": {
+                  "type": "string",
+                  "description": "Heading for the story/history section"
+                },
+                "storyText": {
+                  "type": "string",
+                  "description": "Content text for the story/history section"
+                },
+                "missionTitle": {
+                  "type": "string",
+                  "description": "Heading for the mission/philosophy section"
+                },
+                "missionText": {
+                  "type": "string",
+                  "description": "Content text for the mission/philosophy section"
+                },
+                "imageUrl": {
+                  "type": "string",
+                  "description": "URL to the about section image"
+                },
+                "backgroundColor": {
+                  "type": "string",
+                  "format": "color",
+                  "description": "Background color of the about section"
+                },
+                "textColor": {
+                  "type": "string",
+                  "format": "color",
+                  "description": "Text color for the about section"
+                },
+                "values": {
+                  "type": "array",
+                  "description": "List of core values (premium plan only)",
+                  "items": { "type": "string" }
+                },
+                "valuesTitle": {
+                  "type": "string",
+                  "description": "Heading for the values section (premium plan only)"
+                }
+              },
+              "required": [
+                "title",
+                "subtitle",
+                "storyTitle",
+                "storyText",
+                "missionTitle",
+                "missionText",
+                "backgroundColor",
+                "textColor"
+              ]
             },
             "services": {
               "type": "object",
@@ -186,7 +307,30 @@
                 "showMap": { "type": "boolean" },
                 "mapLocation": { "type": "string" },
                 "backgroundColor": { "type": "string", "format": "color" },
-                "textColor": { "type": "string", "format": "color" }
+                "textColor": { "type": "string", "format": "color" },
+                "formTitle": { "type": "string" },
+                "formButtonText": { "type": "string" },
+                "formspreeId": {
+                  "type": "string",
+                  "description": "The Formspree form ID for email forwarding"
+                },
+                "formSubject": {
+                  "type": "string",
+                  "description": "Subject line for the email you will receive"
+                },
+                "thankYouUrl": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "URL to redirect to after form submission"
+                },
+                "hours": {
+                  "type": "string",
+                  "description": "Business hours (Premium feature)"
+                },
+                "showSocialLinks": {
+                  "type": "boolean",
+                  "description": "Whether to display social media links in contact (Premium feature)"
+                }
               }
             }
           }
@@ -195,27 +339,138 @@
     },
     "footer": {
       "type": "object",
+      "description": "Footer section configuration",
       "properties": {
-        "backgroundColor": { "type": "string", "format": "color" },
-        "textColor": { "type": "string", "format": "color" },
-        "copyrightText": { "type": "string" },
-        "showSocialLinks": { "type": "boolean" },
+        "backgroundColor": {
+          "type": "string",
+          "format": "color",
+          "description": "Background color of the footer"
+        },
+        "textColor": {
+          "type": "string",
+          "format": "color",
+          "description": "Text color for the footer"
+        },
+        "copyrightText": {
+          "type": "string",
+          "description": "Copyright text displayed in the footer"
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL to the footer logo image"
+        },
+        "tagline": {
+          "type": "string",
+          "description": "Company tagline displayed in the footer"
+        },
+        "address": {
+          "type": "string",
+          "description": "Physical address of the business"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact phone number"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Contact email address"
+        },
+        "showSocialLinks": {
+          "type": "boolean",
+          "description": "Whether to display social media links"
+        },
+        "menuItems": {
+          "type": "array",
+          "description": "Quick links menu items",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "number",
+                "description": "Unique identifier for the menu item"
+              },
+              "label": {
+                "type": "string",
+                "description": "Display text for the menu item"
+              },
+              "link": {
+                "type": "string",
+                "description": "URL path for the menu item"
+              }
+            }
+          }
+        },
+        "socialUrls": {
+          "type": "object",
+          "description": "URLs for social media platforms",
+          "properties": {
+            "facebook": {
+              "type": "string",
+              "format": "uri",
+              "description": "Facebook page URL"
+            },
+            "instagram": {
+              "type": "string",
+              "format": "uri",
+              "description": "Instagram profile URL"
+            },
+            "tiktok": {
+              "type": "string",
+              "format": "uri",
+              "description": "TikTok profile URL"
+            },
+            "linkedin": {
+              "type": "string",
+              "format": "uri",
+              "description": "LinkedIn profile or company page URL (premium plan only)"
+            },
+            "youtube": {
+              "type": "string",
+              "format": "uri",
+              "description": "YouTube channel URL (premium plan only)"
+            }
+          }
+        },
         "socialLinks": {
           "type": "array",
+          "description": "Social media profile links (premium plan only)",
           "items": {
             "type": "object",
             "properties": {
               "platform": {
                 "type": "string",
-                "enum": ["facebook", "twitter", "instagram", "linkedin"]
+                "enum": ["facebook", "twitter", "instagram", "linkedin"],
+                "description": "Social media platform name"
               },
-              "url": { "type": "string", "format": "uri" }
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL to the social media profile"
+              }
             },
             "required": ["platform", "url"]
           }
+        },
+        "showLegalLinks": {
+          "type": "boolean",
+          "description": "Whether to display legal links (premium plan only)"
+        },
+        "privacyPolicyUrl": {
+          "type": "string",
+          "description": "URL to the privacy policy page (premium plan only)"
+        },
+        "termsUrl": {
+          "type": "string",
+          "description": "URL to the terms of service page (premium plan only)"
+        },
+        "footerLayout": {
+          "type": "string",
+          "enum": ["standard", "compact", "minimal"],
+          "description": "Footer layout style (premium plan only)"
         }
       },
-      "required": ["backgroundColor", "textColor", "copyrightText"]
+      "required": ["backgroundColor", "textColor"]
     }
   }
 }

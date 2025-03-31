@@ -1,4 +1,122 @@
 /**
+ * Configuration for Contact section
+ */
+export const contactSectionConfig: FieldConfig[] = [
+  // Content settings
+  {
+    key: 'title',
+    label: 'Section Title',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'Contact Us',
+    description: 'Main title for the contact section',
+  },
+  {
+    key: 'subtitle',
+    label: 'Section Subtitle',
+    type: 'text',
+    category: 'content',
+    defaultValue: "We'd love to hear from you",
+    description: 'Subtitle or tagline for the contact section',
+  },
+  {
+    key: 'address',
+    label: 'Business Address',
+    type: 'textarea',
+    category: 'content',
+    defaultValue: '123 Business Street\nAnytown, ST 12345',
+    description:
+      'Address displayed in the contact information (use line breaks for formatting)',
+  },
+  {
+    key: 'email',
+    label: 'Email Address',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'info@yourbusiness.com',
+    description: 'Contact email address for form submissions and display',
+  },
+  // Form settings
+  {
+    key: 'formTitle',
+    label: 'Form Title',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'Send a Message',
+    description: 'Title displayed above the contact form',
+  },
+  {
+    key: 'formButtonText',
+    label: 'Submit Button Text',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'Send Message',
+    description: 'Text displayed on the form submit button',
+  },
+  // Style settings
+  {
+    key: 'backgroundColor',
+    label: 'Background Color',
+    type: 'color',
+    category: 'styling',
+    defaultValue: '#f8f8f8',
+    description: 'Background color of the contact section',
+  },
+  {
+    key: 'textColor',
+    label: 'Text Color',
+    type: 'color',
+    category: 'styling',
+    defaultValue: '#333333',
+    description: 'Main text color for the contact section',
+  },
+];
+
+// Premium-only fields for contact section
+export const contactSectionPremiumConfig: FieldConfig[] = [
+  {
+    key: 'showSocialLinks',
+    label: 'Show Social Media Links',
+    type: 'select',
+    category: 'content',
+    defaultValue: true,
+    description: 'Display social media links in the contact section',
+    options: [
+      { value: true, label: 'Yes' },
+      { value: false, label: 'No' },
+    ],
+  },
+  {
+    key: 'showMap',
+    label: 'Show Map',
+    type: 'select',
+    category: 'content',
+    defaultValue: true,
+    description: 'Display a map of your location',
+    options: [
+      { value: true, label: 'Yes' },
+      { value: false, label: 'No' },
+    ],
+  },
+  {
+    key: 'mapLocation',
+    label: 'Map Location',
+    type: 'text',
+    category: 'content',
+    defaultValue: '123 Main St, New York, NY 10001',
+    description: 'Address for the map display',
+  },
+  {
+    key: 'hours',
+    label: 'Business Hours',
+    type: 'textarea',
+    category: 'content',
+    defaultValue: 'Monday-Friday: 9am-5pm\nWeekends: Closed',
+    description: 'Business hours displayed in contact information',
+  },
+];
+
+/**
  * Configuration for About section
  */
 export const aboutSectionConfig: FieldConfig[] = [
@@ -20,20 +138,47 @@ export const aboutSectionConfig: FieldConfig[] = [
     description: 'A brief subtitle or tagline for the about section.',
   },
   {
-    key: 'content',
-    label: 'Main Content',
-    type: 'textarea',
-    category: 'content',
-    defaultValue:
-      'We are dedicated to providing exceptional service and quality. Our commitment to excellence has made us a trusted choice in the industry.',
-    description: 'The main paragraph describing your business.',
-  },
-  {
     key: 'imageUrl',
     label: 'About Image',
     type: 'file',
     category: 'content',
     description: 'An image representing your business or team.',
+    acceptedFileTypes: 'image/*',
+    fileUploadNote: 'Recommended size: 800x600px. JPG or PNG format.',
+  },
+  {
+    key: 'storyTitle',
+    label: 'Story Heading',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'Our Story',
+    description: 'The heading for your business story section.',
+  },
+  {
+    key: 'storyText',
+    label: 'Story Content',
+    type: 'textarea',
+    category: 'content',
+    defaultValue:
+      'We are dedicated to providing exceptional service and quality. Our commitment to excellence has made us a trusted choice in the industry.',
+    description: 'Tell the story of your business or personal journey.',
+  },
+  {
+    key: 'missionTitle',
+    label: 'Mission Heading',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'Our Mission',
+    description: 'The heading for your mission statement section.',
+  },
+  {
+    key: 'missionText',
+    label: 'Mission Content',
+    type: 'textarea',
+    category: 'content',
+    defaultValue:
+      "Our mission is to provide high-quality services that exceed our clients' expectations. We believe in building long-lasting relationships based on trust, integrity, and results.",
+    description: 'Describe your mission, values, or philosophy.',
   },
 
   // STYLING category
@@ -52,6 +197,28 @@ export const aboutSectionConfig: FieldConfig[] = [
     category: 'styling',
     defaultValue: '#333333',
     description: 'The color of the text in the about section.',
+  },
+];
+
+/**
+ * Configure premium-only fields for About section
+ */
+export const aboutSectionPremiumConfig: FieldConfig[] = [
+  {
+    key: 'valuesTitle',
+    label: 'Values Heading',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'Our Values',
+    description: 'The heading for your core values section.',
+  },
+  {
+    key: 'values',
+    label: 'Core Values',
+    type: 'list',
+    category: 'content',
+    defaultValue: ['Quality', 'Integrity', 'Innovation', 'Customer Focus'],
+    description: 'List your core business values.',
   },
 ];
 
@@ -107,12 +274,14 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
     },
   ],
   footer: [
+    // Styling settings
     {
       key: 'backgroundColor',
       label: 'Background Color',
       type: 'color',
       category: 'styling',
       defaultValue: '#1a1a1a',
+      description: 'Background color of the footer section',
     },
     {
       key: 'textColor',
@@ -120,13 +289,96 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       type: 'color',
       category: 'styling',
       defaultValue: '#ffffff',
+      description: 'Color of the text in the footer',
+    },
+
+    // Content settings
+    {
+      key: 'logoUrl',
+      label: 'Footer Logo',
+      type: 'file',
+      category: 'content',
+      description: 'Logo to display in the footer (optional)',
+      acceptedFileTypes: 'image/*',
+    },
+    {
+      key: 'tagline',
+      label: 'Company Tagline',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Professional solutions tailored to your needs',
+      description: 'Short tagline describing your business',
     },
     {
       key: 'copyrightText',
       label: 'Copyright Text',
       type: 'text',
+      category: 'content',
+      defaultValue: `© ${new Date().getFullYear()} Your Company. All rights reserved.`,
+      description: 'Text shown in the copyright section',
+    },
+    {
+      key: 'address',
+      label: 'Business Address',
+      type: 'text',
+      category: 'content',
+      defaultValue: '123 Business Ave, City',
+      description: 'Physical address of your business',
+    },
+    {
+      key: 'phone',
+      label: 'Phone Number',
+      type: 'text',
+      category: 'content',
+      defaultValue: '(555) 123-4567',
+      description: 'Contact phone number',
+    },
+    {
+      key: 'email',
+      label: 'Email Address',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'info@yourbusiness.com',
+      description: 'Contact email address',
+    },
+
+    // Social media settings
+    {
+      key: 'showSocialLinks',
+      label: 'Show Social Media Links',
+      type: 'select',
       category: 'general',
-      defaultValue: '© 2025 MyWebsite',
+      defaultValue: true,
+      description: 'Display social media links in the footer',
+      options: [
+        { value: true, label: 'Yes' },
+        { value: false, label: 'No' },
+      ],
+    },
+    // Social media URLs
+    {
+      key: 'socialUrls.facebook',
+      label: 'Facebook URL',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'https://facebook.com/',
+      description: 'Your Facebook page URL',
+    },
+    {
+      key: 'socialUrls.instagram',
+      label: 'Instagram URL',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'https://instagram.com/',
+      description: 'Your Instagram profile URL',
+    },
+    {
+      key: 'socialUrls.tiktok',
+      label: 'TikTok URL',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'https://tiktok.com/',
+      description: 'Your TikTok profile URL',
     },
   ],
   'pages.home.hero1': [
@@ -189,15 +441,6 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       description:
         'A brief description or tagline that appears below the headline.',
     },
-    {
-      key: 'primaryButtonText',
-      label: 'Button Text',
-      type: 'text',
-      category: 'content',
-      defaultValue: 'Get Started',
-      description:
-        'The text that appears on the primary call-to-action button.',
-    },
 
     // STYLING category
     {
@@ -237,22 +480,6 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       category: 'styling',
       defaultValue: '#f0f0f0',
       description: 'The color of the supporting tagline text.',
-    },
-    {
-      key: 'primaryButtonColor',
-      label: 'Button Color',
-      type: 'color',
-      category: 'styling',
-      defaultValue: '#ff5722',
-      description: 'The background color of the primary button.',
-    },
-    {
-      key: 'primaryButtonTextColor',
-      label: 'Button Text Color',
-      type: 'color',
-      category: 'styling',
-      defaultValue: '#ffffff',
-      description: 'The color of the text on the primary button.',
     },
 
     // GENERAL category
@@ -297,44 +524,128 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
         { value: 'heavy', label: 'Heavy' },
       ],
     },
-    {
-      key: 'showPrimaryButton',
-      label: 'Show Button',
-      type: 'select',
-      category: 'general',
-      defaultValue: true,
-      description: 'Show or hide the call-to-action button.',
-      options: [
-        { value: true, label: 'Yes' },
-        { value: false, label: 'No' },
-      ],
-    },
-    {
-      key: 'primaryButtonLink',
-      label: 'Button Target',
-      type: 'select',
-      category: 'general',
-      defaultValue: '/contact',
-      description:
-        'The page that users will navigate to when clicking the button.',
-      options: [
-        { value: '/about', label: 'About Us Page' },
-        { value: '/services', label: 'Services Page' },
-        { value: '/contact', label: 'Contact Page' },
-      ],
-    },
   ],
   // About section configuration for standard structure
   'pages.home.about': aboutSectionConfig,
+  'pages.home.contact': contactSectionConfig,
 };
 
+/**
+ * Field configuration for customization form
+ */
 export interface FieldConfig {
   key: string;
   label: string;
-  type: 'text' | 'color' | 'file' | 'list' | 'select' | 'textarea';
-  category: string;
+  type: 'text' | 'textarea' | 'select' | 'color' | 'file' | 'list';
+  category: 'general' | 'styling' | 'content' | 'advanced';
   defaultValue?: any;
-  required?: boolean;
-  description?: string;
   options?: Array<{ value: any; label: string }>;
+  description?: string;
+  required?: boolean;
+  acceptedFileTypes?: string;
+  fileUploadNote?: string;
+  placeholder?: string;
 }
+
+/**
+ * Add premium fields to the main configuration
+ */
+export function getPlanSpecificConfig(
+  section: string,
+  plan: 'standard' | 'premium'
+): FieldConfig[] {
+  const baseConfig = CustomizationFormConfig[section] || [];
+
+  if (plan === 'premium') {
+    // Add premium-specific fields based on section
+    if (section === 'pages.home.about') {
+      return [...baseConfig, ...aboutSectionPremiumConfig];
+    }
+
+    if (section === 'footer') {
+      return [...baseConfig, ...footerPremiumConfig];
+    }
+
+    if (section === 'pages.home.contact') {
+      return [...baseConfig, ...contactSectionPremiumConfig];
+    }
+  }
+
+  return baseConfig;
+}
+
+/**
+ * Configure premium-only fields for Footer section
+ */
+export const footerPremiumConfig: FieldConfig[] = [
+  {
+    key: 'socialLinks',
+    label: 'Social Media Links',
+    type: 'list',
+    category: 'content',
+    defaultValue: [
+      { platform: 'facebook', url: 'https://facebook.com/' },
+      { platform: 'instagram', url: 'https://instagram.com/' },
+      { platform: 'twitter', url: 'https://twitter.com/' },
+    ],
+    description: 'Your social media profiles',
+  },
+  {
+    key: 'showLegalLinks',
+    label: 'Show Legal Links',
+    type: 'select',
+    category: 'general',
+    defaultValue: true,
+    description: 'Display Privacy Policy and Terms links',
+    options: [
+      { value: true, label: 'Yes' },
+      { value: false, label: 'No' },
+    ],
+  },
+  {
+    key: 'privacyPolicyUrl',
+    label: 'Privacy Policy URL',
+    type: 'text',
+    category: 'content',
+    defaultValue: '/privacy',
+    description: 'Link to your privacy policy page',
+  },
+  {
+    key: 'termsUrl',
+    label: 'Terms of Service URL',
+    type: 'text',
+    category: 'content',
+    defaultValue: '/terms',
+    description: 'Link to your terms of service page',
+  },
+  {
+    key: 'footerLayout',
+    label: 'Footer Layout',
+    type: 'select',
+    category: 'styling',
+    defaultValue: 'standard',
+    description: 'Choose the footer layout style',
+    options: [
+      { value: 'standard', label: 'Standard (4 columns)' },
+      { value: 'compact', label: 'Compact (3 columns)' },
+      { value: 'minimal', label: 'Minimal (2 columns)' },
+    ],
+  },
+  // Additional premium social media options
+  {
+    key: 'socialUrls.linkedin',
+    label: 'LinkedIn URL',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'https://linkedin.com/',
+    description: 'Your LinkedIn profile or company page URL',
+  },
+  {
+    key: 'socialUrls.youtube',
+    label: 'YouTube URL',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'https://youtube.com/',
+    description: 'Your YouTube channel URL',
+  },
+];

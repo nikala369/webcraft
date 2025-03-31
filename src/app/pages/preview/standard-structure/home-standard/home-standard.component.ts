@@ -98,29 +98,46 @@ export class HomeStandardComponent implements OnInit {
       )
     );
 
-    // Apply CSS variable for the primary color
+    // Apply CSS variable for the primary color to the root element for use by child components
     document.documentElement.style.setProperty(
-      '--primary-accent-color',
+      '--theme-primary-color',
       this.primaryColor()
     );
 
     // Set RGB version of primary color for rgba usage
-    const hexToRgb = (hex: string) => {
-      const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-      hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result
-        ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(
-            result[3],
-            16
-          )}`
-        : '74, 141, 255'; // Default RGB
-    };
-
+    const rgbValue = this.hexToRgb(this.primaryColor());
     document.documentElement.style.setProperty(
-      '--primary-accent-color-rgb',
-      hexToRgb(this.primaryColor())
+      '--theme-primary-color-rgb',
+      rgbValue
     );
+  }
+
+  /**
+   * Convert hex color to RGB format for CSS variables
+   */
+  private hexToRgb(hex: string): string {
+    // Default to a standard blue if invalid hex
+    if (!hex || typeof hex !== 'string') {
+      return '74, 141, 255'; // Default RGB
+    }
+
+    // Remove # if present
+    hex = hex.replace('#', '');
+
+    // Handle shorthand (3 chars) hex
+    if (hex.length === 3) {
+      hex = hex
+        .split('')
+        .map((c) => c + c)
+        .join('');
+    }
+
+    // Parse RGB values with fallbacks for invalid values
+    const r = parseInt(hex.substring(0, 2), 16) || 0;
+    const g = parseInt(hex.substring(2, 4), 16) || 0;
+    const b = parseInt(hex.substring(4, 6), 16) || 0;
+
+    return `${r}, ${g}, ${b}`;
   }
 
   /**

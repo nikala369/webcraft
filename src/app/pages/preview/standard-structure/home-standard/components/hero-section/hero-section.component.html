@@ -67,18 +67,6 @@
             {{ getHeroSubtitle() }}
           </p>
         </ng-container>
-
-        <!-- Call-to-action button -->
-        <div class="hero-cta" *ngIf="shouldShowButton()">
-          <a
-            href="#"
-            class="hero-button hero-button-primary"
-            [style.background-color]="getButtonColor()"
-            [style.color]="getButtonTextColor()"
-          >
-            {{ getButtonText() }}
-          </a>
-        </div>
       </div>
     </div>
   </div>

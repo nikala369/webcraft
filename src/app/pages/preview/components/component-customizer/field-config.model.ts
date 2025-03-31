@@ -27,4 +27,7 @@ export interface FieldConfig {
   // Properties for file fields
   accept?: string; // File type filter, e.g. 'image/*', 'video/*', etc.
   hint?: string; // Hint text to display below the field
+  description?: string; // Explanatory text for the field
+  acceptedFileTypes?: string; // Specify file types (e.g., 'image/*')
+  fileUploadNote?: string; // Note about recommended file size/format
 }

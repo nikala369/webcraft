@@ -32,7 +32,7 @@ export class ScrollService {
           (event.url.includes('/preview') &&
             !event.urlAfterRedirects.includes('/preview'))
         ) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       });
   }

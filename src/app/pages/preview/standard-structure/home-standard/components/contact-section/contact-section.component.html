@@ -30,8 +30,14 @@
             <div class="contact-text">
               <h3>{{ getFieldLabel(field) }}</h3>
               <p
+                *ngIf="field !== 'email'"
                 [innerHTML]="getFieldValue(field) | replace : '\n' : '<br>'"
               ></p>
+              <p *ngIf="field === 'email'">
+                <a [href]="getEmailMailtoLink()" class="email-link">{{
+                  getFormattedEmail()
+                }}</a>
+              </p>
             </div>
           </div>
 
@@ -71,65 +77,39 @@
           </div>
         </div>
 
-        <!-- Contact Form -->
+        <!-- Contact Form - Simplified and Professional -->
         <div class="contact-form-container">
           <h3>{{ getFormTitle() }}</h3>
-          <form class="contact-form">
+
+          <!-- Simple Form with Email Server Integration -->
+          <form
+            class="contact-form"
+            method="POST"
+            [attr.action]="'#'"
+            (submit)="handleFormSubmit($event)"
+          >
             <!-- Name Field -->
             <div class="form-group">
               <label for="name">Name</label>
-              <input type="text" id="name" placeholder="Your Name" />
+              <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Your name"
+                required
+              />
             </div>
 
             <!-- Email Field -->
             <div class="form-group">
               <label for="email">Email</label>
-              <input type="email" id="email" placeholder="Your Email" />
-            </div>
-
-            <!-- Phone Field -->
-            <div class="form-group">
-              <label for="phone">Phone</label>
-              <input type="tel" id="phone" placeholder="Your Phone Number" />
-            </div>
-
-            <!-- Date & Time Fields (For Restaurants and Salons - Premium Only) -->
-            <div class="form-row" *ngIf="includeBookingFields()">
-              <div class="form-group">
-                <label for="date">Date</label>
-                <input type="date" id="date" />
-              </div>
-
-              <div class="form-group">
-                <label for="time">Time</label>
-                <input type="time" id="time" />
-              </div>
-            </div>
-
-            <!-- Party Size Field (For Restaurants - Premium Only) -->
-            <div class="form-group" *ngIf="includePartySize()">
-              <label for="party-size">Number of People</label>
-              <select id="party-size">
-                <option value="">Select</option>
-                <option value="1">1 Person</option>
-                <option value="2">2 People</option>
-                <option value="3-4">3-4 People</option>
-                <option value="5-6">5-6 People</option>
-                <option value="7+">7+ People</option>
-              </select>
-            </div>
-
-            <!-- Service Selection (For Salons - Premium Only) -->
-            <div class="form-group" *ngIf="includeServiceSelection()">
-              <label for="service">Service</label>
-              <select id="service">
-                <option value="">Select a Service</option>
-                <option value="haircut">Haircut</option>
-                <option value="color">Hair Color</option>
-                <option value="facial">Facial Treatment</option>
-                <option value="manicure">Manicure & Pedicure</option>
-                <option value="other">Other</option>
-              </select>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Your email address"
+                required
+              />
             </div>
 
             <!-- Message Field -->
@@ -137,8 +117,10 @@
               <label for="message">Message</label>
               <textarea
                 id="message"
+                name="message"
                 rows="4"
-                placeholder="Your Message"
+                placeholder="What would you like to say?"
+                required
               ></textarea>
             </div>
 
@@ -146,6 +128,11 @@
             <button type="submit" class="submit-button">
               {{ getFormButtonText() }}
             </button>
+
+            <!-- Form Status Message -->
+            <div class="form-status" *ngIf="formStatus">
+              <p [ngClass]="formStatus.type">{{ formStatus.message }}</p>
+            </div>
           </form>
         </div>
       </div>

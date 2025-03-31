@@ -20,11 +20,6 @@ export interface HeroData {
   titleColor?: string;
   subtitleColor?: string;
   textShadow?: 'none' | 'light' | 'medium' | 'heavy';
-  showPrimaryButton?: boolean;
-  primaryButtonText?: string;
-  primaryButtonColor?: string;
-  primaryButtonTextColor?: string;
-  primaryButtonLink?: string;
 }
 
 /**
@@ -37,6 +32,12 @@ export interface AboutData {
   imageUrl?: string;
   backgroundColor?: string;
   textColor?: string;
+  storyTitle?: string;
+  storyText?: string;
+  missionTitle?: string;
+  missionText?: string;
+  values?: string[];
+  valuesTitle?: string;
 }
 
 /**
@@ -107,6 +108,22 @@ export interface ContactData {
   mapLocation?: string;
   backgroundColor?: string;
   textColor?: string;
+  // Form-related properties
+  formTitle?: string;
+  formButtonText?: string;
+  formspreeId?: string;
+  formSubject?: string;
+  thankYouUrl?: string;
+  // Premium features
+  hours?: string;
+  showSocialLinks?: boolean;
+  socialUrls?: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+    [key: string]: string | undefined;
+  };
 }
 
 /**
@@ -126,11 +143,29 @@ export interface FooterData {
   backgroundColor: string;
   textColor: string;
   copyrightText: string;
+  logoUrl?: string;
+  tagline?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
   showSocialLinks?: boolean;
+  menuItems?: Array<{ id: number; label: string; link: string }>;
+  socialUrls?: {
+    facebook?: string;
+    instagram?: string;
+    tiktok?: string;
+    linkedin?: string;
+    youtube?: string;
+    [key: string]: string | undefined;
+  };
   socialLinks?: Array<{
-    platform: 'facebook' | 'twitter' | 'instagram' | 'linkedin';
+    platform: 'facebook' | 'twitter' | 'instagram' | 'linkedin' | 'tiktok';
     url: string;
   }>;
+  showLegalLinks?: boolean;
+  privacyPolicyUrl?: string;
+  termsUrl?: string;
+  footerLayout?: 'standard' | 'compact' | 'minimal';
 }
 
 /**
@@ -158,8 +193,6 @@ export interface Customizations {
       contact?: ContactData;
       [key: string]: any;
     };
-    about?: any;
-    contact?: any;
     [key: string]: any;
   };
   footer?: FooterData;

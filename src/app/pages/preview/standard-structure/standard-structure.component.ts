@@ -19,7 +19,6 @@ import { SectionHoverWrapperComponent } from '../components/section-hover-wrappe
 import { Router } from '@angular/router';
 import { HomeStandardComponent } from './home-standard/home-standard.component';
 import { AboutStandardComponent } from './about-standard/about-standard.component';
-import { ContactStandardComponent } from './contact-standard/contact-standard.component';
 import { FontOption } from '../components/font-selector/font-selector.component';
 import { ScrollService } from '../../../core/services/shared/scroll/scroll.service';
 import { BUSINESS_TYPE_SECTIONS } from '../../../core/models/business-types';
@@ -33,7 +32,6 @@ import { BUSINESS_TYPE_SECTIONS } from '../../../core/models/business-types';
     SectionHoverWrapperComponent,
     HomeStandardComponent,
     AboutStandardComponent,
-    ContactStandardComponent,
     CommonModule,
   ],
   templateUrl: './standard-structure.component.html',
@@ -73,10 +71,10 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
     () => this.customizations()?.pages?.home || {}
   );
   aboutCustomizationsSignal = computed(
-    () => this.customizations()?.pages?.about || {}
+    () => this.customizations()?.pages?.home?.about || {}
   );
   contactCustomizationsSignal = computed(
-    () => this.customizations()?.pages?.contact || {}
+    () => this.customizations()?.pages?.home?.contact || {}
   );
 
   // Create a Signal from the customizations function

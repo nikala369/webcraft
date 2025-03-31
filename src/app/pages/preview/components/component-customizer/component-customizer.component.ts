@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 import {
   CustomizationFormConfig,
   FieldConfig,
+  getPlanSpecificConfig,
 } from './customizing-form-config';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../core/services/toast/toast.service';
@@ -110,9 +111,11 @@ export class ComponentCustomizerComponent implements OnInit {
 
   // Helper to get field config for this component
   getFieldsConfig(): FieldConfig[] {
-    // No longer need backward compatibility aliases
-    // Use only the exact component key provided
-    return CustomizationFormConfig[this.componentKey] || [];
+    // Use the plan-specific config function to get fields appropriate for the plan type
+    return getPlanSpecificConfig(
+      this.componentKey,
+      this.planType as 'standard' | 'premium'
+    );
   }
 
   // Form validation signal
@@ -374,16 +377,33 @@ export class ComponentCustomizerComponent implements OnInit {
     this.localData.update((data) => ({ ...data, [fieldKey]: value }));
   }
 
-  // Form field methods
-  updateField(fieldKey: string, event: any) {
-    const value = event.target.value;
-    this.localData.update((current) => {
-      return { ...current, [fieldKey]: value };
-    });
-  }
-
+  /**
+   * Update text field handling to support nested objects
+   */
   updateTextField(fieldKey: string, value: string): void {
-    this.localData.update((data) => ({ ...data, [fieldKey]: value }));
+    // Check if this is a nested field (contains a dot)
+    if (fieldKey.includes('.')) {
+      const [parentKey, childKey] = fieldKey.split('.');
+
+      this.localData.update((data) => {
+        // Create the parent object if it doesn't exist
+        if (!data[parentKey]) {
+          data[parentKey] = {};
+        }
+
+        // Update the nested property
+        return {
+          ...data,
+          [parentKey]: {
+            ...data[parentKey],
+            [childKey]: value,
+          },
+        };
+      });
+    } else {
+      // Regular field update
+      this.localData.update((data) => ({ ...data, [fieldKey]: value }));
+    }
   }
 
   /**
@@ -705,8 +725,39 @@ export class ComponentCustomizerComponent implements OnInit {
       delete result.id;
     }
 
+    // Process nested object values (like socialUrls.facebook)
+    const nestedProperties: Record<string, any> = {};
+
+    // Find all properties with dots to handle nested objects
+    Object.keys(result).forEach((key) => {
+      if (key.includes('.')) {
+        const [parent, child] = key.split('.');
+
+        // Initialize parent object if needed
+        if (!nestedProperties[parent]) {
+          nestedProperties[parent] = {};
+        }
+
+        // Set child property
+        nestedProperties[parent][child] = result[key];
+
+        // Delete the dotted property
+        delete result[key];
+      }
+    });
+
+    // Merge nested properties back into result
+    Object.keys(nestedProperties).forEach((parent) => {
+      result[parent] = {
+        ...(result[parent] || {}),
+        ...nestedProperties[parent],
+      };
+    });
+
     // Start closing animation
     this.startClosingAnimation();
+
+    console.log('Applying changes with result:', result);
 
     // Emit update event with the result
     this.update.emit(result);

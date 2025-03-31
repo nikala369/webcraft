@@ -263,34 +263,6 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if hero should display primary CTA button
-   */
-  shouldShowButton(): boolean {
-    return this.heroData?.showPrimaryButton !== false;
-  }
-
-  /**
-   * Get button text or fallback
-   */
-  getButtonText(): string {
-    return this.heroData?.primaryButtonText || 'GET STARTED NOW';
-  }
-
-  /**
-   * Get button color or fallback
-   */
-  getButtonColor(): string {
-    return this.heroData?.primaryButtonColor || '#ff5722';
-  }
-
-  /**
-   * Get button text color or fallback
-   */
-  getButtonTextColor(): string {
-    return this.heroData?.primaryButtonTextColor || '#ffffff';
-  }
-
-  /**
    * Get title color or fallback
    */
   getTitleColor(): string {

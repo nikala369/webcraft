@@ -8,22 +8,14 @@
 >
   <section id="about" class="about-section">
     <div class="section-container">
+      <!-- Section Header -->
       <div class="section-header">
-        <h2 class="section-title">
-          {{
-            getAboutContent().title ||
-              checkDirectAttributeAccess("title", getDefaultTitle())
-          }}
-        </h2>
+        <h2 class="section-title">{{ getAboutContent().title }}</h2>
         <div class="title-underline"></div>
-        <p class="section-subtitle">
-          {{
-            getAboutContent().subtitle ||
-              checkDirectAttributeAccess("subtitle", getDefaultSubtitle())
-          }}
-        </p>
+        <p class="section-subtitle">{{ getAboutContent().subtitle }}</p>
       </div>
 
+      <!-- Main Content -->
       <div
         class="about-content"
         [ngClass]="{ 'about-content--mobile': isMobileLayout }"
@@ -35,41 +27,19 @@
 
         <!-- About Text -->
         <div class="about-text">
-          <h3>
-            {{
-              getAboutContent().storyTitle ||
-                checkDirectAttributeAccess("storyTitle", getDefaultStoryTitle())
-            }}
-          </h3>
-          <p>
-            {{
-              getAboutContent().storyText ||
-                checkDirectAttributeAccess("storyText", getDefaultStoryText())
-            }}
-          </p>
+          <!-- Story Section -->
+          <h3>{{ getAboutContent().storyTitle }}</h3>
+          <p>{{ getAboutContent().storyText }}</p>
 
-          <h3>
-            {{
-              getAboutContent().missionTitle ||
-                checkDirectAttributeAccess(
-                  "missionTitle",
-                  getDefaultMissionTitle()
-                )
-            }}
-          </h3>
-          <p>
-            {{
-              getAboutContent().missionText ||
-                checkDirectAttributeAccess(
-                  "missionText",
-                  getDefaultMissionText()
-                )
-            }}
-          </p>
+          <!-- Mission Section -->
+          <h3>{{ getAboutContent().missionTitle }}</h3>
+          <p>{{ getAboutContent().missionText }}</p>
 
           <!-- Additional content for premium users -->
-          <ng-container *ngIf="planType === 'premium'">
-            <div class="about-values" *ngIf="getAboutContent().values">
+          <ng-container
+            *ngIf="planType === 'premium' && getAboutContent().values?.length"
+          >
+            <div class="about-values">
               <h3>{{ getAboutContent().valuesTitle || "Our Values" }}</h3>
               <ul>
                 <li *ngFor="let value of getAboutContent().values">

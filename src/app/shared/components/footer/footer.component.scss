@@ -12,6 +12,7 @@ $gray-text: #a0a0a0;
   position: relative;
   overflow: hidden;
   padding: 80px 0 0;
+  border-top: 0.1px solid $white;
 
   // Subtle background pattern
   &::before {

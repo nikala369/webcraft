@@ -21,7 +21,7 @@
         *ngIf="section === 'about' && shouldDisplaySection('about')"
       >
         <app-about-section
-          [customizations]="customizations"
+          [customizations]="wholeData()"
           [isMobileLayout]="isMobileLayout"
           [planType]="planType"
           [businessType]="businessType"
@@ -75,7 +75,7 @@
         *ngIf="section === 'contact' && shouldDisplaySection('contact')"
       >
         <app-contact-section
-          [customizations]="customizations"
+          [customizations]="wholeData()"
           [isMobileLayout]="isMobileLayout"
           [planType]="planType"
           [businessType]="businessType"

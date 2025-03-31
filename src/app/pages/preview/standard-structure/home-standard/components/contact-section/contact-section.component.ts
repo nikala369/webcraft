@@ -6,6 +6,8 @@ import {
   inject,
   Pipe,
   PipeTransform,
+  OnInit,
+  HostBinding,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
@@ -23,6 +25,12 @@ export class ReplacePipe implements PipeTransform {
   }
 }
 
+// Form status type for showing success/error messages
+interface FormStatus {
+  type: 'success' | 'error';
+  message: string;
+}
+
 @Component({
   selector: 'app-contact-section',
   standalone: true,
@@ -30,7 +38,7 @@ export class ReplacePipe implements PipeTransform {
   templateUrl: './contact-section.component.html',
   styleUrls: ['./contact-section.component.scss'],
 })
-export class ContactSectionComponent {
+export class ContactSectionComponent implements OnInit {
   @Input() customizations: any;
   @Input() isMobileLayout: boolean = false;
   @Input() planType: 'standard' | 'premium' = 'standard';
@@ -41,29 +49,96 @@ export class ContactSectionComponent {
     path?: string;
   }>();
 
+  // HostBinding for section styling from customizations
+  @HostBinding('style.--section-bg-color') get sectionBgColor() {
+    return this.getCustomization('backgroundColor') || '#f8f8f8';
+  }
+
+  @HostBinding('style.--text-color') get textColor() {
+    return this.getCustomization('textColor') || '#333333';
+  }
+
+  @HostBinding('style.--heading-color') get headingColor() {
+    return this.getCustomization('textColor') || '#222222';
+  }
+
+  @HostBinding('style.--primary-accent-color') get primaryAccentColor() {
+    return this.themeColorsService.getPrimaryColor(this.planType);
+  }
+
+  @HostBinding('style.--primary-accent-color-rgb') get primaryAccentColorRgb() {
+    const color = this.themeColorsService.getPrimaryColor(this.planType);
+    return this.hexToRgb(color);
+  }
+
   private themeColorsService = inject(ThemeColorsService);
+
+  // Form status for showing feedback to the user
+  formStatus: FormStatus | null = null;
 
   // Default contact information
   private defaultInfo = {
     address: '123 Business Street\nAnytown, ST 12345',
-    phone: '(123) 456-7890',
     email: 'info@yourbusiness.com',
     hours: 'Monday-Friday: 9am-5pm\nWeekends: Closed',
-    socials: {
-      facebook: 'https://facebook.com/',
-      instagram: 'https://instagram.com/',
-      twitter: 'https://twitter.com/',
-      linkedin: 'https://linkedin.com/',
-    },
   };
+
+  ngOnInit(): void {
+    // Log customizations for debugging
+    console.log('Contact section customizations:', this.customizations);
+  }
+
+  /**
+   * Convert hex color to RGB format for CSS variables
+   */
+  private hexToRgb(hex: string): string {
+    // Default to black if hex is invalid or undefined
+    if (!hex || typeof hex !== 'string') {
+      return '0, 0, 0';
+    }
+
+    // Remove # if present
+    hex = hex.replace('#', '');
+
+    // Handle shorthand (3 chars) hex
+    if (hex.length === 3) {
+      hex = hex
+        .split('')
+        .map((c) => c + c)
+        .join('');
+    }
+
+    // Parse RGB values with fallbacks for invalid values
+    const r = parseInt(hex.substring(0, 2), 16) || 0;
+    const g = parseInt(hex.substring(2, 4), 16) || 0;
+    const b = parseInt(hex.substring(4, 6), 16) || 0;
+
+    return `${r}, ${g}, ${b}`;
+  }
+
+  /**
+   * Get customization value safely from either direct or nested paths
+   */
+  getCustomization(key: string): any {
+    // First check direct path
+    if (this.customizations?.[key] !== undefined) {
+      return this.customizations[key];
+    }
+
+    // Then check nested path
+    if (this.customizations?.pages?.home?.contact?.[key] !== undefined) {
+      return this.customizations.pages.home.contact[key];
+    }
+
+    return null;
+  }
 
   /**
    * Get section title based on business type
    */
   getSectionTitle(): string {
-    if (this.customizations?.pages?.home?.contact?.title) {
-      return this.customizations.pages.home.contact.title;
-    }
+    const title = this.getCustomization('title');
+    if (title) return title;
 
     return 'Contact Us';
   }
@@ -72,9 +147,8 @@ export class ContactSectionComponent {
    * Get section subtitle based on business type
    */
   getSectionSubtitle(): string {
-    if (this.customizations?.pages?.home?.contact?.subtitle) {
-      return this.customizations.pages.home.contact.subtitle;
-    }
+    const subtitle = this.getCustomization('subtitle');
+    if (subtitle) return subtitle;
 
     const subtitles = {
       restaurant: 'Make a reservation or get in touch with our team',
@@ -93,20 +167,19 @@ export class ContactSectionComponent {
    * Get contact form title based on business type
    */
   getFormTitle(): string {
-    if (this.customizations?.pages?.home?.contact?.formTitle) {
-      return this.customizations.pages.home.contact.formTitle;
-    }
+    const formTitle = this.getCustomization('formTitle');
+    if (formTitle) return formTitle;
 
     const formTitles = {
-      restaurant: 'Make a Reservation',
-      salon: 'Book an Appointment',
-      architecture: 'Request a Consultation',
-      portfolio: 'Send a Message',
+      restaurant: 'Send a Message',
+      salon: 'Send a Message',
+      architecture: 'Send a Message',
+      portfolio: 'Get in Touch',
     };
 
     return (
       formTitles[this.businessType as keyof typeof formTitles] ||
-      'Send us a Message'
+      'Send a Message'
     );
   }
 
@@ -114,36 +187,51 @@ export class ContactSectionComponent {
    * Get contact form button text based on business type
    */
   getFormButtonText(): string {
-    if (this.customizations?.pages?.home?.contact?.formButtonText) {
-      return this.customizations.pages.home.contact.formButtonText;
-    }
+    const buttonText = this.getCustomization('formButtonText');
+    if (buttonText) return buttonText;
 
-    const buttonTexts = {
-      restaurant: 'Reserve Now',
-      salon: 'Book Now',
-      architecture: 'Request Consultation',
-      portfolio: 'Send Message',
-    };
-
-    return (
-      buttonTexts[this.businessType as keyof typeof buttonTexts] ||
-      'Send Message'
-    );
+    return 'Send Message';
   }
 
   /**
    * Get contact info fields to show based on business type
    */
   getInfoFields(): string[] {
-    const standardFields = ['address', 'phone', 'email'];
+    // Only include address and email as standard fields
+    const standardFields = ['email'];
 
+    // Include address only if it should be shown (dependent on business type)
+    if (this.shouldShowAddress()) {
+      standardFields.unshift('address'); // Add address at the beginning
+    }
+
+    // For premium plans with certain business types, show hours
     if (this.planType === 'premium') {
       if (this.businessType === 'restaurant' || this.businessType === 'salon') {
-        return [...standardFields, 'hours'];
+        standardFields.push('hours');
       }
     }
 
     return standardFields;
+  }
+
+  /**
+   * Determine if address should be shown
+   * Portfolio businesses typically don't need an address
+   */
+  shouldShowAddress(): boolean {
+    // Always show if it's explicitly set in customizations
+    if (this.getCustomization('address')) {
+      return true;
+    }
+
+    // For portfolio business type, don't show address by default
+    if (this.businessType === 'portfolio') {
+      return false;
+    }
+
+    // For all other business types, show address
+    return true;
   }
 
   /**
@@ -152,7 +240,6 @@ export class ContactSectionComponent {
   getFieldIcon(field: string): string {
     const icons = {
       address: 'assets/standard-contact/location-icon.svg',
-      phone: 'assets/standard-contact/phone-icon.svg',
       email: 'assets/standard-contact/email-icon.svg',
       hours: 'assets/standard-contact/clock-icon.svg',
     };
@@ -164,9 +251,14 @@ export class ContactSectionComponent {
    * Get field value or default if not set
    */
   getFieldValue(field: string): string {
+    const value = this.getCustomization(field);
+    if (value && typeof value === 'string') {
+      return value;
+    }
+
+    // Use default values if available
     return (
-      this.customizations?.pages?.home?.contact?.[field] ||
-      this.defaultInfo[field as keyof typeof this.defaultInfo]
+      (this.defaultInfo[field as keyof typeof this.defaultInfo] as string) || ''
     );
   }
 
@@ -176,7 +268,6 @@ export class ContactSectionComponent {
   getFieldLabel(field: string): string {
     const labels = {
       address: 'Our Location',
-      phone: 'Phone Number',
       email: 'Email Address',
       hours: 'Business Hours',
     };
@@ -192,15 +283,23 @@ export class ContactSectionComponent {
   }
 
   /**
-   * Get social media link or default
+   * Get social media link
    */
   getSocialLink(platform: string): string {
-    return (
-      this.customizations?.pages?.home?.contact?.socials?.[platform] ||
-      this.defaultInfo.socials[
-        platform as keyof typeof this.defaultInfo.socials
-      ]
-    );
+    const socialUrls = this.getCustomization('socialUrls');
+    if (socialUrls && socialUrls[platform]) {
+      return socialUrls[platform];
+    }
+
+    // Default social media URLs
+    const defaults = {
+      facebook: 'https://facebook.com/',
+      instagram: 'https://instagram.com/',
+      twitter: 'https://twitter.com/',
+      linkedin: 'https://linkedin.com/',
+    };
+
+    return defaults[platform as keyof typeof defaults] || '#';
   }
 
   /**
@@ -215,26 +314,59 @@ export class ContactSectionComponent {
   }
 
   /**
-   * Check if form should include date/time fields (restaurants & salons)
+   * Handle form submission with multiple email sending options
    */
-  includeBookingFields(): boolean {
-    return (
-      (this.businessType === 'restaurant' || this.businessType === 'salon') &&
-      this.planType === 'premium'
-    );
+  handleFormSubmit(event: Event): void {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+
+    // Basic form validation
+    if (!form.checkValidity()) {
+      this.formStatus = {
+        type: 'error',
+        message: 'Please fill all required fields correctly.',
+      };
+      return;
+    }
+
+    // Get form data
+    const formData = new FormData(form);
+    const formValues: Record<string, string> = {};
+
+    // Convert FormData to a regular object
+    formData.forEach((value, key) => {
+      formValues[key] = value.toString();
+    });
+
+    // Add recipient email from customizations
+    formValues['recipient'] = this.getFieldValue('email');
+
+    console.log('Form submission:', formValues);
+
+    // Show success message
+    this.formStatus = {
+      type: 'success',
+      message: 'Thank you! Your message has been received.',
+    };
+
+    // Reset form after successful submission
+    form.reset();
   }
 
   /**
-   * Display "People/Party Size" field for restaurants
+   * Get a mailto link for the email field
    */
-  includePartySize(): boolean {
-    return this.businessType === 'restaurant' && this.planType === 'premium';
+  getEmailMailtoLink(): string {
+    const email = this.getFieldValue('email');
+    if (!email) return 'mailto:info@example.com';
+
+    return `mailto:${email}`;
   }
 
   /**
-   * Display "Service Selection" field for salons
+   * Format email address for display
    */
-  includeServiceSelection(): boolean {
-    return this.businessType === 'salon' && this.planType === 'premium';
+  getFormattedEmail(): string {
+    return this.getFieldValue('email');
   }
 }

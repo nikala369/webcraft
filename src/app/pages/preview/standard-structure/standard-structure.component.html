@@ -79,7 +79,11 @@
     [isMobileView]="isMobileView"
     (onEdit)="handleComponentSelection('footer')"
   >
-    <app-structure-footer [customizations]="customizations().footer">
+    <app-structure-footer
+      [customizations]="customizations().footer"
+      [planType]="currentPlan"
+      [businessType]="businessType"
+    >
     </app-structure-footer>
   </app-section-hover-wrapper>
 </div>

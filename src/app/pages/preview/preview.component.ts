@@ -160,20 +160,45 @@ export class PreviewComponent implements OnInit, OnDestroy {
           titleColor: '#ffffff',
           subtitleColor: '#f0f0f0',
           textShadow: 'medium',
-          showPrimaryButton: true,
-          primaryButtonText: 'GET STARTED NOW',
-          primaryButtonColor: '#ffffff',
-          primaryButtonTextColor: '#000000',
-          primaryButtonLink: '/contact',
+        },
+        about: {
+          title: 'About Us',
+          subtitle: 'Our Story',
+          storyTitle: 'Our Story',
+          storyText:
+            'We are dedicated to providing exceptional service and quality. Our commitment to excellence has made us a trusted choice in the industry.',
+          missionTitle: 'Our Mission',
+          missionText:
+            "Our mission is to provide high-quality services that exceed our clients' expectations. We believe in building long-lasting relationships based on trust, integrity, and results.",
+          imageUrl: 'assets/standard-hero1/background-image1.jpg',
+          backgroundColor: '#ffffff',
+          textColor: '#333333',
+        },
+        contact: {
+          title: 'Contact Us',
+          subtitle: 'Get in touch with us',
+          address: '123 Business Street\nAnytown, ST 12345',
+          phone: '(123) 456-7890',
+          email: 'info@yourbusiness.com',
+          formTitle: 'Send a Message',
+          formSubject: 'New message from your website',
+          formButtonText: 'Send Message',
         },
       },
-      about: {},
-      contact: {},
     },
     footer: {
       backgroundColor: '#1a1a1a',
       textColor: '#ffffff',
       copyrightText: '© 2025 Your Company',
+      logoUrl: '',
+      tagline: '',
+      address: '',
+      phone: '',
+      email: '',
+      showSocialLinks: true,
+      menuItems: [],
+      socialUrls: {},
+      socialLinks: [],
     },
   });
 
@@ -261,6 +286,42 @@ export class PreviewComponent implements OnInit, OnDestroy {
         // Ensure background type is set
         if (!data[lastPart].backgroundType) {
           data[lastPart].backgroundType = 'image';
+        }
+      }
+
+      // Special handling for about section
+      if (lastPart === 'about') {
+        console.log(
+          'About section selected. Data before potentially fixing:',
+          data[lastPart]
+        );
+
+        // Check if we have an imageUrl in custom or default state
+        const aboutData = this.customizations()?.pages?.home?.about;
+        if (aboutData && aboutData.imageUrl) {
+          console.log(
+            'Found imageUrl in nested customizations, ensuring it is passed to editor'
+          );
+          if (!data[lastPart].imageUrl || data[lastPart].imageUrl === '') {
+            data[lastPart].imageUrl = aboutData.imageUrl;
+          }
+        }
+
+        // Ensure all required fields are set
+        if (!data[lastPart].storyTitle) {
+          data[lastPart].storyTitle = aboutData?.storyTitle || 'Our Story';
+        }
+        if (!data[lastPart].storyText) {
+          data[lastPart].storyText =
+            aboutData?.storyText || 'Our story text here.';
+        }
+        if (!data[lastPart].missionTitle) {
+          data[lastPart].missionTitle =
+            aboutData?.missionTitle || 'Our Mission';
+        }
+        if (!data[lastPart].missionText) {
+          data[lastPart].missionText =
+            aboutData?.missionText || 'Our mission text here.';
         }
       }
 
@@ -1361,14 +1422,14 @@ export class PreviewComponent implements OnInit, OnDestroy {
     try {
       // Find any video data in the hero sections and create a placeholder
       if (customizationsToSave.pages?.home?.hero1?.backgroundVideo) {
-        const videoSrc = customizationsToSave.pages.home.hero1.backgroundVideo;
+        const videoSrc = customizationsToSave.pages?.home.hero1.backgroundVideo;
         // If it's a data URL (usually very large), replace with a flag
-        if (videoSrc.startsWith('data:video')) {
+        if (videoSrc?.startsWith('data:video')) {
           console.log('Replacing video data URL with placeholder for storage');
           // Store only the first 100 chars as reference and a flag
-          (customizationsToSave.pages.home.hero1 as any)._videoPlaceholder =
+          (customizationsToSave.pages?.home.hero1 as any)._videoPlaceholder =
             'VIDEO_DATA_PLACEHOLDER';
-          delete customizationsToSave.pages.home.hero1.backgroundVideo;
+          delete customizationsToSave.pages?.home.hero1.backgroundVideo;
         }
       }
 

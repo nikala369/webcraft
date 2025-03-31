@@ -59,7 +59,7 @@ export class BusinessConfigService {
       restaurant: ['hero', 'about', 'menu', 'contact'],
       salon: ['hero', 'about', 'services', 'contact'],
       portfolio: ['hero', 'about', 'projects', 'contact'],
-      architecture: ['hero', 'about', 'projects', 'services', 'contact'],
+      architecture: ['hero', 'about', 'projects', 'contact'],
     };
 
     // Check if business type exists in our predefined sections
@@ -125,11 +125,6 @@ export class BusinessConfigService {
       titleColor: '#ffffff',
       subtitleColor: '#f0f0f0',
       textShadow: 'medium',
-      showPrimaryButton: true,
-      primaryButtonText: 'GET STARTED',
-      primaryButtonColor: '#ff5722',
-      primaryButtonTextColor: '#ffffff',
-      primaryButtonLink: '/contact',
     };
   }
 
@@ -158,33 +153,107 @@ export class BusinessConfigService {
       copyrightText: `© ${new Date().getFullYear()} ${this.generateBusinessName(
         businessType
       )}`,
+      tagline: this.getDefaultTagline(businessType),
+      address: this.getDefaultAddress(businessType),
+      phone: this.getDefaultPhone(),
+      email: this.getDefaultEmail(businessType),
+      showSocialLinks: true,
+      socialUrls: this.getDefaultSocialUrls(businessType),
     };
   }
 
   /**
-   * Generate default about section data based on business type
+   * Get default about section data based on business type
    */
   getDefaultAboutData(businessType: string): AboutData {
-    const aboutContent = {
-      restaurant:
-        'We are a family-owned restaurant dedicated to providing exceptional dining experiences with locally-sourced ingredients and innovative recipes.',
-      salon:
-        'Our skilled team of stylists brings years of experience and a passion for beauty to every client, ensuring you look and feel your best.',
-      architecture:
-        'With a focus on sustainable design and functional elegance, our architectural studio transforms concepts into stunning spaces.',
-      portfolio:
-        'I am a creative professional specializing in delivering high-quality work that exceeds expectations and showcases innovation.',
-    };
-
-    return {
-      title: 'About Us',
-      subtitle: 'Our Story',
-      content:
-        aboutContent[businessType as keyof typeof aboutContent] ||
-        'We are dedicated to delivering excellence in everything we do.',
+    const baseData = {
       backgroundColor: '#ffffff',
       textColor: '#333333',
     };
+
+    // Business-specific data
+    switch (businessType) {
+      case 'restaurant':
+        return {
+          ...baseData,
+          title: 'About Our Restaurant',
+          subtitle: 'Our Culinary Story',
+          storyTitle: 'Our Culinary Journey',
+          storyText:
+            'Founded in 2015, our restaurant brings together the finest ingredients and culinary expertise. Our chefs are dedicated to creating memorable dining experiences with innovative flavors and traditional techniques.',
+          missionTitle: 'Our Food Philosophy',
+          missionText:
+            'We believe in sustainable, locally-sourced ingredients that support our community while delivering exceptional flavor. Every dish is crafted with care, creating a dining experience that honors culinary traditions while embracing innovation.',
+          imageUrl: 'assets/standard-hero1/background-image2.jpg',
+          values: ['Quality', 'Sustainability', 'Tradition', 'Innovation'],
+          textColor: '#333333',
+        };
+      case 'salon':
+        return {
+          ...baseData,
+          title: 'About Our Salon',
+          subtitle: 'Excellence in Beauty',
+          storyTitle: 'Our Beginnings',
+          storyText:
+            "Established in 2010, our salon was born from a passion for beauty and self-expression. We've assembled a team of experienced stylists who are committed to helping our clients look and feel their best.",
+          missionTitle: 'Our Approach',
+          missionText:
+            'We use only premium products and stay current with the latest techniques to ensure our clients receive the highest quality service. Our commitment to ongoing education and client satisfaction sets us apart.',
+          imageUrl: 'assets/standard-hero1/background-image3.jpg',
+          values: ['Expertise', 'Quality', 'Innovation', 'Individuality'],
+          textColor: '#333333',
+        };
+      case 'architecture':
+        return {
+          ...baseData,
+          title: 'About Our Firm',
+          subtitle: 'Creating Spaces That Inspire',
+          storyTitle: 'Our Design Philosophy',
+          storyText:
+            'With over a decade of experience, our architectural firm specializes in blending functionality with aesthetic excellence. We approach each project with a fresh perspective, focusing on sustainable design and client satisfaction.',
+          missionTitle: 'Our Commitment',
+          missionText:
+            "We are dedicated to creating spaces that inspire, function flawlessly, and exceed our clients' expectations. Our collaborative approach ensures that each project reflects the unique vision and requirements of our clients.",
+          imageUrl: 'assets/standard-hero1/background-image1.jpg',
+          values: [
+            'Innovation',
+            'Sustainability',
+            'Functionality',
+            'Client-Focused',
+          ],
+          textColor: '#333333',
+        };
+      case 'portfolio':
+        return {
+          ...baseData,
+          title: 'About Me',
+          subtitle: 'My Creative Journey',
+          storyTitle: 'My Background',
+          storyText:
+            "With a background in design and digital media, I've spent the last 8 years honing my craft. My approach combines technical expertise with creative problem-solving to deliver exceptional results for clients across various industries.",
+          missionTitle: 'My Approach',
+          missionText:
+            'I believe in a collaborative process that puts client needs first. My work blends creativity with functionality, ensuring that each project not only looks great but also achieves its strategic objectives.',
+          imageUrl: 'assets/standard-hero1/background-image3.jpg',
+          values: ['Creativity', 'Precision', 'Communication', 'Results'],
+          textColor: '#333333',
+        };
+      default:
+        return {
+          ...baseData,
+          title: 'About Us',
+          subtitle: 'Our Story',
+          storyTitle: 'Our Story',
+          storyText:
+            'We are a dedicated team of professionals committed to delivering exceptional value to our clients. With years of experience in the industry, we understand what it takes to help your business succeed.',
+          missionTitle: 'Our Mission',
+          missionText:
+            "Our mission is to provide high-quality services that exceed our clients' expectations. We believe in building long-lasting relationships based on trust, integrity, and results.",
+          imageUrl: 'assets/standard-hero1/background-image1.jpg',
+          values: ['Quality', 'Integrity', 'Innovation', 'Customer Focus'],
+          textColor: '#333333',
+        };
+    }
   }
 
   /**
@@ -371,15 +440,54 @@ export class BusinessConfigService {
    * Generate default contact data based on business type
    */
   private getDefaultContactData(businessType: string): ContactData {
+    // Business-specific titles and subtitles
+    const titles = {
+      restaurant: 'Reserve a Table',
+      salon: 'Book an Appointment',
+      architecture: 'Start Your Project',
+      portfolio: 'Get in Touch',
+    };
+
+    const subtitles = {
+      restaurant: 'Make a reservation or get in touch with our team',
+      salon: 'Book an appointment or reach out with questions',
+      architecture: "Let's discuss your project requirements",
+      portfolio: 'Get in touch for collaboration opportunities',
+    };
+
+    const formTitles = {
+      restaurant: 'Make a Reservation',
+      salon: 'Book an Appointment',
+      architecture: 'Request a Consultation',
+      portfolio: 'Send a Message',
+    };
+
+    const buttonTexts = {
+      restaurant: 'Reserve Now',
+      salon: 'Book Now',
+      architecture: 'Request Consultation',
+      portfolio: 'Send Message',
+    };
+
     return {
-      title: 'Contact Us',
-      subtitle: 'Get in Touch',
-      address: '123 Business St., City, State',
-      phone: '(555) 123-4567',
-      email: `info@${businessType.toLowerCase()}business.com`,
+      title: titles[businessType as keyof typeof titles] || 'Contact Us',
+      subtitle:
+        subtitles[businessType as keyof typeof subtitles] ||
+        "We'd love to hear from you",
+      address: this.getDefaultAddress(businessType),
+      phone: this.getDefaultPhone(),
+      email: this.getDefaultEmail(businessType),
       showMap: true,
-      backgroundColor: '#ffffff',
+      backgroundColor: '#f8f8f8',
       textColor: '#333333',
+      formTitle:
+        formTitles[businessType as keyof typeof formTitles] ||
+        'Send us a Message',
+      formButtonText:
+        buttonTexts[businessType as keyof typeof buttonTexts] || 'Send Message',
+      formSubject: `New message from your ${businessType} website`,
+      // Important note: formspreeId must be set by the user for email to work
+      formspreeId: 'your-formspree-id',
     };
   }
 
@@ -489,5 +597,107 @@ export class BusinessConfigService {
     }
 
     return updated;
+  }
+
+  /**
+   * Get default tagline for a business type
+   */
+  private getDefaultTagline(businessType: string): string {
+    switch (businessType) {
+      case 'restaurant':
+        return 'Exceptional cuisine and dining experience';
+      case 'salon':
+        return 'Where beauty meets expertise';
+      case 'architecture':
+        return 'Creating spaces that inspire';
+      case 'portfolio':
+        return 'Crafting visual stories';
+      default:
+        return 'Professional solutions tailored to your needs';
+    }
+  }
+
+  /**
+   * Get default address for a business type
+   */
+  private getDefaultAddress(businessType: string): string {
+    switch (businessType) {
+      case 'restaurant':
+        return '123 Culinary Ave, Gourmet City';
+      case 'salon':
+        return '456 Style Street, Beauty Town';
+      case 'architecture':
+        return '789 Design Blvd, Creative City';
+      case 'portfolio':
+        return 'Based in Creative District, Design City';
+      default:
+        return '123 Business Ave, City';
+    }
+  }
+
+  /**
+   * Get default phone number
+   */
+  private getDefaultPhone(): string {
+    return '(555) 123-4567';
+  }
+
+  /**
+   * Get default email for a business type
+   */
+  private getDefaultEmail(businessType: string): string {
+    switch (businessType) {
+      case 'restaurant':
+        return 'info@finedining.com';
+      case 'salon':
+        return 'hello@beautystudio.com';
+      case 'architecture':
+        return 'projects@designworks.com';
+      case 'portfolio':
+        return 'contact@creativeportfolio.com';
+      default:
+        return 'info@yourbusiness.com';
+    }
+  }
+
+  /**
+   * Get default social media URLs for a business type
+   */
+  private getDefaultSocialUrls(businessType: string): Record<string, string> {
+    const defaultUrls = {
+      facebook: 'https://facebook.com/',
+      instagram: 'https://instagram.com/',
+      tiktok: 'https://tiktok.com/',
+    };
+
+    // Customize URLs based on business type
+    switch (businessType) {
+      case 'restaurant':
+        return {
+          ...defaultUrls,
+          facebook: 'https://facebook.com/finedining',
+          instagram: 'https://instagram.com/finedining',
+        };
+      case 'salon':
+        return {
+          ...defaultUrls,
+          facebook: 'https://facebook.com/beautystudio',
+          instagram: 'https://instagram.com/beautystudio',
+        };
+      case 'architecture':
+        return {
+          ...defaultUrls,
+          facebook: 'https://facebook.com/designworks',
+          instagram: 'https://instagram.com/designworks',
+        };
+      case 'portfolio':
+        return {
+          ...defaultUrls,
+          facebook: 'https://facebook.com/creativeportfolio',
+          instagram: 'https://instagram.com/creativeportfolio',
+        };
+      default:
+        return defaultUrls;
+    }
   }
 }

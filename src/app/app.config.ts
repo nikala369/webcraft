@@ -1,4 +1,4 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import {
   provideRouter,
   withViewTransitions,
@@ -19,6 +19,6 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(),
     BrowserModule,
-    BrowserAnimationsModule,
+    importProvidersFrom(BrowserAnimationsModule),
   ],
 };
