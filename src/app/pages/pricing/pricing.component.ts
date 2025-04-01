@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import {
   DynamicPricingCardComponent,
   PricingFeature,
 } from '../../shared/components/dynamic-pricing-card/dynamic-pricing-card.component';
 import { CommonModule } from '@angular/common';
+import { BUSINESS_TYPES, BusinessType } from '../../core/models/business-types';
+import { BusinessTypeSelectorComponent } from '../preview/components/business-type-selector/business-type-selector.component';
 
 interface PricingPlan {
   type: 'standard' | 'premium';
@@ -20,11 +22,15 @@ interface PricingPlan {
 @Component({
   selector: 'app-pricing',
   standalone: true,
-  imports: [CommonModule, DynamicPricingCardComponent],
+  imports: [
+    CommonModule,
+    DynamicPricingCardComponent,
+    BusinessTypeSelectorComponent,
+  ],
   templateUrl: './pricing.component.html',
   styleUrl: './pricing.component.scss',
 })
-export class PricingComponent {
+export class PricingComponent implements OnInit {
   pricingPlans: PricingPlan[] = [
     {
       type: 'standard',
@@ -63,9 +69,76 @@ export class PricingComponent {
     },
   ];
 
-  constructor(private router: Router) {}
+  businessTypes = BUSINESS_TYPES;
+  selectedBusinessType: string | null = null;
+  showBusinessTypeSelector = false;
+
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  ngOnInit() {
+    // Check for business type in query params
+    this.route.queryParams.subscribe((params) => {
+      if (params['businessType']) {
+        this.selectedBusinessType = params['businessType'];
+        this.showBusinessTypeSelector = false;
+      } else {
+        // If no business type is selected, show the selector
+        this.showBusinessTypeSelector = true;
+      }
+    });
+  }
 
   navigateToPreview(planType: 'standard' | 'premium') {
-    this.router.navigate(['/preview'], { queryParams: { plan: planType } });
+    // If business type is not selected, show business type selector
+    if (!this.selectedBusinessType) {
+      this.router.navigate(['/business-type'], {
+        queryParams: {
+          plan: planType,
+        },
+      });
+      return;
+    }
+
+    // If business type is selected, go to preview
+    this.router.navigate(['/preview'], {
+      queryParams: {
+        plan: planType,
+        businessType: this.selectedBusinessType,
+      },
+    });
+  }
+
+  handleBusinessTypeSelection(type: string) {
+    this.selectedBusinessType = type;
+
+    // Update URL to include business type without full navigation
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { businessType: type },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  /**
+   * Get the display name of the selected business type
+   */
+  getSelectedBusinessTypeName(): string {
+    if (!this.selectedBusinessType) {
+      return 'Not Selected';
+    }
+
+    const selectedType = this.businessTypes.find(
+      (type) => type.id === this.selectedBusinessType
+    );
+
+    return selectedType ? selectedType.name : 'Unknown';
+  }
+
+  /**
+   * Toggle visibility of business type selector
+   */
+  toggleBusinessTypeSelector(show: boolean): void {
+    this.showBusinessTypeSelector = show;
   }
 }

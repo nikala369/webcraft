@@ -470,6 +470,21 @@ export class PreviewComponent implements OnInit, OnDestroy {
       const hasStarted =
         sessionStorage.getItem('hasStartedBuilding') === 'true';
 
+      // Check if business type is provided in URL
+      const urlBusinessType = this.route.snapshot.queryParams['businessType'];
+
+      if (urlBusinessType) {
+        console.log('Business type provided in URL:', urlBusinessType);
+        this.businessType.set(urlBusinessType);
+        this.showBusinessTypeSelector.set(false);
+
+        // If we have a business type, set step to 3 (Customize)
+        this.currentStep.set(3);
+
+        // Load themes for this business type
+        this.loadThemesForBusinessType(urlBusinessType);
+      }
+
       if (hasSavedConfig && hasStarted) {
         // User has previously saved changes - set appropriate flags
         console.log('Found saved customizations - showing edit/view options');
@@ -495,8 +510,8 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
         // Load their saved configuration
         this.loadSavedCustomizations();
-      } else {
-        // New visitor - reset flags and prepare to select business type
+      } else if (!urlBusinessType) {
+        // New visitor with no business type - reset flags and prepare to select business type
         console.log('No saved customizations - showing Business Type Selector');
         this.hasStartedBuilding.set(false);
         this.hasSavedChangesFlag.set(false);

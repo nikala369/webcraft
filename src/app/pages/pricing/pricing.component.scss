@@ -37,7 +37,7 @@
 
   &__info {
     text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 3rem;
   }
 
   &__title {
@@ -59,6 +59,99 @@
     justify-content: center;
     gap: 2.5rem;
     flex-wrap: wrap;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* Make cards take more width on large screens */
+  ::ng-deep .pricing-card {
+    width: 400px !important;
+    max-width: calc(50% - 1.25rem) !important;
+
+    @media (max-width: 900px) {
+      width: 100% !important;
+      max-width: 450px !important;
+    }
+  }
+}
+
+/* Business Type Section Styling */
+.business-type-section {
+  margin-bottom: 4rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+
+  .business-type-heading {
+    font-size: 1.75rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .business-type-description {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+}
+
+/* Selected Business Type Banner */
+.selected-business-type {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  margin-bottom: 3rem;
+
+  .selected-business-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .selected-business-label {
+      font-size: 1rem;
+      opacity: 0.85;
+    }
+
+    .selected-business-value {
+      font-size: 1.1rem;
+      color: #fff;
+      position: relative;
+      padding-left: 12px;
+
+      &:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 1rem;
+        background-color: #4a8dff;
+        border-radius: 2px;
+      }
+    }
+  }
+
+  .change-business-type {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
   }
 }
 
@@ -79,6 +172,15 @@
 @media (max-width: 992px) {
   .pricing {
     padding: 5rem 2rem;
+
+    &__info {
+      margin-bottom: 2.5rem;
+    }
+  }
+
+  .business-type-section {
+    padding: 1.5rem;
+    margin-bottom: 3rem;
   }
 }
 
@@ -98,10 +200,40 @@
       gap: 2rem;
     }
   }
+
+  .business-type-section {
+    .business-type-heading {
+      font-size: 1.5rem;
+    }
+
+    .business-type-description {
+      font-size: 1rem;
+    }
+  }
+
+  .selected-business-type {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem;
+
+    .change-business-type {
+      align-self: flex-end;
+    }
+  }
 }
 
 @media (max-width: 480px) {
   .pricing {
     padding: 2rem 1rem;
+
+    &__info {
+      margin-bottom: 2rem;
+    }
+  }
+
+  .business-type-section {
+    padding: 1.25rem;
+    margin-bottom: 2.5rem;
   }
 }

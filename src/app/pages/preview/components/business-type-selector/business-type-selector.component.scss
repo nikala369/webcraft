@@ -4,9 +4,9 @@
 
 .business-type-selector {
   width: 100%;
-  max-width: 800px;
+  max-width: 1000px; /* Increase from 800px to 1000px for more spacious layout */
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem 2rem 2rem;
   color: #ffffff;
 
   &.compact-mode {
@@ -35,9 +35,14 @@
 
   .business-types-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(
+      4,
+      1fr
+    ); /* Always 4 cards in a row by default */
     gap: 1.5rem;
     margin-bottom: 2rem;
+    max-width: 100%;
+    align-items: stretch; /* Ensure all cards are stretched to the same height */
   }
 
   .business-type-card {
@@ -50,6 +55,10 @@
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
     &:hover {
       transform: translateY(-5px);
@@ -97,10 +106,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    padding: 10px;
 
     svg.type-icon {
-      width: 40px;
-      height: 40px;
+      width: 100%;
+      height: 100%;
       stroke: rgba(255, 255, 255, 0.8);
       stroke-width: 1.5;
       fill: none;
@@ -130,6 +144,8 @@
     line-height: 1.4;
     position: relative;
     z-index: 1;
+    flex-grow: 1;
+    margin-bottom: 0.5rem;
   }
 
   .selected-indicator {
@@ -365,6 +381,22 @@
 
     .business-type-description {
       font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 992px) {
+    .business-types-grid {
+      grid-template-columns: repeat(2, 1fr); /* 2 cards per row */
+      gap: 1rem;
+    }
+  }
+
+  @media (max-width: 580px) {
+    .business-types-grid {
+      grid-template-columns: 1fr; /* 1 card per row */
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
     }
   }
 }

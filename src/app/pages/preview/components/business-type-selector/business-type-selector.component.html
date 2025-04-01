@@ -1,9 +1,9 @@
 <div class="business-type-selector" [class.compact-mode]="compactMode">
   <!-- Regular mode (card selection) -->
   <ng-container *ngIf="!compactMode">
-    <h3 class="selector-title">Select Your Business Type</h3>
+    <h3 class="selector-title">Select Your Website Type</h3>
     <p class="selector-subtitle">
-      Choose the type that best matches your business to get optimized content
+      Choose the type that best represents your needs to get optimized content
       and sections.
     </p>
 
@@ -16,168 +16,172 @@
         [style.border-color]="isSelected(type.id) ? accentColor : ''"
       >
         <div class="business-type-icon">
-          <!-- Custom SVG icons for each business type -->
+          <!-- Restaurant icon -->
           <svg
             *ngIf="type.id === 'restaurant'"
             class="type-icon"
-            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            viewBox="0 0 40 40"
             fill="none"
           >
             <path
-              d="M8.1 13.34L4.4 9.63C3.8 9.03 3.8 8.05 4.4 7.46L7.7 4.16C8.3 3.56 9.28 3.56 9.88 4.16L13.58 7.86L8.1 13.34Z"
+              d="M12 10C12 7.79086 13.7909 6 16 6H24C26.2091 6 28 7.79086 28 10V24C28 26.2091 26.2091 28 24 28H16C13.7909 28 12 26.2091 12 24V10Z"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
             />
             <path
-              d="M14.26 13.59L21.18 6.67C22.14 5.71 22.14 4.15 21.18 3.19C20.22 2.23 18.66 2.23 17.7 3.19L10.78 10.11"
+              d="M10 34H30"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <path d="M16 28V34" stroke="currentColor" stroke-width="2" />
+            <path d="M24 28V34" stroke="currentColor" stroke-width="2" />
+            <path
+              d="M16 16H24"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
             />
             <path
-              d="M2 22L12.39 11.61"
+              d="M16 20H24"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
+              stroke-linecap="round"
             />
             <path
-              d="M18.51 15.83L19.92 17.24C20.32 17.64 20.32 18.31 19.92 18.71L18.71 19.92C18.31 20.32 17.64 20.32 17.24 19.92L15.83 18.51"
+              d="M20 12V24"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
+              stroke-linecap="round"
             />
-            <path
-              d="M5.47 8.14L7.29 10.05"
-              stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path d="M19.5 4.5L21 6" stroke="currentColor" stroke-width="1.5" />
           </svg>
 
+          <!-- Salon icon -->
           <svg
             *ngIf="type.id === 'salon'"
             class="type-icon"
-            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            viewBox="0 0 40 40"
             fill="none"
           >
             <path
-              d="M12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22Z"
+              d="M20 6V16"
               stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path
-              d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
-              stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path
-              d="M12 7L12 9"
-              stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
               stroke-linecap="round"
             />
             <path
-              d="M12 15L12 17"
+              d="M16 12L24 12"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
               stroke-linecap="round"
             />
             <path
-              d="M7 12L9 12"
+              d="M11 24C14.3137 24 17 21.3137 17 18C17 14.6863 14.3137 12 11 12C7.68629 12 5 14.6863 5 18C5 21.3137 7.68629 24 11 24Z"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
+            />
+            <path
+              d="M29 24C32.3137 24 35 21.3137 35 18C35 14.6863 32.3137 12 29 12C25.6863 12 23 14.6863 23 18C23 21.3137 25.6863 24 29 24Z"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path
+              d="M11 24V34"
+              stroke="currentColor"
+              stroke-width="2"
               stroke-linecap="round"
             />
             <path
-              d="M15 12L17 12"
+              d="M29 24V34"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <path
+              d="M11 29H29"
+              stroke="currentColor"
+              stroke-width="2"
               stroke-linecap="round"
             />
           </svg>
 
+          <!-- Architecture icon -->
           <svg
             *ngIf="type.id === 'architecture'"
             class="type-icon"
-            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            viewBox="0 0 40 40"
             fill="none"
           >
             <path
-              d="M2 22H22"
+              d="M4 34H36"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
               stroke-linecap="round"
             />
             <path
-              d="M3 22L3 11C3 9.89543 3.89543 9 5 9H8L11 4L14 9H19C20.1046 9 21 9.89543 21 11V22"
+              d="M20 5L32 15V34H8V15L20 5Z"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
             />
-            <path d="M9 22V16H15V22" stroke="currentColor" stroke-width="1.5" />
+            <path d="M16 34V24H24V34" stroke="currentColor" stroke-width="2" />
             <path
-              d="M8 12H16"
+              d="M12 20H28"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
               stroke-linecap="round"
             />
           </svg>
 
+          <!-- Portfolio icon -->
           <svg
             *ngIf="type.id === 'portfolio'"
             class="type-icon"
-            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            viewBox="0 0 40 40"
             fill="none"
           >
-            <path
-              d="M12 10L16 7L12 4L8 7L12 10Z"
+            <rect
+              x="8"
+              y="8"
+              width="24"
+              height="24"
+              rx="2"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
             />
-            <path
-              d="M16 12L20 9L16 6"
+            <rect
+              x="12"
+              y="12"
+              width="7"
+              height="7"
+              rx="1"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
             />
-            <path d="M8 12L4 9L8 6" stroke="currentColor" stroke-width="1.5" />
-            <path
-              d="M12 20L16 17L12 14L8 17L12 20Z"
+            <rect
+              x="12"
+              y="21"
+              width="7"
+              height="7"
+              rx="1"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
             />
-            <path d="M12 10L12 14" stroke="currentColor" stroke-width="1.5" />
-          </svg>
-
-          <svg
-            *ngIf="type.id === 'retail'"
-            class="type-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            <path
-              d="M2 8.50488H22"
+            <rect
+              x="21"
+              y="12"
+              width="7"
+              height="16"
+              rx="1"
               stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-            <path
-              d="M6 16.5049H8"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-            <path
-              d="M10.5 16.5049H18"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-            <path
-              d="M6 12.5049H18"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-            <path
-              d="M19 4.50488H5C3.89543 4.50488 3 5.40031 3 6.50488V17.5049C3 18.6095 3.89543 19.5049 5 19.5049H19C20.1046 19.5049 21 18.6095 21 17.5049V6.50488C21 5.40031 20.1046 4.50488 19 4.50488Z"
-              stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
             />
           </svg>
         </div>
@@ -232,92 +236,112 @@
     <div class="compact-selector">
       <div class="selected-type" (click)="toggleDropdown()">
         <div class="business-type-icon">
-          <!-- Custom SVG for selected business type -->
+          <!-- Restaurant icon -->
           <svg
             *ngIf="selectedBusinessType === 'restaurant'"
             class="type-icon"
-            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            viewBox="0 0 40 40"
             fill="none"
           >
             <path
-              d="M8.1 13.34L4.4 9.63C3.8 9.03 3.8 8.05 4.4 7.46L7.7 4.16C8.3 3.56 9.28 3.56 9.88 4.16L13.58 7.86L8.1 13.34Z"
+              d="M12 10C12 7.79086 13.7909 6 16 6H24C26.2091 6 28 7.79086 28 10V24C28 26.2091 26.2091 28 24 28H16C13.7909 28 12 26.2091 12 24V10Z"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
             />
             <path
-              d="M14.26 13.59L21.18 6.67C22.14 5.71 22.14 4.15 21.18 3.19C20.22 2.23 18.66 2.23 17.7 3.19L10.78 10.11"
+              d="M16 16H24"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <path
+              d="M16 20H24"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
             />
           </svg>
 
+          <!-- Salon icon -->
           <svg
             *ngIf="selectedBusinessType === 'salon'"
             class="type-icon"
-            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            viewBox="0 0 40 40"
             fill="none"
           >
             <path
-              d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
+              d="M20 6V16"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
+              stroke-linecap="round"
             />
             <path
-              d="M12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22Z"
+              d="M16 12L24 12"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
+              stroke-linecap="round"
             />
           </svg>
 
+          <!-- Architecture icon -->
           <svg
             *ngIf="selectedBusinessType === 'architecture'"
             class="type-icon"
-            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            viewBox="0 0 40 40"
             fill="none"
           >
             <path
-              d="M3 22L3 11C3 9.89543 3.89543 9 5 9H8L11 4L14 9H19C20.1046 9 21 9.89543 21 11V22"
+              d="M4 34H36"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
+              stroke-linecap="round"
             />
-            <path d="M9 22V16H15V22" stroke="currentColor" stroke-width="1.5" />
+            <path
+              d="M20 5L32 15V34H8V15L20 5Z"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <path d="M16 34V24H24V34" stroke="currentColor" stroke-width="2" />
+            <path
+              d="M12 20H28"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
           </svg>
 
+          <!-- Portfolio icon -->
           <svg
             *ngIf="selectedBusinessType === 'portfolio'"
             class="type-icon"
-            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            viewBox="0 0 40 40"
             fill="none"
           >
-            <path
-              d="M12 10L16 7L12 4L8 7L12 10Z"
+            <rect
+              x="8"
+              y="8"
+              width="24"
+              height="24"
+              rx="2"
               stroke="currentColor"
-              stroke-width="1.5"
+              stroke-width="2"
             />
-            <path
-              d="M12 20L16 17L12 14L8 17L12 20Z"
+            <rect
+              x="12"
+              y="12"
+              width="7"
+              height="7"
+              rx="1"
               stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path d="M12 10L12 14" stroke="currentColor" stroke-width="1.5" />
-          </svg>
-
-          <svg
-            *ngIf="selectedBusinessType === 'retail'"
-            class="type-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            <path
-              d="M19 4.50488H5C3.89543 4.50488 3 5.40031 3 6.50488V17.5049C3 18.6095 3.89543 19.5049 5 19.5049H19C20.1046 19.5049 21 18.6095 21 17.5049V6.50488C21 5.40031 20.1046 4.50488 19 4.50488Z"
-              stroke="currentColor"
-              stroke-width="1.5"
-            />
-            <path
-              d="M2 8.50488H22"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
+              stroke-width="2"
             />
           </svg>
 
@@ -377,96 +401,116 @@
           (click)="selectBusinessType(type.id)"
         >
           <div class="business-type-icon">
-            <!-- Custom SVG icons for each business type in dropdown -->
+            <!-- Restaurant icon -->
             <svg
               *ngIf="type.id === 'restaurant'"
               class="type-icon-small"
-              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              viewBox="0 0 40 40"
               fill="none"
             >
               <path
-                d="M8.1 13.34L4.4 9.63C3.8 9.03 3.8 8.05 4.4 7.46L7.7 4.16C8.3 3.56 9.28 3.56 9.88 4.16L13.58 7.86L8.1 13.34Z"
+                d="M12 10C12 7.79086 13.7909 6 16 6H24C26.2091 6 28 7.79086 28 10V24C28 26.2091 26.2091 28 24 28H16C13.7909 28 12 26.2091 12 24V10Z"
                 stroke="currentColor"
-                stroke-width="1.5"
+                stroke-width="2"
               />
               <path
-                d="M14.26 13.59L21.18 6.67C22.14 5.71 22.14 4.15 21.18 3.19C20.22 2.23 18.66 2.23 17.7 3.19L10.78 10.11"
+                d="M16 16H24"
                 stroke="currentColor"
-                stroke-width="1.5"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <path
+                d="M16 20H24"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
               />
             </svg>
 
+            <!-- Salon icon -->
             <svg
               *ngIf="type.id === 'salon'"
               class="type-icon-small"
-              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              viewBox="0 0 40 40"
               fill="none"
             >
               <path
-                d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"
+                d="M20 6V16"
                 stroke="currentColor"
-                stroke-width="1.5"
+                stroke-width="2"
+                stroke-linecap="round"
               />
               <path
-                d="M12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22Z"
+                d="M16 12L24 12"
                 stroke="currentColor"
-                stroke-width="1.5"
+                stroke-width="2"
+                stroke-linecap="round"
               />
             </svg>
 
+            <!-- Architecture icon -->
             <svg
               *ngIf="type.id === 'architecture'"
               class="type-icon-small"
-              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              viewBox="0 0 40 40"
               fill="none"
             >
               <path
-                d="M3 22L3 11C3 9.89543 3.89543 9 5 9H8L11 4L14 9H19C20.1046 9 21 9.89543 21 11V22"
+                d="M4 34H36"
                 stroke="currentColor"
-                stroke-width="1.5"
+                stroke-width="2"
+                stroke-linecap="round"
               />
               <path
-                d="M9 22V16H15V22"
+                d="M20 5L32 15V34H8V15L20 5Z"
                 stroke="currentColor"
-                stroke-width="1.5"
+                stroke-width="2"
+              />
+              <path
+                d="M16 34V24H24V34"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M12 20H28"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
               />
             </svg>
 
+            <!-- Portfolio icon -->
             <svg
               *ngIf="type.id === 'portfolio'"
               class="type-icon-small"
-              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              viewBox="0 0 40 40"
               fill="none"
             >
-              <path
-                d="M12 10L16 7L12 4L8 7L12 10Z"
+              <rect
+                x="8"
+                y="8"
+                width="24"
+                height="24"
+                rx="2"
                 stroke="currentColor"
-                stroke-width="1.5"
+                stroke-width="2"
               />
-              <path
-                d="M12 20L16 17L12 14L8 17L12 20Z"
+              <rect
+                x="12"
+                y="12"
+                width="7"
+                height="7"
+                rx="1"
                 stroke="currentColor"
-                stroke-width="1.5"
-              />
-              <path d="M12 10L12 14" stroke="currentColor" stroke-width="1.5" />
-            </svg>
-
-            <svg
-              *ngIf="type.id === 'retail'"
-              class="type-icon-small"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <path
-                d="M19 4.50488H5C3.89543 4.50488 3 5.40031 3 6.50488V17.5049C3 18.6095 3.89543 19.5049 5 19.5049H19C20.1046 19.5049 21 18.6095 21 17.5049V6.50488C21 5.40031 20.1046 4.50488 19 4.50488Z"
-                stroke="currentColor"
-                stroke-width="1.5"
-              />
-              <path
-                d="M2 8.50488H22"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
+                stroke-width="2"
               />
             </svg>
           </div>

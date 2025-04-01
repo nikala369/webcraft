@@ -9,6 +9,34 @@
       </p>
     </div>
 
+    <!-- Business Type Selection - visible when no business type is selected -->
+    <div class="business-type-section" *ngIf="showBusinessTypeSelector">
+      <app-business-type-selector
+        [currentPlan]="'standard'"
+        [selectedBusinessType]="selectedBusinessType"
+        (businessTypeSelected)="handleBusinessTypeSelection($event)"
+      ></app-business-type-selector>
+    </div>
+
+    <!-- Business Type Selected Banner - visible when business type is selected -->
+    <div
+      class="selected-business-type"
+      *ngIf="selectedBusinessType && !showBusinessTypeSelector"
+    >
+      <div class="selected-business-info">
+        <span class="selected-business-label">Selected Website Type:</span>
+        <strong class="selected-business-value">
+          {{ getSelectedBusinessTypeName() }}
+        </strong>
+      </div>
+      <button
+        class="change-business-type"
+        (click)="showBusinessTypeSelector = true"
+      >
+        Change
+      </button>
+    </div>
+
     <!-- Pricing Cards Section -->
     <div class="pricing__cards">
       <app-dynamic-pricing-card

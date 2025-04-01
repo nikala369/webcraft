@@ -1,0 +1,50 @@
+<section class="business-type-container">
+  <div class="business-type-content">
+    <h1 class="business-type-title">What type of website are you creating?</h1>
+    <p class="business-type-subtitle">
+      Select the category that best represents your needs to get tailored
+      templates and features.
+    </p>
+
+    <div class="business-type-grid">
+      <div
+        *ngFor="let type of businessTypes"
+        class="business-type-card"
+        [class.selected]="selectedType === type.id"
+        [ngStyle]="getCardStyle(type.id)"
+        (click)="selectBusinessType(type.id)"
+      >
+        <div class="business-type-icon">
+          <img
+            [src]="'assets/business-types/' + type.id + '.svg'"
+            [alt]="type.name + ' icon'"
+          />
+        </div>
+        <h3 class="business-type-card-title">{{ type.name }}</h3>
+        <p class="business-type-card-desc">{{ type.description }}</p>
+      </div>
+    </div>
+
+    <div class="business-type-actions">
+      <button
+        class="business-type-btn business-type-btn-continue"
+        [disabled]="!selectedType"
+        (click)="continueToPreview()"
+      >
+        Continue to Website Builder
+      </button>
+
+      <div class="business-type-plan-info">
+        <span
+          >Current plan: <strong>{{ currentPlan | titlecase }}</strong></span
+        >
+        <button
+          class="business-type-btn business-type-btn-plan"
+          (click)="continueToPlans()"
+        >
+          View Plans
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

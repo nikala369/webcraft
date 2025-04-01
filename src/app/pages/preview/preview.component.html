@@ -78,7 +78,10 @@
 
       <!-- Business Type Selector (Added to fullscreen mode) -->
       <app-business-type-selector
-        *ngIf="!this.isViewOnlyStateService.isOnlyViewMode()"
+        *ngIf="
+          !this.isViewOnlyStateService.isOnlyViewMode() &&
+          (businessType() === '' || currentStep() === 2)
+        "
         class="preview-header__center-left"
         [currentPlan]="currentPlan()"
         [selectedBusinessType]="businessType()"

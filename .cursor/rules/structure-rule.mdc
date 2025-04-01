@@ -1,0 +1,46 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project Context: Auto Website Builder
+
+**Project Goal:** Develop "Auto Website Builder," a platform enabling users (often non-technical) to create professional websites by selecting and configuring pre-designed, business-specific templates, NOT via drag-and-drop.
+
+**Core User Flow (Customer):**
+1.  **Landing/Home:** User initiates via "Get Started."
+2.  **Selection:** User selects `templateTypeId` (Business Type: Restaurant, Salon, Portfolio, etc.) and then `templatePlanId` (Standard/Basic, Premium).
+3.  **Builder Interface:**
+    *   Loads immediately (fullscreen).
+    *   Based on selections, shows a default *template* (e.g., 1 of 5) for the chosen `templateTypeId`.
+    *   Allows switching between available *templates* for that `templateTypeId`.
+    *   **Focus:** User *configures* content (text, images, video) and settings within the sections provided by the *chosen template*.
+4.  **Saving:**
+    *   First Save -> `POST` API call, prompt user to name the site.
+    *   Subsequent Saves -> `PUT` API call to update.
+5.  **Publishing:**
+    *   User clicks "Publish".
+    *   **Premium:** Requires Stripe checkout/subscription validation before proceeding.
+    *   **Standard/Basic:** TBD exact flow, but likely involves initiating a recurring hosting/support fee ($40/month - clarify details as needed).
+    *   Successful publish triggers backend build process.
+6.  **Build & Deploy:** Backend uses saved user configuration + base template structure -> Generates static site -> Deploys to Netlify.
+
+**Key Architectural Points:**
+*   **NO Drag-and-Drop:** Emphasize configuration of fixed structures.
+*   **Template-Centric:** Users work within pre-defined templates associated with a `templateTypeId`.
+*   **Technology Stack:**
+    *   **Frontend (Customer App):** Angular (v17+), TypeScript, SCSS, **Angular Signals** (preferred state management).
+    *   **Frontend (Admin App):** Separate Angular application (details less critical for now).
+    *   **Backend:** Java Spring Boot (RESTful APIs).
+    *   **Deployment:** Netlify.
+*   **Modular Sections:** Pre-built sections are rendered based on template; configuration options may vary by `templatePlanId`. Consider a shared component library approach.
+*   **Standard vs. Premium:** Affects available templates, configuration options within sections, and the publishing/payment process.
+
+**Current Development Focus (Instruct AI):**
+*   Implement and refine the **customer user flow** described above.
+*   Build out the **builder interface** focusing on template selection and **configuration panels** for sections.
+*   Integrate **saving** logic (POST/PUT) with the backend API stubs/definitions.
+*   Conceptualize/stub the **publishing** trigger mechanism and plan differences.
+*   **EXCLUDE FOR NOW:** Deep user authentication/authorization flows, full admin panel implementation, detailed Stripe API integration, complex backend build logic implementation. Focus on the customer frontend experience and core configuration flow first.
+
+**Operational Directive:** Apply your GLOBAL expertise specifically to the context, constraints, and goals of the "Auto Website Builder" as defined here. Prioritize solutions that fit this template-configuration model and leverage the specified tech stack, especially Angular Signals.

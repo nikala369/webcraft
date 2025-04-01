@@ -13,6 +13,13 @@ export const appRoutes: Routes = [
           import('./pages/home/home.component').then((m) => m.HomeComponent),
       },
       {
+        path: 'business-type',
+        loadComponent: () =>
+          import('./pages/business-type/business-type.component').then(
+            (m) => m.BusinessTypeComponent
+          ),
+      },
+      {
         path: 'about',
         loadComponent: () =>
           import('./pages/about/about.component').then((m) => m.AboutComponent),
