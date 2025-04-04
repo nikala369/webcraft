@@ -561,16 +561,14 @@ export class PreviewComponent implements OnInit, OnDestroy {
       // Advance to step 3 (Customize) after selecting business type
       this.currentStep.set(3);
 
-      // If in fullscreen mode, store the current state for editing
-      if (this.isFullscreen()) {
-        this.storeCurrentConfiguration();
-      } else {
+      // Store the current state for editing
+      this.storeCurrentConfiguration();
+
+      // Always show the business type selector in compact mode when in fullscreen
+      if (!this.isFullscreen()) {
         // If not in fullscreen, hide selector after choosing
         this.showBusinessTypeSelector.set(false);
       }
-    } else if (!this.isFullscreen()) {
-      // If same type selected and not in fullscreen, just hide selector
-      this.showBusinessTypeSelector.set(false);
     }
   }
 

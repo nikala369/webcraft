@@ -76,12 +76,9 @@
       >
       </app-theme-switcher>
 
-      <!-- Business Type Selector (Added to fullscreen mode) -->
+      <!-- Business Type Selector (Always shown in fullscreen edit mode) -->
       <app-business-type-selector
-        *ngIf="
-          !this.isViewOnlyStateService.isOnlyViewMode() &&
-          (businessType() === '' || currentStep() === 2)
-        "
+        *ngIf="!this.isViewOnlyStateService.isOnlyViewMode()"
         class="preview-header__center-left"
         [currentPlan]="currentPlan()"
         [selectedBusinessType]="businessType()"
