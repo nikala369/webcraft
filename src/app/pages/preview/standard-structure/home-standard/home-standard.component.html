@@ -34,6 +34,7 @@
       <ng-container *ngIf="section === 'menu' && shouldDisplaySection('menu')">
         <app-menu-section
           [customizations]="customizations"
+          [wholeData]="wholeData()"
           [isMobileLayout]="isMobileLayout"
           [planType]="planType"
           [businessType]="businessType"
@@ -47,7 +48,7 @@
         *ngIf="section === 'services' && shouldDisplaySection('services')"
       >
         <app-services-section
-          [customizations]="customizations"
+          [customizations]="wholeData()"
           [isMobileLayout]="isMobileLayout"
           [planType]="planType"
           [businessType]="businessType"
@@ -61,7 +62,7 @@
         *ngIf="section === 'projects' && shouldDisplaySection('projects')"
       >
         <app-projects-section
-          [customizations]="customizations"
+          [customizations]="wholeData()"
           [isMobileLayout]="isMobileLayout"
           [planType]="planType"
           [businessType]="businessType"

@@ -1,0 +1,95 @@
+@use "../../../../styles/variables" as v;
+@use "../../../../styles/mixins" as m;
+
+:host {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000; // Very high z-index to ensure it's always on top
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+  pointer-events: none; // Hide from interactions when invisible
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease, visibility 0s linear;
+    pointer-events: all; // Allow interactions when visible
+  }
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(3px);
+  z-index: -1;
+}
+
+.modal-content {
+  position: relative; // Positioned above the backdrop
+  background-color: v.$color-background-medium;
+  color: v.$color-text-primary;
+  border-radius: v.$border-radius-lg;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  overflow: hidden; // Let child component handle its scrolling
+  display: flex;
+  flex-direction: column;
+  width: 85vw;
+  height: 85vh;
+  max-width: 1200px;
+  max-height: 800px;
+  transform: scale(0.95);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+
+  :host.visible & {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  @include m.breakpoint(md) {
+    width: 95vw;
+    height: 95vh;
+  }
+}
+
+// Animation for the modal entry/exit
+:host.visible .modal-content {
+  animation: fadeInUp 0.3s ease forwards;
+}
+
+:host:not(.visible) .modal-content {
+  animation: fadeOutDown 0.3s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+}

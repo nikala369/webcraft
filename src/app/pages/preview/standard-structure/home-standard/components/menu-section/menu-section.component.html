@@ -28,7 +28,10 @@
             <!-- Menu Items -->
             <div
               class="menu-items"
-              [ngClass]="{ 'menu-items--premium': isPremium() }"
+              [ngClass]="{
+                'menu-items--premium': isPremium(),
+                'menu-items--standard': !isPremium()
+              }"
             >
               <div
                 *ngFor="let item of category.items"
@@ -82,7 +85,9 @@
       <!-- Premium call-to-action to add custom menu (standard plan users) -->
       <div class="menu-cta" *ngIf="planType === 'standard'">
         <p>
-          Want to showcase more of your menu with food images and special tags?
+          Want to showcase more of your menu with {{ maxCategories }}+
+          categories, {{ maxItemsPerCategory }}+ items, food images and special
+          tags?
         </p>
         <button class="upgrade-button">Upgrade to Premium</button>
       </div>

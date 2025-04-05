@@ -1,9 +1,19 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  inject,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
 import { ThemeColorsService } from '../../../../../../core/services/theme/theme-colors.service';
 
+// Interface definition should match the MenuCategory from menu-editor.component.ts
 interface MenuItem {
+  id?: string;
   name: string;
   description: string;
   price: string;
@@ -13,6 +23,7 @@ interface MenuItem {
 }
 
 interface MenuCategory {
+  id?: string;
   name: string;
   description?: string;
   items: MenuItem[];
@@ -25,8 +36,9 @@ interface MenuCategory {
   templateUrl: './menu-section.component.html',
   styleUrls: ['./menu-section.component.scss'],
 })
-export class MenuSectionComponent {
+export class MenuSectionComponent implements OnChanges {
   @Input() customizations: any;
+  @Input() wholeData: any;
   @Input() isMobileLayout: boolean = false;
   @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = 'restaurant';
@@ -38,13 +50,18 @@ export class MenuSectionComponent {
 
   private themeColorsService = inject(ThemeColorsService);
 
+  // Track when updates happen
+  private lastUpdated = Date.now();
+
   // Default menu items for a restaurant
   private defaultMenuCategories: MenuCategory[] = [
     {
+      id: 'cat1',
       name: 'Appetizers',
       description: 'Perfect starters to begin your culinary journey.',
       items: [
         {
+          id: 'item1',
           name: 'Bruschetta',
           description:
             'Toasted bread topped with ripe tomatoes, fresh basil, and extra virgin olive oil.',
@@ -52,6 +69,7 @@ export class MenuSectionComponent {
           tags: ['vegetarian'],
         },
         {
+          id: 'item2',
           name: 'Calamari Fritti',
           description:
             'Crispy fried calamari served with lemon and marinara sauce.',
@@ -60,10 +78,12 @@ export class MenuSectionComponent {
       ],
     },
     {
+      id: 'cat2',
       name: 'Main Courses',
       description: 'Signature dishes crafted with finest ingredients.',
       items: [
         {
+          id: 'item3',
           name: 'Grilled Salmon',
           description:
             'Fresh salmon fillet grilled to perfection, served with seasonal vegetables and lemon butter sauce.',
@@ -71,6 +91,7 @@ export class MenuSectionComponent {
           featured: true,
         },
         {
+          id: 'item4',
           name: 'Pasta Carbonara',
           description:
             'Classic Italian pasta with pancetta, egg, black pepper, and Parmesan cheese.',
@@ -80,11 +101,31 @@ export class MenuSectionComponent {
     },
   ];
 
+  // Plan-based limits (matching with menu-editor)
+  get maxCategories(): number {
+    return this.isPremium() ? 5 : 2; // Premium: 5, Standard: 2
+  }
+
+  get maxItemsPerCategory(): number {
+    return this.isPremium() ? 15 : 8; // Premium: 15, Standard: 8
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['customizations'] || changes['wholeData']) {
+      console.log(
+        'Menu section received updated customizations:',
+        this.customizations
+      );
+      console.log('Menu section received updated wholeData:', this.wholeData);
+      this.lastUpdated = Date.now();
+    }
+  }
+
   /**
    * Get menu section title or fallback
    */
   getMenuTitle(): string {
-    return this.customizations?.pages?.home?.menu?.title || 'Our Menu';
+    return this.getSectionData()?.title || 'Our Menu';
   }
 
   /**
@@ -92,19 +133,41 @@ export class MenuSectionComponent {
    */
   getMenuSubtitle(): string {
     return (
-      this.customizations?.pages?.home?.menu?.subtitle ||
+      this.getSectionData()?.subtitle ||
       'Enjoy our carefully crafted dishes made with the finest ingredients'
     );
+  }
+
+  /**
+   * Get the menu section data using the same pattern as other sections
+   */
+  private getSectionData(): any {
+    // Check for data in the correct hierarchy
+    const data =
+      this.wholeData?.pages?.home?.menu ||
+      this.customizations?.pages?.home?.menu ||
+      this.customizations;
+
+    console.log('getSectionData returning:', data);
+    return data;
   }
 
   /**
    * Get menu categories or use defaults
    */
   getMenuCategories(): MenuCategory[] {
-    return (
-      this.customizations?.pages?.home?.menu?.categories ||
-      this.defaultMenuCategories
-    );
+    const categories = this.getSectionData()?.categories;
+
+    // Make sure we log what we're working with
+    if (categories && categories.length > 0) {
+      console.log(
+        `Menu section returning ${categories.length} custom categories (updated: ${this.lastUpdated})`
+      );
+      return categories;
+    } else {
+      console.log('Menu section using default categories');
+      return this.defaultMenuCategories;
+    }
   }
 
   /**
@@ -134,6 +197,7 @@ export class MenuSectionComponent {
    * Handle section selection
    */
   handleSectionSelection() {
+    console.log('Menu section selected, emitting path: pages.home.menu');
     this.sectionSelected.emit({
       key: 'menu',
       name: 'Menu Section',

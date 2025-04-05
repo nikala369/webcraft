@@ -7,11 +7,66 @@ $accent-color: #00b894;
 $text-color: #c9c9c9;
 $bg-header: #131212;
 
+$color-background-light: #1c1f2e;
+$color-background-medium: #1c1f2e;
+$color-background-dark: #1c1f2e;
+
+$color-text-primary: #ffffff;
+$color-text-secondary: #c9c9c9;
+
+$color-primary: #0984e3;
+$color-primary-dark: darken(#0984e3, 10%);
+
+$color-border: #2c2f3e;
+$color-border-light: #2c2f3e;
+$color-border-medium: #2c2f3e;
+$color-border-dark: #2c2f3e;
+$color-border-subtle: rgba(44, 47, 62, 0.5);
+
+$color-background-hover: rgba(255, 255, 255, 0.05);
+$color-border-hover: rgba(255, 255, 255, 0.3);
+
+$color-danger: #e74c3c;
+$color-warning: #f39c12;
+$color-success: #2ecc71;
+
+// Z-index values
+$z-index-modal: 1000;
+
+// Border radius
+$border-radius-sm: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 8px;
+
+$color-button-primary: #0984e3;
+$color-button-primary-hover: #0984e3;
+$color-button-primary-active: #0984e3;
+
+$color-button-secondary: #0984e3;
+$color-button-secondary-hover: #0984e3;
+$color-button-secondary-active: #0984e3;
+
+$color-button-accent: #0984e3;
+$color-button-accent-hover: #0984e3;
+$color-button-accent-active: #0984e3;
+
+$color-button-danger: #0984e3;
+$color-button-danger-hover: #0984e3;
+$color-button-danger-active: #0984e3;
+
+$color-button-success: #0984e3;
+$color-button-success-hover: #0984e3;
+$color-button-success-active: #0984e3;
+
+$color-button-warning: #0984e3;
+$color-button-warning-hover: #0984e3;
+$color-button-warning-active: #0984e3;
+
 // Additional derived variable if needed
 $secondary-dark: darken($secondary, 10%);
 
 // TYPOGRAPHY
-$base-font-family: 'Inter', system-ui, sans-serif;
+$base-font-family: "Inter", system-ui, sans-serif;
 $base-font-size: 16px;
 $line-height: 1.6;
 

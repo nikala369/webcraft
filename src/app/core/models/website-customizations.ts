@@ -64,10 +64,10 @@ export interface MenuData {
   title?: string;
   subtitle?: string;
   categories?: Array<{
-    id: number;
+    id: string;
     name: string;
     items: Array<{
-      id: number;
+      id: string;
       name: string;
       description: string;
       price: string;

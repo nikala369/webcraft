@@ -18,6 +18,8 @@ import {
 } from './customizing-form-config';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../core/services/toast/toast.service';
+import { ModalService } from '../../../../core/services/modal/modal.service';
+import { MenuEditorComponent } from '../menu-editor/menu-editor.component';
 
 @Component({
   selector: 'app-component-customizer',
@@ -37,6 +39,7 @@ export class ComponentCustomizerComponent implements OnInit {
 
   // Inject the toast service
   private toastService = inject(ToastService);
+  private modalService = inject(ModalService);
 
   // Data structure for storing video placeholder metadata
   videoPlaceholders: Record<string, { fileName: string; timestamp: string }> =
@@ -716,8 +719,8 @@ export class ComponentCustomizerComponent implements OnInit {
     }
   }
 
-  // Actions
-  applyChanges(): void {
+  // Actions for menu editors
+  applyChanges(closeSidebar: boolean = true): void {
     const result = { ...this.localData() };
 
     // Remove the ID field we added for internal tracking
@@ -754,13 +757,18 @@ export class ComponentCustomizerComponent implements OnInit {
       };
     });
 
-    // Start closing animation
-    this.startClosingAnimation();
-
     console.log('Applying changes with result:', result);
 
     // Emit update event with the result
     this.update.emit(result);
+
+    // Only trigger closing animation if closeSidebar is true
+    if (closeSidebar) {
+      console.log('Closing sidebar after applying changes');
+      this.startClosingAnimation();
+    } else {
+      console.log('Keeping sidebar open after applying changes');
+    }
   }
 
   cancel(): void {
@@ -855,5 +863,126 @@ export class ComponentCustomizerComponent implements OnInit {
    */
   trackByIndex(index: number): number {
     return index;
+  }
+
+  /**
+   * Get a summary string for specialized lists (e.g., "2 Categories, 15 Items")
+   */
+  getSpecializedListSummary(fieldKey: string): string {
+    const data = this.localData()[fieldKey];
+    if (!Array.isArray(data)) {
+      return '0 Items';
+    }
+
+    // Specific logic for menu categories
+    if (fieldKey === 'categories') {
+      const categoryCount = data.length;
+      const itemCount = data.reduce(
+        (sum, category) => sum + (category.items?.length || 0),
+        0
+      );
+      const catLabel = categoryCount === 1 ? 'Category' : 'Categories';
+      const itemLabel = itemCount === 1 ? 'Item' : 'Items';
+      return `${categoryCount} ${catLabel}, ${itemCount} ${itemLabel}`;
+    }
+
+    // Generic summary for other lists (like services, projects)
+    const count = data.length;
+    const itemLabel = count === 1 ? 'Item' : 'Items';
+    return `${count} ${itemLabel}`;
+  }
+
+  /**
+   * Get the label for the specialized editor button based on the field key.
+   */
+  getSpecializedEditorLabel(fieldKey: string): string {
+    switch (fieldKey) {
+      case 'categories':
+        return 'Edit Menu Items';
+      case 'services':
+        return 'Edit Services';
+      case 'projects':
+        return 'Edit Projects';
+      default:
+        return 'Edit Items';
+    }
+  }
+
+  /**
+   * Updates a specific field in the local data
+   */
+  private updateLocalData(fieldKey: string, value: any): void {
+    console.log(`Updating local data for ${fieldKey}:`, value);
+
+    // Update the signal with the new data
+    this.localData.update((data) => ({
+      ...data,
+      [fieldKey]: value,
+    }));
+
+    // Show success message
+    this.toastService.success('Changes saved successfully');
+
+    // Apply changes to parent component without closing sidebar
+    this.applyChanges(false);
+  }
+
+  /**
+   * Opens the modal for the specialized editor (Menu, Services, Projects).
+   */
+  openSpecializedEditor(fieldKey: string): void {
+    console.log(`Opening specialized editor for ${fieldKey}`);
+
+    try {
+      // If there's already a modal open, close it first
+      if (this.modalService.isModalOpen()) {
+        console.warn(
+          'A modal is already open. Closing it before opening a new one.'
+        );
+        this.modalService.forceClose();
+      }
+
+      // Get the current data for this field
+      const currentData = this.localData()[fieldKey] || [];
+      console.log(`Current data for ${fieldKey}:`, currentData);
+
+      // Handle different specialized editors
+      switch (fieldKey) {
+        case 'categories': // Menu items editor
+          import('../menu-editor/menu-editor.component').then((m) => {
+            // Configure the modal with properly structured data
+            const modalConfig = {
+              width: '85vw',
+              height: '85vh',
+              data: {
+                initialCategories: Array.isArray(currentData)
+                  ? currentData
+                  : [],
+                planType: this.planType || 'standard',
+                onSave: (updatedCategories: any[]) => {
+                  console.log('Menu categories saved:', updatedCategories);
+                  // Update the local data
+                  this.updateLocalData(fieldKey, updatedCategories);
+                },
+              },
+            };
+
+            // Open the modal with the MenuEditorComponent
+            console.log(
+              'Opening MenuEditorComponent modal with config:',
+              modalConfig
+            );
+            this.modalService.open(m.MenuEditorComponent, modalConfig);
+          });
+          break;
+
+        // Other specialized editors can be added here
+        default:
+          console.error(`Unknown specialized editor for field: ${fieldKey}`);
+      }
+    } catch (error) {
+      console.error(`Error opening specialized editor for ${fieldKey}:`, error);
+      this.toastService.error('Failed to open editor. Please try again.');
+    }
   }
 }

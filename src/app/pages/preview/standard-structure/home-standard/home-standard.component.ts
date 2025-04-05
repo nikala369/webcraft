@@ -173,6 +173,9 @@ export class HomeStandardComponent implements OnInit {
   shouldDisplaySection(sectionKey: string): boolean {
     // First check if the section is in the available sections for this business type
     if (!this.isSectionAvailable(sectionKey)) {
+      console.log(
+        `Section ${sectionKey} is not available for business type ${this.businessType}`
+      );
       return false;
     }
 
@@ -194,6 +197,21 @@ export class HomeStandardComponent implements OnInit {
       const validBusinessTypes = Object.entries(businessSpecificSections)
         .filter(([_, sections]) => sections.includes(sectionKey))
         .map(([type, _]) => type);
+
+      // Special debug logging for menu section
+      if (sectionKey === 'menu') {
+        console.log(
+          `Menu section check: current business type: ${this.businessType}`
+        );
+        console.log(
+          `Valid business types for menu: ${validBusinessTypes.join(', ')}`
+        );
+        console.log(
+          `Is valid business type? ${validBusinessTypes.includes(
+            this.businessType
+          )}`
+        );
+      }
 
       // Check if current business type is valid for this section
       return validBusinessTypes.includes(this.businessType);

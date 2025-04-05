@@ -222,6 +222,58 @@ export const aboutSectionPremiumConfig: FieldConfig[] = [
   },
 ];
 
+/**
+ * Configuration for Menu section (Restaurant)
+ */
+export const menuSectionConfig: FieldConfig[] = [
+  // Content Settings
+  {
+    key: 'title',
+    label: 'Section Title',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'Our Menu',
+    description: 'Main title for the menu section',
+  },
+  {
+    key: 'subtitle',
+    label: 'Section Subtitle',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'Freshly Prepared Daily',
+    description: 'Subtitle or tagline for the menu section',
+  },
+  // Menu Items (using specialized editor)
+  {
+    key: 'categories',
+    label: 'Menu Categories & Items',
+    type: 'specializedList', // Use a custom type to trigger the specialized editor
+    category: 'content',
+    defaultValue: [
+      { id: 'cat1', name: 'Appetizers', items: [] },
+      { id: 'cat2', name: 'Main Courses', items: [] },
+    ], // Default with 2 categories for standard plan
+    description: 'Manage menu categories and the items within them.',
+  },
+  // Styling Settings
+  {
+    key: 'backgroundColor',
+    label: 'Background Color',
+    type: 'color',
+    category: 'styling',
+    defaultValue: '#ffffff',
+    description: 'Background color of the menu section',
+  },
+  {
+    key: 'textColor',
+    label: 'Text Color',
+    type: 'color',
+    category: 'styling',
+    defaultValue: '#333333',
+    description: 'Main text color for the menu section',
+  },
+];
+
 export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
   header: [
     // {
@@ -528,6 +580,7 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
   // About section configuration for standard structure
   'pages.home.about': aboutSectionConfig,
   'pages.home.contact': contactSectionConfig,
+  'pages.home.menu': menuSectionConfig,
 };
 
 /**
@@ -536,7 +589,14 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
 export interface FieldConfig {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'select' | 'color' | 'file' | 'list';
+  type:
+    | 'text'
+    | 'textarea'
+    | 'select'
+    | 'color'
+    | 'file'
+    | 'list'
+    | 'specializedList';
   category: 'general' | 'styling' | 'content' | 'advanced';
   defaultValue?: any;
   options?: Array<{ value: any; label: string }>;

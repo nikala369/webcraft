@@ -83,7 +83,7 @@
                 [ngModel]="localData()[field.key]"
                 (ngModelChange)="updateTextField(field.key, $event)"
                 class="text-input"
-                placeholder="{{ field.label }}"
+                placeholder="{{ field.placeholder || field.label }}"
                 [name]="field.key"
               />
 
@@ -94,7 +94,7 @@
                 [ngModel]="localData()[field.key]"
                 (ngModelChange)="updateTextField(field.key, $event)"
                 class="textarea-input"
-                placeholder="{{ field.label }}"
+                placeholder="{{ field.placeholder || field.label }}"
                 [name]="field.key"
                 rows="5"
               ></textarea>
@@ -122,7 +122,7 @@
                 </div>
               </div>
 
-              <!-- Add handling for boolean fields in the ngSwitch -->
+              <!-- Boolean Field -->
               <div *ngSwitchCase="'boolean'" class="boolean-field">
                 <label class="checkbox-label">
                   <input
@@ -182,10 +182,9 @@
                 </div>
               </ng-container>
 
-              <!-- Standard select for other fields -->
-              <ng-container *ngIf="field.key !== 'backgroundType'">
+              <!-- Select Field (Handles backgroundType and others) -->
+              <ng-container *ngSwitchCase="'select'">
                 <select
-                  *ngSwitchCase="'select'"
                   [id]="field.key"
                   [ngModel]="localData()[field.key]"
                   (ngModelChange)="updateSelectField(field.key, $event)"
@@ -353,7 +352,7 @@
                 </ng-container>
               </div>
 
-              <!-- List Field -->
+              <!-- Standard List Field -->
               <div *ngSwitchCase="'list'" class="list-field">
                 <div
                   *ngFor="
@@ -384,6 +383,60 @@
                   (click)="addListItem(field.key)"
                 >
                   + Add Item
+                </button>
+              </div>
+
+              <!-- Specialized List Field (e.g., Menu Items, Services, Projects) -->
+              <div
+                *ngSwitchCase="'specializedList'"
+                class="specialized-list-field"
+              >
+                <div class="specialized-editor-summary">
+                  <p>{{ getSpecializedListSummary(field.key) }}</p>
+                  <p class="specialized-editor-hint">{{ field.description }}</p>
+                </div>
+                <button
+                  type="button"
+                  class="specialized-editor-btn"
+                  (click)="openSpecializedEditor(field.key)"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M11 4H4V11H11V4Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M20 4H13V11H20V4Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M11 13H4V20H11V13Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M20 13H13V20H20V13Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  {{ getSpecializedEditorLabel(field.key) }}
                 </button>
               </div>
             </ng-container>

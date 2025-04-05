@@ -952,3 +952,61 @@ $premium-color: #9e6aff;
     }
   }
 }
+
+// Add proper styling for specialized editors like menu editor
+.specialized-list-field {
+  margin-top: 10px;
+
+  .specialized-editor-summary {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+
+    p {
+      margin: 0;
+      color: $light-text;
+      font-size: 0.9rem;
+
+      &.specialized-editor-hint {
+        margin-top: 8px;
+        font-size: 0.8rem;
+        color: $muted-text;
+        font-style: italic;
+      }
+    }
+  }
+
+  .specialized-editor-btn {
+    width: 100%;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background-color: rgba($primary-color, 0.15);
+    color: $primary-color;
+    border: 1px solid $primary-color;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      stroke: $primary-color;
+    }
+
+    &:hover {
+      background-color: rgba($primary-color, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba($primary-color, 0.2);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}

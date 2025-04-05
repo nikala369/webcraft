@@ -1,0 +1,236 @@
+<div class="menu-editor-modal-content">
+  <div class="menu-editor-header">
+    <h2>Edit Menu Items</h2>
+    <p class="plan-limit" *ngIf="planType === 'standard'">
+      Standard Plan Limit: Up to
+      <strong>{{ maxCategories() }}</strong> categories &
+      <strong>{{ maxItemsPerCategory() }}</strong> items per category.
+    </p>
+    <!-- Premium Plan Badge -->
+    <p class="premium-badge" *ngIf="isPremium()">
+      <span class="premium-icon">★</span>
+      Premium Plan: Up to {{ maxCategories() }} categories,
+      {{ maxItemsPerCategory() }} items per category
+    </p>
+    <button
+      class="close-btn"
+      (click)="onCancelClick()"
+      aria-label="Close Menu Editor"
+    >
+      &times;
+    </button>
+  </div>
+
+  <div class="menu-editor-body">
+    <!-- Categories List (Left Panel) -->
+    <div
+      class="categories-panel"
+      cdkDropList
+      [cdkDropListDisabled]="!isPremium()"
+      (cdkDropListDropped)="dropCategory($event)"
+    >
+      <div class="panel-header">
+        <h3>Categories ({{ categories().length }}/{{ maxCategories() }})</h3>
+        <button
+          *ngIf="canAddCategory()"
+          (click)="addCategory()"
+          class="add-btn add-category-btn"
+          aria-label="Add new category"
+          title="Add Category"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <span *ngIf="!canAddCategory()" class="limit-reached-text"
+          >(Limit Reached)</span
+        >
+      </div>
+      <div class="categories-list">
+        <div
+          *ngFor="let category of categories(); let i = index"
+          class="category-item"
+          [class.active]="selectedCategoryIndex() === i"
+          [class.premium]="isPremium()"
+          cdkDrag
+          [cdkDragDisabled]="!isPremium()"
+          (click)="selectCategory(i)"
+        >
+          <span class="category-name">{{
+            category.name || "Unnamed Category"
+          }}</span>
+          <div class="category-actions">
+            <!-- Drag Handle (Only shown for Premium) -->
+            <button
+              *ngIf="isPremium()"
+              class="drag-handle"
+              cdkDragHandle
+              title="Drag to reorder category"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M10 18L10 6M14 18L14 6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+            <button
+              *ngIf="canRemoveCategory()"
+              class="remove-btn remove-category-btn"
+              (click)="removeCategory(i); $event.stopPropagation()"
+              aria-label="Remove category"
+              title="Remove Category"
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+        <div *ngIf="categories().length === 0" class="empty-state-text">
+          No categories yet.
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Editor (Right Panel) -->
+    <div class="items-panel">
+      <ng-container
+        *ngIf="selectedCategory() as category; else noCategorySelected"
+      >
+        <div class="panel-header item-panel-header">
+          <input
+            type="text"
+            [(ngModel)]="category.name"
+            placeholder="Enter Category Name"
+            class="category-name-input"
+            aria-label="Category Name"
+          />
+          <div class="item-actions">
+            <button
+              *ngIf="canAddItem()"
+              (click)="addItem()"
+              class="add-btn add-item-btn"
+              aria-label="Add new item to this category"
+              title="Add Item"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Add Item</span>
+            </button>
+            <span *ngIf="canAddItem()" class="item-count">
+              {{ category.items?.length || 0 }}/{{ maxItemsPerCategory() }}
+            </span>
+            <span *ngIf="!canAddItem()" class="limit-reached-text"
+              >(Limit Reached)</span
+            >
+          </div>
+        </div>
+
+        <div
+          class="items-list"
+          cdkDropList
+          [cdkDropListDisabled]="!isPremium()"
+          (cdkDropListDropped)="dropItem($event)"
+        >
+          <div
+            *ngFor="let item of category.items; let i = index"
+            class="menu-item-card"
+            [class.premium]="isPremium()"
+            cdkDrag
+            [cdkDragDisabled]="!isPremium()"
+          >
+            <!-- Drag Handle (Only shown for Premium) -->
+            <button
+              *ngIf="isPremium()"
+              class="drag-handle item-drag-handle"
+              cdkDragHandle
+              title="Drag to reorder item"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M10 18L10 6M14 18L14 6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+
+            <div class="item-details">
+              <div class="item-row">
+                <input
+                  type="text"
+                  [(ngModel)]="item.name"
+                  placeholder="Item Name"
+                  class="item-input item-name-input"
+                  aria-label="Item Name"
+                />
+                <input
+                  type="text"
+                  [(ngModel)]="item.price"
+                  placeholder="Price (e.g., 9.99)"
+                  class="item-input item-price-input"
+                  aria-label="Item Price"
+                />
+              </div>
+              <textarea
+                [(ngModel)]="item.description"
+                placeholder="Item Description (optional)"
+                class="item-input item-description-input"
+                rows="2"
+                aria-label="Item Description"
+              ></textarea>
+            </div>
+            <button
+              class="remove-btn remove-item-btn"
+              (click)="removeItem(i)"
+              aria-label="Remove item"
+              title="Remove Item"
+            >
+              &times;
+            </button>
+          </div>
+          <div *ngIf="category.items.length === 0" class="empty-state-text">
+            No items in this category yet.
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #noCategorySelected>
+        <div class="empty-state-panel">
+          <p>
+            Select a category on the left, or add a new one to start adding menu
+            items.
+          </p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <div class="menu-editor-footer">
+    <button (click)="onCancelClick()" class="btn btn-secondary">Cancel</button>
+    <button (click)="onSaveClick()" class="btn btn-primary">Save Menu</button>
+  </div>
+</div>

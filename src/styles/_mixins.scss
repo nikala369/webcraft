@@ -1,4 +1,4 @@
-@import './variables';
+@import "./variables";
 
 @mixin flex-center($direction: row) {
   display: flex;
@@ -17,6 +17,64 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1.5rem;
+}
+
+// Button reset removes all default browser styling
+@mixin button-reset {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+  text-align: center;
+}
+
+// Button variant applies main styling
+@mixin button-variant($bg-color, $text-color, $hover-color) {
+  background-color: $bg-color;
+  color: $text-color;
+  border: none;
+  &:hover {
+    background-color: $hover-color;
+  }
+  &:disabled {
+    background-color: rgba($bg-color, 0.5);
+    cursor: not-allowed;
+  }
+}
+
+// Input base styling
+@mixin input-base {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: $primary;
+  background-color: $color-background-dark;
+  background-clip: padding-box;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-sm;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+  &:focus {
+    border-color: $color-primary;
+    outline: 0;
+    box-shadow: 0 0 0 0.1rem rgba($color-primary, 0.25);
+  }
+
+  &::placeholder {
+    color: rgba($color-text-secondary, 0.7);
+    opacity: 1;
+  }
+
+  &:disabled {
+    background-color: rgba($color-background-dark, 0.5);
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
 }
 
 @mixin dropdown-styles($width: 180px, $z-index: 2000) {
@@ -129,15 +187,23 @@
   }
 }
 
-
-// RESPONSIVE MIXIN
-@mixin breakpoint($size) {
-  @media (max-width: map-get((
-    sm: 640px,
-    md: 768px,
-    lg: 1024px,
-    xl: 1280px
-  ), $size)) {
-    @content;
+// Breakpoints
+@mixin breakpoint($breakpoint) {
+  @if $breakpoint == sm {
+    @media (max-width: 576px) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (max-width: 768px) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (max-width: 992px) {
+      @content;
+    }
+  } @else if $breakpoint == xl {
+    @media (max-width: 1200px) {
+      @content;
+    }
   }
 }

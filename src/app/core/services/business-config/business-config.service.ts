@@ -362,11 +362,11 @@ export class BusinessConfigService {
       subtitle: 'Fresh Ingredients, Exceptional Taste',
       categories: [
         {
-          id: 1,
+          id: 'cat1',
           name: 'Starters',
           items: [
             {
-              id: 1,
+              id: 'item1',
               name: 'Bruschetta',
               description:
                 'Toasted bread with fresh tomatoes, garlic, and basil.',
@@ -374,7 +374,7 @@ export class BusinessConfigService {
               featured: true,
             },
             {
-              id: 2,
+              id: 'item2',
               name: 'Soup of the Day',
               description: 'Ask your server about our daily special.',
               price: '$7',
@@ -382,18 +382,18 @@ export class BusinessConfigService {
           ],
         },
         {
-          id: 2,
+          id: 'cat2',
           name: 'Main Courses',
           items: [
             {
-              id: 3,
+              id: 'item3',
               name: 'Grilled Salmon',
               description: 'Fresh salmon with seasonal vegetables.',
               price: '$22',
               featured: true,
             },
             {
-              id: 4,
+              id: 'item4',
               name: 'Pasta Primavera',
               description:
                 'Fresh pasta with seasonal vegetables in a light cream sauce.',
@@ -402,7 +402,7 @@ export class BusinessConfigService {
           ],
         },
       ],
-      backgroundColor: '#ffffff',
+      backgroundColor: '#fdfbf9',
       textColor: '#333333',
     };
   }
