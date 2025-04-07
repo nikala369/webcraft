@@ -6,7 +6,11 @@
   [sectionPath]="'pages.home.services'"
   (sectionSelected)="handleSectionSelection()"
 >
-  <section id="services" class="services-section">
+  <section
+    id="services"
+    class="services-section"
+    *ngIf="supportsBusinessType()"
+  >
     <div class="section-container">
       <div class="section-header">
         <h2 class="section-title">{{ getSectionTitle() }}</h2>
@@ -19,14 +23,18 @@
       <!-- Services Grid -->
       <div
         class="services-grid"
-        [ngClass]="{ 'services-grid--mobile': isMobileLayout }"
+        [ngClass]="{
+          'services-grid--mobile': isMobileLayout,
+          'premium-grid': isPremium()
+        }"
       >
         <div
           *ngFor="let service of getServices(); let i = index"
           class="service-card"
           [ngClass]="{
-            'service-card--premium': planType === 'premium',
-            'service-card--with-image': hasImage(service)
+            'service-card--premium': isPremium(),
+            'service-card--with-image': hasImage(service),
+            'service-card--featured': isFeatured(service)
           }"
           [ngStyle]="getAnimationDelay(i)"
         >
@@ -35,14 +43,10 @@
             <img [src]="service.image" [alt]="service.title" />
           </div>
 
-          <!-- Service Content -->
           <div class="service-content">
             <!-- Service Icon -->
-            <div class="service-icon" *ngIf="hasIcon(service) || true">
-              <img
-                [src]="getServiceIcon(service, i)"
-                [alt]="service.title + ' icon'"
-              />
+            <div class="service-icon" *ngIf="service.icon">
+              <img [src]="service.icon" [alt]="service.title + ' icon'" />
             </div>
 
             <!-- Service Title -->
@@ -51,42 +55,35 @@
             <!-- Service Description -->
             <p class="service-description">{{ service.description }}</p>
 
-            <!-- Service Details (Price & Duration) - For salon business type -->
+            <!-- Service Details (Price & Duration) -->
             <div
               class="service-details"
-              *ngIf="hasPrice(service) || hasDuration(service)"
+              *ngIf="service.price || service.duration"
             >
-              <div class="service-price" *ngIf="hasPrice(service)">
+              <div class="service-price" *ngIf="service.price">
                 <span class="price-label">Price:</span>
                 <span class="price-value">{{ service.price }}</span>
               </div>
 
-              <div class="service-duration" *ngIf="hasDuration(service)">
+              <div
+                class="service-duration"
+                *ngIf="service.duration && isPremium()"
+              >
                 <span class="duration-label">Duration:</span>
                 <span class="duration-value">{{ service.duration }}</span>
               </div>
             </div>
 
-            <!-- Book Now Button (Premium Only) -->
-            <button
-              class="book-button"
-              *ngIf="planType === 'premium' && businessType === 'salon'"
+            <!-- Booking Button (Premium Only for Salon) -->
+            <a
+              *ngIf="
+                isPremium() && businessType === 'salon' && service.bookingUrl
+              "
+              [href]="service.bookingUrl"
+              class="book-now-btn"
+              target="_blank"
             >
               Book Now
-            </button>
-
-            <!-- Learn More Link (For architecture & portfolio) -->
-            <a
-              href="#"
-              class="learn-more"
-              *ngIf="
-                planType === 'premium' &&
-                (businessType === 'architecture' ||
-                  businessType === 'portfolio')
-              "
-            >
-              Learn More
-              <span class="arrow-icon">→</span>
             </a>
           </div>
         </div>

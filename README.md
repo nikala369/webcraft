@@ -1,6 +1,66 @@
 # Auto Website Builder
 
-A modern, customizable website builder that allows users to create professional websites without coding. Built with Angular 17+, TypeScript, and a modular architecture.
+An Angular-based visual website builder that allows users to create and customize professional websites without coding skills.
+
+## Latest Updates & Implementation Status
+
+### Menu & Services Sections: Complete Implementation Summary
+
+**Both sections now support:**
+
+- Full content customization with specialized editors
+- Comprehensive color customization
+  - Background color
+  - Text color
+  - Card background color
+  - Accent color for highlights
+- Plan-appropriate limits and features
+- Proper rendering based on business type
+- Optimized responsive layouts
+
+#### Menu Section
+
+- **Content Editor:**
+  - Standard Plan: 2 categories, 8 items per category
+  - Premium Plan: 5 categories, 15 items per category
+  - Item editor with name, description, price, tags, and image (premium)
+  - Featured item highlighting (premium)
+- **Styling:**
+  - All text elements properly respect text color settings
+  - Cards properly apply background color
+  - Price displays in accent color
+  - Responsive grid layout optimized for different screen sizes
+
+#### Services Section
+
+- **Content Editor:**
+  - Standard Plan: 4 services with icon selection
+  - Premium Plan: 10 services with image uploads
+  - Business-type specific fields:
+    - Salon: Price, duration (premium), booking URL (premium)
+    - Architecture: Description-focused with images
+    - Portfolio: Generalized service representation
+  - Premium-only features clearly marked in UI
+- **Styling:**
+  - 4-card horizontal layout for standard plan
+  - Featured service highlighting for premium plan
+  - Proper accent color application
+  - Premium upgrade CTA with consistent styling
+
+### Recent Fixes
+
+- Fixed issue with services section not properly applying style customizations
+- Added proper logging to diagnose rendering issues
+- Fixed business type change not correctly updating displayed sections
+- Improved computed property usage for available sections
+- Resolved conflicts in component naming and methods
+- Enhanced color application for descriptions and subtitles
+
+### Next Steps
+
+- Complete Projects Section for architecture/portfolio business types
+- Finalize standard structure completely for backend integration
+- Implement premium layout variations and animations
 
 ## Features
 
@@ -10,6 +70,49 @@ A modern, customizable website builder that allows users to create professional 
 - **Theme customization**: Easily change colors, fonts, and layouts
 - **Media management**: Upload and manage images and videos
 - **Standard and Premium plans**: Different feature sets for different user needs
+
+## Recent Updates
+
+### Services Section Improvements (Current)
+
+- Added comprehensive color customization options:
+  - Section background color
+  - Text color
+  - Card background color
+  - Accent color
+- Adjusted feature distinctions between plans:
+  - Standard plan: 4 services with icons, basic information
+  - Premium plan: 10 services with images, advanced options
+- Made duration display premium-only for salon businesses
+- Optimized layout to show 4 cards horizontally on standard plan
+- Added proper featured service handling
+- Enhanced styling for different business types
+
+### Menu Section Enhancements (Previous)
+
+- Fixed issue with the main sidebar closing when saving menu items
+- Added color customization options (background, text, and card colors)
+- Updated category and item limits:
+  - Standard plan: 2 categories, 8 items per category
+  - Premium plan: 5 categories, 15 items per category
+- Enhanced menu layout to accommodate the increased number of items
+- Improved the UI with better card styling and responsiveness
+- Added clear visual distinction for premium features
+
+### General Improvements
+
+- Fixed edge cases in modal handling
+- Enhanced error handling and logging
+- Improved the component customizer to properly handle specialized editors
+- Added new styling for plan limit indicators
+
+## Planned Features
+
+- Projects section editor for portfolio business type
+- Team member section for business websites
+- Custom color scheme generator
+- Additional section templates
+- Import/export functionality for templates
 
 ## Getting Started
 
@@ -97,7 +200,16 @@ See [Component Development Guide](docs/component-development-guide.md) for detai
 
 ## Backend Integration
 
-See [Backend Integration Guide](docs/backend-integration-guide.md) for information about the API.
+The frontend is designed to work with a Java Spring Boot backend (in development).
+User authentication and template storage will be handled by the backend service.
+
+Standard config flow:
+
+1. Users select a website type (restaurant, salon, etc.)
+2. Choose a plan tier (standard or premium)
+3. The system provides appropriate templates and restrictions
+4. Users customize and save their template
+5. Changes are stored in their profile via backend API calls
 
 ## Standard vs Premium Features
 

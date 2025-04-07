@@ -57,7 +57,8 @@
       font-size: 1.1rem;
       max-width: 700px;
       margin: 0 auto;
-      color: #666;
+      color: var(--text-color);
+      opacity: 0.8;
       line-height: 1.6;
     }
   }
@@ -83,7 +84,8 @@
       .category-description {
         font-size: 1rem;
         margin-bottom: 1.5rem;
-        color: #666;
+        color: var(--text-color);
+        opacity: 0.8;
         font-style: italic;
       }
     }
@@ -204,7 +206,8 @@
     .menu-item-desc {
       font-size: 0.95rem;
       line-height: 1.6;
-      color: #666;
+      color: var(--text-color);
+      opacity: 0.85;
       margin-bottom: 1rem;
       display: -webkit-box;
       -webkit-line-clamp: 3;
@@ -278,11 +281,11 @@
     p {
       font-size: 1.1rem;
       margin-bottom: 1.5rem;
-      color: #555;
+      color: var(--text-color);
     }
 
     .upgrade-button {
-      background: linear-gradient(135deg, #ff9800, #ff5722);
+      background: linear-gradient(135deg, #9e6aff, #6a3bcc);
       color: white;
       border: none;
       padding: 0.75rem 1.5rem;
@@ -294,7 +297,7 @@
 
       &:hover {
         transform: translateY(-3px);
-        box-shadow: 0 6px 15px rgba(255, 87, 34, 0.3);
+        box-shadow: 0 6px 15px rgba(158, 106, 255, 0.3);
       }
     }
   }

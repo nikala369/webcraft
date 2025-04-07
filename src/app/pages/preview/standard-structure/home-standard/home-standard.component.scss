@@ -9,14 +9,23 @@
 
 /* Main container for the standard home page layout */
 .home-standard {
-  width: 100%;
-  overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100%;
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
+
+  /* Fix for the extra scrolling space */
+  &::after {
+    content: "";
+    display: none; /* Hide any potentially extra space */
+  }
 
   // Common styling for section containers for smooth scrolling
   section {
     scroll-margin-top: 80px; // For smooth scroll when navigating between sections
+    width: 100%;
+    box-sizing: border-box;
   }
 }

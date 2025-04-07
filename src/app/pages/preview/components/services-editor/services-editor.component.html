@@ -1,0 +1,327 @@
+<div class="services-editor-modal-content">
+  <div class="services-editor-header">
+    <h2>Edit Services</h2>
+    <p class="plan-limit" *ngIf="planType === 'standard'">
+      Standard Plan Limit: Up to
+      <strong>{{ maxServices() }}</strong> services
+    </p>
+    <!-- Premium Plan Badge -->
+    <p class="premium-badge" *ngIf="isPremium()">
+      <span class="premium-icon">★</span>
+      Premium Plan: Up to {{ maxServices() }} services with advanced features
+    </p>
+    <button
+      class="close-btn"
+      (click)="onCancelClick()"
+      aria-label="Close Services Editor"
+    >
+      &times;
+    </button>
+  </div>
+
+  <div class="services-editor-body">
+    <!-- Services List (Left Panel) -->
+    <div
+      class="services-panel"
+      cdkDropList
+      [cdkDropListDisabled]="!isPremium()"
+      (cdkDropListDropped)="dropService($event)"
+    >
+      <div class="panel-header">
+        <h3>Services ({{ services().length }}/{{ maxServices() }})</h3>
+        <button
+          *ngIf="canAddService()"
+          (click)="addService()"
+          class="add-btn add-service-btn"
+          aria-label="Add new service"
+          title="Add Service"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <span *ngIf="!canAddService()" class="limit-reached-text"
+          >(Limit Reached)</span
+        >
+      </div>
+      <div class="services-list">
+        <div
+          *ngFor="let service of services(); let i = index"
+          class="service-item"
+          [class.active]="selectedServiceIndex() === i"
+          [class.premium]="isPremium()"
+          [class.featured]="service.featured"
+          cdkDrag
+          [cdkDragDisabled]="!isPremium()"
+          (click)="selectService(i)"
+        >
+          <span class="service-name">{{
+            service.title || "Unnamed Service"
+          }}</span>
+          <div class="service-actions">
+            <!-- Drag Handle (Premium Only) -->
+            <button
+              *ngIf="isPremium()"
+              class="drag-handle"
+              cdkDragHandle
+              title="Drag to reorder service"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M10 18L10 6M14 18L14 6"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+            <!-- Featured Toggle (Premium Only) -->
+            <button
+              *ngIf="isPremium()"
+              class="feature-toggle"
+              (click)="toggleFeatured(service); $event.stopPropagation()"
+              [class.featured]="service.featured"
+              title="{{
+                service.featured ? 'Unmark as featured' : 'Mark as featured'
+              }}"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                ></polygon>
+              </svg>
+            </button>
+            <button
+              class="remove-btn remove-service-btn"
+              (click)="removeService(i); $event.stopPropagation()"
+              aria-label="Remove service"
+              title="Remove Service"
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+        <div *ngIf="services().length === 0" class="empty-state-text">
+          No services yet.
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Editor (Right Panel) -->
+    <div class="detail-panel">
+      <ng-container
+        *ngIf="selectedService() as service; else noServiceSelected"
+      >
+        <div class="panel-header detail-panel-header">
+          <div class="service-details-title">
+            <h3>Service Details</h3>
+            <span *ngIf="service.featured" class="featured-badge">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                stroke="none"
+              >
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                ></polygon>
+              </svg>
+              Featured
+            </span>
+          </div>
+        </div>
+
+        <div class="service-form">
+          <!-- Basic Info -->
+          <div class="form-section">
+            <h4 class="section-label">Basic Information</h4>
+
+            <div class="form-row">
+              <label for="service-title">Service Name</label>
+              <input
+                id="service-title"
+                type="text"
+                [(ngModel)]="service.title"
+                placeholder="Service Name"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-row">
+              <label for="service-description">Description</label>
+              <textarea
+                id="service-description"
+                [(ngModel)]="service.description"
+                placeholder="Description of this service"
+                class="form-input form-textarea"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Price & Duration (For salon specifically) -->
+          <div class="form-section" *ngIf="businessType === 'salon'">
+            <h4 class="section-label">Pricing & Duration</h4>
+
+            <div class="form-row" [class.form-row-split]="isPremium()">
+              <div class="form-group">
+                <label for="service-price">Price</label>
+                <input
+                  id="service-price"
+                  type="text"
+                  [(ngModel)]="service.price"
+                  placeholder="$0.00"
+                  class="form-input"
+                />
+              </div>
+
+              <!-- Duration (Premium Only for salon) -->
+              <div class="form-group" *ngIf="isPremium()">
+                <label for="service-duration">Duration</label>
+                <input
+                  id="service-duration"
+                  type="text"
+                  [(ngModel)]="service.duration"
+                  placeholder="30 min"
+                  class="form-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Price (For other business types) -->
+          <div class="form-section" *ngIf="businessType !== 'salon'">
+            <h4 class="section-label">Pricing</h4>
+
+            <div class="form-row">
+              <label for="service-price">Price (Optional)</label>
+              <input
+                id="service-price"
+                type="text"
+                [(ngModel)]="service.price"
+                placeholder="$0.00 or 'Starting at $99'"
+                class="form-input"
+              />
+            </div>
+          </div>
+
+          <!-- Icon/Image Section based on plan type -->
+          <div class="form-section">
+            <!-- Standard Plan: Icon Selection -->
+            <div *ngIf="!isPremium()">
+              <h4 class="section-label">Service Icon</h4>
+
+              <div class="icon-selector">
+                <div
+                  *ngFor="let icon of getIconOptions()"
+                  class="icon-option"
+                  [class.selected]="service.icon === icon"
+                  (click)="service.icon = icon"
+                >
+                  <img [src]="icon" alt="Service icon" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Premium Plan: Image URL -->
+            <div *ngIf="isPremium()">
+              <h4 class="section-label">Service Image</h4>
+
+              <div class="form-row">
+                <label for="service-image">Image URL</label>
+                <input
+                  id="service-image"
+                  type="text"
+                  [(ngModel)]="service.image"
+                  placeholder="https://example.com/image.jpg"
+                  class="form-input"
+                />
+              </div>
+
+              <div *ngIf="service.image" class="image-preview">
+                <img [src]="service.image" alt="Service image preview" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Premium-only features -->
+          <div class="form-section" *ngIf="isPremium()">
+            <h4 class="section-label">Advanced Options (Premium Only)</h4>
+
+            <div class="form-row">
+              <label for="service-image">Service Image URL</label>
+              <input
+                id="service-image"
+                type="text"
+                [(ngModel)]="service.image"
+                placeholder="https://example.com/image.jpg"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-row" *ngIf="businessType === 'salon'">
+              <label for="service-booking">Booking URL</label>
+              <input
+                id="service-booking"
+                type="text"
+                [(ngModel)]="service.bookingUrl"
+                placeholder="https://example.com/book"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-row">
+              <div class="toggle-row">
+                <label>
+                  <input
+                    type="checkbox"
+                    [checked]="service.featured"
+                    (change)="toggleFeatured(service)"
+                  />
+                  <span>Featured Service</span>
+                </label>
+                <p class="help-text">
+                  Featured services are highlighted on your website.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #noServiceSelected>
+        <div class="empty-state-panel">
+          <p>
+            Select a service on the left, or add a new one to start configuring
+            your services.
+          </p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <div class="services-editor-footer">
+    <button (click)="onCancelClick()" class="btn btn-secondary">Cancel</button>
+    <button (click)="onSaveClick()" class="btn btn-primary">
+      Save Services
+    </button>
+  </div>
+</div>

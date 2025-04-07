@@ -1,89 +1,72 @@
 <div class="home-standard">
-  <!-- Dynamically render sections based on business type -->
+  <!-- Fixed sections rendering based on business type -->
   <ng-container *ngIf="customizations">
-    <ng-container *ngFor="let section of availableSections()">
-      <!-- Hero Section -->
-      <ng-container *ngIf="section === 'hero'">
-        <app-hero-section
-          [customizations]="wholeData()"
-          [heroData]="getHeroData()"
-          [isMobileLayout]="isMobileLayout"
-          [isMobileView]="isMobileView"
-          [planType]="planType"
-          [businessType]="businessType"
-          (sectionSelected)="handleSectionSelection($event)"
-        >
-        </app-hero-section>
-      </ng-container>
+    <!-- 1. Hero Section (Always shown) -->
+    <app-hero-section
+      [customizations]="wholeData"
+      [heroData]="getHeroData()"
+      [isMobileLayout]="isMobileLayout"
+      [isMobileView]="isMobileView"
+      [planType]="planType"
+      [businessType]="businessType"
+      (sectionSelected)="handleSectionSelection($event)"
+    >
+    </app-hero-section>
 
-      <!-- About Section -->
-      <ng-container
-        *ngIf="section === 'about' && shouldDisplaySection('about')"
-      >
-        <app-about-section
-          [customizations]="wholeData()"
-          [isMobileLayout]="isMobileLayout"
-          [planType]="planType"
-          [businessType]="businessType"
-          (sectionSelected)="handleSectionSelection($event)"
-        >
-        </app-about-section>
-      </ng-container>
+    <!-- 2. About Section (Always shown) -->
+    <app-about-section
+      [customizations]="wholeData"
+      [isMobileLayout]="isMobileLayout"
+      [planType]="planType"
+      [businessType]="businessType"
+      (sectionSelected)="handleSectionSelection($event)"
+    >
+    </app-about-section>
 
-      <!-- Menu Section (For Restaurant) -->
-      <ng-container *ngIf="section === 'menu' && shouldDisplaySection('menu')">
-        <app-menu-section
-          [customizations]="customizations"
-          [wholeData]="wholeData()"
-          [isMobileLayout]="isMobileLayout"
-          [planType]="planType"
-          [businessType]="businessType"
-          (sectionSelected)="handleSectionSelection($event)"
-        >
-        </app-menu-section>
-      </ng-container>
+    <!-- 3. Business-specific sections -->
 
-      <!-- Services Section (For Salon, Architecture) -->
-      <ng-container
-        *ngIf="section === 'services' && shouldDisplaySection('services')"
-      >
-        <app-services-section
-          [customizations]="wholeData()"
-          [isMobileLayout]="isMobileLayout"
-          [planType]="planType"
-          [businessType]="businessType"
-          (sectionSelected)="handleSectionSelection($event)"
-        >
-        </app-services-section>
-      </ng-container>
+    <!-- Menu Section (Restaurant only) -->
+    <app-menu-section
+      *ngIf="businessType === 'restaurant'"
+      [customizations]="customizations"
+      [wholeData]="wholeData"
+      [isMobileLayout]="isMobileLayout"
+      [planType]="planType"
+      [businessType]="businessType"
+      (sectionSelected)="handleSectionSelection($event)"
+    >
+    </app-menu-section>
 
-      <!-- Projects Section (For Architecture/Portfolio) -->
-      <ng-container
-        *ngIf="section === 'projects' && shouldDisplaySection('projects')"
-      >
-        <app-projects-section
-          [customizations]="wholeData()"
-          [isMobileLayout]="isMobileLayout"
-          [planType]="planType"
-          [businessType]="businessType"
-          (sectionSelected)="handleSectionSelection($event)"
-        >
-        </app-projects-section>
-      </ng-container>
+    <!-- Services Section (Salon only) -->
+    <app-services-section
+      *ngIf="businessType === 'salon'"
+      [customizations]="wholeData"
+      [isMobileLayout]="isMobileLayout"
+      [planType]="planType"
+      [businessType]="businessType"
+      (sectionSelected)="handleSectionSelection($event)"
+    >
+    </app-services-section>
 
-      <!-- Contact Section -->
-      <ng-container
-        *ngIf="section === 'contact' && shouldDisplaySection('contact')"
-      >
-        <app-contact-section
-          [customizations]="wholeData()"
-          [isMobileLayout]="isMobileLayout"
-          [planType]="planType"
-          [businessType]="businessType"
-          (sectionSelected)="handleSectionSelection($event)"
-        >
-        </app-contact-section>
-      </ng-container>
-    </ng-container>
+    <!-- Projects Section (Architecture/Portfolio only) -->
+    <app-projects-section
+      *ngIf="businessType === 'architecture' || businessType === 'portfolio'"
+      [customizations]="wholeData"
+      [isMobileLayout]="isMobileLayout"
+      [planType]="planType"
+      [businessType]="businessType"
+      (sectionSelected)="handleSectionSelection($event)"
+    >
+    </app-projects-section>
+
+    <!-- 4. Contact Section (Always shown) -->
+    <app-contact-section
+      [customizations]="wholeData"
+      [isMobileLayout]="isMobileLayout"
+      [planType]="planType"
+      [businessType]="businessType"
+      (sectionSelected)="handleSectionSelection($event)"
+    >
+    </app-contact-section>
   </ng-container>
 </div>

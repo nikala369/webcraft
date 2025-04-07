@@ -7,6 +7,8 @@ import {
   computed,
   OnInit,
   inject,
+  OnChanges,
+  SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -24,6 +26,7 @@ import { MenuSectionComponent } from './components/menu-section/menu-section.com
 import { ServicesSectionComponent } from './components/services-section/services-section.component';
 import { ProjectsSectionComponent } from './components/projects-section/projects-section.component';
 import { ContactSectionComponent } from './components/contact-section/contact-section.component';
+import { ComponentCustomizerComponent } from '../../components/component-customizer/component-customizer.component';
 
 @Component({
   selector: 'app-home-standard',
@@ -34,14 +37,15 @@ import { ContactSectionComponent } from './components/contact-section/contact-se
     HeroSectionComponent,
     AboutSectionComponent,
     MenuSectionComponent,
-    ServicesSectionComponent,
     ProjectsSectionComponent,
+    ServicesSectionComponent,
     ContactSectionComponent,
+    ComponentCustomizerComponent,
   ],
   templateUrl: './home-standard.component.html',
   styleUrl: './home-standard.component.scss',
 })
-export class HomeStandardComponent implements OnInit {
+export class HomeStandardComponent implements OnInit, OnChanges {
   @Input() customizations: any;
   @Input() wholeData: any;
   @Input() isMobileLayout: boolean = false;
@@ -54,43 +58,17 @@ export class HomeStandardComponent implements OnInit {
   private businessConfigService = inject(BusinessConfigService);
   primaryColor = signal<string>('');
 
-  // Computed signal for available sections based on business type
-  availableSections = computed(() => {
-    console.log(
-      `Computing available sections for business type: ${this.businessType}`
-    );
-
-    // Get sections from the business config service
-    return this.businessConfigService.getAvailableSectionsForBusinessType(
-      this.businessType,
-      this.planType
-    );
-  });
-
-  /**
-   * Get hero section data from customizations with fallbacks
-   */
-  getHeroData(): Partial<HeroData> {
-    // First check for direct hero1 property (for backward compatibility)
-    if (this.customizations?.hero1) {
-      console.log(
-        'Returning direct hero1 property:',
-        this.customizations.hero1
-      );
-      return this.customizations.hero1;
-    }
-
-    // Then check for the proper nested path
-    if (this.wholeData()?.pages?.home?.hero1) {
-      return this.wholeData().pages.home.hero1;
-    }
-
-    // Finally, if no data exists, return empty object (component has defaults)
-    console.log('No hero data found, returning empty object');
-    return {};
-  }
+  // Track data updates for debugging
+  lastCustomizationsUpdate = signal<number>(Date.now());
 
   ngOnInit(): void {
+    console.log(
+      'HomeStandardComponent initialized with businessType:',
+      this.businessType
+    );
+    console.log('Initial customizations:', this.customizations);
+    console.log('Initial wholeData:', this.wholeData);
+
     // Set the appropriate color based on plan
     this.primaryColor.set(
       this.themeColorsService.getPrimaryColor(
@@ -110,6 +88,31 @@ export class HomeStandardComponent implements OnInit {
       '--theme-primary-color-rgb',
       rgbValue
     );
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Track when customizations or wholeData change to help debug updates
+    if (changes['customizations'] || changes['wholeData']) {
+      console.log(
+        'HomeStandard received changes:',
+        changes['customizations'] ? 'customizations changed' : '',
+        changes['wholeData'] ? 'wholeData changed' : ''
+      );
+
+      this.lastCustomizationsUpdate.set(Date.now());
+
+      if (changes['customizations']) {
+        console.log('New customizations:', this.customizations);
+      }
+      if (changes['wholeData']) {
+        console.log('New wholeData:', this.wholeData);
+      }
+    }
+
+    // Update business type if changed
+    if (changes['businessType']) {
+      console.log('BusinessType changed to:', this.businessType);
+    }
   }
 
   /**
@@ -141,13 +144,6 @@ export class HomeStandardComponent implements OnInit {
   }
 
   /**
-   * Check if a section is available for the current business type
-   */
-  isSectionAvailable(sectionId: string): boolean {
-    return this.availableSections().includes(sectionId);
-  }
-
-  /**
    * Forward section selection to parent component
    */
   handleSectionSelection(data: { key: string; name: string; path?: string }) {
@@ -159,65 +155,56 @@ export class HomeStandardComponent implements OnInit {
       `Home component - emitting sectionSelected with path: ${fullPath}`
     );
 
-    // If this is the hero section, log the relevant data
-    if (data.key === 'hero1' || fullPath.includes('hero1')) {
-      console.log('Hero data being passed to customize:', this.getHeroData());
-    }
-
     this.sectionSelected.emit(fullPath);
   }
 
   /**
-   * Check if a section should be displayed based on business type and plan
+   * Get hero section data from customizations with fallbacks
+   */
+  getHeroData(): Partial<HeroData> {
+    // First check for direct hero1 property (for backward compatibility)
+    if (this.customizations?.hero1) {
+      console.log(
+        'Returning direct hero1 property:',
+        this.customizations.hero1
+      );
+      return this.customizations.hero1;
+    }
+
+    // Then check for the proper nested path
+    if (this.wholeData?.pages?.home?.hero1) {
+      return this.wholeData.pages.home.hero1;
+    }
+
+    // Finally, if no data exists, return empty object (component has defaults)
+    console.log('No hero data found, returning empty object');
+    return {};
+  }
+
+  /**
+   * Get sections based on business type
+   */
+  getBusinessTypeSections(): string[] {
+    const commonSections = ['hero', 'about', 'contact'];
+
+    if (this.businessType === 'restaurant') {
+      return [...commonSections, 'menu'];
+    } else if (this.businessType === 'salon') {
+      return [...commonSections, 'services'];
+    } else if (
+      this.businessType === 'architecture' ||
+      this.businessType === 'portfolio'
+    ) {
+      return [...commonSections, 'projects'];
+    }
+
+    return commonSections;
+  }
+
+  /**
+   * Check if a section should be displayed based on business type
    */
   shouldDisplaySection(sectionKey: string): boolean {
-    // First check if the section is in the available sections for this business type
-    if (!this.isSectionAvailable(sectionKey)) {
-      console.log(
-        `Section ${sectionKey} is not available for business type ${this.businessType}`
-      );
-      return false;
-    }
-
-    // Business type specific sections
-    const businessSpecificSections: Record<string, string[]> = {
-      restaurant: ['menu'],
-      salon: ['services'],
-      architecture: ['projects'],
-      portfolio: ['projects'],
-    };
-
-    // If it's a business-specific section, only show for the appropriate business type
-    const isBusinessSpecific = Object.values(businessSpecificSections).some(
-      (sections) => sections.includes(sectionKey)
-    );
-
-    if (isBusinessSpecific) {
-      // Find business types that include this section
-      const validBusinessTypes = Object.entries(businessSpecificSections)
-        .filter(([_, sections]) => sections.includes(sectionKey))
-        .map(([type, _]) => type);
-
-      // Special debug logging for menu section
-      if (sectionKey === 'menu') {
-        console.log(
-          `Menu section check: current business type: ${this.businessType}`
-        );
-        console.log(
-          `Valid business types for menu: ${validBusinessTypes.join(', ')}`
-        );
-        console.log(
-          `Is valid business type? ${validBusinessTypes.includes(
-            this.businessType
-          )}`
-        );
-      }
-
-      // Check if current business type is valid for this section
-      return validBusinessTypes.includes(this.businessType);
-    }
-
-    // If we got here, the section is generally available for all business types
-    return true;
+    return this.getBusinessTypeSections().includes(sectionKey);
   }
 }

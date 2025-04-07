@@ -6,6 +6,8 @@ import {
   inject,
   OnChanges,
   SimpleChanges,
+  OnInit,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
@@ -36,7 +38,7 @@ interface MenuCategory {
   templateUrl: './menu-section.component.html',
   styleUrls: ['./menu-section.component.scss'],
 })
-export class MenuSectionComponent implements OnChanges {
+export class MenuSectionComponent implements OnChanges, OnInit {
   @Input() customizations: any;
   @Input() wholeData: any;
   @Input() isMobileLayout: boolean = false;
@@ -49,6 +51,7 @@ export class MenuSectionComponent implements OnChanges {
   }>();
 
   private themeColorsService = inject(ThemeColorsService);
+  private elementRef = inject(ElementRef);
 
   // Track when updates happen
   private lastUpdated = Date.now();
@@ -110,14 +113,68 @@ export class MenuSectionComponent implements OnChanges {
     return this.isPremium() ? 15 : 8; // Premium: 15, Standard: 8
   }
 
+  ngOnInit() {
+    // Apply custom colors from configuration
+    this.applyCustomColors();
+    console.log(
+      'MenuSectionComponent initialized with businessType:',
+      this.businessType
+    );
+    console.log('Initial customizations:', this.customizations);
+    console.log('Initial wholeData:', this.wholeData);
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
+    // Track changes for debugging
     if (changes['customizations'] || changes['wholeData']) {
-      console.log(
-        'Menu section received updated customizations:',
-        this.customizations
-      );
-      console.log('Menu section received updated wholeData:', this.wholeData);
       this.lastUpdated = Date.now();
+      console.log('Menu section received update at:', new Date().toISOString());
+
+      if (changes['customizations']) {
+        console.log(
+          'New customizations for menu section:',
+          this.customizations
+        );
+      }
+      if (changes['wholeData']) {
+        console.log('New wholeData for menu section:', this.wholeData);
+      }
+    }
+
+    // Re-apply colors when customizations change
+    this.applyCustomColors();
+  }
+
+  /**
+   * Apply custom colors from configuration
+   */
+  private applyCustomColors(): void {
+    const host = this.elementRef.nativeElement;
+    const data = this.getSectionData();
+
+    // Apply primary accent color
+    const primaryColor = this.themeColorsService.getPrimaryColor(this.planType);
+    host.style.setProperty('--primary-accent-color', primaryColor);
+
+    // Apply section background color
+    if (data?.backgroundColor) {
+      host.style.setProperty('--section-bg-color', data.backgroundColor);
+    }
+
+    // Apply text color
+    if (data?.textColor) {
+      host.style.setProperty('--text-color', data.textColor);
+      host.style.setProperty('--heading-color', data.textColor);
+    }
+
+    // Apply card background color
+    if (data?.cardBackgroundColor) {
+      host.style.setProperty('--card-bg-color', data.cardBackgroundColor);
+    }
+
+    // Apply accent color (overrides primary if specified)
+    if (data?.accentColor) {
+      host.style.setProperty('--primary-accent-color', data.accentColor);
     }
   }
 
@@ -125,15 +182,17 @@ export class MenuSectionComponent implements OnChanges {
    * Get menu section title or fallback
    */
   getMenuTitle(): string {
-    return this.getSectionData()?.title || 'Our Menu';
+    const data = this.getSectionData();
+    return data?.title || 'Our Menu';
   }
 
   /**
    * Get menu section subtitle or fallback
    */
   getMenuSubtitle(): string {
+    const data = this.getSectionData();
     return (
-      this.getSectionData()?.subtitle ||
+      data?.subtitle ||
       'Enjoy our carefully crafted dishes made with the finest ingredients'
     );
   }
@@ -142,13 +201,35 @@ export class MenuSectionComponent implements OnChanges {
    * Get the menu section data using the same pattern as other sections
    */
   private getSectionData(): any {
-    // Check for data in the correct hierarchy
-    const data =
-      this.wholeData?.pages?.home?.menu ||
-      this.customizations?.pages?.home?.menu ||
-      this.customizations;
+    let data = null;
+    console.log(
+      'Searching for menu data in:',
+      this.wholeData,
+      this.customizations
+    );
 
-    console.log('getSectionData returning:', data);
+    // Check for data in different possible locations
+    if (this.wholeData?.pages?.home?.menu) {
+      console.log('Found menu data in wholeData.pages.home.menu');
+      data = this.wholeData.pages.home.menu;
+    } else if (this.customizations?.pages?.home?.menu) {
+      console.log('Found menu data in customizations.pages.home.menu');
+      data = this.customizations.pages.home.menu;
+    } else {
+      console.log('Using top-level customizations data');
+      data = this.customizations;
+    }
+
+    // Log found data
+    if (data?.categories) {
+      console.log(
+        `Found ${data.categories.length} menu categories:`,
+        data.categories
+      );
+    } else {
+      console.log('No menu data found, using defaults');
+    }
+
     return data;
   }
 
@@ -156,7 +237,8 @@ export class MenuSectionComponent implements OnChanges {
    * Get menu categories or use defaults
    */
   getMenuCategories(): MenuCategory[] {
-    const categories = this.getSectionData()?.categories;
+    const data = this.getSectionData();
+    const categories = data?.categories;
 
     // Make sure we log what we're working with
     if (categories && categories.length > 0) {

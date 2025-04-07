@@ -258,10 +258,10 @@ export const menuSectionConfig: FieldConfig[] = [
   // Styling Settings
   {
     key: 'backgroundColor',
-    label: 'Background Color',
+    label: 'Section Background Color',
     type: 'color',
     category: 'styling',
-    defaultValue: '#ffffff',
+    defaultValue: '#f9f9f9',
     description: 'Background color of the menu section',
   },
   {
@@ -271,6 +271,137 @@ export const menuSectionConfig: FieldConfig[] = [
     category: 'styling',
     defaultValue: '#333333',
     description: 'Main text color for the menu section',
+  },
+  {
+    key: 'cardBackgroundColor',
+    label: 'Card Background Color',
+    type: 'color',
+    category: 'styling',
+    defaultValue: '#ffffff',
+    description: 'Background color for individual menu item cards',
+  },
+  {
+    key: 'accentColor',
+    label: 'Accent Color',
+    type: 'color',
+    category: 'styling',
+    defaultValue: '#4a8dff',
+    description: 'Accent color used for pricing and highlights',
+  },
+];
+
+/**
+ * Configuration for Services section
+ */
+export const servicesSectionConfig: FieldConfig[] = [
+  // Content settings
+  {
+    key: 'title',
+    label: 'Section Title',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'Our Services',
+    description: 'Main title for the services section',
+  },
+  {
+    key: 'subtitle',
+    label: 'Section Subtitle',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'Professional services tailored to your needs',
+    description: 'Subtitle or tagline for the services section',
+  },
+  // Services items (using specialized editor)
+  {
+    key: 'items',
+    label: 'Services & Offerings',
+    type: 'specializedList', // Use specialized editor
+    category: 'content',
+    description: 'Manage your service offerings with details and pricing',
+  },
+  // Styling settings
+  {
+    key: 'backgroundColor',
+    label: 'Section Background Color',
+    type: 'color',
+    category: 'styling',
+    defaultValue: '#f9f9f9',
+    description: 'Background color of the services section',
+  },
+  {
+    key: 'textColor',
+    label: 'Text Color',
+    type: 'color',
+    category: 'styling',
+    defaultValue: '#333333',
+    description: 'Main text color for the services section',
+  },
+  {
+    key: 'cardBackgroundColor',
+    label: 'Card Background Color',
+    type: 'color',
+    category: 'styling',
+    defaultValue: '#ffffff',
+    description: 'Background color for individual service cards',
+  },
+  {
+    key: 'accentColor',
+    label: 'Accent Color',
+    type: 'color',
+    category: 'styling',
+    defaultValue: '#4a8dff',
+    description: 'Accent color used for pricing and highlights',
+  },
+];
+
+/**
+ * Premium-only fields for Services section
+ */
+export const servicesSectionPremiumConfig: FieldConfig[] = [
+  {
+    key: 'layout',
+    label: 'Layout Style',
+    type: 'select',
+    category: 'styling',
+    defaultValue: 'grid',
+    description: 'Choose the layout style for displaying services',
+    options: [
+      { value: 'grid', label: 'Grid Layout' },
+      { value: 'list', label: 'List Layout' },
+      { value: 'carousel', label: 'Carousel' },
+    ],
+  },
+  {
+    key: 'showPricing',
+    label: 'Show Pricing',
+    type: 'select',
+    category: 'content',
+    defaultValue: true,
+    description: 'Display service prices in the services section',
+    options: [
+      { value: true, label: 'Yes' },
+      { value: false, label: 'No' },
+    ],
+  },
+  {
+    key: 'showBooking',
+    label: 'Show Booking Button',
+    type: 'select',
+    category: 'content',
+    defaultValue: true,
+    description: 'Display booking buttons for each service',
+    options: [
+      { value: true, label: 'Yes' },
+      { value: false, label: 'No' },
+    ],
+  },
+  {
+    key: 'bookingBtnText',
+    label: 'Booking Button Text',
+    type: 'text',
+    category: 'content',
+    defaultValue: 'Book Now',
+    description: 'Text displayed on the booking button',
   },
 ];
 
@@ -581,6 +712,7 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
   'pages.home.about': aboutSectionConfig,
   'pages.home.contact': contactSectionConfig,
   'pages.home.menu': menuSectionConfig,
+  'pages.home.services': servicesSectionConfig,
 };
 
 /**
@@ -628,6 +760,10 @@ export function getPlanSpecificConfig(
 
     if (section === 'pages.home.contact') {
       return [...baseConfig, ...contactSectionPremiumConfig];
+    }
+
+    if (section === 'pages.home.services') {
+      return [...baseConfig, ...servicesSectionPremiumConfig];
     }
   }
 

@@ -67,9 +67,15 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
   constructor(private router: Router, private el: ElementRef) {}
 
   // Create computed signals for each page's customizations
-  homeCustomizationsSignal = computed(
-    () => this.customizations()?.pages?.home || {}
-  );
+  homeCustomizationsSignal = computed(() => {
+    const homeData = this.customizations()?.pages?.home || {};
+    console.log(
+      'Standard structure computed homeCustomizationsSignal:',
+      homeData
+    );
+    return homeData;
+  });
+
   aboutCustomizationsSignal = computed(
     () => this.customizations()?.pages?.home?.about || {}
   );
@@ -81,13 +87,7 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
   // This is the complete data structure for components that need it
   wholeDataSignal = computed(() => {
     const fullData = this.customizations();
-    console.log('Full customization data in standard-structure:', fullData);
-
-    // Ensure complete structure with necessary defaults
-    if (!fullData.pages?.home?.hero1) {
-      console.log('Hero1 section not found, may need initialization');
-    }
-
+    console.log('Standard structure computed wholeDataSignal:', fullData);
     return fullData;
   });
 

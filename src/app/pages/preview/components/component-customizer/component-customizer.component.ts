@@ -20,6 +20,15 @@ import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../core/services/toast/toast.service';
 import { ModalService } from '../../../../core/services/modal/modal.service';
 import { MenuEditorComponent } from '../menu-editor/menu-editor.component';
+// Dynamic imports are used for the following components
+// import { ServicesEditorComponent } from '../services-editor/services-editor.component';
+import {
+  trigger,
+  state,
+  style,
+  animate,
+  transition,
+} from '@angular/animations';
 
 @Component({
   selector: 'app-component-customizer',
@@ -719,9 +728,36 @@ export class ComponentCustomizerComponent implements OnInit {
     }
   }
 
-  // Actions for menu editors
+  /**
+   * Updates a specific field in the local data
+   */
+  private updateLocalData(fieldKey: string, value: any): void {
+    console.log(`Updating local data for ${fieldKey} with:`, value);
+
+    // Update the signal with the new data
+    this.localData.update((data) => {
+      const updatedData = {
+        ...data,
+        [fieldKey]: value,
+      };
+      console.log('Updated local data:', updatedData);
+      return updatedData;
+    });
+
+    // Show success message
+    this.toastService.success('Changes saved successfully');
+
+    // Apply changes to parent component without closing sidebar
+    this.applyChanges(false);
+  }
+
+  /**
+   * Direct application of customizations without loading from theme service
+   * This is critical for preventing saved customizations from being overridden
+   */
   applyChanges(closeSidebar: boolean = true): void {
     const result = { ...this.localData() };
+    console.log('Applying customizer changes with result:', result);
 
     // Remove the ID field we added for internal tracking
     if (result.id === this.componentKey) {
@@ -757,7 +793,7 @@ export class ComponentCustomizerComponent implements OnInit {
       };
     });
 
-    console.log('Applying changes with result:', result);
+    console.log('Final changes to apply:', result);
 
     // Emit update event with the result
     this.update.emit(result);
@@ -909,44 +945,17 @@ export class ComponentCustomizerComponent implements OnInit {
   }
 
   /**
-   * Updates a specific field in the local data
-   */
-  private updateLocalData(fieldKey: string, value: any): void {
-    console.log(`Updating local data for ${fieldKey}:`, value);
-
-    // Update the signal with the new data
-    this.localData.update((data) => ({
-      ...data,
-      [fieldKey]: value,
-    }));
-
-    // Show success message
-    this.toastService.success('Changes saved successfully');
-
-    // Apply changes to parent component without closing sidebar
-    this.applyChanges(false);
-  }
-
-  /**
    * Opens the modal for the specialized editor (Menu, Services, Projects).
    */
   openSpecializedEditor(fieldKey: string): void {
     console.log(`Opening specialized editor for ${fieldKey}`);
 
     try {
-      // If there's already a modal open, close it first
-      if (this.modalService.isModalOpen()) {
-        console.warn(
-          'A modal is already open. Closing it before opening a new one.'
-        );
-        this.modalService.forceClose();
-      }
-
       // Get the current data for this field
       const currentData = this.localData()[fieldKey] || [];
       console.log(`Current data for ${fieldKey}:`, currentData);
 
-      // Handle different specialized editors
+      // Handle different specialized editors based on field key and component key
       switch (fieldKey) {
         case 'categories': // Menu items editor
           import('../menu-editor/menu-editor.component').then((m) => {
@@ -974,6 +983,43 @@ export class ComponentCustomizerComponent implements OnInit {
             );
             this.modalService.open(m.MenuEditorComponent, modalConfig);
           });
+          break;
+
+        case 'items': // Services editor
+          if (this.componentKey.includes('services')) {
+            import('../services-editor/services-editor.component').then((m) => {
+              // Configure the modal with properly structured data
+              const modalConfig = {
+                width: '85vw',
+                height: '85vh',
+                data: {
+                  initialServices: Array.isArray(currentData)
+                    ? currentData
+                    : [],
+                  planType: this.planType || 'standard',
+                  businessType: this.businessType || 'salon',
+                  onSave: (updatedServices: any[]) => {
+                    console.log('Services saved:', updatedServices);
+                    // Update the local data
+                    this.updateLocalData(fieldKey, updatedServices);
+                    // Immediately apply changes to parent without closing sidebar
+                    this.applyChanges(false);
+                  },
+                },
+              };
+
+              // Open the modal with the ServicesEditorComponent
+              console.log(
+                'Opening ServicesEditorComponent modal with config:',
+                modalConfig
+              );
+              this.modalService.open(m.ServicesEditorComponent, modalConfig);
+            });
+          } else {
+            console.error(
+              `Unknown specialized editor for field: ${fieldKey} in component: ${this.componentKey}`
+            );
+          }
           break;
 
         // Other specialized editors can be added here
