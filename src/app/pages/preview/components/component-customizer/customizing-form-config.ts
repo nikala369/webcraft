@@ -258,7 +258,7 @@ export const menuSectionConfig: FieldConfig[] = [
   // Styling Settings
   {
     key: 'backgroundColor',
-    label: 'Section Background Color',
+    label: 'Background Color',
     type: 'color',
     category: 'styling',
     defaultValue: '#f9f9f9',
@@ -282,11 +282,11 @@ export const menuSectionConfig: FieldConfig[] = [
   },
   {
     key: 'accentColor',
-    label: 'Accent Color',
+    label: 'Pricing Color',
     type: 'color',
     category: 'styling',
     defaultValue: '#4a8dff',
-    description: 'Accent color used for pricing and highlights',
+    description: 'Pricing color used for pricing and highlights',
   },
 ];
 
@@ -322,7 +322,7 @@ export const servicesSectionConfig: FieldConfig[] = [
   // Styling settings
   {
     key: 'backgroundColor',
-    label: 'Section Background Color',
+    label: 'Background Color',
     type: 'color',
     category: 'styling',
     defaultValue: '#f9f9f9',
@@ -346,11 +346,11 @@ export const servicesSectionConfig: FieldConfig[] = [
   },
   {
     key: 'accentColor',
-    label: 'Accent Color',
+    label: 'Pricing Color',
     type: 'color',
     category: 'styling',
     defaultValue: '#4a8dff',
-    description: 'Accent color used for pricing and highlights',
+    description: 'Pricing color used for pricing and highlights',
   },
 ];
 

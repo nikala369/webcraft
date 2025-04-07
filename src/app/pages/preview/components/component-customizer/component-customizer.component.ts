@@ -59,22 +59,6 @@ export class ComponentCustomizerComponent implements OnInit {
       console.log('Component customizer received initial data:', value);
       console.log('Component key:', this.componentKey);
 
-      // Check specifically for image and video data
-      if (this.componentKey.includes('hero')) {
-        console.log(
-          'Hero section data - backgroundImage:',
-          value.backgroundImage
-        );
-        console.log(
-          'Hero section data - backgroundType:',
-          value.backgroundType
-        );
-        console.log(
-          'Hero section data - backgroundVideo:',
-          value.backgroundVideo ? 'Video data present' : 'No video data'
-        );
-      }
-
       // Store original for reset functionality
       this.originalData = structuredClone(value);
 

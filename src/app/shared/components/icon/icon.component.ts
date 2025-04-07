@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-icon',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './icon.component.html',
   styles: [
     `
@@ -36,6 +36,7 @@ export class IconComponent {
   @Input() name: string = '';
   @Input() width: string | number = 28;
   @Input() height: string | number = 28;
+  @Input() viewBox: string | number = '0 0 24 24';
 
   getStrokeValue(): string {
     // Only exitFullscreen needs stroke attribute

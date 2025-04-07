@@ -179,13 +179,15 @@
 
           <!-- Price & Duration (For salon specifically) -->
           <div class="form-section" *ngIf="businessType === 'salon'">
-            <h4 class="section-label">Pricing & Duration</h4>
+            <h4 class="section-label">
+              Pricing <span *ngIf="isPremium()">& Duration</span>
+            </h4>
 
             <div class="form-row" [class.form-row-split]="isPremium()">
               <div class="form-group">
-                <label for="service-price">Price</label>
+                <label for="service-price1">Price</label>
                 <input
-                  id="service-price"
+                  id="service-price1"
                   type="text"
                   [(ngModel)]="service.price"
                   placeholder="$0.00"
@@ -212,9 +214,9 @@
             <h4 class="section-label">Pricing</h4>
 
             <div class="form-row">
-              <label for="service-price">Price (Optional)</label>
+              <label for="service-price2">Price (Optional)</label>
               <input
-                id="service-price"
+                id="service-price2"
                 type="text"
                 [(ngModel)]="service.price"
                 placeholder="$0.00 or 'Starting at $99'"
@@ -246,9 +248,9 @@
               <h4 class="section-label">Service Image</h4>
 
               <div class="form-row">
-                <label for="service-image">Image URL</label>
+                <label for="service-image1">Image URL</label>
                 <input
-                  id="service-image"
+                  id="service-image1"
                   type="text"
                   [(ngModel)]="service.image"
                   placeholder="https://example.com/image.jpg"
@@ -267,9 +269,9 @@
             <h4 class="section-label">Advanced Options (Premium Only)</h4>
 
             <div class="form-row">
-              <label for="service-image">Service Image URL</label>
+              <label for="service-image2">Service Image URL</label>
               <input
-                id="service-image"
+                id="service-image2"
                 type="text"
                 [(ngModel)]="service.image"
                 placeholder="https://example.com/image.jpg"

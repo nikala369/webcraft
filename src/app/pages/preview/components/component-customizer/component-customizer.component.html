@@ -137,68 +137,71 @@
                 </label>
               </div>
 
-              <!-- Add a more intuitive background type selector for hero section -->
-              <ng-container *ngIf="field.key === 'backgroundType'">
-                <div class="background-type-selector">
-                  <button
-                    class="type-btn"
-                    [ngClass]="{ active: localData()[field.key] === 'image' }"
-                    (click)="updateSelectField(field.key, 'image')"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      width="20"
-                      height="20"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <rect x="3" y="3" width="18" height="18" rx="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <path d="M21 15l-5-5L5 21" />
-                    </svg>
-                    <span>Image</span>
-                  </button>
-                  <button
-                    class="type-btn"
-                    [ngClass]="{ active: localData()[field.key] === 'video' }"
-                    (click)="updateSelectField(field.key, 'video')"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      width="20"
-                      height="20"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <rect x="2" y="2" width="20" height="20" rx="2.18" />
-                      <path d="M10 8l6 4-6 4V8z" />
-                    </svg>
-                    <span>Video</span>
-                  </button>
-                </div>
-              </ng-container>
-
               <!-- Select Field (Handles backgroundType and others) -->
               <ng-container *ngSwitchCase="'select'">
-                <select
-                  [id]="field.key"
-                  [ngModel]="localData()[field.key]"
-                  (ngModelChange)="updateSelectField(field.key, $event)"
-                  class="select-input"
-                  [name]="field.key"
-                >
-                  <option
-                    *ngFor="let option of field.options"
-                    [value]="option.value"
+                <!-- Special button-based selector for backgroundType -->
+                <ng-container *ngIf="field.key === 'backgroundType'; else defaultSelect">
+                  <div class="background-type-selector">
+                    <button
+                      class="type-btn"
+                      [ngClass]="{ active: localData()[field.key] === 'image' }"
+                      (click)="updateSelectField(field.key, 'image')"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        width="20"
+                        height="20"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <path d="M21 15l-5-5L5 21" />
+                      </svg>
+                      <span>Image</span>
+                    </button>
+                    <button
+                      class="type-btn"
+                      [ngClass]="{ active: localData()[field.key] === 'video' }"
+                      (click)="updateSelectField(field.key, 'video')"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        width="20"
+                        height="20"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <rect x="2" y="2" width="20" height="20" rx="2.18" />
+                        <path d="M10 8l6 4-6 4V8z" />
+                      </svg>
+                      <span>Video</span>
+                    </button>
+                  </div>
+                </ng-container>
+
+                <!-- Default select dropdown for other select fields -->
+                <ng-template #defaultSelect>
+                  <select
+                    [id]="field.key"
+                    [ngModel]="localData()[field.key]"
+                    (ngModelChange)="updateSelectField(field.key, $event)"
+                    class="select-input"
+                    [name]="field.key"
                   >
-                    {{ option.label }}
-                  </option>
-                </select>
+                    <option *ngFor="let option of field.options" [value]="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </ng-template>
+
               </ng-container>
+
+
 
               <!-- File Field -->
               <div *ngSwitchCase="'file'" class="file-field">

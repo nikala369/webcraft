@@ -1,6 +1,6 @@
 @mixin dropdown-styles($width: 200px, $zindex: 100) {
   position: relative;
-  
+
   // Use CSS variable with fallback color
   $accent-color: var(--theme-accent-color, #4a8dff);
 
@@ -68,6 +68,8 @@
       align-items: center;
       gap: 10px;
 
+      font-size: 12px;
+
       &:hover {
         background: rgba(255, 255, 255, 0.05);
       }
@@ -112,4 +114,4 @@
       }
     }
   }
-} 
+}

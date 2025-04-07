@@ -17,173 +17,17 @@
       >
         <div class="business-type-icon">
           <!-- Restaurant icon -->
-          <svg
-            *ngIf="type.id === 'restaurant'"
-            class="type-icon"
-            width="24"
-            height="24"
-            viewBox="0 0 40 40"
-            fill="none"
-          >
-            <path
-              d="M12 10C12 7.79086 13.7909 6 16 6H24C26.2091 6 28 7.79086 28 10V24C28 26.2091 26.2091 28 24 28H16C13.7909 28 12 26.2091 12 24V10Z"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <path
-              d="M10 34H30"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path d="M16 28V34" stroke="currentColor" stroke-width="2" />
-            <path d="M24 28V34" stroke="currentColor" stroke-width="2" />
-            <path
-              d="M16 16H24"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M16 20H24"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M20 12V24"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
+          <img style="width: 40px; height: 40px;" *ngIf="type.id === 'restaurant'" src="assets/business-types/restaurant.svg" />
 
           <!-- Salon icon -->
-          <svg
-            *ngIf="type.id === 'salon'"
-            class="type-icon"
-            width="24"
-            height="24"
-            viewBox="0 0 40 40"
-            fill="none"
-          >
-            <path
-              d="M20 6V16"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M16 12L24 12"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M11 24C14.3137 24 17 21.3137 17 18C17 14.6863 14.3137 12 11 12C7.68629 12 5 14.6863 5 18C5 21.3137 7.68629 24 11 24Z"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <path
-              d="M29 24C32.3137 24 35 21.3137 35 18C35 14.6863 32.3137 12 29 12C25.6863 12 23 14.6863 23 18C23 21.3137 25.6863 24 29 24Z"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <path
-              d="M11 24V34"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M29 24V34"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M11 29H29"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
+          <img style="width: 40px; height: 40px;" *ngIf="type.id === 'salon'" src="assets/business-types/salon.svg" />
 
           <!-- Architecture icon -->
-          <svg
-            *ngIf="type.id === 'architecture'"
-            class="type-icon"
-            width="24"
-            height="24"
-            viewBox="0 0 40 40"
-            fill="none"
-          >
-            <path
-              d="M4 34H36"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M20 5L32 15V34H8V15L20 5Z"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <path d="M16 34V24H24V34" stroke="currentColor" stroke-width="2" />
-            <path
-              d="M12 20H28"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
+          <img style="width: 40px; height: 40px;" *ngIf="type.id === 'architecture'" src="assets/business-types/architecture.svg" />
 
           <!-- Portfolio icon -->
-          <svg
-            *ngIf="type.id === 'portfolio'"
-            class="type-icon"
-            width="24"
-            height="24"
-            viewBox="0 0 40 40"
-            fill="none"
-          >
-            <rect
-              x="8"
-              y="8"
-              width="24"
-              height="24"
-              rx="2"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <rect
-              x="12"
-              y="12"
-              width="7"
-              height="7"
-              rx="1"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <rect
-              x="12"
-              y="21"
-              width="7"
-              height="7"
-              rx="1"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <rect
-              x="21"
-              y="12"
-              width="7"
-              height="16"
-              rx="1"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-          </svg>
+          <img style="width: 40px; height: 40px;" *ngIf="type.id === 'portfolio'" src="assets/business-types/portfolio.svg" />
+
         </div>
         <h4 class="business-type-name">{{ type.name }}</h4>
         <p class="business-type-description">{{ type.description }}</p>
@@ -216,114 +60,19 @@
     <div class="compact-selector">
       <div class="selected-type" (click)="toggleDropdown()">
         <div class="business-type-icon">
+
           <!-- Restaurant icon -->
-          <svg
-            *ngIf="selectedBusinessType === 'restaurant'"
-            class="type-icon"
-            width="24"
-            height="24"
-            viewBox="0 0 40 40"
-            fill="none"
-          >
-            <path
-              d="M12 10C12 7.79086 13.7909 6 16 6H24C26.2091 6 28 7.79086 28 10V24C28 26.2091 26.2091 28 24 28H16C13.7909 28 12 26.2091 12 24V10Z"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <path
-              d="M16 16H24"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M16 20H24"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
+          <img style="width: 22px; height: 22px;" *ngIf="selectedBusinessType === 'restaurant'" src="assets/business-types/restaurant.svg" />
 
           <!-- Salon icon -->
-          <svg
-            *ngIf="selectedBusinessType === 'salon'"
-            class="type-icon"
-            width="24"
-            height="24"
-            viewBox="0 0 40 40"
-            fill="none"
-          >
-            <path
-              d="M20 6V16"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M16 12L24 12"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
+          <img style="width: 22px; height: 22px;" *ngIf="selectedBusinessType === 'salon'" src="assets/business-types/salon.svg" />
 
           <!-- Architecture icon -->
-          <svg
-            *ngIf="selectedBusinessType === 'architecture'"
-            class="type-icon"
-            width="24"
-            height="24"
-            viewBox="0 0 40 40"
-            fill="none"
-          >
-            <path
-              d="M4 34H36"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M20 5L32 15V34H8V15L20 5Z"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <path d="M16 34V24H24V34" stroke="currentColor" stroke-width="2" />
-            <path
-              d="M12 20H28"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
+          <img style="width: 22px; height: 22px;" *ngIf="selectedBusinessType === 'architecture'" src="assets/business-types/architecture.svg" />
 
           <!-- Portfolio icon -->
-          <svg
-            *ngIf="selectedBusinessType === 'portfolio'"
-            class="type-icon"
-            width="24"
-            height="24"
-            viewBox="0 0 40 40"
-            fill="none"
-          >
-            <rect
-              x="8"
-              y="8"
-              width="24"
-              height="24"
-              rx="2"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <rect
-              x="12"
-              y="12"
-              width="7"
-              height="7"
-              rx="1"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-          </svg>
+          <img style="width: 22px; height: 22px;" *ngIf="selectedBusinessType === 'portfolio'" src="assets/business-types/portfolio.svg" />
+
 
           <!-- Default icon if no business type selected -->
           <svg
@@ -382,117 +131,16 @@
         >
           <div class="business-type-icon">
             <!-- Restaurant icon -->
-            <svg
-              *ngIf="type.id === 'restaurant'"
-              class="type-icon-small"
-              width="18"
-              height="18"
-              viewBox="0 0 40 40"
-              fill="none"
-            >
-              <path
-                d="M12 10C12 7.79086 13.7909 6 16 6H24C26.2091 6 28 7.79086 28 10V24C28 26.2091 26.2091 28 24 28H16C13.7909 28 12 26.2091 12 24V10Z"
-                stroke="currentColor"
-                stroke-width="2"
-              />
-              <path
-                d="M16 16H24"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-              <path
-                d="M16 20H24"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
+            <img style="width: 22px; height: 22px;" *ngIf="type.id === 'restaurant'" src="assets/business-types/restaurant.svg" />
 
             <!-- Salon icon -->
-            <svg
-              *ngIf="type.id === 'salon'"
-              class="type-icon-small"
-              width="18"
-              height="18"
-              viewBox="0 0 40 40"
-              fill="none"
-            >
-              <path
-                d="M20 6V16"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-              <path
-                d="M16 12L24 12"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
+            <img style="width: 22px; height: 22px;" *ngIf="type.id === 'salon'" src="assets/business-types/salon.svg" />
 
             <!-- Architecture icon -->
-            <svg
-              *ngIf="type.id === 'architecture'"
-              class="type-icon-small"
-              width="18"
-              height="18"
-              viewBox="0 0 40 40"
-              fill="none"
-            >
-              <path
-                d="M4 34H36"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-              <path
-                d="M20 5L32 15V34H8V15L20 5Z"
-                stroke="currentColor"
-                stroke-width="2"
-              />
-              <path
-                d="M16 34V24H24V34"
-                stroke="currentColor"
-                stroke-width="2"
-              />
-              <path
-                d="M12 20H28"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
+            <img style="width: 22px; height: 22px;" *ngIf="type.id === 'architecture'" src="assets/business-types/architecture.svg" />
 
             <!-- Portfolio icon -->
-            <svg
-              *ngIf="type.id === 'portfolio'"
-              class="type-icon-small"
-              width="18"
-              height="18"
-              viewBox="0 0 40 40"
-              fill="none"
-            >
-              <rect
-                x="8"
-                y="8"
-                width="24"
-                height="24"
-                rx="2"
-                stroke="currentColor"
-                stroke-width="2"
-              />
-              <rect
-                x="12"
-                y="12"
-                width="7"
-                height="7"
-                rx="1"
-                stroke="currentColor"
-                stroke-width="2"
-              />
-            </svg>
+            <img style="width: 22px; height: 22px;" *ngIf="type.id === 'portfolio'" src="assets/business-types/portfolio.svg" />
           </div>
           <span>{{ type.name }}</span>
           <div class="selected-indicator" *ngIf="isSelected(type.id)">
