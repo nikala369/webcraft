@@ -96,14 +96,15 @@
   // Services grid
   .services-grid {
     display: grid;
-    // Desktop: show 4 items per row with fixed width columns
-    grid-template-columns: repeat(4, 1fr);
+    // Using auto-fill instead of fixed columns for better responsiveness
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 2.5rem;
     margin-bottom: 3rem;
+    min-height: 300px; /* Ensure a minimum height even with few items */
 
     // Mobile layout
     &--mobile {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       gap: 1.5rem;
       max-width: 540px;
       margin-left: auto;
@@ -112,22 +113,32 @@
 
     // Premium grid
     &.premium-grid {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+
+    // Add empty state styling
+    &:empty {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.02);
+      border-radius: 8px;
     }
   }
 
   // Service card
   .service-card {
     background-color: var(--card-bg-color);
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: var(--card-shadow);
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
     position: relative;
     width: 100%;
     height: 100%;
+    min-height: 380px;
 
     // Animation
     opacity: 0;
@@ -145,13 +156,6 @@
     // Premium cards
     &--premium {
       border-bottom: 3px solid var(--primary-accent-color);
-    }
-
-    // Card with image
-    &--with-image {
-      .service-content {
-        padding-top: 1.5rem;
-      }
     }
 
     // Featured service card
@@ -173,10 +177,12 @@
       }
     }
 
-    // Service image
+    // Service image - increased to 70% of card height
     .service-image {
       width: 100%;
-      height: 200px;
+      height: 240px; // Fixed height for consistency
+      flex-grow: 0;
+      flex-shrink: 0;
       overflow: hidden;
       position: relative;
 
@@ -186,8 +192,8 @@
         bottom: 0;
         left: 0;
         right: 0;
-        height: 40px;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.1), transparent);
+        height: 60px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.2), transparent);
         z-index: 1;
       }
 
@@ -199,51 +205,39 @@
       }
     }
 
-    // Service content
+    // Service content - streamlined layout
     .service-content {
-      padding: 1.5rem;
+      padding: 1.25rem;
       display: flex;
       flex-direction: column;
       flex: 1;
+      justify-content: space-between;
+      background-color: var(--card-bg-color);
+      position: relative;
 
-      // Service title
+      // Service title - removed the decoration line
       .service-title {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         font-weight: 600;
         color: var(--heading-color);
-        margin-bottom: 0.75rem;
-        position: relative;
-        padding-bottom: 0.5rem;
-        height: auto;
-        min-height: 2.6rem;
-        line-height: 1.4;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
+        -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
-
-        &::after {
-          content: "";
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 40px;
-          height: 2px;
-          background-color: var(--primary-accent-color);
-        }
       }
 
       // Service description
       .service-description {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         line-height: 1.5;
         color: var(--text-color);
-        opacity: 0.8;
-        margin-bottom: 1.25rem;
-        flex-grow: 1;
+        opacity: 0.85;
+        margin-bottom: 1rem;
         display: -webkit-box;
-        -webkit-line-clamp: 3;
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -252,25 +246,24 @@
       // Service details (price, duration)
       .service-details {
         margin-top: auto;
-        margin-bottom: 1.5rem;
         display: flex;
         justify-content: space-between;
         flex-wrap: wrap;
-        gap: 1rem;
-        background-color: rgba(0, 0, 0, 0.03);
-        padding: 1.25rem;
-        border-radius: 10px;
-        border: 1px solid rgba(0, 0, 0, 0.05);
+        gap: 0.5rem;
+        background-color: rgba(0, 0, 0, 0.02);
+        padding: 0.85rem;
+        border-radius: 8px;
+        margin-bottom: 0;
 
         .service-price,
         .service-duration {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 0.5rem;
 
           .price-label,
           .duration-label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 600;
             color: var(--text-color);
             opacity: 0.7;
@@ -278,36 +271,38 @@
 
           .price-value,
           .duration-value {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 700;
             color: var(--primary-accent-color);
           }
         }
-      }
 
-      // Book now button (for salon)
-      .book-now-btn {
-        display: inline-block;
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 6px;
-        background-color: var(--primary-accent-color);
-        color: white;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        text-align: center;
-        text-decoration: none;
-        transition: all 0.3s ease;
+        // Book now button (for salon)
+        .book-now-btn {
+          display: inline-block;
+          padding: 0.5rem 1rem;
+          border: none;
+          border-radius: 6px;
+          background-color: var(--primary-accent-color);
+          color: white;
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          text-align: center;
+          text-decoration: none;
+          transition: all 0.3s ease;
+          margin-left: auto;
+          white-space: nowrap;
 
-        &:hover {
-          background-color: darken(#4a8dff, 10%);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(74, 141, 255, 0.2);
-        }
+          &:hover {
+            background-color: darken(#4a8dff, 10%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 141, 255, 0.2);
+          }
 
-        &:active {
-          transform: translateY(0);
+          &:active {
+            transform: translateY(0);
+          }
         }
       }
     }
@@ -345,14 +340,35 @@
       }
     }
   }
+
+  // Empty state styling
+  .empty-services-message {
+    background-color: rgba(0, 0, 0, 0.02);
+    border: 2px dashed rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 3rem;
+    text-align: center;
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    p {
+      color: rgba(0, 0, 0, 0.5);
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+  }
 }
 
 // Responsive adjustments
 @media (max-width: 1200px) {
   .services-section {
     .services-grid {
-      // Adjust to 3 columns for large screens
-      grid-template-columns: repeat(3, 1fr);
+      // No need to change columns with auto-fill, just adjust gap
+      gap: 2rem;
     }
   }
 }
@@ -368,13 +384,9 @@
     }
 
     .services-grid {
-      // 2 columns for tablets
-      grid-template-columns: repeat(2, 1fr);
-
-      // Mobile view in tablet size matches the mobile grid
-      &--mobile {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      // Adjust min width for tablets
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem;
     }
   }
 }
@@ -396,11 +408,12 @@
     }
 
     .services-grid {
-      // 1 column for mobile
+      // For mobile, we can use a single column layout
       grid-template-columns: 1fr;
       max-width: 450px;
       margin-left: auto;
       margin-right: auto;
+      gap: 1.5rem;
 
       // Mobile view in mobile size shows one full width column
       &--mobile {
@@ -410,15 +423,43 @@
     }
 
     .service-card {
+      min-height: 320px;
+
       .service-image {
-        height: 200px;
+        height: 180px;
       }
 
       .service-content {
+        padding: 1rem;
+
         .service-title {
-          font-size: 1.3rem;
-          min-height: auto;
-          -webkit-line-clamp: 2;
+          font-size: 1.1rem;
+          margin-bottom: 0.4rem;
+        }
+
+        .service-description {
+          font-size: 0.85rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .service-details {
+          padding: 0.75rem;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.5rem;
+
+          .service-price,
+          .service-duration {
+            width: 100%;
+            justify-content: space-between;
+          }
+
+          .book-now-btn {
+            width: 100%;
+            margin-top: 0.5rem;
+            text-align: center;
+            padding: 0.6rem;
+          }
         }
       }
     }
@@ -428,14 +469,28 @@
 @media (max-width: 576px) {
   .services-section {
     .services-grid {
-      gap: 1.5rem;
+      gap: 1.25rem;
     }
 
     .service-card {
-      border-radius: 6px;
+      border-radius: 10px;
+      min-height: 300px;
 
       .service-image {
-        height: 180px;
+        height: 160px;
+      }
+
+      .service-content {
+        padding: 0.85rem;
+      }
+    }
+
+    .empty-services-message {
+      padding: 2rem;
+      min-height: 200px;
+
+      p {
+        font-size: 1.1rem;
       }
     }
   }

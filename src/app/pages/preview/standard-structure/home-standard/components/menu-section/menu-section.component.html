@@ -18,67 +18,90 @@
 
       <!-- Menu Categories -->
       <div class="menu-categories">
-        <ng-container *ngFor="let category of getMenuCategories()">
-          <div class="menu-category">
-            <h3 class="category-title">{{ category.name }}</h3>
-            <p *ngIf="category.description" class="category-description">
-              {{ category.description }}
-            </p>
+        <ng-container *ngIf="getMenuCategories().length > 0; else noCategories">
+          <ng-container *ngFor="let category of getMenuCategories()">
+            <div class="menu-category">
+              <h3 class="category-title">{{ category.name }}</h3>
+              <p *ngIf="category.description" class="category-description">
+                {{ category.description }}
+              </p>
 
-            <!-- Menu Items -->
-            <div
-              class="menu-items"
-              [ngClass]="{
-                'menu-items--premium': isPremium(),
-                'menu-items--standard': !isPremium()
-              }"
-            >
+              <!-- Menu Items -->
               <div
-                *ngFor="let item of category.items"
-                class="menu-item"
+                class="menu-items"
                 [ngClass]="{
-                  'menu-item--featured': isFeatured(item),
-                  'menu-item--with-image': hasImage(item)
+                  'menu-items--premium': isPremium(),
+                  'menu-items--standard': !isPremium()
                 }"
               >
-                <!-- Featured badge for premium users -->
-                <div
-                  class="featured-badge"
-                  *ngIf="isFeatured(item) && isPremium()"
+                <ng-container
+                  *ngIf="
+                    category.items && category.items.length > 0;
+                    else noItems
+                  "
                 >
-                  Featured
-                </div>
-
-                <div class="menu-item-inner">
-                  <!-- Menu item image (for all plans) -->
-                  <div class="menu-item-image" *ngIf="hasImage(item)">
-                    <img [src]="item.image" [alt]="item.name" />
-                  </div>
-
-                  <div class="menu-item-content">
-                    <div class="menu-item-header">
-                      <h4 class="menu-item-name">{{ item.name }}</h4>
-                      <span class="menu-item-price">{{ item.price }}</span>
+                  <div
+                    *ngFor="let item of category.items"
+                    class="menu-item"
+                    [ngClass]="{
+                      'menu-item--featured': isFeatured(item),
+                      'menu-item--with-image': hasImage(item)
+                    }"
+                  >
+                    <!-- Featured badge for premium users -->
+                    <div
+                      class="featured-badge"
+                      *ngIf="isFeatured(item) && isPremium()"
+                    >
+                      Featured
                     </div>
 
-                    <p class="menu-item-desc">{{ item.description }}</p>
+                    <div class="menu-item-inner">
+                      <!-- Menu item image (for all plans) -->
+                      <div class="menu-item-image" *ngIf="hasImage(item)">
+                        <img [src]="item.image" [alt]="item.name" />
+                      </div>
 
-                    <!-- Item tags (dietary restrictions, special badges) -->
-                    <div class="menu-item-tags" *ngIf="hasTags(item)">
-                      <span
-                        *ngFor="let tag of item.tags"
-                        class="menu-tag"
-                        [ngClass]="getTagClass(tag)"
-                      >
-                        {{ getTagLabel(tag) }}
-                      </span>
+                      <div class="menu-item-content">
+                        <div class="menu-item-header">
+                          <h4 class="menu-item-name">{{ item.name }}</h4>
+                          <span class="menu-item-price">{{ item.price }}</span>
+                        </div>
+
+                        <p class="menu-item-desc">{{ item.description }}</p>
+
+                        <!-- Item tags (dietary restrictions, special badges) -->
+                        <div class="menu-item-tags" *ngIf="hasTags(item)">
+                          <span
+                            *ngFor="let tag of item.tags"
+                            class="menu-tag"
+                            [ngClass]="getTagClass(tag)"
+                          >
+                            {{ getTagLabel(tag) }}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </ng-container>
+
+                <!-- Empty items template -->
+                <ng-template #noItems>
+                  <div class="empty-items-message">
+                    <p>Add menu items to this category, click edit button</p>
+                  </div>
+                </ng-template>
               </div>
             </div>
-          </div>
+          </ng-container>
         </ng-container>
+
+        <!-- Empty categories template -->
+        <ng-template #noCategories>
+          <div class="empty-categories-message">
+            <p>Add menu items to this category, click edit button</p>
+          </div>
+        </ng-template>
       </div>
 
       <!-- Premium call-to-action to add custom menu (standard plan users) -->

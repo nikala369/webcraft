@@ -94,15 +94,17 @@
   // Menu items - Standard Plan Grid
   .menu-items--standard {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1.5rem;
+    min-height: 200px; /* Ensure minimum height even when empty */
   }
 
   // Menu items - Premium Plan Grid (more elaborate)
   .menu-items--premium {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 2rem;
+    min-height: 200px; /* Ensure minimum height even when empty */
   }
 
   // Individual menu item
@@ -341,13 +343,67 @@
       }
     }
   }
+
+  // Empty category state
+  .menu-category {
+    &:empty {
+      min-height: 250px;
+      background-color: rgba(0, 0, 0, 0.02);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  // Empty state styling for categories
+  .empty-categories-message {
+    background-color: rgba(0, 0, 0, 0.02);
+    border: 2px dashed rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 3rem;
+    text-align: center;
+    width: 100%;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 2rem 0;
+
+    p {
+      color: rgba(0, 0, 0, 0.5);
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+  }
+
+  // Empty state styling for items within a category
+  .empty-items-message {
+    background-color: rgba(0, 0, 0, 0.02);
+    border: 2px dashed rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    p {
+      color: rgba(0, 0, 0, 0.5);
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+  }
 }
 
 // Responsive adjustments
 @media (min-width: 1400px) {
-  // Extra large screens - show more columns for premium
+  // Extra large screens - allow slightly larger items
   .menu-section .menu-items--premium {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
 }
 
@@ -355,7 +411,8 @@
   .menu-section {
     .menu-items--premium,
     .menu-items--standard {
-      grid-template-columns: repeat(3, 1fr);
+      // Auto-fill works well here, just adjust min-width
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     }
   }
 }
@@ -372,7 +429,8 @@
 
     .menu-items--premium,
     .menu-items--standard {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.5rem;
     }
   }
 }

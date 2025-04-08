@@ -28,58 +28,73 @@
           'premium-grid': isPremium()
         }"
       >
-        <div
-          *ngFor="let service of getServices(); let i = index"
-          class="service-card"
-          [ngClass]="{
-            'service-card--premium': isPremium(),
-            'service-card--with-image': hasImage(service),
-            'service-card--featured': isFeatured(service)
-          }"
-          [ngStyle]="getAnimationDelay(i)"
-        >
-          <!-- Service Image (for all plans) -->
-          <div class="service-image" *ngIf="service.image">
-            <img [src]="service.image" [alt]="service.title" />
-          </div>
-          <div class="service-content">
-            <!-- Service Icon removed as requested -->
+        <ng-container *ngIf="getServices().length > 0; else noServices">
+          <div
+            *ngFor="let service of getServices(); let i = index"
+            class="service-card"
+            [ngClass]="{
+              'service-card--premium': isPremium(),
+              'service-card--with-image': hasImage(service),
+              'service-card--featured': isFeatured(service)
+            }"
+            [ngStyle]="getAnimationDelay(i)"
+          >
+            <!-- Service Image (for all plans) -->
+            <div class="service-image" *ngIf="service.image">
+              <img [src]="service.image" [alt]="service.title" />
+            </div>
+            <div class="service-content">
+              <!-- Service Title -->
+              <h3 class="service-title">{{ service.title }}</h3>
 
-            <!-- Service Title -->
-            <h3 class="service-title">{{ service.title }}</h3>
+              <!-- Service Description -->
+              <p class="service-description">{{ service.description }}</p>
 
-            <!-- Service Description -->
-            <p class="service-description">{{ service.description }}</p>
+              <!-- Service Details (Price & Duration) -->
+              <div
+                class="service-details"
+                *ngIf="
+                  service.price ||
+                  service.duration ||
+                  (isPremium() &&
+                    businessType === 'salon' &&
+                    service.bookingUrl)
+                "
+              >
+                <div class="service-price" *ngIf="service.price">
+                  <span class="price-label">Price:</span>
+                  <span class="price-value">{{ service.price }}</span>
+                </div>
 
-            <!-- Service Details (Price & Duration) -->
-            <div
-              class="service-details"
-              *ngIf="service.price || service.duration"
-            >
-              <div class="service-price" *ngIf="service.price">
-                <span class="price-label">Price:</span>
-                <span class="price-value">{{ service.price }}</span>
-              </div>
+                <div class="service-duration" *ngIf="service.duration">
+                  <span class="duration-label">Duration:</span>
+                  <span class="duration-value">{{ service.duration }}</span>
+                </div>
 
-              <div class="service-duration" *ngIf="service.duration">
-                <span class="duration-label">Duration:</span>
-                <span class="duration-value">{{ service.duration }}</span>
+                <!-- Booking Button (Premium Only for Salon) -->
+                <a
+                  *ngIf="
+                    isPremium() &&
+                    businessType === 'salon' &&
+                    service.bookingUrl
+                  "
+                  [href]="service.bookingUrl"
+                  class="book-now-btn"
+                  target="_blank"
+                >
+                  Book Now
+                </a>
               </div>
             </div>
-
-            <!-- Booking Button (Premium Only for Salon) -->
-            <a
-              *ngIf="
-                isPremium() && businessType === 'salon' && service.bookingUrl
-              "
-              [href]="service.bookingUrl"
-              class="book-now-btn"
-              target="_blank"
-            >
-              Book Now
-            </a>
           </div>
-        </div>
+        </ng-container>
+
+        <!-- Empty state template -->
+        <ng-template #noServices>
+          <div class="empty-services-message">
+            <p>Add services, click edit button</p>
+          </div>
+        </ng-template>
       </div>
 
       <!-- Premium call-to-action only shown for carousel and advanced features -->

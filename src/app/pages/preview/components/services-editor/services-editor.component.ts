@@ -52,7 +52,7 @@ export class ServicesEditorComponent implements OnInit {
   selectedServiceIndex = signal<number | null>(null);
 
   // Plan-based limits (standard: 10, premium: 15)
-  maxServices = computed(() => (this.isPremium() ? 15 : 10));
+  maxServices = computed(() => (this.isPremium() ? 15 : 9));
 
   // Check if user has premium plan
   isPremium(): boolean {
