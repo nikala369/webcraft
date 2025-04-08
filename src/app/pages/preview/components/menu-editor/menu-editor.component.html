@@ -140,7 +140,7 @@
               <span>Add Item</span>
             </button>
             <span *ngIf="canAddItem()" class="item-count">
-              {{ category.items?.length || 0 }}/{{ maxItemsPerCategory() }}
+              {{ category.items.length || 0 }}/{{ maxItemsPerCategory() }}
             </span>
             <span *ngIf="!canAddItem()" class="limit-reached-text"
               >(Limit Reached)</span
