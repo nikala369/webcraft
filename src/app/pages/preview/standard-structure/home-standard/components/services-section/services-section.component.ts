@@ -18,7 +18,6 @@ interface ServiceItem {
   description: string;
   price?: string;
   duration?: string;
-  icon?: string;
   image?: string;
   featured?: boolean;
   bookingUrl?: string;
@@ -46,6 +45,9 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
   private themeColorsService = inject(ThemeColorsService);
   private elementRef = inject(ElementRef);
 
+  // Maximum number of services to display
+  private readonly maxServices = 10;
+
   // Timestamp to track last update (for debugging)
   lastUpdateTime = new Date().toISOString();
 
@@ -57,7 +59,8 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
         'Professional haircut and styling tailored to your preferences and face shape.',
       price: '$40',
       duration: '45 min',
-      icon: 'assets/standard-services/salon-icon1.svg',
+      image:
+        'https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
     {
       title: 'Color & Highlights',
@@ -65,7 +68,8 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
         'Full color or highlights performed with premium products for vibrant, long-lasting results.',
       price: '$85',
       duration: '90 min',
-      icon: 'assets/standard-services/salon-icon2.svg',
+      image:
+        'https://images.unsplash.com/photo-1562322140-8baeececf3df?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
     {
       title: 'Manicure & Pedicure',
@@ -73,7 +77,8 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
         'Relaxing nail treatment including cuticle care, nail shaping, and polish application.',
       price: '$55',
       duration: '60 min',
-      icon: 'assets/standard-services/salon-icon3.svg',
+      image:
+        'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
     {
       title: 'Facial Treatment',
@@ -81,7 +86,8 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
         'Rejuvenating facial customized to your skin type to cleanse, exfoliate, and hydrate.',
       price: '$70',
       duration: '50 min',
-      icon: 'assets/standard-services/salon-icon4.svg',
+      image:
+        'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
   ];
 
@@ -219,12 +225,13 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
     // Check for services data using specific paths in priority order
     if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
       console.log(`Found custom ${data.items.length} services:`, data.items);
-      return data.items;
+      // Limit to maximum number of services
+      return data.items.slice(0, this.maxServices);
     }
 
     console.log('Using default services for business type:', this.businessType);
 
-    // Return appropriate default services based on business type
+    // Return appropriate default services based on business type (already limited by definition)
     if (this.businessType === 'salon') {
       return this.defaultSalonServices;
     } else if (this.businessType === 'architecture') {
@@ -322,25 +329,29 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
       title: 'Residential Design',
       description:
         'Custom home designs that balance aesthetics, functionality, and sustainability.',
-      icon: 'assets/standard-services/service-icon1.svg',
+      image:
+        'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
     {
       title: 'Commercial Architecture',
       description:
         'Innovative commercial spaces that enhance productivity and user experience.',
-      icon: 'assets/standard-services/service-icon2.svg',
+      image:
+        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
     {
       title: 'Renovation Planning',
       description:
         'Thoughtful renovation designs that respect existing structures while modernizing spaces.',
-      icon: 'assets/standard-services/service-icon3.svg',
+      image:
+        'https://images.unsplash.com/photo-1503387762-592deb58ef4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
     {
       title: 'Architectural Consulting',
       description:
         'Expert advice on architectural decisions, materials, and sustainable building practices.',
-      icon: 'assets/standard-services/service-icon4.svg',
+      image:
+        'https://images.unsplash.com/photo-1503174971373-b1f69c758416?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
   ];
 
@@ -349,25 +360,29 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
       title: 'UI/UX Design',
       description:
         'User-centered design solutions for web and mobile applications.',
-      icon: 'assets/standard-services/service-icon1.svg',
+      image:
+        'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
     {
       title: 'Brand Identity',
       description:
         'Comprehensive branding solutions including logos, style guides, and visual identity systems.',
-      icon: 'assets/standard-services/service-icon2.svg',
+      image:
+        'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
     {
       title: 'Web Development',
       description:
         'Custom website development with modern technologies and responsive design.',
-      icon: 'assets/standard-services/service-icon3.svg',
+      image:
+        'https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
     {
       title: 'Content Creation',
       description:
         'Professional photography, copywriting, and visual content for your digital presence.',
-      icon: 'assets/standard-services/service-icon4.svg',
+      image:
+        'https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
   ];
 }

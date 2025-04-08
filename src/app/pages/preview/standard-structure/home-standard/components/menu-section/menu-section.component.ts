@@ -50,6 +50,10 @@ export class MenuSectionComponent implements OnChanges, OnInit {
     path?: string;
   }>();
 
+  // Maximum menu limits that match the menu editor
+  readonly maxCategories = 3; // Standard plan limit
+  readonly maxItemsPerCategory = 12; // Standard plan limit
+
   private themeColorsService = inject(ThemeColorsService);
   private elementRef = inject(ElementRef);
 
@@ -103,15 +107,6 @@ export class MenuSectionComponent implements OnChanges, OnInit {
       ],
     },
   ];
-
-  // Plan-based limits (matching with menu-editor)
-  get maxCategories(): number {
-    return this.isPremium() ? 5 : 2; // Premium: 5, Standard: 2
-  }
-
-  get maxItemsPerCategory(): number {
-    return this.isPremium() ? 15 : 8; // Premium: 15, Standard: 8
-  }
 
   ngOnInit() {
     // Apply custom colors from configuration
@@ -318,9 +313,9 @@ export class MenuSectionComponent implements OnChanges, OnInit {
   }
 
   /**
-   * Check if an item has an image
+   * Check if menu item has an image
    */
   hasImage(item: MenuItem): boolean {
-    return !!item.image;
+    return !!item.image && item.image.trim() !== '';
   }
 }

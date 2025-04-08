@@ -38,16 +38,12 @@
           }"
           [ngStyle]="getAnimationDelay(i)"
         >
-          <!-- Service Image (Premium Only) -->
-          <div class="service-image" *ngIf="hasImage(service)">
+          <!-- Service Image (for all plans) -->
+          <div class="service-image" *ngIf="service.image">
             <img [src]="service.image" [alt]="service.title" />
           </div>
-
           <div class="service-content">
-            <!-- Service Icon -->
-            <div class="service-icon" *ngIf="service.icon">
-              <img [src]="service.icon" [alt]="service.title + ' icon'" />
-            </div>
+            <!-- Service Icon removed as requested -->
 
             <!-- Service Title -->
             <h3 class="service-title">{{ service.title }}</h3>
@@ -65,10 +61,7 @@
                 <span class="price-value">{{ service.price }}</span>
               </div>
 
-              <div
-                class="service-duration"
-                *ngIf="service.duration && isPremium()"
-              >
+              <div class="service-duration" *ngIf="service.duration">
                 <span class="duration-label">Duration:</span>
                 <span class="duration-value">{{ service.duration }}</span>
               </div>
@@ -89,10 +82,11 @@
         </div>
       </div>
 
-      <!-- Premium call-to-action (standard plan users) -->
+      <!-- Premium call-to-action only shown for carousel and advanced features -->
       <div class="services-cta" *ngIf="planType === 'standard'">
         <p>
-          Want to showcase more services with booking options and custom images?
+          Upgrade to Premium for a carousel display, booking system integration,
+          and advanced customization options.
         </p>
         <button class="upgrade-button">Upgrade to Premium</button>
       </div>

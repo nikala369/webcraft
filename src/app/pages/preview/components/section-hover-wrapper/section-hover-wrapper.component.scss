@@ -29,11 +29,12 @@
   .edit-button {
     position: absolute;
     top: 10px;
-    right: 10px;
+    left: 50%;
+    transform: translateX(-50%);
     background-color: var(--hover-accent-color);
     color: white;
     border: none;
-    padding: 6px 12px;
+    padding: 7.5px 15px;
     border-radius: 4px;
     font-size: 12px;
     font-weight: 600;
@@ -44,17 +45,20 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
     opacity: 0;
-    z-index: 9999; /* Very high to be above all content */
-    pointer-events: none; /* Initially no pointer events */
+    z-index: 9999;
+    pointer-events: none;
+
+    /* New stacking context */
+    isolation: isolate;
 
     &.visible {
       opacity: 0.9;
-      pointer-events: auto; /* Enable pointer events when visible */
+      pointer-events: auto;
     }
 
     &:hover {
       opacity: 1;
-      transform: translateY(-2px);
+      transform: translate(-50%, -2px); /* Maintain center while moving up */
     }
 
     .edit-icon {
@@ -63,7 +67,7 @@
 
     .edit-text {
       @include m.breakpoint(md) {
-        display: none; /* Hide text on mobile, show only icon */
+        display: none;
       }
     }
   }

@@ -179,11 +179,9 @@
 
           <!-- Price & Duration (For salon specifically) -->
           <div class="form-section" *ngIf="businessType === 'salon'">
-            <h4 class="section-label">
-              Pricing <span *ngIf="isPremium()">& Duration</span>
-            </h4>
+            <h4 class="section-label">Pricing & Duration</h4>
 
-            <div class="form-row" [class.form-row-split]="isPremium()">
+            <div class="form-row form-row-split">
               <div class="form-group">
                 <label for="service-price1">Price</label>
                 <input
@@ -195,8 +193,8 @@
                 />
               </div>
 
-              <!-- Duration (Premium Only for salon) -->
-              <div class="form-group" *ngIf="isPremium()">
+              <!-- Duration field for all plans -->
+              <div class="form-group">
                 <label for="service-duration">Duration</label>
                 <input
                   id="service-duration"
@@ -225,59 +223,69 @@
             </div>
           </div>
 
-          <!-- Icon/Image Section based on plan type -->
+          <!-- Service Image Section (available for all plans) -->
           <div class="form-section">
-            <!-- Standard Plan: Icon Selection -->
-            <div *ngIf="!isPremium()">
-              <h4 class="section-label">Service Icon</h4>
+            <h4 class="section-label">Service Image</h4>
 
-              <div class="icon-selector">
-                <div
-                  *ngFor="let icon of getIconOptions()"
-                  class="icon-option"
-                  [class.selected]="service.icon === icon"
-                  (click)="service.icon = icon"
-                >
-                  <img [src]="icon" alt="Service icon" />
-                </div>
+            <div class="file-upload-container">
+              <div class="file-controls">
+                <input
+                  type="file"
+                  id="service-image-upload"
+                  class="file-input"
+                  accept="image/*"
+                  (change)="handleImageUpload($event)"
+                />
+                <label for="service-image-upload" class="file-upload-btn">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  Upload Image
+                </label>
+              </div>
+
+              <div class="file-info">
+                <span class="required-notice" *ngIf="!service.image">
+                  Please upload a service image
+                </span>
+                <span class="success-notice" *ngIf="service.image">
+                  ✓ Image uploaded
+                </span>
+                <span class="hint">Max 2MB, JPG or PNG recommended</span>
               </div>
             </div>
 
-            <!-- Premium Plan: Image URL -->
-            <div *ngIf="isPremium()">
-              <h4 class="section-label">Service Image</h4>
-
-              <div class="form-row">
-                <label for="service-image1">Image URL</label>
-                <input
-                  id="service-image1"
-                  type="text"
-                  [(ngModel)]="service.image"
-                  placeholder="https://example.com/image.jpg"
-                  class="form-input"
-                />
-              </div>
-
-              <div *ngIf="service.image" class="image-preview">
-                <img [src]="service.image" alt="Service image preview" />
-              </div>
+            <div *ngIf="service.image" class="image-preview">
+              <img [src]="service.image" alt="Service image preview" />
+              <button class="remove-image-btn" (click)="removeServiceImage()">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Remove
+              </button>
             </div>
           </div>
 
           <!-- Premium-only features -->
           <div class="form-section" *ngIf="isPremium()">
             <h4 class="section-label">Advanced Options (Premium Only)</h4>
-
-            <div class="form-row">
-              <label for="service-image2">Service Image URL</label>
-              <input
-                id="service-image2"
-                type="text"
-                [(ngModel)]="service.image"
-                placeholder="https://example.com/image.jpg"
-                class="form-input"
-              />
-            </div>
 
             <div class="form-row" *ngIf="businessType === 'salon'">
               <label for="service-booking">Booking URL</label>

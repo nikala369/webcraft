@@ -38,7 +38,7 @@
                 class="menu-item"
                 [ngClass]="{
                   'menu-item--featured': isFeatured(item),
-                  'menu-item--with-image': hasImage(item) && isPremium()
+                  'menu-item--with-image': hasImage(item)
                 }"
               >
                 <!-- Featured badge for premium users -->
@@ -49,31 +49,30 @@
                   Featured
                 </div>
 
-                <!-- Menu item image (premium only) -->
-                <div
-                  class="menu-item-image"
-                  *ngIf="hasImage(item) && isPremium()"
-                >
-                  <img [src]="item.image" [alt]="item.name" />
-                </div>
-
-                <div class="menu-item-content">
-                  <div class="menu-item-header">
-                    <h4 class="menu-item-name">{{ item.name }}</h4>
-                    <span class="menu-item-price">{{ item.price }}</span>
+                <div class="menu-item-inner">
+                  <!-- Menu item image (for all plans) -->
+                  <div class="menu-item-image" *ngIf="hasImage(item)">
+                    <img [src]="item.image" [alt]="item.name" />
                   </div>
 
-                  <p class="menu-item-desc">{{ item.description }}</p>
+                  <div class="menu-item-content">
+                    <div class="menu-item-header">
+                      <h4 class="menu-item-name">{{ item.name }}</h4>
+                      <span class="menu-item-price">{{ item.price }}</span>
+                    </div>
 
-                  <!-- Item tags (dietary restrictions, special badges) -->
-                  <div class="menu-item-tags" *ngIf="hasTags(item)">
-                    <span
-                      *ngFor="let tag of item.tags"
-                      class="menu-tag"
-                      [ngClass]="getTagClass(tag)"
-                    >
-                      {{ getTagLabel(tag) }}
-                    </span>
+                    <p class="menu-item-desc">{{ item.description }}</p>
+
+                    <!-- Item tags (dietary restrictions, special badges) -->
+                    <div class="menu-item-tags" *ngIf="hasTags(item)">
+                      <span
+                        *ngFor="let tag of item.tags"
+                        class="menu-tag"
+                        [ngClass]="getTagClass(tag)"
+                      >
+                        {{ getTagLabel(tag) }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

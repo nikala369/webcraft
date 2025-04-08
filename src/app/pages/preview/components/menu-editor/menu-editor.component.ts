@@ -56,8 +56,8 @@ export class MenuEditorComponent implements OnInit {
   selectedCategoryIndex = signal<number | null>(null);
 
   // Plan-based limits (updated as per requirement)
-  maxCategories = computed(() => (this.isPremium() ? 5 : 2)); // Premium: 5, Standard: 2
-  maxItemsPerCategory = computed(() => (this.isPremium() ? 15 : 8)); // Premium: 15, Standard: 8
+  maxCategories = computed(() => (this.isPremium() ? 8 : 3)); // Premium: 8, Standard: 3
+  maxItemsPerCategory = computed(() => (this.isPremium() ? 15 : 12)); // Premium: 15, Standard: 12
 
   // Check if user has premium plan
   isPremium(): boolean {
@@ -259,6 +259,78 @@ export class MenuEditorComponent implements OnInit {
   }
 
   // --- Save / Cancel ---
+
+  /**
+   * Handle menu item image upload from file input
+   * @param event File input change event
+   * @param item Menu item to update
+   */
+  handleItemImageUpload(event: Event, item: MenuItem): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+
+    if (!files || files.length === 0) {
+      console.log('No file selected');
+      return;
+    }
+
+    const file = files[0];
+    console.log(
+      'File selected:',
+      file.name,
+      'Size:',
+      file.size,
+      'Type:',
+      file.type
+    );
+
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      alert('File size exceeds 2MB limit. Please choose a smaller image.');
+      // Reset the input
+      input.value = '';
+      return;
+    }
+
+    // Check if it's an image
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (JPEG, PNG, etc.)');
+      input.value = '';
+      return;
+    }
+
+    // Read file as data URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        // Update the item image
+        item.image = e.target.result as string;
+
+        // Force update to the categories signal for reactivity
+        this.categories.update((categories) => [...categories]);
+      }
+    };
+
+    reader.onerror = () => {
+      alert('Error reading file. Please try again.');
+    };
+
+    // Start reading the file
+    reader.readAsDataURL(file);
+  }
+
+  /**
+   * Remove the image from a menu item
+   * @param item Menu item to update
+   */
+  removeItemImage(item: MenuItem): void {
+    // Remove the image
+    item.image = '';
+
+    // Force update to the categories signal for reactivity
+    this.categories.update((categories) => [...categories]);
+  }
 
   onSaveClick(): void {
     // Perform validation if needed before saving

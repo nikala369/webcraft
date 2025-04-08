@@ -51,8 +51,8 @@ export class ServicesEditorComponent implements OnInit {
   services = signal<ServiceItem[]>([]);
   selectedServiceIndex = signal<number | null>(null);
 
-  // Plan-based limits (standard: 4, premium: 10)
-  maxServices = computed(() => (this.isPremium() ? 10 : 4));
+  // Plan-based limits (standard: 10, premium: 15)
+  maxServices = computed(() => (this.isPremium() ? 15 : 10));
 
   // Check if user has premium plan
   isPremium(): boolean {
@@ -116,7 +116,7 @@ export class ServicesEditorComponent implements OnInit {
       description: 'Description of this service',
       price: this.businessType === 'salon' ? '$0.00' : '',
       duration: this.businessType === 'salon' ? '30 min' : '',
-      icon: 'assets/standard-services/service-icon1.svg',
+      image: '', // Empty image URL by default
     };
 
     // Add to services list
@@ -197,32 +197,6 @@ export class ServicesEditorComponent implements OnInit {
     this.services.update((svcs) => [...svcs]);
   }
 
-  // Get appropriate icon options based on business type
-  getIconOptions(): string[] {
-    if (this.businessType === 'salon') {
-      return [
-        'assets/standard-services/salon-icon1.svg',
-        'assets/standard-services/salon-icon2.svg',
-        'assets/standard-services/salon-icon3.svg',
-        'assets/standard-services/salon-icon4.svg',
-      ];
-    } else if (this.businessType === 'architecture') {
-      return [
-        'assets/standard-services/arch-icon1.svg',
-        'assets/standard-services/arch-icon2.svg',
-        'assets/standard-services/arch-icon3.svg',
-        'assets/standard-services/arch-icon4.svg',
-      ];
-    } else {
-      return [
-        'assets/standard-services/service-icon1.svg',
-        'assets/standard-services/service-icon2.svg',
-        'assets/standard-services/service-icon3.svg',
-        'assets/standard-services/service-icon4.svg',
-      ];
-    }
-  }
-
   // --- Save / Cancel ---
 
   onSaveClick(): void {
@@ -258,5 +232,81 @@ export class ServicesEditorComponent implements OnInit {
   onCancelClick(): void {
     console.log('Cancelling services edit');
     this.cancel.emit();
+  }
+
+  /**
+   * Handle service image upload from file input
+   */
+  handleImageUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+
+    if (!files || files.length === 0) {
+      console.log('No file selected');
+      return;
+    }
+
+    const file = files[0];
+    console.log(
+      'File selected:',
+      file.name,
+      'Size:',
+      file.size,
+      'Type:',
+      file.type
+    );
+
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      alert('File size exceeds 2MB limit. Please choose a smaller image.');
+      // Reset the input
+      input.value = '';
+      return;
+    }
+
+    // Check if it's an image
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (JPEG, PNG, etc.)');
+      input.value = '';
+      return;
+    }
+
+    // Read file as data URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        // Get the currently selected service
+        const selectedService = this.selectedService();
+        if (selectedService) {
+          // Update the service image
+          selectedService.image = e.target.result as string;
+
+          // Force update to the services signal
+          this.services.update((services) => [...services]);
+        }
+      }
+    };
+
+    reader.onerror = () => {
+      alert('Error reading file. Please try again.');
+    };
+
+    // Start reading the file
+    reader.readAsDataURL(file);
+  }
+
+  /**
+   * Remove the image from the currently selected service
+   */
+  removeServiceImage(): void {
+    const selectedService = this.selectedService();
+    if (selectedService) {
+      // Remove the image
+      selectedService.image = '';
+
+      // Force update to the services signal
+      this.services.update((services) => [...services]);
+    }
   }
 }
