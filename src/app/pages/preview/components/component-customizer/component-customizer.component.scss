@@ -329,7 +329,6 @@ $premium-color: #9e6aff;
             pointer-events: none;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             transform-origin: right center;
-            transform: translateY(-50%) scale(0.95);
             text-align: left;
 
             /* Right-pointing arrow */
@@ -668,8 +667,9 @@ $premium-color: #9e6aff;
         color: white;
 
         &:hover:not(:disabled) {
-          background-color: darken($primary-color, 5%);
-          transform: translateY(-2px);
+          background: darken(#2876ff, 5%);
+
+          transform: translateY(-1px);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
@@ -689,7 +689,7 @@ $premium-color: #9e6aff;
 
         &:hover {
           background-color: rgba(255, 255, 255, 0.15);
-          transform: translateY(-2px);
+          transform: translateY(-1px);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 

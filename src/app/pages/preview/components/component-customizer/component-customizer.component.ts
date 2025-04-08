@@ -5,30 +5,17 @@ import {
   Output,
   signal,
   computed,
-  effect,
-  HostListener,
   OnInit,
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-  CustomizationFormConfig,
   FieldConfig,
   getPlanSpecificConfig,
 } from './customizing-form-config';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../core/services/toast/toast.service';
 import { ModalService } from '../../../../core/services/modal/modal.service';
-import { MenuEditorComponent } from '../menu-editor/menu-editor.component';
-// Dynamic imports are used for the following components
-// import { ServicesEditorComponent } from '../services-editor/services-editor.component';
-import {
-  trigger,
-  state,
-  style,
-  animate,
-  transition,
-} from '@angular/animations';
 
 @Component({
   selector: 'app-component-customizer',
