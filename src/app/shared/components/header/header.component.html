@@ -6,14 +6,6 @@
   <div class="header__container">
     <!-- LEFT: Logo -->
     <div class="header__left">
-      <!--      <a class="header__logo" routerLink="/" aria-label="Home" (click)="closeMenu()">-->
-      <!--        <span class="header__logo-text">WebCraft</span>-->
-      <!-- Inline shapes container -->
-      <!--        <div class="header__logo-shapes">-->
-      <!--          <div class="shape shape&#45;&#45;1"></div>-->
-      <!--          <div class="shape shape&#45;&#45;2"></div>-->
-      <!--        </div>-->
-      <!--      </a>-->
       <a
         class="header__logo"
         routerLink="/"
@@ -25,7 +17,6 @@
           alt="WebCraft Logo"
           class="header__logo-icon"
         />
-        <!--        <span class="header__logo-text">WebCraft</span>-->
       </a>
     </div>
 
@@ -49,16 +40,30 @@
 
     <!-- RIGHT: Auth (Desktop) + Mobile Toggle -->
     <div class="header__right">
-      <!-- Desktop Auth -->
-      <div class="header__auth">
-        <a class="auth__link auth__link--login" routerLink="/login">Sign In</a>
-        <a class="auth__link auth__link--signup" routerLink="/signup"
+      <!-- Desktop Auth - shown only when not authenticated -->
+      <div class="header__auth" *ngIf="!authService.isAuthenticated()">
+        <a class="auth__link auth__link--login" routerLink="/auth/login"
+          >Sign In</a
+        >
+        <a class="auth__link auth__link--signup" routerLink="/auth/register"
           >Sign Up</a
         >
       </div>
 
+      <!-- Profile Menu Toggle - shown only when authenticated (desktop) -->
+      <div class="profile-section" *ngIf="authService.isAuthenticated()">
+        <button
+          class="profile-toggle"
+          (click)="openProfileSidebar()"
+          aria-label="Open profile sidebar"
+        >
+          <div class="profile-avatar">{{ getInitials() }}</div>
+        </button>
+      </div>
+
       <!-- Mobile Hamburger -->
       <button
+        *ngIf="!authService.isAuthenticated()"
         class="header__toggle"
         (click)="toggleMenu()"
         [attr.aria-expanded]="isMenuOpen()"
@@ -80,6 +85,7 @@
     aria-label="Mobile navigation"
   >
     <div class="mobile-nav__content">
+      <!-- Standard navigation links for all users -->
       <ul class="mobile-nav__list">
         <li class="mobile-nav__item" *ngFor="let link of navLinks">
           <a
@@ -93,17 +99,17 @@
         </li>
       </ul>
 
-      <!-- Auth (Mobile) -->
-      <div class="mobile-nav__auth">
+      <!-- Auth links shown only when not authenticated -->
+      <div class="mobile-nav__auth" *ngIf="!authService.isAuthenticated()">
         <a
           class="auth__link auth__link--login"
-          routerLink="/login"
+          routerLink="/auth/login"
           (click)="closeMenu()"
           >Sign In</a
         >
         <a
           class="auth__link auth__link--signup"
-          routerLink="/signup"
+          routerLink="/auth/register"
           (click)="closeMenu()"
           >Get Started</a
         >

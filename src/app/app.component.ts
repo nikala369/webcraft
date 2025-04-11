@@ -5,11 +5,19 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ThemeService } from './core/services/theme/theme.service';
 import { ScrollService } from './core/services/shared/scroll/scroll.service';
 import { ConfirmationMessageComponent } from './shared/components/confirmation-message/confirmation-message.component';
+import { AuthService } from './core/services/auth/auth.service';
+import { SessionService } from './core/services/auth/session.service';
+import { SessionTimeoutComponent } from './shared/components/session-timeout/session-timeout.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, ConfirmationMessageComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    ConfirmationMessageComponent,
+    SessionTimeoutComponent,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
@@ -18,8 +26,14 @@ export class AppComponent {
   themeService = inject(ThemeService);
   renderer = inject(Renderer2);
   scrollService = inject(ScrollService);
+  authService = inject(AuthService);
+  sessionService = inject(SessionService);
 
   ngOnInit() {
+    // Initialize authentication state
+    this.authService.initAuthState();
+
+    // Theme initialization
     this.themeService.getAll().subscribe({
       next: (res) => {},
     });

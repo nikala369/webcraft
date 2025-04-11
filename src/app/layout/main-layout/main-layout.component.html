@@ -1,9 +1,14 @@
-<app-header></app-header>
+<app-header (toggleSidebar)="toggleProfileSidebar()"></app-header>
 <!--<main class="main-content">-->
 <!--</main>-->
 <router-outlet></router-outlet>
 <app-footer></app-footer>
 
+<!-- Profile Sidebar (shown when authenticated) -->
+<app-profile-sidebar
+  *ngIf="authService.isAuthenticated()"
+  [isOpen]="isProfileSidebarOpen"
+></app-profile-sidebar>
 
 <!--<div class="main">-->
 <!--  <div class="header">-->

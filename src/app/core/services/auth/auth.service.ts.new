@@ -1,0 +1,304 @@
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { Observable, catchError, map, of, tap, throwError } from 'rxjs';
+
+import { TokenService } from './token.service';
+
+// User interface based on API response
+export interface User {
+  id: number | string;
+  username: string;
+  email: string;
+  status: 'DRAFT' | 'ACTIVE' | string;
+  role: 'ROLE_ADMIN' | 'ROLE_CREATOR' | string;
+}
+
+// Auth response interface
+export interface AuthResponse {
+  token: string;
+  username: string;
+  role: string;
+  status: string;
+}
+
+// Register response interface
+export interface RegisterResponse {
+  message: string;
+  data?: any;
+}
+
+// Register request interface
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+  role: string;
+}
+
+/**
+ * AuthService handles user authentication state and operations
+ * using Angular Signals for reactive state management.
+ */
+@Injectable({
+  providedIn: 'root',
+})
+export class AuthService {
+  private readonly tokenService = inject(TokenService);
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+
+  // Authentication state as Signals
+  readonly isAuthenticated = signal<boolean>(false);
+  readonly currentUser = signal<User | null>(null);
+  readonly authToken = signal<string | null>(null);
+  readonly authLoading = signal<boolean>(false);
+  readonly authError = signal<string | null>(null);
+
+  // API endpoints
+  private readonly API_LOGIN = '/api/security/user/login';
+  private readonly API_REGISTER = '/api/security/user/creator';
+  private readonly API_USER = '/api/security/user';
+  private readonly API_CHANGE_PASSWORD = '/api/security/user/changePassword';
+  private readonly API_REQUEST_RESET =
+    '/api/security/user/request-reset-password';
+  private readonly API_RESET_PASSWORD = '/api/security/user/reset-password';
+
+  constructor() {
+    // Initialize auth state from stored token
+    this.initAuthState();
+  }
+
+  /**
+   * Get current authentication status from signal value
+   * @returns Current authentication state
+   */
+  getAuthenticationStatus(): boolean {
+    return this.isAuthenticated.value;
+  }
+
+  /**
+   * Initializes authentication state from stored token
+   */
+  public initAuthState(): void {
+    const storedToken = this.tokenService.getToken();
+
+    if (storedToken) {
+      // Update the token signal
+      this.authToken.set(storedToken);
+
+      // Try to fetch user data with this token
+      this.fetchCurrentUser().subscribe({
+        next: (user) => {
+          // Success: Token is valid, user is authenticated
+          this.currentUser.set(user);
+          this.isAuthenticated.set(true);
+          console.log('User authenticated from stored token');
+        },
+        error: () => {
+          // Error: Token is invalid or expired, log out the user
+          console.warn('Stored token is invalid. Logging out.');
+          this.logout();
+        },
+      });
+    }
+  }
+
+  /**
+   * Attempts to log in the user with the provided credentials
+   * @param username - The username
+   * @param password - The password
+   * @returns An Observable of the AuthResponse
+   */
+  login(username: string, password: string): Observable<AuthResponse> {
+    this.authLoading.set(true);
+    this.authError.set(null);
+
+    return this.http
+      .post<AuthResponse>(this.API_LOGIN, { username, password })
+      .pipe(
+        tap((response) => {
+          // Save the token
+          this.tokenService.saveToken(response.token);
+          this.authToken.set(response.token);
+
+          // Create a partial user object from the login response
+          const partialUser: User = {
+            id: 0, // We don't have this from login response
+            username: response.username,
+            email: '', // We don't have this from login response
+            status: response.status,
+            role: response.role,
+          };
+
+          // Set the current user and authentication state
+          this.currentUser.set(partialUser);
+          this.isAuthenticated.set(true);
+          this.authLoading.set(false);
+
+          // Fetch the complete user data
+          this.fetchCurrentUser().subscribe({
+            next: (user) => {
+              this.currentUser.set(user);
+            },
+            error: (error) => {
+              console.error('Error fetching user details after login:', error);
+            },
+          });
+        }),
+        catchError((error: HttpErrorResponse) => {
+          this.authLoading.set(false);
+          this.authError.set(
+            error.error?.message ||
+              'Login failed. Please check your credentials.'
+          );
+          console.error('Login error:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Registers a new user
+   * @param username - The username
+   * @param email - The email
+   * @param password - The password
+   * @returns An Observable of the RegisterResponse
+   */
+  register(
+    username: string,
+    email: string,
+    password: string
+  ): Observable<RegisterResponse> {
+    this.authLoading.set(true);
+    this.authError.set(null);
+
+    const registerData: RegisterRequest = {
+      username,
+      email,
+      password,
+      role: 'ROLE_CREATOR', // Default role for user registration
+    };
+
+    return this.http
+      .post<RegisterResponse>(this.API_REGISTER, registerData)
+      .pipe(
+        tap(() => {
+          this.authLoading.set(false);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          this.authLoading.set(false);
+          this.authError.set(
+            error.error?.message || 'Registration failed. Please try again.'
+          );
+          console.error('Registration error:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Changes the user's password
+   * @param oldPassword - The current password
+   * @param newPassword - The new password
+   * @returns An Observable of the response
+   */
+  changePassword(oldPassword: string, newPassword: string): Observable<any> {
+    return this.http.post(this.API_CHANGE_PASSWORD, {
+      oldPassword,
+      newPassword,
+    });
+  }
+
+  /**
+   * Logs out the current user
+   */
+  logout(): void {
+    // Clear all authentication state
+    this.currentUser.set(null);
+    this.isAuthenticated.set(false);
+    this.authToken.set(null);
+    this.authError.set(null);
+    this.tokenService.removeToken();
+
+    // Redirect to login page
+    this.router.navigate(['/auth/login']);
+  }
+
+  /**
+   * Fetches the current user data
+   * @returns An Observable of the User
+   */
+  fetchCurrentUser(): Observable<User> {
+    return this.http.get<User>(this.API_USER).pipe(
+      catchError((error: HttpErrorResponse) => {
+        // If 401 Unauthorized, token is invalid
+        if (error.status === 401) {
+          this.logout();
+        }
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Requests a password reset for the given username
+   * @param username - The username to reset password for
+   * @returns An Observable of the response
+   */
+  requestPasswordReset(username: string): Observable<any> {
+    this.authLoading.set(true);
+    this.authError.set(null);
+
+    return this.http
+      .post(this.API_REQUEST_RESET, {
+        source: 'USERNAME',
+        username: username,
+      })
+      .pipe(
+        tap(() => {
+          this.authLoading.set(false);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          this.authLoading.set(false);
+          this.authError.set(
+            error.error?.message ||
+              'Failed to request password reset. Please try again.'
+          );
+          console.error('Password reset request error:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Resets the password using the reset code
+   * @param code - The reset code from the email
+   * @param newPassword - The new password
+   * @returns An Observable of the response
+   */
+  resetPassword(code: string, newPassword: string): Observable<any> {
+    this.authLoading.set(true);
+    this.authError.set(null);
+
+    return this.http
+      .post(this.API_RESET_PASSWORD, {
+        code,
+        newPassword,
+      })
+      .pipe(
+        tap(() => {
+          this.authLoading.set(false);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          this.authLoading.set(false);
+          this.authError.set(
+            error.error?.message ||
+              'Failed to reset password. The link may have expired.'
+          );
+          console.error('Password reset error:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+}

@@ -1,0 +1,113 @@
+<div class="auth-page">
+  <div class="auth-background">
+    <div class="animated-bg"></div>
+  </div>
+
+  <div class="auth-logo" routerLink="/">
+    <img src="assets/images/logo.svg" alt="Webcraft Logo" />
+  </div>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1 class="auth-title">Welcome Back</h1>
+        <!-- <div class="title-underline"></div> -->
+        <p class="auth-subtitle">
+          Sign in to continue building with webcraft75
+        </p>
+      </div>
+
+      <!-- Error message display -->
+      <div class="auth-error" *ngIf="error">
+        {{ error }}
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <!-- Username/Email field -->
+        <div class="form-group">
+          <label for="username" class="form-label">Username or Email</label>
+          <div class="input-container">
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
+              class="form-control"
+              placeholder="Enter your username or email"
+              [class.is-invalid]="
+                loginForm.get('username')?.invalid && submitted
+              "
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <!-- Password field -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-container">
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              class="form-control"
+              placeholder="Enter your password"
+              [class.is-invalid]="
+                loginForm.get('password')?.invalid && submitted
+              "
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <!-- Forgot Password link -->
+        <div class="auth-links">
+          <a routerLink="/auth/request-password-reset">Forgot password?</a>
+        </div>
+
+        <!-- Submit button -->
+        <button
+          type="submit"
+          class="btn btn-primary btn-block"
+          [disabled]="loading"
+        >
+          <span *ngIf="!loading">Sign in</span>
+          <span *ngIf="loading" class="loading-spinner"></span>
+        </button>
+
+        <!-- Or divider -->
+        <div class="divider">
+          <span>or</span>
+        </div>
+
+        <!-- Google login button -->
+        <button type="button" class="btn btn-google btn-block">
+          <img
+            src="assets/images/google-icon.svg"
+            alt="Google"
+            class="google-icon"
+          />
+          <span>Continue with Google</span>
+        </button>
+
+        <!-- Register link -->
+        <div class="auth-links register-link">
+          <p>
+            Don't have an account?
+            <a routerLink="/auth/register">Sign up for free</a>
+          </p>
+        </div>
+      </form>
+
+      <div class="terms-text">
+        By using Webcraft, you agree to our
+        <a style="text-decoration: underline" href="/terms" target="_blank"
+          >Terms of Service</a
+        >
+        and
+        <a style="text-decoration: underline" href="/privacy" target="_blank"
+          >Privacy Policy</a
+        >
+      </div>
+    </div>
+  </div>
+</div>

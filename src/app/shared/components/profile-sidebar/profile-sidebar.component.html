@@ -1,0 +1,61 @@
+<div class="sidebar-overlay" [class.active]="isOpen()" (click)="close()"></div>
+
+<aside class="profile-sidebar" [class.active]="isOpen()">
+  <div class="profile-sidebar__header">
+    <button class="close-button" aria-label="Close sidebar" (click)="close()">
+      <span class="close-icon">×</span>
+    </button>
+
+    <div class="user-profile">
+      <div class="user-avatar">{{ getInitials() }}</div>
+      <div class="user-info">
+        <h3 class="user-name">{{ authService.currentUser()?.username }}</h3>
+        <p class="user-email">{{ authService.currentUser()?.email }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-sidebar__body">
+    <nav class="sidebar-nav">
+      <ul class="sidebar-nav__list">
+        <li class="sidebar-nav__item" *ngFor="let link of navLinks">
+          <a
+            class="sidebar-nav__link"
+            [routerLink]="link.path"
+            routerLinkActive="active"
+            (click)="close()"
+          >
+            <span class="sidebar-nav__icon" [attr.data-icon]="link.icon"></span>
+            <span class="sidebar-nav__label">{{ link.label }}</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- Conditionally show the main website links for authenticated mobile users -->
+      <div *ngIf="authService.isAuthenticated() && isMobileDevice()">
+        <!-- Divider -->
+        <hr class="sidebar-divider" />
+        <ul class="sidebar-nav__list">
+          <li class="sidebar-nav__item" *ngFor="let link of mainNavLinks">
+            <a
+              class="sidebar-nav__link"
+              [routerLink]="link.path"
+              routerLinkActive="active"
+              (click)="close()"
+            >
+              <span class="sidebar-nav__label">{{ link.label }}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+    </nav>
+  </div>
+
+  <div class="profile-sidebar__footer">
+    <button class="logout-button" (click)="logout()">
+      <span class="logout-icon"></span>
+      <span>Logout</span>
+    </button>
+  </div>
+</aside>

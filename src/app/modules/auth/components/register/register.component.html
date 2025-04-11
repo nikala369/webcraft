@@ -1,0 +1,173 @@
+<div class="auth-page">
+  <div class="auth-background">
+    <div class="animated-bg"></div>
+  </div>
+
+  <div class="auth-logo" routerLink="/">
+    <img src="assets/images/logo.svg" alt="Webcraft Logo" />
+  </div>
+
+  <div class="auth-container">
+    <!-- Success message shown after successful registration -->
+    <div class="auth-card" *ngIf="registrationSuccess()">
+      <div class="auth-header">
+        <h1 class="auth-title">Registration Successful!</h1>
+      </div>
+
+      <div class="success-message">
+        <div class="success-icon">✓</div>
+        <p>
+          {{ successMessage() }}
+        </p>
+        <div class="action-buttons">
+          <button
+            class="btn btn-outline btn-block"
+            style="margin-top: 15px"
+            (click)="resendActivation()"
+          >
+            Resend Activation Link
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registration form shown before successful registration -->
+    <div class="auth-card" *ngIf="!registrationSuccess()">
+      <div class="auth-header">
+        <h1 class="auth-title">Sign up to Webcraft75</h1>
+        <p class="auth-subtitle">Create your free account and start building</p>
+      </div>
+
+      <!-- Error message display -->
+      <div class="auth-error" *ngIf="error">
+        {{ error }}
+      </div>
+
+      <form
+        [formGroup]="registerForm"
+        (ngSubmit)="onSubmit()"
+        class="auth-form"
+      >
+        <!-- Username field -->
+        <div class="form-group">
+          <label for="username" class="form-label">Username</label>
+          <div class="input-container">
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
+              class="form-control"
+              placeholder="Choose a username"
+              [class.is-invalid]="
+                registerForm.get('username')?.invalid && submitted
+              "
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <!-- Email field -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <div class="input-container">
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="form-control"
+              placeholder="your@email.com"
+              [class.is-invalid]="
+                registerForm.get('email')?.invalid && submitted
+              "
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <!-- Password field -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-container">
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              class="form-control"
+              placeholder="Create a password (min. 8 characters)"
+              [class.is-invalid]="
+                registerForm.get('password')?.invalid && submitted
+              "
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <!-- Confirm Password field -->
+        <div class="form-group">
+          <label for="confirmPassword" class="form-label"
+            >Confirm Password</label
+          >
+          <div class="input-container">
+            <input
+              type="password"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              class="form-control"
+              placeholder="Confirm your password"
+              [class.is-invalid]="
+                (registerForm.get('confirmPassword')?.invalid ||
+                  registerForm.hasError('passwordMismatch')) &&
+                submitted
+              "
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <!-- Submit button -->
+        <button
+          type="submit"
+          class="btn btn-primary btn-block"
+          [disabled]="loading"
+        >
+          <span *ngIf="!loading">Create Account</span>
+          <span *ngIf="loading" class="loading-spinner"></span>
+        </button>
+
+        <!-- Or divider -->
+        <div class="divider">
+          <span>or</span>
+        </div>
+
+        <!-- Google signup button -->
+        <button type="button" class="btn btn-google btn-block">
+          <img
+            src="assets/images/google-icon.svg"
+            alt="Google"
+            class="google-icon"
+          />
+          <span>Sign up with Google</span>
+        </button>
+
+        <!-- Login link -->
+        <div class="auth-links register-link">
+          <p>
+            Already have an account?
+            <a routerLink="/auth/login">Sign in</a>
+          </p>
+        </div>
+      </form>
+
+      <div class="terms-text">
+        By signing up for Webcraft, you agree to our
+        <a style="text-decoration: underline" href="/terms" target="_blank"
+          >Terms of Service</a
+        >
+        and
+        <a style="text-decoration: underline" href="/privacy" target="_blank"
+          >Privacy Policy</a
+        >
+      </div>
+    </div>
+  </div>
+</div>
