@@ -103,6 +103,7 @@ export class ActivateComponent implements OnInit {
       // Check for activation code under either 'token' or 'code'
       const activationCode = params['token'] || params['code'];
       if (activationCode) {
+        console.log(activationCode, 'passing token')
         this.activateAccount(activationCode);
       } else {
         this.handleError('Invalid activation link. No activation code found.');
@@ -121,6 +122,7 @@ export class ActivateComponent implements OnInit {
         return of(null);
       }),
       finalize(() => {
+        console.log(activationCode, 'token testtt valid')
         this.loading.set(false);
       })
     )

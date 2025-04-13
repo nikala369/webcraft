@@ -1,4 +1,4 @@
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import {APP_INITIALIZER, ApplicationConfig, importProvidersFrom} from '@angular/core';
 import {
   provideRouter,
   withViewTransitions,
@@ -7,15 +7,14 @@ import {
 } from '@angular/router';
 import {
   provideHttpClient,
-  withInterceptors,
-  HttpInterceptorFn,
+  withInterceptorsFromDi, // Add this import
+  HTTP_INTERCEPTORS
 } from '@angular/common/http';
 import { appRoutes } from './app.routes';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-
-// Import auth interceptor
-import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import {AuthService} from "./core/services/auth/auth.service";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -24,8 +23,19 @@ export const appConfig: ApplicationConfig = {
       withViewTransitions(),
       withComponentInputBinding()
     ),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    // Correct HTTP client configuration
+    provideHttpClient(
+      withInterceptorsFromDi() // Enable DI-based interceptors
+    ),
+    // Register class-based interceptors
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     BrowserModule,
     importProvidersFrom(BrowserAnimationsModule),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (auth: AuthService) => () => auth.initialize(),
+      deps: [AuthService],
+      multi: true
+    }
   ],
 };

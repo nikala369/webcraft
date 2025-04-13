@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, catchError, map, of, tap, throwError } from 'rxjs';
+import {Observable, catchError, map, of, tap, throwError, BehaviorSubject, first} from 'rxjs';
 
 import { TokenService } from './token.service';
 import { environment } from '../../../../environments/environment';
@@ -39,6 +39,10 @@ export class AuthService {
   readonly authLoading = signal<boolean>(false);
   readonly authError = signal<string | null>(null);
 
+  // Track authentication initialization status
+  private authInitializedSubject = new BehaviorSubject<boolean>(false);
+  public authInitialized$ = this.authInitializedSubject.asObservable();
+
   // API endpoints
   private readonly apiUrl = environment.apiUrl;
   private readonly apiPrefix = environment.apiPrefix;
@@ -50,8 +54,14 @@ export class AuthService {
   private readonly API_RESET_PASSWORD = `${this.apiUrl}${this.apiPrefix}/security/user/reset-password`;
 
   constructor() {
-    // Initialize auth state from stored token
-    this.initAuthState();
+  }
+
+  // Add initialization method for APP_INITIALIZER
+  initialize(): Promise<void> {
+    return new Promise((resolve) => {
+      this.initAuthState();
+      this.authInitialized$.pipe(first()).subscribe(() => resolve());
+    });
   }
 
   /**
@@ -69,16 +79,18 @@ export class AuthService {
     const storedToken = this.tokenService.getToken();
 
     if (storedToken) {
-      // Check if token is expired
-      if (this.tokenService.isTokenExpired(storedToken)) {
+      const expired = this.tokenService.isTokenExpired(storedToken);
+      console.log('Is token expired?', expired);
+      if (expired) {
         console.warn('Stored token is expired. Logging out.');
         this.logout();
+        this.authInitializedSubject.next(true);
         return;
       }
 
       // Update the token signal
       this.authToken.set(storedToken);
-
+      console.log('Fetching current user...');
       // Try to fetch user data with this token
       this.fetchCurrentUser().subscribe({
         next: (user) => {
@@ -86,14 +98,18 @@ export class AuthService {
           this.currentUser.set(user);
           this.authenticationState.set(true);
           console.log('User authenticated from stored token');
+          this.authInitializedSubject.next(true);
         },
         error: (error) => {
           // Error: Token is invalid or expired, log out the user
           console.warn('Authentication failed with stored token:', error);
-          // api is on 500, reactivate it later
           this.logout();
+          this.authInitializedSubject.next(true);
         },
       });
+    } else {
+      // No token available, initialization complete
+      this.authInitializedSubject.next(true);
     }
   }
 

@@ -27,7 +27,7 @@ export class TokenService {
    * @param token - The JWT token string to save
    */
   saveToken(token: string): void {
-    if (!this.isLocalStorageAvailable) return;
+    // if (!this.isLocalStorageAvailable) return;
 
     try {
       localStorage.setItem(this.TOKEN_KEY, token);
@@ -41,7 +41,7 @@ export class TokenService {
    * @returns The stored token or null if not found
    */
   getToken(): string | null {
-    if (!this.isLocalStorageAvailable) return null;
+    // if (!this.isLocalStorageAvailable) return null;
 
     try {
       return localStorage.getItem(this.TOKEN_KEY);

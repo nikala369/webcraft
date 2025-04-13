@@ -1,17 +1,17 @@
-import { inject } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import {
+  HttpInterceptor,
   HttpRequest,
-  HttpHandlerFn,
-  HttpInterceptorFn,
+  HttpHandler,
+  HttpEvent,
   HttpErrorResponse,
 } from '@angular/common/http';
-import { catchError, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
-
 import { AuthService } from '../services/auth/auth.service';
 import { environment } from '../../../environments/environment';
 
-// List of API paths that should NOT receive the Authorization header
 const PUBLIC_PATHS = [
   '/security/user/login',
   '/security/user/creator',
@@ -21,77 +21,52 @@ const PUBLIC_PATHS = [
   '/security/user/resendActivationCode',
 ];
 
-/**
- * Functional interceptor that adds JWT token to API requests
- * and handles unauthorized (401) responses.
- */
-export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+  private authService: AuthService | null = null;
+  private router: Router | null = null;
 
-  // Check if this is an API request that needs authorization
-  if (shouldAddAuthHeader(req.url)) {
-    const token = authService.authToken();
+  constructor(private injector: Injector) {}
 
-    if (token) {
-      // Clone the request and add the Authorization header
-      const authReq = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Forward the cloned request with the token
-      return next(authReq).pipe(
-        catchError((error) => handleAuthError(error, authService, router))
-      );
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Lazy load services when needed
+    if (!this.authService) {
+      this.authService = this.injector.get(AuthService);
     }
+    if (!this.router) {
+      this.router = this.injector.get(Router);
+    }
+
+    if (this.shouldAddAuthHeader(req.url)) {
+      const token = this.authService!.authToken();
+      if (token) {
+        req = req.clone({
+          setHeaders: { Authorization: `Bearer ${token}` }
+        });
+      }
+    }
+    return next.handle(req).pipe(
+      catchError((error) => this.handleAuthError(error))
+    );
   }
 
-  // If no token or public path, proceed with original request
-  return next(req).pipe(
-    catchError((error) => handleAuthError(error, authService, router))
-  );
-};
-
-/**
- * Determines whether an Authorization header should be added to a request
- * @param url - The request URL
- * @returns True if we should add auth header, false otherwise
- */
-function shouldAddAuthHeader(url: string): boolean {
-  // Get the API URL and prefix from environment
-  const apiUrl = environment.apiUrl;
-  const apiPrefix = environment.apiPrefix;
-  const fullApiPath = apiUrl + apiPrefix;
-
-  // Only add auth header to API requests
-  if (!url || !url.startsWith(fullApiPath)) {
-    return false;
+  private shouldAddAuthHeader(url: string): boolean {
+    const apiUrl = environment.apiUrl;
+    const apiPrefix = environment.apiPrefix;
+    const fullApiPath = apiUrl + apiPrefix;
+    if (!url || !url.startsWith(fullApiPath)) {
+      return false;
+    }
+    const pathPart = url.substring(fullApiPath.length);
+    return !PUBLIC_PATHS.some(publicPath => pathPart.startsWith(publicPath));
   }
 
-  // Extract the path part after the API prefix for comparison
-  const pathPart = url.substring(fullApiPath.length);
-
-  // Don't add auth header to public paths
-  return !PUBLIC_PATHS.some((publicPath) => pathPart.startsWith(publicPath));
-}
-
-/**
- * Handles authentication errors (401 Unauthorized)
- * @param error - The HTTP error
- * @param authService - The auth service
- * @param router - The router
- * @returns An observable that throws the error
- */
-function handleAuthError(error: any, authService: AuthService, router: Router) {
-  if (error instanceof HttpErrorResponse && error.status === 401) {
-    console.warn('Received 401 Unauthorized response. Logging out.');
-
-    // Log out the user
-    authService.logout();
+  private handleAuthError(error: HttpErrorResponse) {
+    if (error.status === 401 && this.authService && this.router) {
+      console.warn('Received 401 Unauthorized response. Logging out.');
+      this.authService.logout();
+      this.router.navigate(['/auth/login']);
+    }
+    return throwError(() => error);
   }
-
-  // Re-throw the error for the calling service to handle
-  return throwError(() => error);
 }

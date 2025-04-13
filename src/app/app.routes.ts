@@ -112,13 +112,6 @@ export const appRoutes: Routes = [
           { path: '', redirectTo: 'templates', pathMatch: 'full' },
         ],
       },
-      {
-        path: 'activate',
-        loadComponent: () =>
-          import('./modules/auth/components/activate/activate.component').then(
-            (m) => m.ActivateComponent
-          ),
-      },
     ],
   },
   // Auth module for authentication flow

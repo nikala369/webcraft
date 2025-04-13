@@ -71,13 +71,13 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.submitted = true;
 
     // Mark controls as touched to trigger validation
-    if (this.loginForm.invalid) {
+    // if (this.loginForm.invalid) {
       Object.keys(this.loginForm.controls).forEach((key) => {
         const control = this.loginForm.get(key);
         control?.markAsTouched();
       });
-      return;
-    }
+      // return;
+    // }
 
     const { username, password } = this.loginForm.value;
 

@@ -30,18 +30,16 @@ export class AppComponent {
   sessionService = inject(SessionService);
 
   ngOnInit() {
-    // Initialize authentication state
-    this.authService.initAuthState();
 
     // Theme initialization
-    this.themeService.getAll().subscribe({
-      next: (res) => {},
-    });
-    this.themeService.getById(1).subscribe({
-      next: (res) => {
-        this.applyGlobalStyles(res.cssContent);
-      },
-    });
+    // this.themeService.getAll().subscribe({
+    //   next: (res) => {},
+    // });
+    // this.themeService.getById(1).subscribe({
+    //   next: (res) => {
+    //     this.applyGlobalStyles(res.cssContent);
+    //   },
+    // });
   }
 
   applyGlobalStyles(cssContent: string): void {
