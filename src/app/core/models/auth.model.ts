@@ -29,6 +29,10 @@ export interface AuthUser {
   lastName?: string;
   status: UserStatus | string;
   role: UserRole | string;
+  subscription?: {
+    plan: string;
+    expiryDate: string;
+  };
   avatar?: string;
   createdAt?: string;
   updatedAt?: string;

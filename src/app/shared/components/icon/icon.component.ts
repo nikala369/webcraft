@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-icon',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule],
   templateUrl: './icon.component.html',
   styles: [
     `

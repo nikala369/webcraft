@@ -1,7 +1,16 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import {Observable, catchError, map, of, tap, throwError, BehaviorSubject, first} from 'rxjs';
+import {
+  Observable,
+  catchError,
+  map,
+  of,
+  tap,
+  throwError,
+  BehaviorSubject,
+  first,
+} from 'rxjs';
 
 import { TokenService } from './token.service';
 import { environment } from '../../../../environments/environment';
@@ -53,8 +62,7 @@ export class AuthService {
   private readonly API_REQUEST_RESET = `${this.apiUrl}${this.apiPrefix}/security/user/request-reset-password`;
   private readonly API_RESET_PASSWORD = `${this.apiUrl}${this.apiPrefix}/security/user/reset-password`;
 
-  constructor() {
-  }
+  constructor() {}
 
   // Add initialization method for APP_INITIALIZER
   initialize(): Promise<void> {
@@ -165,7 +173,7 @@ export class AuthService {
             );
           } else if (error.status === 403) {
             this.authError.set(
-              'Your account is not authorized to log in. Please contact support.'
+              'Your account is not authorized to log in. Check credentials.'
             );
           } else {
             this.authError.set(

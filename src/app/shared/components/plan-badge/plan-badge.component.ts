@@ -1,64 +1,79 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-plan-badge',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   template: `
     <div
       class="plan-badge"
-      [class.premium]="plan === 'premium'"
-      [class.standard]="plan === 'standard'"
+      [ngClass]="getPlanClass()"
+      [routerLink]="canUpgrade() ? ['/pricing'] : null"
+      [title]="canUpgrade() ? 'Click to upgrade' : 'Current plan'"
     >
-      {{ plan | uppercase }} PLAN
+      <span class="plan-name">{{ displayPlan }}</span>
+      <span class="upgrade-indicator" *ngIf="canUpgrade()">↗</span>
     </div>
   `,
   styles: [
     `
       .plan-badge {
-        display: flex;
-        justify-content: center;
+        display: inline-flex;
         align-items: center;
-        padding: 6px 15px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        letter-spacing: 1.2px;
-        white-space: nowrap;
-        transition: all 0.3s ease;
-        text-align: center;
-        min-width: 120px;
-        height: 32px;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
       }
 
       .standard {
-        background: rgba(40, 118, 255, 0.15);
-        border: 1px solid rgba(40, 118, 255, 0.5);
-        color: #4a8dff;
-        box-shadow: 0 0 15px rgba(40, 118, 255, 0.3),
-          inset 0 0 10px rgba(40, 118, 255, 0.05);
+        background-color: #e3f2fd;
+        color: #0984e3;
+        border: 1px solid #bbdefb;
+      }
+
+      .standard:hover {
+        background-color: #bbdefb;
       }
 
       .premium {
-        background: rgba(140, 82, 255, 0.15);
-        border: 1px solid rgba(140, 82, 255, 0.5);
+        background-color: #f3e5f5;
         color: #9e6aff;
-        box-shadow: 0 0 15px rgba(140, 82, 255, 0.3),
-          inset 0 0 10px rgba(140, 82, 255, 0.05);
+        border: 1px solid #e1bee7;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
       }
 
-      @media (max-width: 768px) {
-        .plan-badge {
-          font-size: 0.75rem;
-          padding: 5px 12px;
-          min-width: 100px;
-          height: 28px;
-        }
+      .premium:hover {
+        background-color: #e1bee7;
+      }
+
+      .upgrade-indicator {
+        margin-left: 4px;
+        font-weight: bold;
       }
     `,
   ],
 })
 export class PlanBadgeComponent {
-  @Input() plan: 'standard' | 'premium' = 'standard';
+  @Input() plan: string = 'standard';
+  private router = inject(Router);
+  private authService = inject(AuthService);
+
+  get displayPlan(): string {
+    return this.plan === 'premium' ? 'Premium' : 'Free Plan';
+  }
+
+  getPlanClass(): string {
+    return this.plan === 'premium' ? 'premium' : 'standard';
+  }
+
+  canUpgrade(): boolean {
+    // Only show upgrade option if authenticated and on standard plan
+    return this.authService.isAuthenticated() && this.plan !== 'premium';
+  }
 }

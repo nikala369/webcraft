@@ -13,6 +13,13 @@ import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../../../core/services/theme/theme.service';
 import { ThemeListItem } from '../../../../core/services/theme/theme';
 import { ThemeColorsService } from '../../../../core/services/theme/theme-colors.service';
+import {
+  PageResponse,
+  TemplateSearch,
+  TemplateService,
+} from '../../../../core/services/template/template.service';
+import { catchError, switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-theme-switcher',
@@ -24,6 +31,7 @@ import { ThemeColorsService } from '../../../../core/services/theme/theme-colors
 export class ThemeSwitcherComponent implements OnInit {
   private themeService = inject(ThemeService);
   private themeColorsService = inject(ThemeColorsService);
+  private templateService = inject(TemplateService);
 
   themes = signal<ThemeListItem[]>([]);
   dropdownOpen = signal(false);
@@ -140,44 +148,85 @@ export class ThemeSwitcherComponent implements OnInit {
     plan: 'standard' | 'premium',
     businessType: string = ''
   ) {
-    // Skip theme service loading and use mock themes directly
     console.log(
       `Loading themes for plan: ${plan}, business type: ${businessType}`
     );
 
     if (businessType) {
-      // If we have a business type, use ThemeService.getThemesByBusinessType
-      this.themeService.getThemesByBusinessType(businessType, plan).subscribe({
-        next: (themes) => {
-          console.log(
-            `Loaded ${themes.length} themes for ${businessType} - ${plan}`
-          );
-          this.themes.set(themes);
-          this.selectDefaultTheme(themes);
-        },
-        error: (err) => {
-          console.warn(`Failed to load themes for ${businessType}`, err);
-          this.loadFallbackThemes(plan, businessType);
-        },
-      });
+      // Convert frontend plan type to backend plan type
+      const backendPlanType = this.templateService.convertPlanType(plan);
+
+      // Get the plan ID using our caching mechanism
+      this.templateService
+        .getTemplatePlanId(backendPlanType)
+        .pipe(
+          switchMap((planId) => {
+            console.log(`Got plan ID ${planId} for ${backendPlanType}`);
+
+            // Use template search to get templates for this business type and plan
+            return this.templateService
+              .searchTemplates(businessType, planId, 0, 5)
+              .pipe(
+                catchError((error) => {
+                  console.warn(
+                    `Error searching templates: ${error.message}`,
+                    error
+                  );
+                  return of(null);
+                })
+              );
+          }),
+          catchError((error) => {
+            console.warn(
+              `Error getting template plan ID: ${error.message}`,
+              error
+            );
+            return of(null);
+          })
+        )
+        .subscribe({
+          next: (response: PageResponse<TemplateSearch> | null) => {
+            if (!response) {
+              // API failed, use fallback
+              this.loadFallbackThemes(plan, businessType);
+              return;
+            }
+
+            console.log(
+              `Got ${response.content.length} templates for ${businessType}`
+            );
+
+            // Map search results to theme list items
+            const mappedThemes: ThemeListItem[] = response.content.map(
+              (template: TemplateSearch) => ({
+                id: parseInt(template.id) || Math.floor(Math.random() * 1000), // Fallback ID if parsing fails
+                name: template.name,
+                planType:
+                  template.templatePlan.type === 'PREMIUM'
+                    ? 'premium'
+                    : 'standard',
+                businessType: template.templateType.key,
+                description: template.description,
+              })
+            );
+
+            // Set in state
+            if (mappedThemes.length > 0) {
+              this.themes.set(mappedThemes);
+              this.selectDefaultTheme(mappedThemes);
+            } else {
+              // No themes found, use fallback
+              this.loadFallbackThemes(plan, businessType);
+            }
+          },
+          error: (err: Error) => {
+            console.warn(`Failed to load themes for ${businessType}`, err);
+            this.loadFallbackThemes(plan, businessType);
+          },
+        });
     } else {
-      // No business type, try to get all themes
-      this.themeService.getAll().subscribe({
-        next: (themes) => {
-          console.log(
-            `Loaded ${themes.length} themes for ${plan} plan from service`
-          );
-          const filteredThemes = themes.filter(
-            (theme) => plan === 'premium' || theme.planType === 'standard'
-          );
-          this.themes.set(filteredThemes);
-          this.selectDefaultTheme(filteredThemes);
-        },
-        error: (err) => {
-          console.warn('Theme service not available, using mock data', err);
-          this.loadFallbackThemes(plan, businessType);
-        },
-      });
+      // No business type, use fallback
+      this.loadFallbackThemes(plan, businessType);
     }
   }
 

@@ -30,7 +30,6 @@ export class AppComponent {
   sessionService = inject(SessionService);
 
   ngOnInit() {
-
     // Theme initialization
     // this.themeService.getAll().subscribe({
     //   next: (res) => {},

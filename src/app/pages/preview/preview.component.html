@@ -240,20 +240,30 @@
       </button>
     </div>
 
-    <!-- Information Panel (no checkout button) -->
-    <app-checkout-panel
-      *ngIf="
-        !isMobileView() &&
-        hasStartedBuilding() &&
-        !isFullscreen() &&
-        hasSavedChanges()
-      "
-      [showButton]="false"
-      [title]="'Website Saved Successfully'"
-      [description]="
-        'Your website design has been saved. Proceed to checkout when you\'re ready to publish.'
-      "
-    ></app-checkout-panel>
+    <!-- Primary call to action in view mode (shown when not editing) -->
+    <div
+      *ngIf="isViewOnlyStateService.isOnlyViewMode()"
+      class="preview-cta-container"
+    >
+      <div class="cta-buttons">
+        <!-- Simplified CTA - Using router directly instead of missing methods -->
+        <ng-container *ngIf="!isAuthenticated()">
+          <button
+            class="btn btn-primary btn-sign-in"
+            [routerLink]="['/auth/login']"
+          >
+            <i class="fas fa-sign-in-alt me-2"></i>Sign In to Edit
+          </button>
+        </ng-container>
+
+        <!-- Simplified edit buttons for authenticated users -->
+        <ng-container *ngIf="isAuthenticated()">
+          <button class="btn btn-primary" (click)="startBuilding()">
+            <i class="fas fa-edit me-2"></i>Edit This Template
+          </button>
+        </ng-container>
+      </div>
+    </div>
   </div>
 
   <!-- Floating Checkout Button (positioned above footer with high z-index) -->

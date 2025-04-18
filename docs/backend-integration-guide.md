@@ -1,183 +1,184 @@
 # Backend Integration Guide
 
-This document outlines how to integrate the backend with the frontend for the Website Builder application. It covers the data structure, API endpoints, and key considerations for implementation.
+This document provides details on how Webcraft's Angular frontend integrates with the Java Spring Boot backend API. It serves as a guide for developers working on connecting UI components to the appropriate backend services.
 
-## Data Structure
+## API Base URL
 
-The website builder uses a structured customization object that contains all website settings. The structure is defined in `standard-customization-schema.json` and follows this general pattern:
+The API is configured in `environment.ts`:
 
-```
-Customizations
-├── fontConfig
-├── header
-├── pages
-│   └── home
-│       ├── hero1
-│       ├── about
-│       ├── services (for salon/architecture)
-│       ├── menu (for restaurant)
-│       ├── projects (for architecture/portfolio)
-│       └── contact
-└── footer
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: "http://localhost:4200", // Proxy to backend at http://localhost:8080
+  apiPrefix: "/api",
+  // ...other config
+};
 ```
 
-Each section (like hero1, about, etc.) has its own data structure with fields for content, styling, and configuration.
+## Authentication Flow
 
-## Standard vs Premium Plans
+### Core Authentication Services
 
-The application supports two plan types:
+- `AuthService`: Main service for authentication operations
+- `TokenService`: Handles JWT token storage and validation
 
-1. **Standard Plan**: All sections are under the 'home' page with a single-page structure
+### Endpoints
 
-   - Structure: `pages.home.{section}`
-   - Example: `pages.home.hero1`, `pages.home.about`, etc.
+| Endpoint                                       | Method | Purpose                    | Service Method                       |
+| ---------------------------------------------- | ------ | -------------------------- | ------------------------------------ |
+| `/api/security/user/creator`                   | POST   | Register new user          | `AuthService.register()`             |
+| `/api/security/user/login`                     | POST   | Login user                 | `AuthService.login()`                |
+| `/api/security/user`                           | GET    | Fetch current user details | `AuthService.fetchCurrentUser()`     |
+| `/api/security/user/activate/{activationCode}` | POST   | Activate user account      | `AuthService.activateUser()`         |
+| `/api/security/user/changePassword`            | POST   | Change user password       | `AuthService.changePassword()`       |
+| `/api/security/user/request-reset-password`    | POST   | Request password reset     | `AuthService.requestPasswordReset()` |
+| `/api/security/user/reset-password`            | POST   | Reset password with code   | `AuthService.resetPassword()`        |
+| `/api/security/user/search`                    | GET    | Search users (admin only)  | N/A                                  |
 
-2. **Premium Plan**: Features multiple pages with sections on each page
-   - Structure: `pages.{pageName}.{section}`
-   - Example: `pages.home.hero1`, `pages.about.content`, etc.
+### Authentication Flow
 
-## Media Handling
+1. User registers via `register()`, which returns a success message with activation instructions
+2. User activates account via email link or by entering activation code
+3. User logs in via `login()`, which returns a JWT token
+4. Token is stored in local storage via `TokenService`
+5. HTTP interceptor attaches token to all subsequent API requests
+6. App initializer checks token validity on app start
+7. User is automatically logged out if token is invalid or expired
 
-Media files (images and videos) need special handling:
+## Template Management
 
-### Images
+### Core Template Services
 
-- Stored as URL paths to files on the server
-- Temporary files use base64 data URLs during editing
-- For production, convert to server file paths
+- `TemplateService`: Fetches template types, plans, and master templates
+- `UserTemplateService`: Manages user-specific template customizations
 
-### Videos
+### Endpoints
 
-- Limited support in standard plan
-- Premium plan features full video support
-- Temporary video upload uses base64 encoding in frontend
-- Backend should store video files on server and return URL paths
+| Endpoint                                            | Method | Purpose                         | Service Method                              |
+| --------------------------------------------------- | ------ | ------------------------------- | ------------------------------------------- |
+| `/api/template/type/all`                            | GET    | Fetch all template types        | `TemplateService.getAllTemplateTypes()`     |
+| `/api/template/type/{id}`                           | GET    | Fetch specific template type    | `TemplateService.getTemplateTypeById()`     |
+| `/api/template/template-plan/all`                   | GET    | Fetch all template plans        | `TemplateService.getAllTemplatePlans()`     |
+| `/api/template/search`                              | GET    | Search for templates            | `TemplateService.searchTemplates()`         |
+| `/api/template/user-template`                       | POST   | Create new user template        | `UserTemplateService.createUserTemplate()`  |
+| `/api/template/user-template/{id}`                  | GET    | Get user template by ID         | `UserTemplateService.getUserTemplateById()` |
+| `/api/template/user-template/{id}`                  | PUT    | Update user template            | `UserTemplateService.updateUserTemplate()`  |
+| `/api/template/user-template/search`                | GET    | Search user templates           | `UserTemplateService.searchUserTemplates()` |
+| `/api/template/user-template/attachment`            | POST   | Upload user template attachment | `UserTemplateService.uploadAttachment()`    |
+| `/api/template/user-template/attachment/{objectId}` | GET    | Get user template attachment    | `UserTemplateService.getAttachmentUrl()`    |
 
-## Required API Endpoints
+### Template Selection Flow
 
-The backend needs to implement these key endpoints:
+1. Fetch template types via `TemplateService.getAllTemplateTypes()`
+2. User selects business type, which is stored in state
+3. Fetch template plans via `TemplateService.getAllTemplatePlans()`
+4. User selects plan (standard or premium), which is stored in state
+5. Search templates based on selected type and plan via `TemplateService.searchTemplates()`
+6. User selects a template, which loads the default configuration
 
-### Authentication
+### Template Saving Flow
 
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - User login
-- `GET /api/auth/me` - Get current user info
+1. User customizes template in editor
+2. Customizations are tracked via Angular Signals
+3. When user saves, configuration is serialized to JSON via `JSON.stringify()`
+4. If saving for the first time, call `UserTemplateService.createUserTemplate()`
+5. If updating existing template, call `UserTemplateService.updateUserTemplate()`
+6. Template ID is stored for future updates
 
-### Customizations
+## Website Publishing
 
-- `GET /api/customizations/{userId}` - Get user's saved customizations
-- `POST /api/customizations/{userId}` - Save user's customizations
-- `PUT /api/customizations/{userId}` - Update user's customizations
+### Core Build Services
 
-### Media Management
+- `UserBuildService`: Manages build creation and publishing
+- `SubscriptionService`: Manages subscriptions for builds
 
-- `POST /api/media/upload` - Upload image/video files
-- `DELETE /api/media/{mediaId}` - Delete media file
+### Endpoints
 
-### Theme Management
+| Endpoint                       | Method | Purpose                 | Service Method                              |
+| ------------------------------ | ------ | ----------------------- | ------------------------------------------- |
+| `/api/subscription/all`        | GET    | Fetch all subscriptions | `SubscriptionService.getAllSubscriptions()` |
+| `/api/subscription`            | POST   | Create new subscription | `SubscriptionService.createSubscription()`  |
+| `/api/user-build`              | POST   | Create new build        | `UserBuildService.createUserBuild()`        |
+| `/api/user-build/{id}/publish` | POST   | Publish build           | `UserBuildService.publishUserBuild()`       |
+| `/api/user-build/search`       | GET    | Search/monitor builds   | `UserBuildService.searchUserBuilds()`       |
 
-- `GET /api/themes` - Get all available themes
-- `GET /api/themes/filter?businessType={type}&plan={plan}` - Get themes by business type and plan
-- `GET /api/themes/{themeId}` - Get a specific theme
+### Publishing Flow
 
-## Data Model for Business Types
+1. User saves their template customizations
+2. User initiates publishing process via "Publish" button
+3. System fetches appropriate subscription via `SubscriptionService.getDefaultSubscription()`
+4. System creates build via `UserBuildService.createUserBuild()`
+5. System publishes build via `UserBuildService.publishUserBuild()`
+6. System polls build status via `UserBuildService.searchUserBuilds()`
+7. When build completes, user is presented with the published URL
 
-The application supports different business types, each with specific sections:
+## File Attachment Handling
 
-- **Restaurant**: hero1, about, menu, contact
-- **Salon**: hero1, about, services, contact
-- **Architecture**: hero1, about, projects, contact
-- **Portfolio**: hero1, about, projects, contact
+Webcraft handles file uploads through dedicated attachment endpoints:
 
-Each business type has default content tailored to its needs. The `BusinessConfigService` in the frontend handles this, but the backend should provide appropriate customization templates based on business type.
+### Endpoints
 
-## API Response Format
+| Endpoint                                            | Method | Purpose                  | Service Method                           |
+| --------------------------------------------------- | ------ | ------------------------ | ---------------------------------------- |
+| `/api/template/user-template/attachment`            | POST   | Upload file attachment   | `UserTemplateService.uploadAttachment()` |
+| `/api/template/user-template/attachment/{objectId}` | GET    | Retrieve file attachment | `UserTemplateService.getAttachmentUrl()` |
 
-All API responses should follow this general structure:
+### Attachment Types
 
-```json
-{
-  "success": true,
-  "data": {
-    // Response data
-  },
-  "message": "Success message"
-}
+- `USER_TEMPLATE_IMAGE`: Images used in user templates
+- `USER_TEMPLATE_VIDEO`: Videos used in user templates
+
+### Attachment Flow
+
+1. User uploads file via file input
+2. File is converted to FormData
+3. File is uploaded via `UserTemplateService.uploadAttachment()`
+4. Server returns a file ID
+5. File ID is stored in the template configuration
+6. When displaying the template, file is retrieved via `getAttachmentUrl()`
+
+## Error Handling
+
+All service methods use RxJS's `catchError` operator to handle errors. The error handling flow typically involves:
+
+1. Logging error to console
+2. Returning appropriate error message to UI
+3. Using `throwError` to propagate error through RxJS chain
+
+Example error handling pattern:
+
+```typescript
+return this.http.post<UserTemplate>(this.USER_TEMPLATE_BASE, createDto).pipe(
+  catchError((error) => {
+    console.error("Error creating user template:", error);
+    return throwError(() => error);
+  })
+);
 ```
 
-For errors:
+## Plan Type Mapping
 
-```json
-{
-  "success": false,
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "Error message"
-  }
-}
-```
+The frontend and backend use different terminology for plans:
 
-## Implementation Considerations
+| Frontend | Backend          |
+| -------- | ---------------- |
+| standard | BASIC            |
+| premium  | ADVANCED/PREMIUM |
 
-1. **Storage**: Handle large media files efficiently using cloud storage
-2. **Caching**: Implement caching for theme data and common customizations
-3. **Validation**: Validate customization data against the schema before saving
-4. **Versioning**: Include version information in customization data for future compatibility
-5. **User Preferences**: Store user preferences separately from customization data
-6. **Rate Limiting**: Implement rate limiting for media uploads and saves
-7. **Content Security**: Sanitize user input to prevent XSS attacks
+This mapping is handled in the appropriate services to ensure consistency.
 
-## Example Implementation (JSON Server for Development)
+## Authentication Guards
 
-For initial development, you can create a simple API with JSON Server:
+Protected routes are guarded using:
 
-```json
-// db.json
-{
-  "users": [
-    {
-      "id": 1,
-      "email": "user@example.com",
-      "name": "Test User",
-      "plan": "standard"
-    }
-  ],
-  "customizations": [
-    {
-      "id": 1,
-      "userId": 1,
-      "businessType": "restaurant",
-      "themeId": 1,
-      "data": {
-        "fontConfig": { "fontId": 1, "family": "Roboto", "fallback": "sans-serif" },
-        "header": { "backgroundColor": "#161b33", "textColor": "#ffffff" },
-        "pages": {
-          "home": {
-            "hero1": {
-              "backgroundImage": "/assets/images/restaurant-hero.jpg",
-              "title": "Fine Dining Experience",
-              "subtitle": "Exceptional cuisine in an unforgettable atmosphere"
-            }
-          }
-        },
-        "footer": {
-          "backgroundColor": "#161b33",
-          "textColor": "#ffffff",
-          "copyrightText": "© 2023 Restaurant Name"
-        }
-      }
-    }
-  ],
-  "themes": [
-    {
-      "id": 1,
-      "name": "Restaurant Modern",
-      "businessType": "restaurant",
-      "plan": "standard",
-      "cssContent": "/* CSS content */"
-    }
-  ]
-}
-```
+- `AuthGuard`: Ensures user is authenticated
+- `RoleGuard`: Ensures user has appropriate role
+- `PublicGuard`: Ensures user is not authenticated (for login/register pages)
 
-Start with JSON Server for rapid prototyping before implementing the full backend.
+## Next Steps for Backend Integration
+
+- Implement file upload progress tracking
+- Add offline support with synchronization
+- Implement WebSocket for real-time build status updates
+- Add domain management for published websites
+- Implement analytics integration

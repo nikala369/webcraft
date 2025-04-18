@@ -9,7 +9,12 @@ import {
   effect,
 } from '@angular/core';
 import { Location } from '@angular/common';
-import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import {
+  ActivatedRoute,
+  Router,
+  NavigationEnd,
+  RouterModule,
+} from '@angular/router';
 import { ThemeService } from '../../core/services/theme/theme.service';
 import { ThemeSwitcherComponent } from './components/theme-switcher/theme-switcher.component';
 import {
@@ -40,6 +45,12 @@ import {
   ThemeData,
 } from '../../core/models/website-customizations';
 import { BusinessConfigService } from '../../core/services/business-config/business-config.service';
+import { UserTemplateService } from '../../core/services/template/user-template.service';
+import { UserBuildService } from '../../core/services/build/user-build.service';
+import { SubscriptionService } from '../../core/services/subscription/subscription.service';
+import { switchMap } from 'rxjs/operators';
+import { AuthService } from '../../core/services/auth/auth.service';
+import { SelectionStateService } from '../../core/services/selection/selection-state.service';
 
 /**
  * PreviewComponent is the main interface for the website builder.
@@ -66,6 +77,7 @@ import { BusinessConfigService } from '../../core/services/business-config/busin
     IconComponent,
     BusinessTypeSelectorComponent,
     WebcraftLoadingComponent,
+    RouterModule,
   ],
   templateUrl: './preview.component.html',
   styleUrls: ['./preview.component.scss'],
@@ -83,6 +95,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private themeColorsService = inject(ThemeColorsService);
   private businessConfigService = inject(BusinessConfigService);
+  private userTemplateService = inject(UserTemplateService);
+  private userBuildService = inject(UserBuildService);
+  private subscriptionService = inject(SubscriptionService);
+  private selectionStateService = inject(SelectionStateService);
+  private authService = inject(AuthService);
 
   // ======== CORE STATE SIGNALS ========
   // View state
@@ -90,7 +107,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
   viewMode = signal<'view-desktop' | 'view-mobile'>('view-desktop');
 
   // Authentication state
-  isAuthenticated = signal<boolean>(false); // TODO: Integrate with auth service
+  isAuthenticated = computed(() => this.authService.isAuthenticated());
 
   // Building process state
   hasStartedBuilding = signal<boolean>(false);
@@ -391,6 +408,47 @@ export class PreviewComponent implements OnInit, OnDestroy {
         // Check for business type parameter
         if (params['businessType']) {
           this.businessType.set(params['businessType']);
+        }
+
+        // Handle template operations
+        const templateId = params['templateId'];
+        const mode = params['mode'] || 'view';
+        const newTemplate = params['newTemplate'] === 'true';
+
+        if (newTemplate) {
+          // Handle new template creation
+          console.log('Creating new template');
+          this.hasStartedBuilding.set(true);
+          this.currentStep.set(2); // business type selection
+          this.showBusinessTypeSelector.set(true);
+
+          // Automatically switch to fullscreen edit mode
+          setTimeout(() => {
+            if (!this.isFullscreen()) {
+              this.toggleFullscreen();
+            }
+          }, 300);
+        } else if (templateId) {
+          // Handle existing template editing or viewing
+          console.log(`Loading template ${templateId} in ${mode} mode`);
+
+          // TODO: Load the template data from API
+          this.hasStartedBuilding.set(true);
+
+          if (mode === 'edit') {
+            // Automatically enter edit mode (fullscreen)
+            setTimeout(() => {
+              this.editBuilding();
+            }, 300);
+          } else if (mode === 'view') {
+            // Enter view-only mode
+            setTimeout(() => {
+              this.isViewOnlyStateService.setIsOnlyViewMode(true);
+              if (!this.isFullscreen()) {
+                this.toggleFullscreen();
+              }
+            }, 300);
+          }
         }
       });
 
@@ -1389,159 +1447,332 @@ export class PreviewComponent implements OnInit, OnDestroy {
    * Proceed to checkout after saving website changes
    */
   proceedToCheckout(): void {
-    // TODO: Implement checkout flow with payment gateway integration
-    // For now, we'll just navigate to a placeholder checkout page
-    console.log('Proceeding to checkout');
+    // Check if user is authenticated
+    if (!this.isAuthenticated()) {
+      this.confirmationService.showConfirmation(
+        'Please log in or sign up to publish your website.',
+        'info',
+        4000
+      );
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+
+    // Check if we have a currentUserTemplateId
+    if (!this.currentUserTemplateId) {
+      // Try to save first
+      this.confirmationService.showConfirmation(
+        'Please save your changes before publishing.',
+        'info',
+        3000
+      );
+      return;
+    }
+
+    // Show loading state
     this.confirmationService.showConfirmation(
-      'Redirecting to checkout...',
+      'Preparing to publish your website...',
       'info',
-      2000
+      3000
     );
 
-    // Set flag for completed checkout
-    sessionStorage.setItem('hasCompletedCheckout', 'true');
-    // Update step to 4 (final step)
-    this.currentStep.set(4);
+    // First get a default subscription based on plan type
+    const planMapping: Record<string, 'BASIC' | 'ADVANCED'> = {
+      standard: 'BASIC',
+      premium: 'ADVANCED',
+    };
 
-    // Simulate checkout redirect
-    setTimeout(() => {
-      // TODO: Replace with actual checkout route
-      alert('Checkout functionality will be implemented in the next phase');
-      // this.router.navigate(['/checkout'], {
-      //   queryParams: { plan: this.currentPlan() }
-      // });
-    }, 2000);
+    // We need to update this mapping once backend is updated
+    const subscriptionType = planMapping[this.currentPlan()];
+
+    if (!this.subscriptionService) {
+      console.error('SubscriptionService not initialized');
+      return;
+    }
+
+    this.subscriptionService
+      .getDefaultSubscription(subscriptionType)
+      .pipe(
+        switchMap((subscription) => {
+          // Now we have the subscription, let's create and publish the build
+          if (!this.userBuildService) {
+            throw new Error('UserBuildService not initialized');
+          }
+
+          if (!this.currentUserTemplateId) {
+            throw new Error('No user template ID found');
+          }
+
+          return this.userBuildService.buildAndPublishTemplate(
+            this.currentUserTemplateId,
+            subscription.id
+          );
+        })
+      )
+      .subscribe({
+        next: (build) => {
+          console.log('Build completed successfully:', build);
+
+          // Set flag for completed checkout
+          sessionStorage.setItem('hasCompletedCheckout', 'true');
+
+          // Update step to 4 (final step)
+          this.currentStep.set(4);
+
+          // Store the published URL
+          if (build.address?.address) {
+            sessionStorage.setItem('publishedUrl', build.address.address);
+
+            // Show success message with the URL
+            this.confirmationService.showConfirmation(
+              `Your website has been successfully published! You can view it at ${build.address.address}`,
+              'success',
+              6000
+            );
+
+            // Open the published URL in a new tab
+            window.open(build.address.address, '_blank');
+          } else {
+            // Show success message without URL
+            this.confirmationService.showConfirmation(
+              'Your website has been successfully published!',
+              'success',
+              4000
+            );
+          }
+        },
+        error: (error) => {
+          console.error('Error publishing website:', error);
+          this.confirmationService.showConfirmation(
+            'Failed to publish your website: ' +
+              (error.message || 'Unknown error'),
+            'error',
+            5000
+          );
+        },
+      });
   }
 
   // ======== SAVE & RESET ACTIONS ========
   /**
    * Save customizations
    * For unauthenticated users - saves to sessionStorage
-   * TODO: For authenticated users - save to backend
+   * For authenticated users - save to backend
    */
   saveAllChanges(): void {
     console.log('Saving customizations:', this.customizations());
 
-    // TODO: For authenticated users, save to their account in the backend
+    // Set flag to indicate saving is in progress
+    const isSaving = true;
+
     if (this.isAuthenticated()) {
-      // Future implementation: Save to user's account via API
-      // this.userTemplateService.saveTemplate(this.customizations());
-    }
+      // Use the userTemplateService to save to backend
+      const templateId = sessionStorage.getItem('selectedTemplateId');
+      const templateName = 'My Webcraft Website'; // TODO: Get from user input
 
-    // Create a deep copy of customizations to modify before saving
-    const customizationsToSave = structuredClone(this.customizations());
-
-    // Handle video data which might exceed localStorage quota
-    try {
-      // Find any video data in the hero sections and create a placeholder
-      if (customizationsToSave.pages?.home?.hero1?.backgroundVideo) {
-        const videoSrc = customizationsToSave.pages?.home.hero1.backgroundVideo;
-        // If it's a data URL (usually very large), replace with a flag
-        if (videoSrc?.startsWith('data:video')) {
-          console.log('Replacing video data URL with placeholder for storage');
-          // Store only the first 100 chars as reference and a flag
-          (customizationsToSave.pages?.home.hero1 as any)._videoPlaceholder =
-            'VIDEO_DATA_PLACEHOLDER';
-          delete customizationsToSave.pages?.home.hero1.backgroundVideo;
-        }
+      if (!templateId) {
+        console.error('No template ID found - cannot save to backend');
+        this.confirmationService.showConfirmation(
+          'Error: No template selected. Please select a template first.',
+          'error',
+          4000
+        );
+        return;
       }
 
-      // Prepare data for saving with proper structure
-      const savedData = {
-        customizations: customizationsToSave,
-        themeId: this.defaultThemeId(),
-        businessType: this.businessType(),
-      };
+      if (!this.userTemplateService) {
+        console.error('UserTemplateService not initialized');
+        return;
+      }
 
-      // Try to save to session storage
-      sessionStorage.setItem('savedCustomizations', JSON.stringify(savedData));
+      // Create a deep copy of customizations to modify before saving
+      const customizationsToSave = structuredClone(this.customizations());
 
-      // Also update currentCustomizations to match the saved state
-      sessionStorage.setItem(
-        'currentCustomizations',
-        JSON.stringify(savedData)
-      );
+      // Clean up video data which might exceed API limits
+      this.sanitizeCustomizationsForStorage(customizationsToSave);
 
-      // Set flags to indicate successful save
-      sessionStorage.setItem('hasStartedBuilding', 'true');
-      this.hasStartedBuilding.set(true);
-      this.hasSavedChangesFlag.set(true);
+      this.userTemplateService
+        .saveUserTemplate(
+          templateId,
+          templateName,
+          customizationsToSave,
+          this.currentUserTemplateId
+        )
+        .subscribe({
+          next: (savedTemplate) => {
+            console.log(
+              'Template saved successfully to backend:',
+              savedTemplate
+            );
 
-      // Update progress step to the editing step (2)
-      // We only move to step 3 after checkout is complete
-      this.currentStep.set(4);
+            // Store the user template ID for future updates
+            this.currentUserTemplateId = savedTemplate.id;
 
-      // Update lastSavedState to track what was saved
-      this.lastSavedState.set(structuredClone(this.customizations()));
-      this.currentEditingState.set(structuredClone(this.customizations()));
+            // Set flags to indicate successful save
+            this.hasStartedBuilding.set(true);
+            this.hasSavedChangesFlag.set(true);
 
-      // Show confirmation message
-      this.confirmationService.showConfirmation(
-        'Your website changes have been saved successfully!',
-        'success',
-        4000
-      );
-    } catch (error: any) {
-      console.error('Error saving customizations:', error);
+            // Update progress step
+            this.currentStep.set(4);
 
-      // If it's a quota error, try a more aggressive approach by removing all video data
-      if (error.name === 'QuotaExceededError') {
-        try {
-          console.log(
-            'Storage quota exceeded. Removing video data completely.'
-          );
+            // Update lastSavedState to track what was saved
+            this.lastSavedState.set(structuredClone(this.customizations()));
+            this.currentEditingState.set(
+              structuredClone(this.customizations())
+            );
 
-          // Remove all video data from customizations
-          if (customizationsToSave.pages?.home?.hero1) {
-            delete customizationsToSave.pages.home.hero1.backgroundVideo;
-            // Set a flag indicating video was removed
-            (customizationsToSave.pages.home.hero1 as any)._videoRemoved = true;
+            // Show confirmation message
+            this.confirmationService.showConfirmation(
+              'Your website changes have been saved successfully!',
+              'success',
+              4000
+            );
+
+            // Exit fullscreen mode if needed
+            if (this.isFullscreen()) {
+              this.toggleFullscreen();
+            }
+          },
+          error: (error) => {
+            console.error('Error saving template to backend:', error);
+            this.confirmationService.showConfirmation(
+              'Failed to save your website: ' +
+                (error.message || 'Unknown error'),
+              'error',
+              5000
+            );
+          },
+        });
+    } else {
+      // For unauthenticated users, save to sessionStorage as before
+
+      // Create a deep copy of customizations to modify before saving
+      const customizationsToSave = structuredClone(this.customizations());
+
+      // Handle video data which might exceed localStorage quota
+      try {
+        // Find any video data in the hero sections and create a placeholder
+        if (customizationsToSave.pages?.home?.hero1?.backgroundVideo) {
+          const videoSrc =
+            customizationsToSave.pages?.home.hero1.backgroundVideo;
+          // If it's a data URL (usually very large), replace with a flag
+          if (videoSrc?.startsWith('data:video')) {
+            console.log(
+              'Replacing video data URL with placeholder for storage'
+            );
+            // Store only the first 100 chars as reference and a flag
+            (customizationsToSave.pages?.home.hero1 as any)._videoPlaceholder =
+              'VIDEO_DATA_PLACEHOLDER';
+            delete customizationsToSave.pages?.home.hero1.backgroundVideo;
           }
+        }
 
-          // Try again with reduced data
-          const reducedSavedData = {
-            customizations: customizationsToSave,
-            themeId: this.defaultThemeId(),
-            businessType: this.businessType(),
-          };
+        // Prepare data for saving with proper structure
+        const savedData = {
+          customizations: customizationsToSave,
+          themeId: this.defaultThemeId(),
+          businessType: this.businessType(),
+        };
 
-          sessionStorage.setItem(
-            'savedCustomizations',
-            JSON.stringify(reducedSavedData)
-          );
-          sessionStorage.setItem(
-            'currentCustomizations',
-            JSON.stringify(reducedSavedData)
-          );
+        // Try to save to session storage
+        sessionStorage.setItem(
+          'savedCustomizations',
+          JSON.stringify(savedData)
+        );
 
-          // Set all the same flags as before
-          sessionStorage.setItem('hasStartedBuilding', 'true');
-          this.hasStartedBuilding.set(true);
-          this.hasSavedChangesFlag.set(true);
-          this.currentStep.set(4);
+        // Also update currentCustomizations to match the saved state
+        sessionStorage.setItem(
+          'currentCustomizations',
+          JSON.stringify(savedData)
+        );
 
-          // Show a different confirmation message
+        // Set flags to indicate successful save
+        sessionStorage.setItem('hasStartedBuilding', 'true');
+        this.hasStartedBuilding.set(true);
+        this.hasSavedChangesFlag.set(true);
+
+        // Update progress step to the editing step (2)
+        // We only move to step 3 after checkout is complete
+        this.currentStep.set(4);
+
+        // Update lastSavedState to track what was saved
+        this.lastSavedState.set(structuredClone(this.customizations()));
+        this.currentEditingState.set(structuredClone(this.customizations()));
+
+        // Show confirmation message
+        this.confirmationService.showConfirmation(
+          'Your website changes have been saved successfully!',
+          'success',
+          4000
+        );
+      } catch (error: any) {
+        console.error('Error saving customizations:', error);
+
+        // If it's a quota error, try a more aggressive approach by removing all video data
+        if (error.name === 'QuotaExceededError') {
+          try {
+            console.log(
+              'Storage quota exceeded. Removing video data completely.'
+            );
+
+            // Remove all video data from customizations
+            if (customizationsToSave.pages?.home?.hero1) {
+              delete customizationsToSave.pages.home.hero1.backgroundVideo;
+              // Set a flag indicating video was removed
+              (customizationsToSave.pages.home.hero1 as any)._videoRemoved =
+                true;
+            }
+
+            // Try again with reduced data
+            const reducedSavedData = {
+              customizations: customizationsToSave,
+              themeId: this.defaultThemeId(),
+              businessType: this.businessType(),
+            };
+
+            sessionStorage.setItem(
+              'savedCustomizations',
+              JSON.stringify(reducedSavedData)
+            );
+            sessionStorage.setItem(
+              'currentCustomizations',
+              JSON.stringify(reducedSavedData)
+            );
+
+            // Set all the same flags as before
+            sessionStorage.setItem('hasStartedBuilding', 'true');
+            this.hasStartedBuilding.set(true);
+            this.hasSavedChangesFlag.set(true);
+            this.currentStep.set(4);
+
+            // Show a different confirmation message
+            this.confirmationService.showConfirmation(
+              'Changes saved successfully, but video data was removed due to size limitations',
+              'warning',
+              5000
+            );
+          } catch (secondError) {
+            // If it still fails, show an error message
+            console.error(
+              'Failed to save even with reduced data:',
+              secondError
+            );
+            this.confirmationService.showConfirmation(
+              'Failed to save changes: storage quota exceeded',
+              'error',
+              5000
+            );
+          }
+        } else {
+          // For other errors, just show the error message
           this.confirmationService.showConfirmation(
-            'Changes saved successfully, but video data was removed due to size limitations',
-            'warning',
-            5000
-          );
-        } catch (secondError) {
-          // If it still fails, show an error message
-          console.error('Failed to save even with reduced data:', secondError);
-          this.confirmationService.showConfirmation(
-            'Failed to save changes: storage quota exceeded',
+            'Failed to save changes: ' + error.message,
             'error',
             5000
           );
         }
-      } else {
-        // For other errors, just show the error message
-        this.confirmationService.showConfirmation(
-          'Failed to save changes: ' + error.message,
-          'error',
-          5000
-        );
       }
     }
 
@@ -1549,6 +1780,32 @@ export class PreviewComponent implements OnInit, OnDestroy {
     if (this.isFullscreen()) {
       this.toggleFullscreen();
     }
+  }
+
+  /**
+   * Helper method to sanitize customizations for API storage
+   * Removes large data URLs and other problematic data
+   */
+  private sanitizeCustomizationsForStorage(
+    customizations: Customizations
+  ): void {
+    // Handle video data in hero sections
+    if (customizations.pages?.home?.hero1?.backgroundVideo) {
+      const videoSrc = customizations.pages.home.hero1.backgroundVideo;
+
+      // If it's a data URL (usually very large), replace with a flag
+      if (typeof videoSrc === 'string' && videoSrc.startsWith('data:video')) {
+        console.log('Removing large video data URL before API storage');
+        // Mark with a placeholder
+        (customizations.pages.home.hero1 as any)._videoPlaceholder =
+          'VIDEO_DATA_PLACEHOLDER';
+        delete customizations.pages.home.hero1.backgroundVideo;
+      }
+    }
+
+    // TODO: Process other large images if needed
+    // This would involve uploading them through the attachment API
+    // and replacing the data URLs with references to the uploaded files
   }
 
   /**
@@ -1659,4 +1916,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
       this.currentPlan()
     );
   }
+
+  // In class definition after isSaving signal
+  currentUserTemplateId: string | undefined;
 }

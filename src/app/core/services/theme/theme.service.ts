@@ -624,4 +624,61 @@ export class ThemeService {
   private getDefaultCustomizations(themeId: number): Customizations {
     return this.getMockTheme(themeId).customizations;
   }
+
+  /**
+   * Search themes with pagination similar to other services
+   * @param page Page number (0-based)
+   * @param size Page size
+   * @param businessType Business type to filter by
+   * @param planType Plan type to filter by ('standard' or 'premium')
+   * @returns Observable of paginated theme list
+   */
+  searchThemes(
+    page: number = 0,
+    size: number = 10,
+    businessType?: string,
+    planType: string = 'standard'
+  ): Observable<PageResponse<ThemeListItem>> {
+    console.log(
+      `Searching themes - page: ${page}, size: ${size}, businessType: ${businessType}, planType: ${planType}`
+    );
+
+    // Get themes for the business type and plan
+    return this.getThemesByBusinessType(
+      businessType || 'restaurant',
+      planType
+    ).pipe(
+      map((themes) => {
+        // Convert to paginated response
+        const startIndex = page * size;
+        const endIndex = Math.min(startIndex + size, themes.length);
+        const pageContent = themes.slice(startIndex, endIndex);
+
+        const response: PageResponse<ThemeListItem> = {
+          content: pageContent,
+          totalPages: Math.ceil(themes.length / size),
+          totalElements: themes.length,
+          size: size,
+          number: page,
+          first: page === 0,
+          last: endIndex >= themes.length,
+          empty: pageContent.length === 0,
+        };
+
+        return response;
+      })
+    );
+  }
+}
+
+// Interface for paginated responses, consistent with other API services
+interface PageResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
 }

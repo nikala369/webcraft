@@ -1,4 +1,8 @@
-import {APP_INITIALIZER, ApplicationConfig, importProvidersFrom} from '@angular/core';
+import {
+  APP_INITIALIZER,
+  ApplicationConfig,
+  importProvidersFrom,
+} from '@angular/core';
 import {
   provideRouter,
   withViewTransitions,
@@ -8,13 +12,13 @@ import {
 import {
   provideHttpClient,
   withInterceptorsFromDi, // Add this import
-  HTTP_INTERCEPTORS
+  HTTP_INTERCEPTORS,
 } from '@angular/common/http';
 import { appRoutes } from './app.routes';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
-import {AuthService} from "./core/services/auth/auth.service";
+import { AuthService } from './core/services/auth/auth.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -35,7 +39,7 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: (auth: AuthService) => () => auth.initialize(),
       deps: [AuthService],
-      multi: true
-    }
+      multi: true,
+    },
   ],
 };

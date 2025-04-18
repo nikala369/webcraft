@@ -10,6 +10,7 @@ import {
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth/auth.service';
 import { Subscription } from 'rxjs';
+import { SelectionStateService } from '../../../../core/services/selection/selection-state.service';
 
 @Component({
   selector: 'app-login',
@@ -23,6 +24,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private selectionStateService = inject(SelectionStateService);
 
   loginForm!: FormGroup;
   private subscription = new Subscription();
@@ -71,19 +73,68 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.submitted = true;
 
     // Mark controls as touched to trigger validation
-    // if (this.loginForm.invalid) {
-      Object.keys(this.loginForm.controls).forEach((key) => {
-        const control = this.loginForm.get(key);
-        control?.markAsTouched();
-      });
-      // return;
-    // }
+    Object.keys(this.loginForm.controls).forEach((key) => {
+      const control = this.loginForm.get(key);
+      control?.markAsTouched();
+    });
 
     const { username, password } = this.loginForm.value;
 
     const loginSub = this.authService.login(username, password).subscribe({
       next: () => {
-        this.router.navigate([this.returnUrl]);
+        // Check if we have saved selection state
+        if (this.selectionStateService.hasRecentSelections()) {
+          const selections = this.selectionStateService.getSelections();
+
+          // If we have both business type and plan, route to preview
+          if (selections.businessType && selections.planType) {
+            console.log(
+              'Redirecting to preview with saved selections:',
+              selections
+            );
+
+            this.router.navigate(['/preview'], {
+              queryParams: {
+                businessType: selections.businessType,
+                plan: selections.planType,
+                templateId: selections.templateId,
+                new: true,
+              },
+            });
+
+            // Clear selections after use
+            this.selectionStateService.clearSelections();
+            return;
+          }
+          // If we only have business type, route to plan selection
+          else if (selections.businessType) {
+            console.log(
+              'Redirecting to plan selection with business type:',
+              selections.businessType
+            );
+
+            this.router.navigate(['/pricing'], {
+              queryParams: {
+                businessType: selections.businessType,
+              },
+            });
+
+            // Clear selections after use
+            this.selectionStateService.clearSelections();
+            return;
+          }
+        }
+
+        // Check if returnUrl contains a template selection path
+        if (
+          this.returnUrl.includes('/preview') ||
+          this.returnUrl.includes('/pricing')
+        ) {
+          this.router.navigateByUrl(this.returnUrl);
+        } else {
+          // Default to dashboard templates view
+          this.router.navigate(['/app/templates']);
+        }
       },
       error: () => {
         // Focus password field for re-entry

@@ -71,7 +71,7 @@ export class PricingComponent implements OnInit {
 
   businessTypes = BUSINESS_TYPES;
   selectedBusinessType: string | null = null;
-  showBusinessTypeSelector = false;
+  showBusinessTypeSelector = true;
 
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -82,10 +82,8 @@ export class PricingComponent implements OnInit {
       if (params['businessType']) {
         this.selectedBusinessType = params['businessType'];
         this.showBusinessTypeSelector = false;
-      } else {
-        // If no business type is selected, show the selector
-        this.showBusinessTypeSelector = true;
       }
+      // Don't set showBusinessTypeSelector to true here - it's already true by default
     });
   }
 

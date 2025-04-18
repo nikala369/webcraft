@@ -1,180 +1,216 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { UserTemplateService } from '../../../../core/services/template/user-template.service';
+import { SelectionStateService } from '../../../../core/services/selection/selection-state.service';
+import { TemplateService } from '../../../../core/services/template/template.service';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { finalize } from 'rxjs/operators';
+
+// Define the UserTemplate interface for our component
+export interface UserTemplate {
+  id: string;
+  name: string;
+  type: string;
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  published?: boolean;
+  thumbnailUrl?: string;
+}
 
 @Component({
   selector: 'app-templates',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="dashboard-container">
-      <header class="dashboard-header">
-        <h1 class="dashboard-title">My Templates</h1>
-        <button class="create-button">Create New Template</button>
-      </header>
-
-      <div class="templates-empty" *ngIf="!hasTemplates">
-        <div class="empty-illustration">
-          <svg
-            width="120"
-            height="120"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M4 4H20V16H4V4Z"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M4 8H20"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M8 8V16"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M9 20H15"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <path
-              d="M12 16V20"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
-        </div>
-        <h2 class="empty-title">No Templates Yet</h2>
-        <p class="empty-description">
-          Get started by creating your first website template.
-        </p>
-        <button class="empty-button">Create Template</button>
-      </div>
-
-      <!-- This section will be shown when user has templates -->
-      <!-- <div class="templates-grid">
-        Template items will be here
-      </div> -->
-    </div>
-  `,
-  styles: [
-    `
-      .dashboard-container {
-        padding: 2rem;
-        max-width: 1200px;
-        margin: 0 auto;
-      }
-
-      .dashboard-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-      }
-
-      .dashboard-title {
-        font-size: 1.75rem;
-        font-weight: 600;
-        color: var(--text-color, #1e293b);
-        margin: 0;
-      }
-
-      .create-button {
-        background-color: var(--primary-color, #3b82f6);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0.625rem 1.25rem;
-        font-weight: 500;
-        font-size: 0.9375rem;
-        cursor: pointer;
-        transition: background-color 0.2s, transform 0.1s;
-      }
-
-      .create-button:hover {
-        background-color: var(--primary-color-hover, #2563eb);
-      }
-
-      .create-button:active {
-        transform: translateY(1px);
-      }
-
-      /* Empty state styling */
-      .templates-empty {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 4rem 1rem;
-        background-color: var(--card-bg-color, #ffffff);
-        border-radius: 12px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-      }
-
-      .empty-illustration {
-        margin-bottom: 1.5rem;
-        color: var(--text-muted-color, #94a3b8);
-      }
-
-      .empty-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--text-color, #1e293b);
-        margin: 0 0 0.75rem;
-      }
-
-      .empty-description {
-        color: var(--text-muted-color, #64748b);
-        margin: 0 0 2rem;
-        max-width: 400px;
-      }
-
-      .empty-button {
-        background-color: var(--primary-color, #3b82f6);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 500;
-        font-size: 0.9375rem;
-        cursor: pointer;
-        transition: background-color 0.2s, transform 0.1s;
-      }
-
-      .empty-button:hover {
-        background-color: var(--primary-color-hover, #2563eb);
-      }
-
-      .empty-button:active {
-        transform: translateY(1px);
-      }
-
-      /* Responsive adjustments */
-      @media (max-width: 768px) {
-        .dashboard-header {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 1rem;
-        }
-
-        .templates-empty {
-          padding: 3rem 1rem;
-        }
-      }
-    `,
-  ],
+  imports: [CommonModule, IconComponent, DatePipe],
+  templateUrl: './templates.component.html',
+  styleUrls: ['./templates.component.scss'],
 })
-export class TemplatesComponent {
-  // Placeholder for templates data - will be replaced with actual data later
-  hasTemplates = false;
+export class TemplatesComponent implements OnInit {
+  templates: UserTemplate[] = [];
+  filteredTemplates: UserTemplate[] = [];
+  loading = true;
+  error: string | null = null;
+  searchTerm = '';
+  selectedFilter = 'all';
+
+  // Inject services
+  private userTemplateService = inject(UserTemplateService);
+  private selectionStateService = inject(SelectionStateService);
+  private router = inject(Router);
+
+  ngOnInit(): void {
+    this.loadTemplates();
+  }
+
+  /**
+   * Load user templates from the backend
+   */
+  loadTemplates(): void {
+    this.loading = true;
+    this.error = null;
+
+    this.userTemplateService
+      .searchUserTemplates()
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          // Map backend response to our component's UserTemplate interface
+          this.templates = response.content.map((template: any) => ({
+            id: template.id,
+            name: template.name || 'Untitled Template',
+            type: template.template?.templateType?.name || 'Unknown',
+            description: 'A customizable website template',
+            createdAt: template.createdAt
+              ? new Date(template.createdAt)
+              : new Date(),
+            updatedAt: template.updatedAt
+              ? new Date(template.updatedAt)
+              : new Date(),
+            published: !!template.published,
+            thumbnailUrl: template.thumbnailUrl,
+          }));
+          this.applyFilters();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.error = 'Failed to load templates. Please try again.';
+          console.error('Error loading templates:', error);
+        },
+      });
+  }
+
+  /**
+   * Navigate to the template creation page
+   */
+  createTemplate(): void {
+    this.router.navigate(['/preview'], {
+      queryParams: { newTemplate: true },
+    });
+  }
+
+  /**
+   * Navigate to the template editing page
+   */
+  editTemplate(template: UserTemplate): void {
+    this.router.navigate(['/preview'], {
+      queryParams: {
+        templateId: template.id,
+        mode: 'edit',
+      },
+    });
+  }
+
+  /**
+   * Navigate to the template view page
+   */
+  viewTemplate(template: UserTemplate): void {
+    this.router.navigate(['/preview'], {
+      queryParams: {
+        templateId: template.id,
+        mode: 'view',
+      },
+    });
+  }
+
+  /**
+   * Delete a template after confirmation
+   */
+  deleteTemplate(template: UserTemplate): void {
+    if (confirm(`Are you sure you want to delete "${template.name}"?`)) {
+      this.loading = true;
+      this.userTemplateService.deleteTemplate(template.id).subscribe({
+        next: () => {
+          this.loadTemplates();
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error('Error deleting template:', error);
+          this.error = 'Failed to delete template. Please try again.';
+          this.loading = false;
+        },
+      });
+    }
+  }
+
+  /**
+   * Publish or unpublish a template
+   */
+  publishTemplate(template: UserTemplate): void {
+    this.loading = true;
+
+    // Toggle published state
+    const action = template.published
+      ? this.userTemplateService.unpublishTemplate(template.id)
+      : this.userTemplateService.publishTemplate(template.id);
+
+    action.subscribe({
+      next: () => {
+        this.loadTemplates();
+      },
+      error: (error: HttpErrorResponse) => {
+        const action = template.published ? 'unpublish' : 'publish';
+        console.error(`Error ${action}ing template:`, error);
+        this.error = `Failed to ${action} template. Please try again.`;
+        this.loading = false;
+      },
+    });
+  }
+
+  /**
+   * Show options menu for a template
+   */
+  showOptions(template: UserTemplate): void {
+    // This will be implemented when we add a dropdown menu component
+    console.log('Show options for template:', template.id);
+  }
+
+  /**
+   * Handle search input changes
+   */
+  onSearchChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.searchTerm = target.value;
+    this.applyFilters();
+  }
+
+  /**
+   * Handle filter select changes
+   */
+  onFilterChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    this.selectedFilter = target.value;
+    this.applyFilters();
+  }
+
+  /**
+   * Apply both search and filter to templates
+   */
+  private applyFilters(): void {
+    // First filter by type if not "all"
+    let result = this.templates;
+
+    if (this.selectedFilter !== 'all') {
+      result = result.filter(
+        (template) =>
+          template.type?.toLowerCase() === this.selectedFilter.toLowerCase()
+      );
+    }
+
+    // Then filter by search term if not empty
+    if (this.searchTerm.trim() !== '') {
+      const searchLower = this.searchTerm.toLowerCase();
+      result = result.filter(
+        (template) =>
+          template.name?.toLowerCase().includes(searchLower) ||
+          template.description?.toLowerCase().includes(searchLower) ||
+          template.type?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    this.filteredTemplates = result;
+  }
 }

@@ -7,7 +7,18 @@
       and sections.
     </p>
 
-    <div class="business-types-grid">
+    <!-- Loading state -->
+    <div class="loading-container" *ngIf="loading">
+      <div class="loading-spinner"></div>
+      <p>Loading business types...</p>
+    </div>
+
+    <!-- Error state -->
+    <div class="error-container" *ngIf="error">
+      <p class="error-message">{{ error }}</p>
+    </div>
+
+    <div class="business-types-grid" *ngIf="!loading">
       <div
         *ngFor="let type of businessTypes"
         class="business-type-card"
@@ -17,17 +28,44 @@
       >
         <div class="business-type-icon">
           <!-- Restaurant icon -->
-          <img style="width: 40px; height: 40px;" *ngIf="type.id === 'restaurant'" src="assets/business-types/restaurant.svg" />
+          <img
+            style="width: 40px; height: 40px"
+            *ngIf="type.id === 'restaurant'"
+            src="assets/business-types/restaurant.svg"
+          />
 
           <!-- Salon icon -->
-          <img style="width: 40px; height: 40px;" *ngIf="type.id === 'salon'" src="assets/business-types/salon.svg" />
+          <img
+            style="width: 40px; height: 40px"
+            *ngIf="type.id === 'salon'"
+            src="assets/business-types/salon.svg"
+          />
 
           <!-- Architecture icon -->
-          <img style="width: 40px; height: 40px;" *ngIf="type.id === 'architecture'" src="assets/business-types/architecture.svg" />
+          <img
+            style="width: 40px; height: 40px"
+            *ngIf="type.id === 'architecture'"
+            src="assets/business-types/architecture.svg"
+          />
 
           <!-- Portfolio icon -->
-          <img style="width: 40px; height: 40px;" *ngIf="type.id === 'portfolio'" src="assets/business-types/portfolio.svg" />
+          <img
+            style="width: 40px; height: 40px"
+            *ngIf="type.id === 'portfolio'"
+            src="assets/business-types/portfolio.svg"
+          />
 
+          <!-- Generic icon for other types -->
+          <img
+            style="width: 40px; height: 40px"
+            *ngIf="
+              type.id !== 'restaurant' &&
+              type.id !== 'salon' &&
+              type.id !== 'architecture' &&
+              type.id !== 'portfolio'
+            "
+            src="assets/business-types/generic.svg"
+          />
         </div>
         <h4 class="business-type-name">{{ type.name }}</h4>
         <p class="business-type-description">{{ type.description }}</p>
@@ -58,21 +96,53 @@
   <!-- Compact mode for fullscreen (dropdown) -->
   <ng-container *ngIf="compactMode">
     <div class="compact-selector">
-      <div class="selected-type" (click)="toggleDropdown()">
-        <div class="business-type-icon">
+      <!-- Loading for compact mode -->
+      <div class="loading-indicator" *ngIf="loading">
+        <div class="spinner-mini"></div>
+      </div>
 
+      <div class="selected-type" (click)="toggleDropdown()" *ngIf="!loading">
+        <div class="business-type-icon">
           <!-- Restaurant icon -->
-          <img style="width: 22px; height: 22px;" *ngIf="selectedBusinessType === 'restaurant'" src="assets/business-types/restaurant.svg" />
+          <img
+            style="width: 22px; height: 22px"
+            *ngIf="selectedBusinessType === 'restaurant'"
+            src="assets/business-types/restaurant.svg"
+          />
 
           <!-- Salon icon -->
-          <img style="width: 22px; height: 22px;" *ngIf="selectedBusinessType === 'salon'" src="assets/business-types/salon.svg" />
+          <img
+            style="width: 22px; height: 22px"
+            *ngIf="selectedBusinessType === 'salon'"
+            src="assets/business-types/salon.svg"
+          />
 
           <!-- Architecture icon -->
-          <img style="width: 22px; height: 22px;" *ngIf="selectedBusinessType === 'architecture'" src="assets/business-types/architecture.svg" />
+          <img
+            style="width: 22px; height: 22px"
+            *ngIf="selectedBusinessType === 'architecture'"
+            src="assets/business-types/architecture.svg"
+          />
 
           <!-- Portfolio icon -->
-          <img style="width: 22px; height: 22px;" *ngIf="selectedBusinessType === 'portfolio'" src="assets/business-types/portfolio.svg" />
+          <img
+            style="width: 22px; height: 22px"
+            *ngIf="selectedBusinessType === 'portfolio'"
+            src="assets/business-types/portfolio.svg"
+          />
 
+          <!-- Generic icon for other types -->
+          <img
+            style="width: 22px; height: 22px"
+            *ngIf="
+              selectedBusinessType &&
+              selectedBusinessType !== 'restaurant' &&
+              selectedBusinessType !== 'salon' &&
+              selectedBusinessType !== 'architecture' &&
+              selectedBusinessType !== 'portfolio'
+            "
+            src="assets/business-types/generic.svg"
+          />
 
           <!-- Default icon if no business type selected -->
           <svg
@@ -122,7 +192,7 @@
       </div>
 
       <!-- Dropdown for compact mode -->
-      <div class="business-types-dropdown" *ngIf="dropdownOpen">
+      <div class="business-types-dropdown" *ngIf="dropdownOpen && !loading">
         <div
           *ngFor="let type of businessTypes"
           class="dropdown-item"
@@ -131,16 +201,44 @@
         >
           <div class="business-type-icon">
             <!-- Restaurant icon -->
-            <img style="width: 22px; height: 22px;" *ngIf="type.id === 'restaurant'" src="assets/business-types/restaurant.svg" />
+            <img
+              style="width: 22px; height: 22px"
+              *ngIf="type.id === 'restaurant'"
+              src="assets/business-types/restaurant.svg"
+            />
 
             <!-- Salon icon -->
-            <img style="width: 22px; height: 22px;" *ngIf="type.id === 'salon'" src="assets/business-types/salon.svg" />
+            <img
+              style="width: 22px; height: 22px"
+              *ngIf="type.id === 'salon'"
+              src="assets/business-types/salon.svg"
+            />
 
             <!-- Architecture icon -->
-            <img style="width: 22px; height: 22px;" *ngIf="type.id === 'architecture'" src="assets/business-types/architecture.svg" />
+            <img
+              style="width: 22px; height: 22px"
+              *ngIf="type.id === 'architecture'"
+              src="assets/business-types/architecture.svg"
+            />
 
             <!-- Portfolio icon -->
-            <img style="width: 22px; height: 22px;" *ngIf="type.id === 'portfolio'" src="assets/business-types/portfolio.svg" />
+            <img
+              style="width: 22px; height: 22px"
+              *ngIf="type.id === 'portfolio'"
+              src="assets/business-types/portfolio.svg"
+            />
+
+            <!-- Generic icon for other types -->
+            <img
+              style="width: 22px; height: 22px"
+              *ngIf="
+                type.id !== 'restaurant' &&
+                type.id !== 'salon' &&
+                type.id !== 'architecture' &&
+                type.id !== 'portfolio'
+              "
+              src="assets/business-types/generic.svg"
+            />
           </div>
           <span>{{ type.name }}</span>
           <div class="selected-indicator" *ngIf="isSelected(type.id)">

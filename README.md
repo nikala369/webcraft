@@ -4,6 +4,34 @@ An Angular-based visual website builder that allows users to create and customiz
 
 ## Latest Updates & Implementation Status
 
+### Backend API Integration: Complete
+
+**The application now fully integrates with the backend API, providing:**
+
+- **Complete authentication flow:**
+
+  - User registration with email verification
+  - Login with JWT token management
+  - Account activation and password reset functionality
+
+- **Template management integration:**
+
+  - Fetching template types, plans, and templates from API
+  - Storing user customizations in the backend
+  - Maintaining user template history
+
+- **Website publishing flow:**
+
+  - Creating builds from user templates
+  - Publishing builds to live websites
+  - Monitoring build status (pending, building, deploying, success)
+  - Providing the published URL to the user
+
+- **Subscription handling:**
+  - Integration with the subscription API
+  - Proper plan mapping (standard → BASIC, premium → ADVANCED)
+  - Error handling for subscription-related failures
+
 ### Menu & Services Sections: Complete Implementation Summary
 
 **Both sections now support:**
@@ -49,70 +77,30 @@ An Angular-based visual website builder that allows users to create and customiz
 
 ### Recent Fixes
 
+- Implemented full backend API integration
+- Fixed storage of large files by using the attachment API
+- Enhanced template saving and loading with proper error handling
+- Added authenticated vs. unauthenticated user flows
+- Improved user experience with better feedback during publishing
 - Fixed issue with services section not properly applying style customizations
-- Added proper logging to diagnose rendering issues
-- Fixed business type change not correctly updating displayed sections
-- Improved computed property usage for available sections
-- Resolved conflicts in component naming and methods
 - Enhanced color application for descriptions and subtitles
 
 ### Next Steps
 
+- Implement attachment handling for large image/video files
+- Add user template management UI (load, delete saved templates)
 - Complete Projects Section for architecture/portfolio business types
-- Finalize standard structure completely for backend integration
-- Implement premium layout variations and animations
+- Finalize premium layout variations and animations
 
 ## Features
 
-- **Drag-and-drop editing**: Build pages by dragging and dropping components
+- **Template-based editing**: Build pages by selecting and customizing templates
 - **Business-specific templates**: Tailored templates for restaurants, salons, portfolios, and more
 - **Responsive design**: Websites look great on all devices
 - **Theme customization**: Easily change colors, fonts, and layouts
 - **Media management**: Upload and manage images and videos
 - **Standard and Premium plans**: Different feature sets for different user needs
-
-## Recent Updates
-
-### Services Section Improvements (Current)
-
-- Added comprehensive color customization options:
-  - Section background color
-  - Text color
-  - Card background color
-  - Accent color
-- Adjusted feature distinctions between plans:
-  - Standard plan: 4 services with icons, basic information
-  - Premium plan: 10 services with images, advanced options
-- Made duration display premium-only for salon businesses
-- Optimized layout to show 4 cards horizontally on standard plan
-- Added proper featured service handling
-- Enhanced styling for different business types
-
-### Menu Section Enhancements (Previous)
-
-- Fixed issue with the main sidebar closing when saving menu items
-- Added color customization options (background, text, and card colors)
-- Updated category and item limits:
-  - Standard plan: 2 categories, 8 items per category
-  - Premium plan: 5 categories, 15 items per category
-- Enhanced menu layout to accommodate the increased number of items
-- Improved the UI with better card styling and responsiveness
-- Added clear visual distinction for premium features
-
-### General Improvements
-
-- Fixed edge cases in modal handling
-- Enhanced error handling and logging
-- Improved the component customizer to properly handle specialized editors
-- Added new styling for plan limit indicators
-
-## Planned Features
-
-- Projects section editor for portfolio business type
-- Team member section for business websites
-- Custom color scheme generator
-- Additional section templates
-- Import/export functionality for templates
+- **Backend integration**: Save and publish your websites with a full backend integration
 
 ## Getting Started
 
@@ -121,6 +109,7 @@ An Angular-based visual website builder that allows users to create and customiz
 - Node.js 18+
 - npm or yarn
 - Angular CLI 17+
+- Java 17+ and Maven (for backend)
 
 ### Installation
 
@@ -143,7 +132,13 @@ npm install
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:4200`
+4. Start the backend server (separate repository)
+
+```bash
+# Follow instructions in the backend repository
+```
+
+5. Open your browser and navigate to `http://localhost:4200`
 
 ## Project Structure
 
@@ -154,6 +149,10 @@ auto-website-builder/
 │   │   ├── core/                   # Core services, models, and utilities
 │   │   │   ├── models/             # Data models and interfaces
 │   │   │   └── services/           # Core services
+│   │   │       ├── auth/           # Authentication services
+│   │   │       ├── template/       # Template management services
+│   │   │       ├── build/          # Website build services
+│   │   │       └── subscription/   # Subscription services
 │   │   ├── pages/                  # Application pages
 │   │   │   ├── preview/            # Website preview page
 │   │   │   │   ├── components/     # Preview-specific components
@@ -181,35 +180,54 @@ The application is built with a modular architecture to enable easy extension an
 
 ### Key Services
 
-- **CustomizationService**: Manages saving and loading of customizations
+- **AuthService**: Handles user authentication and session management
+- **TemplateService**: Fetches templates, template types, and plans
+- **UserTemplateService**: Manages user template saving and loading
+- **UserBuildService**: Handles the build and publish process
+- **SubscriptionService**: Manages user subscriptions
 - **BusinessConfigService**: Provides business-specific configurations
 - **ThemeService**: Manages themes and styling
 - **ToastService**: Provides user feedback through notifications
 
 ### Data Flow
 
-1. User selects a business type and theme
-2. Standard template is loaded with default sections
-3. User customizes sections through the Component Customizer
-4. Changes are saved to storage (SessionStorage, soon to be backend)
-5. Preview component reflects changes in real-time
-
-## Creating New Components
-
-See [Component Development Guide](docs/component-development-guide.md) for detailed instructions.
+1. User authenticates via AuthService
+2. User selects a business type and theme via TemplateService
+3. Standard template is loaded with default sections
+4. User customizes sections through the Component Customizer
+5. Changes are saved to the backend via UserTemplateService
+6. User publishes their website via UserBuildService
+7. Build status is monitored and user is provided with the published URL
 
 ## Backend Integration
 
-The frontend is designed to work with a Java Spring Boot backend (in development).
-User authentication and template storage will be handled by the backend service.
+The frontend integrates with a Java Spring Boot backend API. The integration points include:
 
-Standard config flow:
+### Authentication Flow
 
-1. Users select a website type (restaurant, salon, etc.)
-2. Choose a plan tier (standard or premium)
-3. The system provides appropriate templates and restrictions
-4. Users customize and save their template
-5. Changes are stored in their profile via backend API calls
+- User registration (`POST /api/security/user/creator`)
+- User login (`POST /api/security/user/login`)
+- Session management with JWT tokens
+- Password reset and email verification
+
+### Template Management
+
+- Fetching template types (`GET /api/template/type/all`)
+- Fetching template plans (`GET /api/template/template-plan/all`)
+- Searching for templates (`GET /api/template/search`)
+- Saving user templates (`POST /api/template/user-template`)
+- Updating user templates (`PUT /api/template/user-template/{id}`)
+
+### Build & Publish
+
+- Creating builds (`POST /api/user-build`)
+- Publishing websites (`POST /api/user-build/{id}/publish`)
+- Monitoring build status (`GET /api/user-build/search`)
+
+### Subscription Management
+
+- Fetching subscriptions (`GET /api/subscription/all`)
+- Creating subscriptions (`POST /api/subscription`)
 
 ## Standard vs Premium Features
 
@@ -219,6 +237,7 @@ Standard config flow:
 - Limited section customization
 - Basic theme options
 - Image uploads
+- Two menu categories with eight items each
 
 ### Premium Plan
 
@@ -226,6 +245,7 @@ Standard config flow:
 - Advanced customization options
 - Premium themes
 - Image and video uploads
+- Five menu categories with fifteen items each
 - Custom domain support
 
 ## License

@@ -26,4 +26,8 @@ export class MainLayoutComponent {
   toggleProfileSidebar() {
     this.isProfileSidebarOpen.update((isOpen) => !isOpen);
   }
+
+  closeSidebar() {
+    this.isProfileSidebarOpen.set(false);
+  }
 }

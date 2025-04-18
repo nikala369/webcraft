@@ -1,6 +1,17 @@
-<div class="sidebar-overlay" [class.active]="isOpen()" (click)="close()"></div>
+<div
+  class="sidebar-overlay"
+  [class.active]="isOpen()"
+  (click)="close()"
+  @overlayAnimation
+  *ngIf="isOpen()"
+></div>
 
-<aside class="profile-sidebar" [class.active]="isOpen()">
+<aside
+  class="profile-sidebar"
+  [class.active]="isOpen()"
+  @sidebarAnimation
+  *ngIf="isOpen()"
+>
   <div class="profile-sidebar__header">
     <button class="close-button" aria-label="Close sidebar" (click)="close()">
       <span class="close-icon">×</span>
@@ -23,6 +34,8 @@
             class="sidebar-nav__link"
             [routerLink]="link.path"
             routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: link.exact || false }"
+            [class.active]="isRouteActive(link.path)"
             (click)="close()"
           >
             <span class="sidebar-nav__icon" [attr.data-icon]="link.icon"></span>
@@ -48,11 +61,34 @@
           </li>
         </ul>
       </div>
-
     </nav>
   </div>
 
   <div class="profile-sidebar__footer">
+    <!-- Current Plan Display -->
+    <div class="plan-info" (click)="navigateToPlans()">
+      <div class="plan-badge" [ngClass]="getUserPlanClass()">
+        {{ getUserPlan() }}
+      </div>
+      <div class="plan-details">
+        <p class="plan-name">{{ getUserPlan() }} Plan</p>
+        <p class="plan-expiry" *ngIf="getUserPlanExpiryDate()">
+          Expires: {{ getUserPlanExpiryDate() | date : "mediumDate" }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Upgrade Plan Button - Hide for premium users -->
+    <!-- <button
+      *ngIf="!isPremiumUser()"
+      class="upgrade-button"
+      (click)="navigateToPlans()"
+    >
+      <span class="upgrade-icon"></span>
+      <span>Upgrade Plan</span>
+    </button> -->
+
+    <!-- Logout Button -->
     <button class="logout-button" (click)="logout()">
       <span class="logout-icon"></span>
       <span>Logout</span>

@@ -3,6 +3,61 @@ import { MainLayoutComponent } from './layout/main-layout/main-layout.component'
 import { PreviewComponent } from './pages/preview/preview.component';
 import { authGuard } from './core/guards/auth.guard';
 import { AUTH_ROUTES } from './modules/auth/auth.routes';
+import { Component, inject } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+
+// Create template redirect components
+@Component({
+  template: '',
+  standalone: true,
+})
+class NewTemplateRedirectComponent {
+  private router = inject(Router);
+
+  constructor() {
+    this.router.navigate(['/preview'], { queryParams: { newTemplate: true } });
+  }
+}
+
+@Component({
+  template: '',
+  standalone: true,
+})
+class EditTemplateRedirectComponent {
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  constructor() {
+    this.route.paramMap.subscribe((params) => {
+      const id = params.get('id');
+      if (id) {
+        this.router.navigate(['/preview'], {
+          queryParams: { templateId: id, mode: 'edit' },
+        });
+      }
+    });
+  }
+}
+
+@Component({
+  template: '',
+  standalone: true,
+})
+class ViewTemplateRedirectComponent {
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  constructor() {
+    this.route.paramMap.subscribe((params) => {
+      const id = params.get('id');
+      if (id) {
+        this.router.navigate(['/preview'], {
+          queryParams: { templateId: id, mode: 'view' },
+        });
+      }
+    });
+  }
+}
 
 export const appRoutes: Routes = [
   {
@@ -76,42 +131,46 @@ export const appRoutes: Routes = [
             (m) => m.ContactComponent
           ),
       },
-      // App routes - protected by Auth Guard
+    ],
+  },
+  // App routes - protected by Auth Guard
+  {
+    path: 'app',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './modules/dashboard/components/dashboard-layout/dashboard-layout.component'
+      ).then((m) => m.DashboardLayoutComponent),
+    children: [
       {
-        path: 'app',
-        canActivate: [authGuard],
-        children: [
-          {
-            path: 'templates',
-            loadComponent: () =>
-              import(
-                './modules/dashboard/components/templates/templates.component'
-              ).then((m) => m.TemplatesComponent),
-          },
-          {
-            path: 'builds',
-            loadComponent: () =>
-              import(
-                './modules/dashboard/components/builds/builds.component'
-              ).then((m) => m.BuildsComponent),
-          },
-          {
-            path: 'domains',
-            loadComponent: () =>
-              import(
-                './modules/dashboard/components/domains/domains.component'
-              ).then((m) => m.DomainsComponent),
-          },
-          {
-            path: 'settings',
-            loadComponent: () =>
-              import(
-                './modules/dashboard/components/settings/settings.component'
-              ).then((m) => m.SettingsComponent),
-          },
-          { path: '', redirectTo: 'templates', pathMatch: 'full' },
-        ],
+        path: 'templates',
+        loadComponent: () =>
+          import(
+            './modules/dashboard/components/templates/templates.component'
+          ).then((m) => m.TemplatesComponent),
       },
+      {
+        path: 'builds',
+        loadComponent: () =>
+          import('./modules/dashboard/components/builds/builds.component').then(
+            (m) => m.BuildsComponent
+          ),
+      },
+      {
+        path: 'domains',
+        loadComponent: () =>
+          import(
+            './modules/dashboard/components/domains/domains.component'
+          ).then((m) => m.DomainsComponent),
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import(
+            './modules/dashboard/components/settings/settings.component'
+          ).then((m) => m.SettingsComponent),
+      },
+      { path: '', redirectTo: 'templates', pathMatch: 'full' },
     ],
   },
   // Auth module for authentication flow

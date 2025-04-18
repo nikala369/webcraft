@@ -1,0 +1,165 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1 class="dashboard-title">Account Settings</h1>
+  </header>
+
+  <div class="settings-layout">
+    <!-- Profile Section -->
+    <section class="settings-card">
+      <h2 class="settings-section-title">Profile Information</h2>
+
+      <div class="profile-avatar-section">
+        <div class="profile-avatar">
+          {{ userInfo()?.username?.substring(0, 2)?.toUpperCase() || "U" }}
+        </div>
+        <div class="profile-avatar-actions">
+          <span class="profile-username">{{
+            userInfo()?.username || "User"
+          }}</span>
+          <span class="profile-email">{{
+            userInfo()?.email || "No email available"
+          }}</span>
+        </div>
+      </div>
+
+      <form [formGroup]="profileForm" class="settings-form">
+        <!-- Username field -->
+        <div class="form-group">
+          <label for="username" class="form-label">Username</label>
+          <input
+            type="text"
+            id="username"
+            formControlName="username"
+            class="form-control"
+            [ngClass]="getFormControlClass(profileForm, 'username')"
+          />
+          <div
+            class="invalid-feedback"
+            *ngIf="
+              profileForm.get('username')?.invalid &&
+              profileForm.get('username')?.touched
+            "
+          >
+            {{ getErrorMessage(profileForm, "username") }}
+          </div>
+        </div>
+
+        <!-- Email field -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-control"
+            [ngClass]="getFormControlClass(profileForm, 'email')"
+          />
+          <div
+            class="invalid-feedback"
+            *ngIf="
+              profileForm.get('email')?.invalid &&
+              profileForm.get('email')?.touched
+            "
+          >
+            {{ getErrorMessage(profileForm, "email") }}
+          </div>
+        </div>
+
+        <div class="form-note">
+          <p>Profile updates will be available soon.</p>
+        </div>
+      </form>
+    </section>
+
+    <!-- Password Section -->
+    <section class="settings-card">
+      <h2 class="settings-section-title">Change Password</h2>
+
+      <form
+        [formGroup]="passwordForm"
+        (ngSubmit)="onChangePassword()"
+        class="settings-form"
+      >
+        <!-- Current Password -->
+        <div class="form-group">
+          <label for="oldPassword" class="form-label">Current Password</label>
+          <input
+            type="password"
+            id="oldPassword"
+            formControlName="oldPassword"
+            class="form-control"
+            [ngClass]="getFormControlClass(passwordForm, 'oldPassword')"
+          />
+          <div
+            class="invalid-feedback"
+            *ngIf="
+              passwordForm.get('oldPassword')?.invalid &&
+              passwordForm.get('oldPassword')?.touched
+            "
+          >
+            {{ getErrorMessage(passwordForm, "oldPassword") }}
+          </div>
+        </div>
+
+        <!-- New Password -->
+        <div class="form-group">
+          <label for="newPassword" class="form-label">New Password</label>
+          <input
+            type="password"
+            id="newPassword"
+            formControlName="newPassword"
+            class="form-control"
+            [ngClass]="getFormControlClass(passwordForm, 'newPassword')"
+          />
+          <div
+            class="invalid-feedback"
+            *ngIf="
+              passwordForm.get('newPassword')?.invalid &&
+              passwordForm.get('newPassword')?.touched
+            "
+          >
+            {{ getErrorMessage(passwordForm, "newPassword") }}
+          </div>
+        </div>
+
+        <!-- Confirm New Password -->
+        <div class="form-group">
+          <label for="confirmPassword" class="form-label"
+            >Confirm New Password</label
+          >
+          <input
+            type="password"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            class="form-control"
+            [ngClass]="getFormControlClass(passwordForm, 'confirmPassword')"
+          />
+          <div
+            class="invalid-feedback"
+            *ngIf="passwordForm.get('confirmPassword')?.touched"
+          >
+            {{ getErrorMessage(passwordForm, "confirmPassword") }}
+          </div>
+        </div>
+
+        <!-- Success/Error messages -->
+        <div class="form-message success" *ngIf="passwordSuccess()">
+          {{ passwordSuccess() }}
+        </div>
+        <div class="form-message error" *ngIf="passwordError()">
+          {{ passwordError() }}
+        </div>
+
+        <!-- Submit button -->
+        <button
+          type="submit"
+          class="submit-button"
+          [disabled]="passwordForm.invalid || isChangingPassword()"
+        >
+          <span *ngIf="!isChangingPassword()">Change Password</span>
+          <span *ngIf="isChangingPassword()" class="loading-spinner"></span>
+        </button>
+      </form>
+    </section>
+  </div>
+</div>
