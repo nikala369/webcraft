@@ -19,6 +19,7 @@
         <li *ngFor="let item of navItems" class="nav-item">
           <a
             [routerLink]="item.route"
+            routerLinkActive="active"
             [class.active]="isActive(item.route)"
             class="nav-link"
           >

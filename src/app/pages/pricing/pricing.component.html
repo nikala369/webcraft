@@ -15,6 +15,7 @@
         [currentPlan]="'standard'"
         [selectedBusinessType]="selectedBusinessType"
         (businessTypeSelected)="handleBusinessTypeSelection($event)"
+        (isLoadingChange)="onLoadingChange($event)"
       ></app-business-type-selector>
     </div>
 
@@ -31,7 +32,7 @@
       </div>
       <button
         class="change-business-type"
-        (click)="showBusinessTypeSelector = true"
+        (click)="toggleBusinessTypeSelector()"
       >
         Change
       </button>

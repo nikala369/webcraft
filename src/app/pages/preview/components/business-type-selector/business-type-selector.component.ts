@@ -34,6 +34,7 @@ export class BusinessTypeSelectorComponent implements OnInit {
   @Input() selectedBusinessType: string | null = null;
   @Input() compactMode: boolean = false;
   @Output() businessTypeSelected = new EventEmitter<string>();
+  @Output() isLoadingChange = new EventEmitter<boolean>();
 
   private themeColorsService = inject(ThemeColorsService);
   private templateService = inject(TemplateService);
@@ -48,6 +49,10 @@ export class BusinessTypeSelectorComponent implements OnInit {
   accentColor = '';
   loading = false;
   error: string | null = null;
+
+  // Added for minimum loading time
+  private loadingStartTime = 0;
+  private minimumLoadingTime = 1500; // 1.5 seconds minimum loading time
 
   ngOnInit() {
     // Set accent color based on plan
@@ -103,16 +108,17 @@ export class BusinessTypeSelectorComponent implements OnInit {
   }
 
   /**
-   * Load business types from the API
+   * Load business types from the API with minimum loading time
    */
   loadBusinessTypes(): void {
     this.loading = true;
+    this.loadingStartTime = Date.now();
+    this.isLoadingChange.emit(true);
     this.error = null;
 
     this.templateService
       .getAllTemplateTypes()
       .pipe(
-        finalize(() => (this.loading = false)),
         catchError((error) => {
           console.error('Failed to load business types:', error);
           this.error = 'Failed to load business types. Using default values.';
@@ -133,6 +139,37 @@ export class BusinessTypeSelectorComponent implements OnInit {
           this.templateTypes = types;
           // Map API types to business types for UI consistency
           this.mapTemplateTypesToBusinessTypes();
+
+          // Ensure minimum loading time
+          const elapsed = Date.now() - this.loadingStartTime;
+          const remainingTime = this.minimumLoadingTime - elapsed;
+
+          if (remainingTime > 0) {
+            // If less than minimum time has passed, wait for the remainder
+            setTimeout(() => {
+              this.loading = false;
+              this.isLoadingChange.emit(false);
+            }, remainingTime);
+          } else {
+            // If minimum time has already elapsed, stop loading immediately
+            this.loading = false;
+            this.isLoadingChange.emit(false);
+          }
+        },
+        error: () => {
+          // Ensure minimum loading time
+          const elapsed = Date.now() - this.loadingStartTime;
+          const remainingTime = this.minimumLoadingTime - elapsed;
+
+          if (remainingTime > 0) {
+            setTimeout(() => {
+              this.loading = false;
+              this.isLoadingChange.emit(false);
+            }, remainingTime);
+          } else {
+            this.loading = false;
+            this.isLoadingChange.emit(false);
+          }
         },
       });
   }

@@ -1,4 +1,14 @@
-<div class="business-type-selector" [class.compact-mode]="compactMode">
+<div
+  class="business-type-selector"
+  [class.compact-mode]="compactMode"
+  [class.loading]="loading"
+>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" [class.visible]="loading">
+    <div class="loader"></div>
+    <p class="loading-text">Loading template selector...</p>
+  </div>
+
   <!-- Regular mode (card selection) -->
   <ng-container *ngIf="!compactMode">
     <h3 class="selector-title">Select Your Website Type</h3>
@@ -8,9 +18,14 @@
     </p>
 
     <!-- Loading state -->
-    <div class="loading-container" *ngIf="loading">
+    <!-- <div class="loading-container" *ngIf="loading">
       <div class="loading-spinner"></div>
       <p>Loading business types...</p>
+    </div> -->
+
+    <!-- Loading Skeleton -->
+    <div class="business-type-skeleton" *ngIf="loading">
+      <div class="skeleton-item" *ngFor="let i of [1, 2, 3, 4, 5, 6]"></div>
     </div>
 
     <!-- Error state -->

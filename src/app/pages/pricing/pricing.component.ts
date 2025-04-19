@@ -72,6 +72,7 @@ export class PricingComponent implements OnInit {
   businessTypes = BUSINESS_TYPES;
   selectedBusinessType: string | null = null;
   showBusinessTypeSelector = true;
+  isLoading = false;
 
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -83,7 +84,6 @@ export class PricingComponent implements OnInit {
         this.selectedBusinessType = params['businessType'];
         this.showBusinessTypeSelector = false;
       }
-      // Don't set showBusinessTypeSelector to true here - it's already true by default
     });
   }
 
@@ -116,6 +116,9 @@ export class PricingComponent implements OnInit {
       queryParams: { businessType: type },
       queryParamsHandling: 'merge',
     });
+
+    // Hide the selector after selection
+    this.showBusinessTypeSelector = false;
   }
 
   /**
@@ -136,7 +139,14 @@ export class PricingComponent implements OnInit {
   /**
    * Toggle visibility of business type selector
    */
-  toggleBusinessTypeSelector(show: boolean): void {
-    this.showBusinessTypeSelector = show;
+  toggleBusinessTypeSelector(): void {
+    this.showBusinessTypeSelector = true;
+  }
+
+  /**
+   * Handle loading state changes from business-type-selector
+   */
+  onLoadingChange(isLoading: boolean): void {
+    this.isLoading = isLoading;
   }
 }

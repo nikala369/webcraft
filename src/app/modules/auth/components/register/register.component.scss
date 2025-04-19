@@ -32,7 +32,6 @@ $success: #10b981;
   z-index: 0;
   overflow: hidden;
 
-
   .animated-bg {
     position: absolute;
     width: 100%;
@@ -44,21 +43,20 @@ $success: #10b981;
     &::before {
       content: "";
       position: absolute;
-      width: 110%;       // Slightly larger for a more sweeping effect
+      width: 110%; // Slightly larger for a more sweeping effect
       height: 110%;
       top: -5%;
       left: -5%;
       // Use your brand primary color with increased opacity for better visibility
-      background:
-        radial-gradient(
-            circle at 20% 30%,
-            rgba($primary, 0.14) 0%,
-            transparent 70%
+      background: radial-gradient(
+          circle at 20% 30%,
+          rgba($primary, 0.14) 0%,
+          transparent 70%
         ),
         radial-gradient(
-            circle at 80% 70%,
-            rgba($primary, 0.22) 0%,
-            transparent 80%
+          circle at 80% 70%,
+          rgba($primary, 0.22) 0%,
+          transparent 80%
         );
       transform: scale(1);
       animation: pulse 8s ease-in-out infinite alternate;
@@ -77,17 +75,23 @@ $success: #10b981;
   }
 
   @keyframes backgroundPulse {
-    0% { filter: brightness(1); }
-    50% { filter: brightness(1.1); }
-    100% { filter: brightness(1); }
+    0% {
+      filter: brightness(1);
+    }
+    50% {
+      filter: brightness(1.1);
+    }
+    100% {
+      filter: brightness(1);
+    }
   }
 }
 
 // Logo in top-left corner
 .auth-logo {
   position: absolute;
-  top: 30px;
-  left: 40px;
+  top: 24px;
+  left: 32px;
   z-index: 10;
   display: flex;
   align-items: center;

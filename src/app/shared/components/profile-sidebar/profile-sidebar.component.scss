@@ -222,11 +222,12 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.3s;
   z-index: 2;
 
   &:hover {
     background-color: rgba(255, 255, 255, 0.25);
+    transform: rotate(90deg);
   }
 
   .close-icon {

@@ -54,6 +54,7 @@
               class="sidebar-nav__link"
               [routerLink]="link.path"
               routerLinkActive="active"
+              [class.active]="isRouteActive(link.path)"
               (click)="close()"
             >
               <span class="sidebar-nav__label">{{ link.label }}</span>

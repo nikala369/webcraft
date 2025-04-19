@@ -1,6 +1,18 @@
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  ElementRef,
+  Renderer2,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import {
+  RouterModule,
+  Router,
+  NavigationEnd,
+  Event,
+  ActivatedRoute,
+} from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { AuthService } from '../../../../core/services/auth/auth.service';
@@ -41,17 +53,27 @@ export class DashboardLayoutComponent implements OnInit {
 
   // Service injections
   private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
   private authService = inject(AuthService);
   private location = inject(Location);
+  private elementRef = inject(ElementRef);
+  private renderer = inject(Renderer2);
 
   ngOnInit(): void {
     // Initialize user information from AuthService
     this.loadUserInfo();
 
+    // Set current route immediately on initialization
+    this.currentRoute = this.router.url;
+
     // Listen for route changes to update the current route
     this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event: any) => {
+      .pipe(
+        filter(
+          (event): event is NavigationEnd => event instanceof NavigationEnd
+        )
+      )
+      .subscribe((event: NavigationEnd) => {
         this.currentRoute = event.url;
       });
   }
@@ -87,26 +109,35 @@ export class DashboardLayoutComponent implements OnInit {
    * Check if a nav item is active
    */
   isActive(route: string): boolean {
-    return this.currentRoute.startsWith(route);
+    return this.currentRoute.includes(route);
   }
 
   /**
    * Close the dashboard and navigate based on template configuration
+   * Now with smooth exit animation
    */
   closeDashboard(): void {
-    // Check if we have a template type and plan before navigating
-    if (this.templateType && this.templatePlan) {
-      // Navigate to preview with the template configuration
-      this.router.navigate(['/preview'], {
-        queryParams: {
-          businessType: this.templateType,
-          plan: this.templatePlan,
-        },
-      });
-    } else {
-      // Default navigation to pricing page
-      this.router.navigate(['/pricing']);
-    }
+    // First, add the closing animation class
+    const dashboardElement =
+      this.elementRef.nativeElement.querySelector('.dashboard-layout');
+    this.renderer.addClass(dashboardElement, 'closing');
+
+    // Wait for animation to complete before navigating
+    setTimeout(() => {
+      // Check if we have a template type and plan before navigating
+      if (this.templateType && this.templatePlan) {
+        // Navigate to preview with the template configuration
+        this.router.navigate(['/preview'], {
+          queryParams: {
+            businessType: this.templateType,
+            plan: this.templatePlan,
+          },
+        });
+      } else {
+        // Default navigation to pricing page
+        this.router.navigate(['/pricing']);
+      }
+    }, 250); // Match animation duration (slightly shorter to prevent black flash)
   }
 
   /**
