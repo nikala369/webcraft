@@ -1,159 +1,166 @@
 <section class="templates-container">
-  <div class="templates-header">
-    <h2>My Templates</h2>
-    <button class="create-button" (click)="createTemplate()">
-      <app-icon name="add" width="16" height="16"></app-icon>
-      <span>Create New Template</span>
-    </button>
-  </div>
-
-  <!-- Search and Filter Controls -->
-  <div class="templates-controls">
-    <div class="search-container">
-      <app-icon
-        name="search"
-        width="16"
-        height="16"
-        class="search-icon"
-      ></app-icon>
-      <input
-        type="search"
-        placeholder="Search templates..."
-        class="search-input"
-        (input)="onSearchChange($event)"
-      />
-    </div>
-
-    <div class="filter-container">
-      <select class="filter-select" (change)="onFilterChange($event)">
-        <option value="all">All Templates</option>
-        <option value="restaurant">Restaurant</option>
-        <option value="salon">Salon</option>
-        <option value="portfolio">Portfolio</option>
-        <option value="architecture">Architecture</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Loading State -->
-  <div class="templates-loading" *ngIf="loading">
-    <div class="spinner"></div>
-    <p>Loading your templates...</p>
-  </div>
-
-  <!-- Error State -->
-  <div class="templates-error" *ngIf="error">
-    <app-icon name="alert" width="48" height="48" class="error-icon"></app-icon>
-    <p>{{ error }}</p>
-    <button class="retry-button" (click)="loadTemplates()">
-      <app-icon name="refresh" width="16" height="16"></app-icon>
-      <span>Retry</span>
-    </button>
-  </div>
-
-  <!-- Empty State -->
-  <div
-    class="templates-empty"
-    *ngIf="!loading && !error && templates.length === 0"
-  >
-    <div class="empty-state-content">
-      <app-icon
-        name="template"
-        width="48"
-        height="48"
-        class="empty-icon"
-      ></app-icon>
-      <h3>No templates yet</h3>
-      <p>Create your first website template to get started</p>
+  <div class="content-panel">
+    <div class="templates-header">
+      <h2>My Templates</h2>
       <button class="create-button" (click)="createTemplate()">
         <app-icon name="add" width="16" height="16"></app-icon>
-        <span>Create First Template</span>
+        <span>Create New Template</span>
       </button>
     </div>
-  </div>
 
-  <!-- Templates List (Horizontal Layout) -->
-  <div
-    class="templates-list"
-    *ngIf="!loading && !error && filteredTemplates.length > 0"
-  >
-    <div class="template-card" *ngFor="let template of filteredTemplates">
-      <!-- Left: Template Preview -->
-      <div class="template-preview">
-        <img
-          [src]="
-            template.thumbnailUrl || 'assets/images/template-placeholder.jpg'
-          "
-          [alt]="template.name"
-          class="template-img"
+    <!-- Search and Filter Controls -->
+    <div class="templates-controls">
+      <div class="search-container">
+        <app-icon
+          name="search"
+          width="16"
+          height="16"
+          class="search-icon"
+        ></app-icon>
+        <input
+          type="search"
+          placeholder="Search templates..."
+          class="search-input"
+          (input)="onSearchChange($event)"
         />
-        <span class="template-type-badge">{{ template.type }}</span>
-        <span class="status-badge" [class.published]="template.published">
-          {{ template.published ? "Published" : "Draft" }}
-        </span>
       </div>
 
-      <!-- Right: Template Info and Actions -->
-      <div class="template-content">
-        <!-- Template Info -->
-        <div class="template-info">
-          <h3 class="template-name">{{ template.name }}</h3>
+      <div class="filter-container">
+        <select class="filter-select" (change)="onFilterChange($event)">
+          <option value="all">All Templates</option>
+          <option value="restaurant">Restaurant</option>
+          <option value="salon">Salon</option>
+          <option value="portfolio">Portfolio</option>
+          <option value="architecture">Architecture</option>
+        </select>
+      </div>
+    </div>
 
-          <div class="template-meta">
-            <span class="meta-item">
-              <app-icon name="calendar" width="14" height="14"></app-icon>
-              <span>{{ template.createdAt | date : "MMM d, yyyy" }}</span>
-            </span>
-          </div>
+    <!-- Loading State -->
+    <div class="templates-loading" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading your templates...</p>
+    </div>
 
-          <p class="template-description">
-            {{ template.description || "A customizable website template" }}
-          </p>
+    <!-- Error State -->
+    <div class="templates-error" *ngIf="error">
+      <app-icon
+        name="alert"
+        width="48"
+        height="48"
+        class="error-icon"
+      ></app-icon>
+      <p>{{ error }}</p>
+      <button class="retry-button" (click)="loadTemplates()">
+        <app-icon name="refresh" width="16" height="16"></app-icon>
+        <span>Retry</span>
+      </button>
+    </div>
+
+    <!-- Empty State -->
+    <div
+      class="templates-empty"
+      *ngIf="!loading && !error && templates.length === 0"
+    >
+      <div class="empty-state-content">
+        <app-icon
+          name="template"
+          width="48"
+          height="48"
+          class="empty-icon"
+        ></app-icon>
+        <h3>No templates yet</h3>
+        <p>Create your first website template to get started</p>
+        <button class="create-button" (click)="createTemplate()">
+          <app-icon name="add" width="16" height="16"></app-icon>
+          <span>Create First Template</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Templates List (Horizontal Layout) -->
+    <div
+      class="templates-list"
+      *ngIf="!loading && !error && filteredTemplates.length > 0"
+    >
+      <div class="template-card" *ngFor="let template of filteredTemplates">
+        <!-- Left: Template Preview -->
+        <div class="template-preview">
+          <img
+            [src]="
+              template.thumbnailUrl || 'assets/images/template-placeholder.jpg'
+            "
+            [alt]="template.name"
+            class="template-img"
+          />
+          <span class="template-type-badge">{{ template.type }}</span>
+          <span class="status-badge" [class.published]="template.published">
+            {{ template.published ? "Published" : "Draft" }}
+          </span>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="template-actions">
-          <div class="action-buttons">
-            <button
-              class="action-btn preview-btn"
-              (click)="viewTemplate(template)"
-              title="Preview template"
-            >
-              <app-icon name="eye" width="16" height="16"></app-icon>
-              <span>Preview</span>
-            </button>
+        <!-- Right: Template Info and Actions -->
+        <div class="template-content">
+          <!-- Template Info -->
+          <div class="template-info">
+            <h3 class="template-name">{{ template.name }}</h3>
 
-            <button
-              class="action-btn edit-btn"
-              (click)="editTemplate(template)"
-              title="Edit template"
-            >
-              <app-icon name="edit" width="16" height="16"></app-icon>
-              <span>Edit</span>
-            </button>
+            <div class="template-meta">
+              <span class="meta-item">
+                <app-icon name="calendar" width="14" height="14"></app-icon>
+                <span>{{ template.createdAt | date : "MMM d, yyyy" }}</span>
+              </span>
+            </div>
 
-            <button
-              class="action-btn delete-btn"
-              (click)="deleteTemplate(template)"
-              title="Delete template"
-            >
-              <app-icon name="trash" width="16" height="16"></app-icon>
-              <span>Delete</span>
-            </button>
+            <p class="template-description">
+              {{ template.description || "A customizable website template" }}
+            </p>
           </div>
 
-          <button
-            class="publish-btn"
-            [class.unpublish-btn]="template.published"
-            (click)="publishTemplate(template)"
-          >
-            <app-icon
-              [name]="template.published ? 'unpublish' : 'publish'"
-              width="16"
-              height="16"
-            ></app-icon>
-            <span>{{ template.published ? "Unpublish" : "Publish" }}</span>
-          </button>
+          <!-- Action Buttons -->
+          <div class="template-actions">
+            <div class="action-buttons">
+              <button
+                class="action-btn preview-btn"
+                (click)="viewTemplate(template)"
+                title="Preview template"
+              >
+                <app-icon name="eye" width="16" height="16"></app-icon>
+                <span>Preview</span>
+              </button>
+
+              <button
+                class="action-btn edit-btn"
+                (click)="editTemplate(template)"
+                title="Edit template"
+              >
+                <app-icon name="edit" width="16" height="16"></app-icon>
+                <span>Edit</span>
+              </button>
+
+              <button
+                class="action-btn delete-btn"
+                (click)="deleteTemplate(template)"
+                title="Delete template"
+              >
+                <app-icon name="trash" width="16" height="16"></app-icon>
+                <span>Delete</span>
+              </button>
+            </div>
+
+            <button
+              class="publish-btn"
+              [class.unpublish-btn]="template.published"
+              (click)="publishTemplate(template)"
+            >
+              <app-icon
+                [name]="template.published ? 'unpublish' : 'publish'"
+                width="16"
+                height="16"
+              ></app-icon>
+              <span>{{ template.published ? "Unpublish" : "Publish" }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

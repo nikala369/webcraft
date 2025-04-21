@@ -1,6 +1,14 @@
 .templates-container {
-  padding: 0;
+  padding: 1.5rem;
   max-width: 100%;
+}
+
+// White content panel
+.content-panel {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 // Header section with title and create button
@@ -133,12 +141,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #ffffff;
+  background-color: #f9fafb;
   border-radius: 8px;
   padding: 3rem 2rem;
   margin-top: 1rem;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px dashed #e5e7eb;
   text-align: center;
 
   .empty-state-content {
@@ -175,6 +182,7 @@
   justify-content: center;
   padding: 3rem;
   text-align: center;
+  min-height: 200px;
 
   .spinner {
     width: 2.5rem;
@@ -205,7 +213,7 @@
   align-items: center;
   justify-content: center;
   padding: 3rem 2rem;
-  background-color: #ffffff;
+  background-color: #fef2f2;
   border-radius: 8px;
   text-align: center;
   border: 1px solid #fecaca;
@@ -218,7 +226,7 @@
 
   p {
     font-size: 0.875rem;
-    color: #1f2937;
+    color: #991b1b;
     margin: 0 0 1.5rem;
   }
 
@@ -250,7 +258,6 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-top: 1rem;
 }
 
 // Template Card - Horizontal Layout
@@ -260,12 +267,12 @@
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border-color: #d1d5db;
   }
 
@@ -388,7 +395,7 @@
   max-width: 90%;
 }
 
-// Action Buttons
+// Action Buttons Section
 .template-actions {
   padding: 0.75rem 1.5rem 1.25rem;
   display: flex;
@@ -503,5 +510,46 @@
 
   @media (max-width: 992px) {
     width: 100%;
+  }
+}
+
+// Media queries for responsive layout
+@media (max-width: 768px) {
+  .templates-controls {
+    flex-direction: column;
+  }
+
+  .template-card {
+    flex-direction: column;
+  }
+
+  .template-preview {
+    width: 100%;
+    height: 160px;
+  }
+
+  .template-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .publish-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .action-buttons {
+    flex-direction: column;
+
+    .action-btn {
+      width: 100%;
+      justify-content: center;
+    }
   }
 }

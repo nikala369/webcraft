@@ -1,5 +1,6 @@
 :host {
   --accent-color: #4a8dff; /* Default, overridden in component */
+  /* --accent-color-rgb is set dynamically by the component (e.g. "74,141,255") */
 }
 
 .business-type-selector {
@@ -9,7 +10,7 @@
   padding: 1rem 2rem 2rem;
   color: #ffffff;
   position: relative;
-  min-height: 200px;
+  //min-height: 200px;
 
   &.loading {
     .selector-title,
@@ -23,6 +24,8 @@
     max-width: none;
     padding: 0;
     margin: 0;
+    position: relative;
+    z-index: 2500;
   }
 
   .selector-title {
@@ -85,7 +88,8 @@
     }
 
     &.selected {
-      background: rgba(var(--accent-color), 0.05);
+      /* FIX: use the RGB var for correct RGBA tint */
+      background: rgba(var(--accent-color-rgb), 0.05);
       border-color: var(--accent-color);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 
@@ -112,7 +116,7 @@
   }
 
   .business-type-icon {
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.25rem;
     width: 40px;
     height: 40px;
     display: flex;
@@ -233,72 +237,59 @@
     }
   }
 
-  // Compact mode styles (for fullscreen mode)
+  /* Compact mode styles (for fullscreen dropdown) */
   .compact-selector {
     position: relative;
-    min-width: 200px;
+    z-index: 2500;
+    min-width: 180px;
+    max-width: 220px;
 
     .selected-type {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.1);
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.12);
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s ease;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      height: 36px;
 
       &:hover {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.25);
-      }
-
-      .business-type-icon {
-        margin-bottom: 0;
-        height: auto;
-
-        svg {
-          width: 20px;
-          height: 20px;
-          stroke: var(--accent-color);
-          opacity: 0.9;
-        }
+        background: rgba(255, 255, 255, 0.18);
       }
 
       span {
         font-size: 0.9rem;
-        font-weight: 500;
         white-space: nowrap;
-        color: rgba(255, 255, 255, 0.9);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
       }
 
       .dropdown-arrow {
         margin-left: auto;
         transition: transform 0.3s ease;
-        display: flex;
-        align-items: center;
+      }
 
-        svg.arrow-icon {
-          width: 16px;
-          height: 16px;
-          stroke: rgba(255, 255, 255, 0.6);
-          transition: transform 0.3s ease;
-        }
+      &.open .dropdown-arrow svg {
+        transform: rotate(180deg);
       }
     }
 
     .business-types-dropdown {
       position: absolute;
-      top: calc(100% + -3px);
+      top: calc(100% + 5px);
       left: 0;
       width: 100%;
       background: #1c1f2e;
       border-radius: 6px;
       margin-top: 5px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-      z-index: 1000;
-      overflow: hidden;
+      z-index: 2501;
+      max-height: 300px;
+      overflow-y: auto;
       border: 1px solid rgba(255, 255, 255, 0.08);
 
       .dropdown-item {
@@ -509,14 +500,14 @@
 
   @media (max-width: 992px) {
     .business-types-grid {
-      grid-template-columns: repeat(2, 1fr); /* 2 cards per row */
+      grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
     }
   }
 
   @media (max-width: 580px) {
     .business-types-grid {
-      grid-template-columns: 1fr; /* 1 card per row */
+      grid-template-columns: 1fr;
       max-width: 320px;
       margin-left: auto;
       margin-right: auto;

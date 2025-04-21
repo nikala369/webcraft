@@ -111,12 +111,11 @@
   <!-- Compact mode for fullscreen (dropdown) -->
   <ng-container *ngIf="compactMode">
     <div class="compact-selector">
-      <!-- Loading for compact mode -->
-      <div class="loading-indicator" *ngIf="loading">
-        <div class="spinner-mini"></div>
-      </div>
-
-      <div class="selected-type" (click)="toggleDropdown()" *ngIf="!loading">
+      <div
+        class="selected-type"
+        (click)="toggleDropdown()"
+        [class.open]="dropdownOpen"
+      >
         <div class="business-type-icon">
           <!-- Restaurant icon -->
           <img
@@ -206,8 +205,8 @@
         </div>
       </div>
 
-      <!-- Dropdown for compact mode -->
-      <div class="business-types-dropdown" *ngIf="dropdownOpen && !loading">
+      <!-- Dropdown for compact mode - Update to never show loading state -->
+      <div class="business-types-dropdown" *ngIf="dropdownOpen">
         <div
           *ngFor="let type of businessTypes"
           class="dropdown-item"

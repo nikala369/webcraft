@@ -51,6 +51,15 @@ import { SubscriptionService } from '../../core/services/subscription/subscripti
 import { switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth/auth.service';
 import { SelectionStateService } from '../../core/services/selection/selection-state.service';
+// Fixed import directly from service to avoid module resolution issues
+import type { UserTemplate } from '../../core/services/template/user-template.service';
+
+// Add the ScreenSize enum if it doesn't exist
+export enum ScreenSize {
+  DESKTOP = 'desktop',
+  TABLET = 'tablet',
+  MOBILE = 'mobile',
+}
 
 /**
  * PreviewComponent is the main interface for the website builder.
@@ -515,77 +524,122 @@ export class PreviewComponent implements OnInit, OnDestroy {
    * and load saved customizations if they exist
    */
   private initializeUserState(): void {
-    // TODO: For authenticated users, fetch their saved templates from the backend
-    // TODO: Implement template selection UI for authenticated users
-    // TODO: Add template saving to user's account
+    // Check for business type in URL regardless of authentication status
+    const urlBusinessType = this.route.snapshot.queryParams['businessType'];
 
-    if (!this.isAuthenticated()) {
-      // For unauthenticated users, check session storage for saved state
-      console.log('User is not authenticated - checking for saved states');
+    if (urlBusinessType) {
+      console.log('Business type provided in URL:', urlBusinessType);
+      this.businessType.set(urlBusinessType);
+      this.showBusinessTypeSelector.set(false);
 
-      // Check for saved customizations and build state
-      const hasSavedConfig = !!sessionStorage.getItem('savedCustomizations');
-      const hasStarted =
-        sessionStorage.getItem('hasStartedBuilding') === 'true';
+      // Load themes for this business type
+      this.loadThemesForBusinessType(urlBusinessType);
+    }
 
-      // Check if business type is provided in URL
-      const urlBusinessType = this.route.snapshot.queryParams['businessType'];
+    // Check if user is authenticated
+    if (this.isAuthenticated()) {
+      console.log('User is authenticated - checking for template ID');
 
-      if (urlBusinessType) {
-        console.log('Business type provided in URL:', urlBusinessType);
-        this.businessType.set(urlBusinessType);
-        this.showBusinessTypeSelector.set(false);
+      // Check if template ID is provided in URL
+      const templateId = this.route.snapshot.queryParams['templateId'];
 
-        // If we have a business type, set step to 3 (Customize)
-        this.currentStep.set(3);
+      if (templateId) {
+        console.log('Template ID found:', templateId);
 
-        // Load themes for this business type
-        this.loadThemesForBusinessType(urlBusinessType);
-      }
+        // Show loading overlay
+        this.showLoadingOverlay.set(true);
+        this.loadingOverlayClass.set('active');
 
-      if (hasSavedConfig && hasStarted) {
-        // User has previously saved changes - set appropriate flags
-        console.log('Found saved customizations - showing edit/view options');
-        this.hasStartedBuilding.set(true);
-        this.hasSavedChangesFlag.set(true);
-        // Only set to step 3 if they've completed checkout, otherwise keep at step 2 (editing)
-        const hasCompletedCheckout =
-          sessionStorage.getItem('hasCompletedCheckout') === 'true';
-
-        // Get the business type from saved data to determine the correct step
-        const savedData = JSON.parse(
-          sessionStorage.getItem('savedCustomizations') || '{}'
-        );
-
-        // If they have a business type set, they're at step 3 (Customize)
-        // Otherwise set to step 2 (Business Type selection)
-        if (savedData.businessType) {
-          this.businessType.set(savedData.businessType);
-          this.currentStep.set(hasCompletedCheckout ? 4 : 3);
-        } else {
-          this.currentStep.set(2); // Still need to select business type
+        // Load template from API
+        if (!this.userTemplateService) {
+          console.error('UserTemplateService not initialized');
+          this.showLoadingOverlay.set(false);
+          return;
         }
 
-        // Load their saved configuration
-        this.loadSavedCustomizations();
-      } else if (!urlBusinessType) {
-        // New visitor with no business type - reset flags and prepare to select business type
-        console.log('No saved customizations - showing Business Type Selector');
-        this.hasStartedBuilding.set(false);
-        this.hasSavedChangesFlag.set(false);
-        this.currentStep.set(2); // They're at the business type selection step (2)
-        this.showBusinessTypeSelector.set(true);
+        this.userTemplateService.getUserTemplateById(templateId).subscribe({
+          next: (template) => {
+            if (template && template.config) {
+              console.log('Loaded user template from API:', template);
 
-        sessionStorage.removeItem('savedCustomizations');
-        sessionStorage.removeItem('hasStartedBuilding');
-        sessionStorage.removeItem('currentCustomizations');
-        sessionStorage.removeItem('hasCompletedCheckout');
+              // Store the template ID for future updates
+              this.currentUserTemplateId = template.id;
+
+              // Set business type based on template data
+              if (template.template?.templateType?.key) {
+                const templateType = template.template.templateType.key;
+                this.businessType.set(templateType);
+
+                // Load themes for this business type if not already loaded
+                if (!urlBusinessType) {
+                  this.loadThemesForBusinessType(templateType);
+                }
+              }
+
+              // Parse the config string to get customizations
+              try {
+                const customizationsData = JSON.parse(template.config);
+
+                // Apply the loaded customizations
+                this.applyCustomizations(customizationsData);
+
+                // Update last saved state to track changes
+                this.lastSavedState.set(structuredClone(customizationsData));
+                this.currentEditingState.set(
+                  structuredClone(customizationsData)
+                );
+              } catch (e) {
+                console.error('Error parsing template config:', e);
+                this.confirmationService.showConfirmation(
+                  'Error parsing template configuration. Using default settings.',
+                  'error',
+                  5000
+                );
+              }
+
+              // Set appropriate flags for editing flow
+              this.hasStartedBuilding.set(true);
+              this.hasSavedChangesFlag.set(true);
+              this.currentStep.set(3); // Move to editing step
+
+              // Hide loading overlay
+              setTimeout(() => {
+                this.showLoadingOverlay.set(false);
+                this.loadingOverlayClass.set('');
+              }, 500);
+            } else {
+              console.warn('Template has no config:', template);
+              this.showLoadingOverlay.set(false);
+            }
+          },
+          error: (error) => {
+            console.error('Error loading template from API:', error);
+            this.confirmationService.showConfirmation(
+              'Failed to load template: ' + (error.message || 'Unknown error'),
+              'error',
+              5000
+            );
+            this.showLoadingOverlay.set(false);
+          },
+        });
+      } else {
+        // No template ID provided - show business type selector if not already set
+        if (!urlBusinessType) {
+          this.currentStep.set(2); // Step 2: Business Type Selection
+          this.showBusinessTypeSelector.set(true);
+        } else {
+          // Business type is set but no template - move to step 3 (Customize)
+          this.currentStep.set(3);
+        }
       }
     } else {
-      // TODO: For authenticated users
-      // 1. Load their saved templates from the backend
-      // 2. If they have purchased a subscription, set appropriate flags
-      // 3. Show their most recent template as the default
+      // User is not authenticated - redirect to login page
+      console.log('User is not authenticated - redirecting to login');
+
+      // Save the current URL as the return URL
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
     }
   }
 
@@ -619,8 +673,8 @@ export class PreviewComponent implements OnInit, OnDestroy {
       // Advance to step 3 (Customize) after selecting business type
       this.currentStep.set(3);
 
-      // Store the current state for editing
-      this.storeCurrentConfiguration();
+      // Store current state in selectionStateService for potential auth flow redirects
+      this.selectionStateService.saveSelections(type, this.currentPlan());
 
       // Always show the business type selector in compact mode when in fullscreen
       if (!this.isFullscreen()) {
@@ -654,25 +708,20 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
           // If we have themes, select the first one as default if no theme is currently selected
           if (themes.length > 0) {
-            if (!this.defaultThemeId()) {
-              this.loadTheme(themes[0].id);
-            } else {
-              // Try to find the current theme in the new list
-              const currentTheme = themes.find(
-                (t) => t.id === this.defaultThemeId()
-              );
-              if (currentTheme) {
-                // If current theme exists in new list, keep it
-                this.loadTheme(currentTheme.id);
-              } else {
-                // Otherwise load the first theme
-                this.loadTheme(themes[0].id);
-              }
-            }
+            const themeToSelect = themes[0].id;
+            console.log(`Auto-selecting theme ID ${themeToSelect}`);
+            this.loadTheme(themeToSelect);
+          } else {
+            console.log('No themes available for this business type and plan');
+
+            // Try to use default theme for current plan
+            this.loadTheme(this.defaultThemeId());
           }
         },
         error: (err) => {
           console.error('Error loading themes for business type:', err);
+          // On error, load default theme
+          this.loadTheme(this.defaultThemeId());
           // Set empty array to avoid undefined errors
           this.availableThemes.set([]);
         },
@@ -705,248 +754,45 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
   // ======== SESSION STATE MANAGEMENT ========
   /**
-   * Check if customizations are stored in the current session
+   * Clean up session storage usage
+   * In the new fully-authenticated flow, we don't need to store customizations in sessionStorage
    */
-  hasStoredCustomizations(): boolean {
-    return !!sessionStorage.getItem('currentCustomizations');
-  }
+  private cleanupSessionStorage(): void {
+    // Remove all stored customization-related data from session storage
+    sessionStorage.removeItem('currentCustomizations');
+    sessionStorage.removeItem('savedCustomizations');
+    sessionStorage.removeItem('hasCompletedCheckout');
+    sessionStorage.removeItem('hasStartedBuilding');
 
-  /**
-   * Store current configuration for editing
-   */
-  storeCurrentConfiguration(): void {
-    // Stores the current editing state to session storage
-    const saveData = {
-      customizations: this.customizations(),
-      themeId: this.defaultThemeId(),
-      businessType: this.businessType(), // Add business type
-    };
-    sessionStorage.setItem('currentCustomizations', JSON.stringify(saveData));
-
-    // Update our in-memory state
-    this.currentEditingState.set(structuredClone(this.customizations()));
-  }
-
-  /**
-   * Load the stored configuration for current editing session
-   */
-  loadStoredCustomizations(): void {
-    const storedCustomizations = sessionStorage.getItem(
-      'currentCustomizations'
-    );
-    if (storedCustomizations) {
-      try {
-        const parsedData = JSON.parse(storedCustomizations);
-
-        if (parsedData.customizations) {
-          // Set the customizations
-          this.customizations.set(parsedData.customizations);
-
-          // Also update font if exists
-          if (parsedData.customizations.fontConfig) {
-            const fontConfig = parsedData.customizations.fontConfig;
-            this.selectedFont.set({
-              id: fontConfig.fontId,
-              family: fontConfig.family,
-              fallback: fontConfig.fallback,
-            });
-          }
-        }
-
-        // Set business type if available
-        if (parsedData.businessType) {
-          this.businessType.set(parsedData.businessType);
-        }
-      } catch (e) {
-        console.error('Error parsing stored customizations:', e);
-        // Fallback to saved customizations or default theme
-        if (sessionStorage.getItem('savedCustomizations')) {
-          this.loadSavedCustomizations();
-        } else {
-          this.loadTheme(this.defaultThemeId());
-        }
-      }
-    }
-  }
-
-  // ======== FULLSCREEN & VIEW MODE MANAGEMENT ========
-  /**
-   * Handle fullscreen change events from browser
-   */
-  handleFullscreenChange = (): void => {
-    if (!document.fullscreenElement && this.isFullscreen()) {
-      this.fullscreenState.set(false);
-      const mainHeader = document.querySelector('.header') as HTMLElement;
-      if (mainHeader) {
-        mainHeader.style.zIndex = '1000';
-        document.body.style.overflow = '';
-      }
-      setTimeout(() => {
-        window.scrollTo({
-          top: this.preFullscreenScrollPosition,
-          behavior: 'auto',
-        });
-      }, 0);
-    }
-    if (this.isFullscreen()) {
-      document.body.classList.add('fullscreen-mode');
-    } else {
-      document.body.classList.remove('fullscreen-mode');
-    }
-  };
-
-  /**
-   * Toggle between fullscreen and normal mode
-   */
-  toggleFullscreen(): void {
-    if (!this.isFullscreen()) {
-      // ENTERING FULLSCREEN
-      console.log('🔍 Entering fullscreen mode');
-
-      // Store scroll position for later restoration
-      this.preFullscreenScrollPosition = window.scrollY;
-
-      // Update state
-      this.fullscreenState.set(true);
-
-      // UI adjustments
-      const mainHeader = document.querySelector('.header') as HTMLElement;
-      if (mainHeader) {
-        mainHeader.style.zIndex = '500';
-        document.body.style.overflow = 'hidden';
-      }
-    } else {
-      // EXITING FULLSCREEN
-      console.log('🔍 Exiting fullscreen mode');
-
-      // Check if we're in view mode or edit mode
-      if (this.isViewOnlyStateService.isOnlyViewMode()) {
-        // In view-only mode, just exit fullscreen without state changes
-        console.log('🔍 Exiting view-only mode - no state changes');
-      } else {
-        // In edit mode, check if changes were saved
-        console.log('🔍 Exiting edit mode - checking for saved customizations');
-        const hasSavedCustomizations = !!sessionStorage.getItem(
-          'savedCustomizations'
-        );
-
-        if (hasSavedCustomizations) {
-          // If user has saved customizations, revert to those
-          console.log('🔍 Reverting to saved customizations');
-          // Don't reload theme, just load saved customizations to prevent overrides
-          this.preventThemeOverride.set(true);
-          this.loadSavedCustomizations();
-          // Reset prevention after short delay
-          setTimeout(() => {
-            this.preventThemeOverride.set(false);
-          }, 500);
-        } else {
-          // If no saved customizations yet (user started building but didn't save),
-          // revert to default theme
-          console.log(
-            '🔍 No saved customizations - reverting to default theme'
-          );
-          this.preventThemeOverride.set(false);
-          this.loadTheme(this.defaultThemeId());
-        }
-      }
-
-      // Update state
-      this.fullscreenState.set(false);
-
-      // UI adjustments
-      const mainHeader = document.querySelector('.header') as HTMLElement;
-      if (mainHeader) {
-        mainHeader.style.zIndex = '1000';
-        document.body.style.overflow = '';
-      }
-
-      // Reset scroll positions
-      const previewWrapper = document.querySelector('.preview-wrapper');
-      if (previewWrapper) {
-        previewWrapper.scrollTop = 0;
-      }
-
-      // Restore main page scroll position
-      if (!this.showBusinessTypeSelector())
-        setTimeout(() => {
-          window.scrollTo({
-            top: this.preFullscreenScrollPosition,
-            behavior: 'auto',
-          });
-        }, 0);
+    // Keep only essential session data like selectedTemplateId if it exists
+    const templateId = sessionStorage.getItem('selectedTemplateId');
+    if (templateId) {
+      console.log('Preserving selected template ID:', templateId);
     }
   }
 
   /**
-   * Ensure view mode is valid for current screen size
+   * Check if template ID is stored in session storage
+   * Used for creating vs updating templates
    */
-  ensureValidViewMode(): void {
-    if (!this.isMobileView() && this.viewMode() === 'view-mobile') {
-      this.viewMode.set('view-desktop');
-    }
+  hasStoredTemplateId(): boolean {
+    return !!sessionStorage.getItem('selectedTemplateId');
   }
 
   /**
-   * Update mobile view signal on window resize
+   * Start building new website
    */
-  updateIsMobile(): void {
-    const isNowMobile = window.innerWidth <= 768;
-    if (this.isMobileView() !== isNowMobile) {
-      this.isMobileView.set(isNowMobile);
-      this.ensureValidViewMode();
-    }
-  }
-
-  /**
-   * Toggle between desktop and mobile view modes
-   */
-  toggleView(mode: 'view-desktop' | 'view-mobile'): void {
-    this.viewMode.set(mode);
-  }
-
-  // ======== VIEWING & EDITING MODES ========
-  /**
-   * Enter view-only mode without editing controls
-   */
-  openViewOnly(): void {
-    // Set view mode flag
-    this.isViewOnlyStateService.setIsOnlyViewMode(true);
-
-    // In view-only mode, we always load the last saved configuration
-    if (sessionStorage.getItem('savedCustomizations')) {
-      this.loadSavedCustomizations();
-    }
-
-    // Then enter fullscreen to show the view
-    if (!this.isFullscreen()) {
-      this.toggleFullscreen();
-    }
-  }
-
-  /**
-   * Exit view-only mode and return to editing mode
-   */
-  exitViewOnly(): void {
-    this.isViewOnlyStateService.setIsOnlyViewMode(false);
-  }
-
-  /**
-   * Enter fullscreen edit mode (Start Building)
-   */
-  onLoadingOverlayFinished(): void {
-    // Remove the overlay by setting the controlling signal to false
-    this.showLoadingOverlay.set(false);
-  }
-
   startBuilding(): void {
     console.log('Starting building process');
     this.showLoadingOverlay.set(true);
 
+    // Clean up any old session storage data
+    this.cleanupSessionStorage();
+
     // Set view mode to editing
     this.isViewOnlyStateService.setIsOnlyViewMode(false);
 
-    // Set building flag (temporary until they save)
+    // Set building flag
     this.hasStartedBuilding.set(true);
 
     // Make sure we load the themes for the current business type BEFORE entering fullscreen
@@ -969,15 +815,8 @@ export class PreviewComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       console.log('3 seconds passed, now toggling fullscreen');
 
-      // Check if there are saved customizations
-      if (sessionStorage.getItem('savedCustomizations')) {
-        console.log('Found saved customizations, loading them');
-        this.loadSavedCustomizations();
-      } else {
-        console.log('No saved customizations, using default theme');
-        // Load default theme for the selected plan
-        this.loadTheme(this.defaultThemeId());
-      }
+      // Load default theme for the selected plan
+      this.loadTheme(this.defaultThemeId());
 
       // Store default state before any edits
       this.lastSavedState.set(structuredClone(this.customizations()));
@@ -998,115 +837,43 @@ export class PreviewComponent implements OnInit, OnDestroy {
   editBuilding(): void {
     console.log('🔍 editBuilding called - continuing editing');
 
-    // Reset view-only flag
+    // Set loading overlay for visual feedback
+    this.showLoadingOverlay.set(true);
+    this.loadingOverlayClass.set('transition-overlay');
+
+    // IMPORTANT: Reset view-only flag to ensure we're in edit mode
     this.isViewOnlyStateService.setIsOnlyViewMode(false);
 
-    // IMPORTANT: Set the flag to prevent theme from overriding saved customizations
+    // Set the flag to prevent theme from overriding saved customizations
     this.preventThemeOverride.set(true);
 
-    // First check for saved customizations
-    const savedCustomizationsRaw = sessionStorage.getItem(
-      'savedCustomizations'
-    );
-    console.log('🔍 Raw saved customizations:', savedCustomizationsRaw);
-
-    const hasSavedCustomizations = !!savedCustomizationsRaw;
-    let businessTypeToLoad = this.businessType();
-
-    if (hasSavedCustomizations) {
-      try {
-        // Parse the data before passing to any functions
-        const parsedData = JSON.parse(savedCustomizationsRaw);
-        console.log('🔍 Parsed saved data structure:', parsedData);
-
-        // IMPORTANT: Apply directly without using loadSavedCustomizations
-        // This avoids potential async issues with theme service
-        if (parsedData.customizations) {
-          console.log('🔍 Applying nested customizations structure directly');
-          // Apply the customizations directly
-          this.customizations.set(parsedData.customizations);
-
-          // Also handle font
-          if (parsedData.customizations.fontConfig) {
-            const fontConfig = parsedData.customizations.fontConfig;
-            this.selectedFont.set({
-              id: fontConfig.fontId,
-              family: fontConfig.family,
-              fallback: fontConfig.fallback,
-            });
-          }
-
-          // Get business type from saved data
-          if (parsedData.businessType) {
-            businessTypeToLoad = parsedData.businessType;
-            this.businessType.set(parsedData.businessType);
-          }
-        } else {
-          console.log('🔍 Applying legacy customizations structure directly');
-          // Handle legacy structure
-          this.customizations.set(parsedData);
-
-          // Handle legacy font
-          if (parsedData.fontConfig) {
-            const fontConfig = parsedData.fontConfig;
-            this.selectedFont.set({
-              id: fontConfig.fontId,
-              family: fontConfig.family,
-              fallback: fontConfig.fallback,
-            });
-          }
-
-          // Get business type from saved data
-          if (parsedData.businessType) {
-            businessTypeToLoad = parsedData.businessType;
-            this.businessType.set(parsedData.businessType);
-          }
-        }
-
-        // Update currentEditingState with our applied data
-        this.currentEditingState.set(structuredClone(this.customizations()));
-        console.log(
-          '🔍 Successfully applied saved customizations:',
-          this.customizations()
-        );
-
-        // IMPORTANT: Also update currentCustomizations to ensure consistency
-        const freshData = {
-          customizations: this.customizations(),
-          themeId: this.defaultThemeId(),
-          businessType: businessTypeToLoad,
-        };
-        sessionStorage.setItem(
-          'currentCustomizations',
-          JSON.stringify(freshData)
-        );
-      } catch (e) {
-        console.error('🚨 Error applying saved customizations:', e);
-        // Disable override prevention since we're loading default theme
-        this.preventThemeOverride.set(false);
-        this.loadTheme(this.defaultThemeId());
-      }
+    // Check if we have a template ID and load it
+    const templateId =
+      this.currentUserTemplateId ||
+      sessionStorage.getItem('selectedTemplateId');
+    if (templateId) {
+      // If we have a template ID, load it from the API
+      this.loadStoredCustomizations();
     } else {
-      console.log('🔍 No saved customizations found - using default theme');
-      // Disable override prevention since we're loading default theme
+      // No template ID - use the default theme
+      console.log('🔍 No template ID found - loading default theme');
       this.preventThemeOverride.set(false);
       this.loadTheme(this.defaultThemeId());
     }
 
-    // Preload themes for the current business type before entering fullscreen
-    if (businessTypeToLoad) {
-      console.log(
-        `🔍 Preloading themes for business type: ${businessTypeToLoad}`
-      );
-      this.loadThemesForBusinessType(businessTypeToLoad);
-    }
+    // Update URL parameters to indicate we're in edit mode
+    this.updateUrlParams({ viewOnly: 'false', mode: 'edit' });
 
     // Enter fullscreen mode after a short delay to allow theme loading
     setTimeout(() => {
+      // Remove loading overlay
+      this.showLoadingOverlay.set(false);
+
+      // Enter fullscreen mode if not already in it
       if (!this.isFullscreen()) {
         this.toggleFullscreen();
       }
-    }, 100);
+    }, 800);
 
     // Keep prevention active for a short time to ensure all theme load operations respect it
     setTimeout(() => {
@@ -1209,82 +976,93 @@ export class PreviewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load saved (not temporary) customizations
+   * Load template customizations from API
    */
-  loadSavedCustomizations(): void {
-    console.log('🔍 Loading saved customizations');
-    const savedCustomizations = sessionStorage.getItem('savedCustomizations');
-    if (savedCustomizations) {
-      try {
-        const parsedData = JSON.parse(savedCustomizations);
-        console.log('🔍 Parsed saved data:', parsedData);
-
-        let customizationsData;
-
-        // Check if data is in the new format with nested customizations
-        if (parsedData.customizations) {
-          console.log('🔍 Setting customizations from nested structure');
-          customizationsData = parsedData.customizations;
-
-          // Check for video placeholder and restore if needed
-          if (customizationsData.pages?.home?.hero1) {
-            const heroData = customizationsData.pages.home.hero1;
-
-            // If there's a video placeholder, we need to reconstruct the real data
-            if (heroData._videoPlaceholder === 'VIDEO_DATA_PLACEHOLDER') {
-              console.log(
-                '🔍 Found video placeholder - checking if real video exists in memory'
-              );
-
-              // Check if we have the video in current state
-              const currentVideo =
-                this.customizations()?.pages?.home?.hero1?.backgroundVideo;
-              if (
-                currentVideo &&
-                typeof currentVideo === 'string' &&
-                currentVideo.startsWith('data:video')
-              ) {
-                console.log('🔍 Restoring video from memory');
-                heroData.backgroundVideo = currentVideo;
-              } else {
-                console.log(
-                  '🔍 No video found in memory - removing placeholder'
-                );
-              }
-
-              // Remove the placeholder property
-              delete heroData._videoPlaceholder;
-            }
-
-            // Same for _videoRemoved flag
-            if (heroData._videoRemoved) {
-              delete heroData._videoRemoved;
-            }
-          }
-        } else {
-          // Handle legacy format (direct customizations object)
-          console.log('🔍 Setting customizations from legacy structure');
-          customizationsData = parsedData;
-        }
-
-        // Use direct application to apply the customizations
-        this.applyCustomizations(customizationsData);
-
-        // Also update the business type if available
-        if (parsedData.businessType) {
-          this.businessType.set(parsedData.businessType);
-        }
-
-        console.log('🔍 Successfully loaded saved customizations');
-      } catch (e) {
-        console.error('🚨 Error parsing saved customizations:', e);
-        // Fallback to default theme if parsing fails
-        this.preventThemeOverride.set(false);
-        this.loadTheme(this.defaultThemeId());
-      }
-    } else {
-      console.warn('No saved customizations found');
+  loadStoredCustomizations(): void {
+    // Check authentication first
+    if (!this.isAuthenticated()) {
+      console.log('User not authenticated, cannot load customizations');
+      return;
     }
+
+    // Get template ID from route params or stored ID
+    const templateId =
+      this.route.snapshot.queryParams['templateId'] ||
+      this.currentUserTemplateId ||
+      sessionStorage.getItem('selectedTemplateId');
+
+    if (!templateId) {
+      console.log('No template ID found, cannot load customizations');
+      return;
+    }
+
+    this.showLoadingOverlay.set(true);
+    this.loadingOverlayClass.set('active');
+
+    // Load template from API
+    if (!this.userTemplateService) {
+      console.error('UserTemplateService not initialized');
+      this.showLoadingOverlay.set(false);
+      return;
+    }
+
+    this.userTemplateService.getUserTemplateById(templateId).subscribe({
+      next: (template) => {
+        if (template && template.config) {
+          console.log('Loaded user template from API:', template);
+
+          // Store the template ID for future updates
+          this.currentUserTemplateId = template.id;
+
+          // Parse the config string to get customizations
+          try {
+            const customizationsData = JSON.parse(template.config);
+
+            // Set business type based on template data
+            if (template.template?.templateType?.key) {
+              this.businessType.set(template.template.templateType.key);
+            }
+
+            // Apply the loaded customizations
+            this.applyCustomizations(customizationsData);
+
+            // Update last saved state to track changes
+            this.lastSavedState.set(structuredClone(customizationsData));
+            this.currentEditingState.set(structuredClone(customizationsData));
+          } catch (e) {
+            console.error('Error parsing template config:', e);
+            this.confirmationService.showConfirmation(
+              'Error parsing template configuration. Using default settings.',
+              'error',
+              5000
+            );
+          }
+
+          // Set appropriate flags for editing flow
+          this.hasStartedBuilding.set(true);
+          this.hasSavedChangesFlag.set(true);
+          this.currentStep.set(3); // Move to editing step
+
+          // Hide loading overlay
+          setTimeout(() => {
+            this.showLoadingOverlay.set(false);
+            this.loadingOverlayClass.set('');
+          }, 500);
+        } else {
+          console.warn('Template has no config:', template);
+          this.showLoadingOverlay.set(false);
+        }
+      },
+      error: (error) => {
+        console.error('Error loading template from API:', error);
+        this.confirmationService.showConfirmation(
+          'Failed to load template: ' + (error.message || 'Unknown error'),
+          'error',
+          5000
+        );
+        this.showLoadingOverlay.set(false);
+      },
+    });
   }
 
   /**
@@ -1558,29 +1336,15 @@ export class PreviewComponent implements OnInit, OnDestroy {
   // ======== SAVE & RESET ACTIONS ========
   /**
    * Save customizations
-   * For unauthenticated users - saves to sessionStorage
    * For authenticated users - save to backend
    */
   saveAllChanges(): void {
     console.log('Saving customizations:', this.customizations());
 
-    // Set flag to indicate saving is in progress
-    const isSaving = true;
-
     if (this.isAuthenticated()) {
       // Use the userTemplateService to save to backend
-      const templateId = sessionStorage.getItem('selectedTemplateId');
+      const templateId = sessionStorage.getItem('selectedTemplateId') || '1'; // Default to template ID 1 if not set
       const templateName = 'My Webcraft Website'; // TODO: Get from user input
-
-      if (!templateId) {
-        console.error('No template ID found - cannot save to backend');
-        this.confirmationService.showConfirmation(
-          'Error: No template selected. Please select a template first.',
-          'error',
-          4000
-        );
-        return;
-      }
 
       if (!this.userTemplateService) {
         console.error('UserTemplateService not initialized');
@@ -1646,134 +1410,15 @@ export class PreviewComponent implements OnInit, OnDestroy {
           },
         });
     } else {
-      // For unauthenticated users, save to sessionStorage as before
-
-      // Create a deep copy of customizations to modify before saving
-      const customizationsToSave = structuredClone(this.customizations());
-
-      // Handle video data which might exceed localStorage quota
-      try {
-        // Find any video data in the hero sections and create a placeholder
-        if (customizationsToSave.pages?.home?.hero1?.backgroundVideo) {
-          const videoSrc =
-            customizationsToSave.pages?.home.hero1.backgroundVideo;
-          // If it's a data URL (usually very large), replace with a flag
-          if (videoSrc?.startsWith('data:video')) {
-            console.log(
-              'Replacing video data URL with placeholder for storage'
-            );
-            // Store only the first 100 chars as reference and a flag
-            (customizationsToSave.pages?.home.hero1 as any)._videoPlaceholder =
-              'VIDEO_DATA_PLACEHOLDER';
-            delete customizationsToSave.pages?.home.hero1.backgroundVideo;
-          }
-        }
-
-        // Prepare data for saving with proper structure
-        const savedData = {
-          customizations: customizationsToSave,
-          themeId: this.defaultThemeId(),
-          businessType: this.businessType(),
-        };
-
-        // Try to save to session storage
-        sessionStorage.setItem(
-          'savedCustomizations',
-          JSON.stringify(savedData)
-        );
-
-        // Also update currentCustomizations to match the saved state
-        sessionStorage.setItem(
-          'currentCustomizations',
-          JSON.stringify(savedData)
-        );
-
-        // Set flags to indicate successful save
-        sessionStorage.setItem('hasStartedBuilding', 'true');
-        this.hasStartedBuilding.set(true);
-        this.hasSavedChangesFlag.set(true);
-
-        // Update progress step to the editing step (2)
-        // We only move to step 3 after checkout is complete
-        this.currentStep.set(4);
-
-        // Update lastSavedState to track what was saved
-        this.lastSavedState.set(structuredClone(this.customizations()));
-        this.currentEditingState.set(structuredClone(this.customizations()));
-
-        // Show confirmation message
-        this.confirmationService.showConfirmation(
-          'Your website changes have been saved successfully!',
-          'success',
-          4000
-        );
-      } catch (error: any) {
-        console.error('Error saving customizations:', error);
-
-        // If it's a quota error, try a more aggressive approach by removing all video data
-        if (error.name === 'QuotaExceededError') {
-          try {
-            console.log(
-              'Storage quota exceeded. Removing video data completely.'
-            );
-
-            // Remove all video data from customizations
-            if (customizationsToSave.pages?.home?.hero1) {
-              delete customizationsToSave.pages.home.hero1.backgroundVideo;
-              // Set a flag indicating video was removed
-              (customizationsToSave.pages.home.hero1 as any)._videoRemoved =
-                true;
-            }
-
-            // Try again with reduced data
-            const reducedSavedData = {
-              customizations: customizationsToSave,
-              themeId: this.defaultThemeId(),
-              businessType: this.businessType(),
-            };
-
-            sessionStorage.setItem(
-              'savedCustomizations',
-              JSON.stringify(reducedSavedData)
-            );
-            sessionStorage.setItem(
-              'currentCustomizations',
-              JSON.stringify(reducedSavedData)
-            );
-
-            // Set all the same flags as before
-            sessionStorage.setItem('hasStartedBuilding', 'true');
-            this.hasStartedBuilding.set(true);
-            this.hasSavedChangesFlag.set(true);
-            this.currentStep.set(4);
-
-            // Show a different confirmation message
-            this.confirmationService.showConfirmation(
-              'Changes saved successfully, but video data was removed due to size limitations',
-              'warning',
-              5000
-            );
-          } catch (secondError) {
-            // If it still fails, show an error message
-            console.error(
-              'Failed to save even with reduced data:',
-              secondError
-            );
-            this.confirmationService.showConfirmation(
-              'Failed to save changes: storage quota exceeded',
-              'error',
-              5000
-            );
-          }
-        } else {
-          // For other errors, just show the error message
-          this.confirmationService.showConfirmation(
-            'Failed to save changes: ' + error.message,
-            'error',
-            5000
-          );
-        }
-      }
+      // For unauthenticated users, redirect to login
+      this.confirmationService.showConfirmation(
+        'Please log in or sign up to save your website.',
+        'info',
+        4000
+      );
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
     }
 
     // Exit fullscreen mode
@@ -1919,4 +1564,196 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
   // In class definition after isSaving signal
   currentUserTemplateId: string | undefined;
+
+  // Fix: Convert from property to signal
+  currentScreenSize = signal<ScreenSize>(ScreenSize.DESKTOP);
+
+  // ======== FULLSCREEN & VIEW MODE MANAGEMENT ========
+  /**
+   * Handle fullscreen change events from browser
+   */
+  handleFullscreenChange = (): void => {
+    if (!document.fullscreenElement && this.isFullscreen()) {
+      this.fullscreenState.set(false);
+      const mainHeader = document.querySelector('.header') as HTMLElement;
+      if (mainHeader) {
+        mainHeader.style.zIndex = '1000';
+        document.body.style.overflow = '';
+      }
+      setTimeout(() => {
+        window.scrollTo({
+          top: this.preFullscreenScrollPosition,
+          behavior: 'auto',
+        });
+      }, 0);
+    }
+    if (this.isFullscreen()) {
+      document.body.classList.add('fullscreen-mode');
+    } else {
+      document.body.classList.remove('fullscreen-mode');
+    }
+  };
+
+  /**
+   * Toggle between fullscreen and normal mode
+   */
+  toggleFullscreen(): void {
+    if (!this.isFullscreen()) {
+      // ENTERING FULLSCREEN
+      console.log('🔍 Entering fullscreen mode');
+
+      // Store scroll position for later restoration
+      this.preFullscreenScrollPosition = window.scrollY;
+
+      // Update state
+      this.fullscreenState.set(true);
+
+      // UI adjustments
+      const mainHeader = document.querySelector('.header') as HTMLElement;
+      if (mainHeader) {
+        mainHeader.style.zIndex = '500';
+        document.body.style.overflow = 'hidden';
+      }
+    } else {
+      // EXITING FULLSCREEN
+      console.log('🔍 Exiting fullscreen mode');
+
+      // Check if we're in view mode or edit mode
+      if (this.isViewOnlyStateService.isOnlyViewMode()) {
+        // In view-only mode, just exit fullscreen without state changes
+        console.log('🔍 Exiting view-only mode - no state changes');
+      } else {
+        // In edit mode, we may need to refresh the UI
+        console.log('🔍 Exiting edit mode');
+        // No need to revert to saved customizations as we're using API now
+      }
+
+      // Update state
+      this.fullscreenState.set(false);
+
+      // UI adjustments
+      const mainHeader = document.querySelector('.header') as HTMLElement;
+      if (mainHeader) {
+        mainHeader.style.zIndex = '1000';
+        document.body.style.overflow = '';
+      }
+
+      // Reset scroll positions
+      const previewWrapper = document.querySelector('.preview-wrapper');
+      if (previewWrapper) {
+        previewWrapper.scrollTop = 0;
+      }
+
+      // Restore main page scroll position
+      if (!this.showBusinessTypeSelector())
+        setTimeout(() => {
+          window.scrollTo({
+            top: this.preFullscreenScrollPosition,
+            behavior: 'auto',
+          });
+        }, 0);
+    }
+  }
+
+  /**
+   * Ensure view mode is valid for current screen size
+   */
+  ensureValidViewMode(): void {
+    if (!this.isMobileView() && this.viewMode() === 'view-mobile') {
+      this.viewMode.set('view-desktop');
+    }
+  }
+
+  /**
+   * Update mobile view signal on window resize
+   */
+  updateIsMobile(): void {
+    const isNowMobile = window.innerWidth <= 768;
+    if (this.isMobileView() !== isNowMobile) {
+      this.isMobileView.set(isNowMobile);
+      this.ensureValidViewMode();
+    }
+  }
+
+  /**
+   * Toggle between desktop and mobile view modes
+   */
+  toggleView(mode: 'view-desktop' | 'view-mobile'): void {
+    this.viewMode.set(mode);
+  }
+
+  // ======== VIEWING & EDITING MODES ========
+  /**
+   * Enter view-only mode without editing controls
+   */
+  openViewOnly(): void {
+    // Set view mode flag
+    this.isViewOnlyStateService.setIsOnlyViewMode(true);
+
+    // Then enter fullscreen to show the view
+    if (!this.isFullscreen()) {
+      this.toggleFullscreen();
+    }
+  }
+
+  /**
+   * Exit view-only mode and switch to edit mode
+   * Enhanced to ensure complete state transition
+   */
+  exitViewOnly(): void {
+    console.log('🔍 Exiting view-only mode');
+
+    // Show loading overlay for visual feedback
+    this.showLoadingOverlay.set(true);
+    this.loadingOverlayClass.set('transition-overlay');
+
+    // Reset view-only state
+    this.isViewOnlyStateService.setIsOnlyViewMode(false);
+
+    // Ensure we're in desktop view for editing
+    if (this.currentScreenSize() !== ScreenSize.DESKTOP) {
+      this.currentScreenSize.set(ScreenSize.DESKTOP);
+    }
+
+    // If we're in fullscreen, update URL params without full navigation
+    if (this.isFullscreen()) {
+      this.updateUrlParams({ viewOnly: 'false', mode: 'edit' });
+    }
+
+    // Hide loading overlay after a short delay
+    setTimeout(() => {
+      this.showLoadingOverlay.set(false);
+
+      // Consider the user has just arrived at step 2 in the building process
+      this.currentStep.set(2);
+
+      // If user came from view-only with business type selected,
+      // ensure the app knows we're editing with a type
+      if (this.businessType()) {
+        console.log('Business type already selected:', this.businessType());
+      }
+    }, 800);
+  }
+
+  /**
+   * Helper method to update URL parameters without navigation
+   */
+  private updateUrlParams(params: { [key: string]: string }): void {
+    // Get current params
+    const urlTree = this.router.createUrlTree([], {
+      queryParams: params,
+      queryParamsHandling: 'merge',
+    });
+
+    // Update URL without navigation
+    this.location.go(urlTree.toString());
+  }
+
+  /**
+   * Called when loading overlay animation completes
+   */
+  onLoadingOverlayFinished(): void {
+    // Remove the overlay by setting the controlling signal to false
+    this.showLoadingOverlay.set(false);
+  }
 }

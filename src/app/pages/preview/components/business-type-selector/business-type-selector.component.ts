@@ -63,8 +63,16 @@ export class BusinessTypeSelectorComponent implements OnInit {
     // Apply CSS variables
     this.applyThemeColors();
 
-    // Load business types from API
-    this.loadBusinessTypes();
+    // Only load business types if we're not in compact mode or if no business type is selected
+    if (!this.compactMode || !this.selectedBusinessType) {
+      this.loadBusinessTypes();
+    } else {
+      // For compact mode with a selected type, just ensure we have the business types data
+      if (this.businessTypes.length === 0) {
+        // Use a minimal loading approach without UI feedback
+        this.loadBusinessTypesQuietly();
+      }
+    }
 
     // Check for saved selection in the selection state service
     if (!this.selectedBusinessType) {
@@ -229,5 +237,29 @@ export class BusinessTypeSelectorComponent implements OnInit {
       (type) => type.id === this.selectedBusinessType
     );
     return selected ? selected.name : 'Select Type';
+  }
+
+  // Add a quiet loading method that doesn't trigger UI changes
+  private loadBusinessTypesQuietly(): void {
+    this.templateService
+      .getAllTemplateTypes()
+      .pipe(
+        catchError((error) => {
+          console.error('Failed to load business types quietly:', error);
+          return of(
+            BUSINESS_TYPES.map((type) => ({
+              id: type.id,
+              name: type.name,
+              key: type.id,
+            }))
+          );
+        })
+      )
+      .subscribe({
+        next: (types) => {
+          this.templateTypes = types;
+          this.mapTemplateTypesToBusinessTypes();
+        },
+      });
   }
 }

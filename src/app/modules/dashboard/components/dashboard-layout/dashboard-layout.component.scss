@@ -377,7 +377,7 @@
   flex: 1;
   margin-left: 280px;
   min-height: 100vh;
-  background-color: #f5f6f7;
+  background-color: #f0f2f5; // Modern light cool grey for contrast with white panels
   transition: opacity 0.3s ease, transform 0.3s ease;
 
   .closing & {

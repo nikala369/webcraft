@@ -66,7 +66,7 @@
     >
       <!-- Theme Selector -->
       <app-theme-switcher
-        *ngIf="!this.isViewOnlyStateService.isOnlyViewMode()"
+        *ngIf="!isViewOnlyStateService.isOnlyViewMode()"
         class="preview-header__left"
         (themeChange)="loadTheme($event)"
         [defaultThemeId]="defaultThemeId()"
@@ -78,7 +78,7 @@
 
       <!-- Business Type Selector (Always shown in fullscreen edit mode) -->
       <app-business-type-selector
-        *ngIf="!this.isViewOnlyStateService.isOnlyViewMode()"
+        *ngIf="!isViewOnlyStateService.isOnlyViewMode()"
         class="preview-header__center-left"
         [currentPlan]="currentPlan()"
         [selectedBusinessType]="businessType()"
@@ -125,7 +125,7 @@
 
       <!-- Font Selector -->
       <app-font-picker
-        *ngIf="!this.isViewOnlyStateService.isOnlyViewMode()"
+        *ngIf="!isViewOnlyStateService.isOnlyViewMode()"
         class="preview-header__right"
         (fontChange)="handleFontUpdate($event)"
       >
@@ -137,7 +137,7 @@
       class="preview-wrapper"
       [ngClass]="[
         viewMode(),
-        this.isViewOnlyStateService.isOnlyViewMode() ? 'view-only-mode' : ''
+        isViewOnlyStateService.isOnlyViewMode() ? 'view-only-mode' : ''
       ]"
       [ngStyle]="{
         border:
@@ -207,7 +207,7 @@
     <div
       class="modal-overlay"
       *ngIf="
-        selectedCustomization() && !this.isViewOnlyStateService.isOnlyViewMode()
+        selectedCustomization() && !isViewOnlyStateService.isOnlyViewMode()
       "
     >
       <app-component-customizer
@@ -225,7 +225,7 @@
 
     <!-- Save and Reset Actions (fixed at bottom in fullscreen) -->
     <div
-      *ngIf="isFullscreen() && !this.isViewOnlyStateService.isOnlyViewMode()"
+      *ngIf="isFullscreen() && !isViewOnlyStateService.isOnlyViewMode()"
       class="preview-footer"
       [ngClass]="{ 'fullscreen-mode-border-remove': isFullscreen() }"
     >
@@ -239,31 +239,6 @@
         Save Changes
       </button>
     </div>
-
-    <!-- Primary call to action in view mode (shown when not editing) -->
-    <div
-      *ngIf="isViewOnlyStateService.isOnlyViewMode()"
-      class="preview-cta-container"
-    >
-      <div class="cta-buttons">
-        <!-- Simplified CTA - Using router directly instead of missing methods -->
-        <ng-container *ngIf="!isAuthenticated()">
-          <button
-            class="btn btn-primary btn-sign-in"
-            [routerLink]="['/auth/login']"
-          >
-            <i class="fas fa-sign-in-alt me-2"></i>Sign In to Edit
-          </button>
-        </ng-container>
-
-        <!-- Simplified edit buttons for authenticated users -->
-        <ng-container *ngIf="isAuthenticated()">
-          <button class="btn btn-primary" (click)="startBuilding()">
-            <i class="fas fa-edit me-2"></i>Edit This Template
-          </button>
-        </ng-container>
-      </div>
-    </div>
   </div>
 
   <!-- Floating Checkout Button (positioned above footer with high z-index) -->
@@ -272,6 +247,25 @@
     [showTooltip]="false"
     (checkoutClicked)="proceedToCheckout()"
   ></app-floating-checkout-button>
+
+  <!-- Switch to Edit Mode CTA (Floating Button in Fullscreen View-Only Mode) -->
+  <div
+    *ngIf="
+      isViewOnlyStateService.isOnlyViewMode() &&
+      isFullscreen() &&
+      isAuthenticated()
+    "
+    class="fullscreen-edit-cta"
+  >
+    <button
+      class="btn-floating-edit"
+      (click)="exitViewOnly()"
+      title="Switch to Edit Mode"
+    >
+      <i class="fas fa-edit"></i>
+      <span>Edit</span>
+    </button>
+  </div>
 </div>
 
 <!-- The loading overlay component -->
