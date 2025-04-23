@@ -74,6 +74,7 @@ export class TemplateService {
   // Template endpoints
   private readonly TEMPLATE_SEARCH = `${this.apiUrl}${this.apiPrefix}/template/search`;
   private readonly TEMPLATE_ATTACHMENT = `${this.apiUrl}${this.apiPrefix}/template/attachment`;
+  private readonly TEMPLATE_BY_ID = `${this.apiUrl}${this.apiPrefix}/template`;
 
   /**
    * Fetches all available template types
@@ -244,5 +245,19 @@ export class TemplateService {
       | 'USER_TEMPLATE_VIDEO' = 'TEMPLATE_IMAGE'
   ): string {
     return `${this.TEMPLATE_ATTACHMENT}/${objectId}?attachmentType=${attachmentType}`;
+  }
+
+  /**
+   * Get a template by ID
+   * @param templateId The template ID to fetch
+   * @returns Observable with the full template data including config
+   */
+  getTemplateById(templateId: string): Observable<Template> {
+    return this.http.get<Template>(`${this.TEMPLATE_BY_ID}/${templateId}`).pipe(
+      catchError((error) => {
+        console.error(`Error fetching template with ID ${templateId}:`, error);
+        return throwError(() => error);
+      })
+    );
   }
 }

@@ -1,3 +1,14 @@
+/**
+ * BusinessTypeSelectorComponent
+ *
+ * This component allows users to select a business type for their website template.
+ * It has two display modes:
+ * 1. Full view with grid of business type cards (used in initial selection)
+ * 2. Compact dropdown mode (used in fullscreen editor header)
+ *
+ * The component fetches business types from the API and falls back to predefined types if needed.
+ * It emits the selected business type ID when a selection is made.
+ */
 import {
   Component,
   EventEmitter,
@@ -17,7 +28,6 @@ import {
   TemplateService,
   TemplateType,
 } from '../../../../core/services/template/template.service';
-import { SelectionStateService } from '../../../../core/services/selection/selection-state.service';
 import { finalize, catchError } from 'rxjs/operators';
 import { WebcraftLoadingComponent } from '../../../../shared/components/webcraft-loading/webcraft-loading.component';
 import { of } from 'rxjs';
@@ -33,12 +43,12 @@ export class BusinessTypeSelectorComponent implements OnInit {
   @Input() currentPlan: string = 'standard';
   @Input() selectedBusinessType: string | null = null;
   @Input() compactMode: boolean = false;
+  @Input() isDisabled: boolean = false;
   @Output() businessTypeSelected = new EventEmitter<string>();
   @Output() isLoadingChange = new EventEmitter<boolean>();
 
   private themeColorsService = inject(ThemeColorsService);
   private templateService = inject(TemplateService);
-  private selectionStateService = inject(SelectionStateService);
 
   // Template types from API
   templateTypes: TemplateType[] = [];
@@ -50,9 +60,9 @@ export class BusinessTypeSelectorComponent implements OnInit {
   loading = false;
   error: string | null = null;
 
-  // Added for minimum loading time
+  // For better UX with minimum loading time
   private loadingStartTime = 0;
-  private minimumLoadingTime = 1500; // 1.5 seconds minimum loading time
+  private minimumLoadingTime = 1000; // 1 second minimum loading time
 
   ngOnInit() {
     // Set accent color based on plan
@@ -71,16 +81,6 @@ export class BusinessTypeSelectorComponent implements OnInit {
       if (this.businessTypes.length === 0) {
         // Use a minimal loading approach without UI feedback
         this.loadBusinessTypesQuietly();
-      }
-    }
-
-    // Check for saved selection in the selection state service
-    if (!this.selectedBusinessType) {
-      const savedSelections = this.selectionStateService.getSelections();
-      if (savedSelections.businessType) {
-        this.selectedBusinessType = savedSelections.businessType;
-        // Only emit if we weren't already given a selection
-        this.businessTypeSelected.emit(this.selectedBusinessType);
       }
     }
   }
@@ -211,27 +211,35 @@ export class BusinessTypeSelectorComponent implements OnInit {
     });
   }
 
+  /**
+   * Handle business type selection
+   */
   selectBusinessType(type: string): void {
+    if (this.isDisabled) return;
+
     this.selectedBusinessType = type;
     this.businessTypeSelected.emit(type);
     this.dropdownOpen = false;
-
-    // Save selection to selection state service
-    this.selectionStateService.saveSelections(type, this.currentPlan);
   }
 
-  getBusinessTypeIcon(typeId: string): string {
-    return typeId; // We'll use the type ID as the icon name
-  }
-
+  /**
+   * Check if a business type is currently selected
+   */
   isSelected(typeId: string): boolean {
     return this.selectedBusinessType === typeId;
   }
 
+  /**
+   * Toggle the dropdown in compact mode
+   */
   toggleDropdown(): void {
+    if (this.isDisabled) return;
     this.dropdownOpen = !this.dropdownOpen;
   }
 
+  /**
+   * Get the display name of the currently selected business type
+   */
   getSelectedBusinessTypeName(): string {
     const selected = this.businessTypes.find(
       (type) => type.id === this.selectedBusinessType
@@ -239,7 +247,9 @@ export class BusinessTypeSelectorComponent implements OnInit {
     return selected ? selected.name : 'Select Type';
   }
 
-  // Add a quiet loading method that doesn't trigger UI changes
+  /**
+   * Load business types quietly without UI updates for background updates
+   */
   private loadBusinessTypesQuietly(): void {
     this.templateService
       .getAllTemplateTypes()

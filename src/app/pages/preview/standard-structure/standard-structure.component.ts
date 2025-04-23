@@ -148,7 +148,7 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
     return `${this.selectedFont.family}, ${this.selectedFont.fallback}`;
   }
 
-  handleComponentSelection(componentKey: keyof Customizations): void {
+  handleComponentSelection(componentKey: string): void {
     if (this.isViewOnly) return;
 
     // Create a simple object with a key and name.

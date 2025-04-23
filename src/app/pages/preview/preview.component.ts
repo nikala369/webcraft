@@ -27,7 +27,7 @@ import { PremiumStructureComponent } from './premium-structure/premium-structure
 import { StandardStructureComponent } from './standard-structure/standard-structure.component';
 import { CommonModule, UpperCasePipe } from '@angular/common';
 import { filter, takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { Subject, switchMap } from 'rxjs';
 import { ScrollService } from '../../core/services/shared/scroll/scroll.service';
 import { ConfirmationService } from '../../core/services/shared/confirmation/confirmation.service';
 import { PlanBadgeComponent } from '../../shared/components/plan-badge/plan-badge.component';
@@ -48,23 +48,25 @@ import { BusinessConfigService } from '../../core/services/business-config/busin
 import { UserTemplateService } from '../../core/services/template/user-template.service';
 import { UserBuildService } from '../../core/services/build/user-build.service';
 import { SubscriptionService } from '../../core/services/subscription/subscription.service';
-import { switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth/auth.service';
 import { SelectionStateService } from '../../core/services/selection/selection-state.service';
+import { TemplateService } from '../../core/services/template/template.service';
 // Fixed import directly from service to avoid module resolution issues
 import type { UserTemplate } from '../../core/services/template/user-template.service';
-
-// Add the ScreenSize enum if it doesn't exist
-export enum ScreenSize {
-  DESKTOP = 'desktop',
-  TABLET = 'tablet',
-  MOBILE = 'mobile',
-}
+import type { Template } from '../../core/services/template/template.service';
+import { BUSINESS_TYPES } from '../../core/models/business-types';
 
 /**
  * PreviewComponent is the main interface for the website builder.
- * It allows users to customize website templates, save their progress,
- * and view their changes in both desktop and mobile layouts.
+ * It allows authenticated users to customize website templates and view their changes
+ * in both desktop and mobile layouts.
+ *
+ * This component handles the following workflows:
+ * 1. Editing an existing template (loaded from API with templateId)
+ * 2. Creating a new template (with predefined businessType and plan)
+ * 3. Viewing a template in view-only mode
+ *
+ * All data persistence is handled via API calls with no reliance on sessionStorage.
  */
 @Component({
   selector: 'app-preview',
@@ -94,21 +96,22 @@ export enum ScreenSize {
 export class PreviewComponent implements OnInit, OnDestroy {
   // ======== SERVICES INJECTION ========
   private themeService = inject(ThemeService);
+  private templateService = inject(TemplateService);
   private renderer = inject(Renderer2);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private confirmationService = inject(ConfirmationService);
   private location = inject(Location);
-  modalStateService = inject(ScrollService);
-  isViewOnlyStateService = inject(ScrollService);
+  private modalStateService = inject(ScrollService);
+  public isViewOnlyStateService = inject(ScrollService);
   private destroy$ = new Subject<void>();
   private themeColorsService = inject(ThemeColorsService);
   private businessConfigService = inject(BusinessConfigService);
   private userTemplateService = inject(UserTemplateService);
   private userBuildService = inject(UserBuildService);
   private subscriptionService = inject(SubscriptionService);
-  private selectionStateService = inject(SelectionStateService);
   private authService = inject(AuthService);
+  private selectionStateService = inject(SelectionStateService);
 
   // ======== CORE STATE SIGNALS ========
   // View state
@@ -125,17 +128,23 @@ export class PreviewComponent implements OnInit, OnDestroy {
   currentStep = signal<number>(1); // Tracks progress in the website building flow
   private hasSavedChangesFlag = signal<boolean>(false); // Tracks if changes were saved
 
+  // Template identification state
+  currentUserTemplateId = signal<string | null>(null);
+  currentTemplateName = signal<string | null>(null);
+  selectedBaseTemplateId = signal<string | null>(null);
+  businessTypeDisplayName = signal<string>('');
+
   // UI state
   selectedComponent = signal<{
-    key: keyof Customizations;
+    key: string;
     name: string;
     path?: string;
   } | null>(null);
 
   // Product configuration
   currentPlan = signal<'standard' | 'premium'>('standard');
-  businessType = signal<string>(''); // NEW: Selected business type
-  showBusinessTypeSelector = signal<boolean>(false); // NEW: Control visibility of business type selector
+  businessType = signal<string>(''); // Selected business type
+  showBusinessTypeSelector = signal<boolean>(false); // Control visibility of business type selector
   currentPage = signal<string>('home');
   selectedFont = signal<FontOption | null>(null);
 
@@ -156,6 +165,14 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
   // Flag to prevent theme service from overriding user customizations
   private preventThemeOverride = signal<boolean>(false);
+
+  // Check if editing is allowed (disabled when in mobile view)
+  isEditingAllowed = computed(() => this.viewMode() === 'view-desktop');
+
+  // Readonly state for preventing changes to businessType after creation
+  isBusinessTypeReadonly = computed(
+    () => this.currentUserTemplateId() !== null || this.isFullscreen()
+  );
 
   // ======== DEFAULT CUSTOMIZATIONS ========
   // Default customization values when no saved state exists
@@ -365,17 +382,15 @@ export class PreviewComponent implements OnInit, OnDestroy {
       };
     }
 
-    // Otherwise use the key directly
-    console.log(
-      'Selected component data for key:',
-      selected.key,
-      this.customizations()[selected.key]
-    );
+    // Otherwise use the key directly with type assertion
+    const customData = (this.customizations() as any)[selected.key];
+
+    console.log('Selected component data for key:', selected.key, customData);
 
     return {
       key: selected.key,
       name: selected.name,
-      data: this.customizations()[selected.key],
+      data: customData,
     };
   });
 
@@ -401,109 +416,393 @@ export class PreviewComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     console.log('PreviewComponent initializing');
 
-    // Initialize default customization structure
-    this.ensureCompleteCustomizationStructure();
-
-    // Handle window resize
+    // Handle window resize for mobile view detection
     window.addEventListener('resize', this.updateIsMobile.bind(this));
-
-    // Handle route parameters
-    this.route.queryParams
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((params) => {
-        const plan = params['plan'] || 'standard';
-        this.currentPlan.set(plan as 'standard' | 'premium');
-
-        // Check for business type parameter
-        if (params['businessType']) {
-          this.businessType.set(params['businessType']);
-        }
-
-        // Handle template operations
-        const templateId = params['templateId'];
-        const mode = params['mode'] || 'view';
-        const newTemplate = params['newTemplate'] === 'true';
-
-        if (newTemplate) {
-          // Handle new template creation
-          console.log('Creating new template');
-          this.hasStartedBuilding.set(true);
-          this.currentStep.set(2); // business type selection
-          this.showBusinessTypeSelector.set(true);
-
-          // Automatically switch to fullscreen edit mode
-          setTimeout(() => {
-            if (!this.isFullscreen()) {
-              this.toggleFullscreen();
-            }
-          }, 300);
-        } else if (templateId) {
-          // Handle existing template editing or viewing
-          console.log(`Loading template ${templateId} in ${mode} mode`);
-
-          // TODO: Load the template data from API
-          this.hasStartedBuilding.set(true);
-
-          if (mode === 'edit') {
-            // Automatically enter edit mode (fullscreen)
-            setTimeout(() => {
-              this.editBuilding();
-            }, 300);
-          } else if (mode === 'view') {
-            // Enter view-only mode
-            setTimeout(() => {
-              this.isViewOnlyStateService.setIsOnlyViewMode(true);
-              if (!this.isFullscreen()) {
-                this.toggleFullscreen();
-              }
-            }, 300);
-          }
-        }
-      });
-
-    // Handle navigation events for page changes
-    this.router.events
-      .pipe(
-        filter((event) => event instanceof NavigationEnd),
-        takeUntil(this.destroy$)
-      )
-      .subscribe(() => {
-        const routeData = this.route.firstChild?.snapshot.data;
-        if (routeData && routeData['page']) {
-          const newPage = routeData['page'];
-          // Only scroll to top if the page actually changed
-          if (this.currentPage() !== newPage) {
-            this.currentPage.set(newPage);
-            // Scroll the preview area to top when changing pages
-            const previewWrapper = document.querySelector('.preview-wrapper');
-            if (previewWrapper) {
-              previewWrapper.scrollTop = 0;
-            }
-          }
-        }
-      });
-
-    // Initial page setup from route
-    const initialPage = this.route.firstChild?.snapshot.data['page'];
-    if (initialPage) {
-      this.currentPage.set(initialPage);
-    }
-
-    // Scroll to top when initially entering preview page
-    window.scrollTo(0, 0);
-
-    // Check authentication status and load appropriate state
-    this.initializeUserState();
-
-    // Ensure view mode is valid
-    this.ensureValidViewMode();
 
     // Add fullscreen change event listener
     document.addEventListener('fullscreenchange', this.handleFullscreenChange);
 
-    // Initial class application
+    // Initial class application for fullscreen state
     if (this.isFullscreen()) {
       document.body.classList.add('fullscreen-mode');
+    }
+
+    // Check if user is authenticated - require auth for all operations
+    if (!this.authService.isAuthenticated()) {
+      console.log('User is not authenticated - redirecting to login');
+      // Save the current URL as the return URL
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+
+    // Parse route parameters to determine the operation mode
+    this.parseRouteParameters();
+  }
+
+  /**
+   * Parse route parameters to determine operation mode and initialize component state
+   */
+  private parseRouteParameters(): void {
+    this.showLoadingOverlay.set(true);
+    this.loadingOverlayClass.set('active');
+
+    this.route.queryParams.subscribe((params) => {
+      console.log('Processing route parameters:', params);
+
+      // Set plan from params or default to standard
+      const plan = params['plan'] || 'standard';
+      this.currentPlan.set(plan as 'standard' | 'premium');
+
+      // Update consolidated state
+      this.templateState.update((state) => ({
+        ...state,
+        plan: plan as 'standard' | 'premium',
+      }));
+
+      // Handle business type from params
+      const urlBusinessType = params['businessType'];
+      if (urlBusinessType) {
+        console.log(`Business type found in URL: ${urlBusinessType}`);
+        this.businessType.set(urlBusinessType);
+
+        // Set business type display name
+        this.setBusinessTypeDisplayName(urlBusinessType);
+
+        // Update consolidated state
+        this.templateState.update((state) => ({
+          ...state,
+          businessType: urlBusinessType,
+          businessTypeName: this.businessTypeDisplayName(),
+        }));
+
+        // Always hide the selector when business type is in URL
+        this.showBusinessTypeSelector.set(false);
+      }
+
+      // Determine the operation mode
+      const templateId = params['templateId'];
+      const newTemplate = params['newTemplate'] === 'true';
+      const mode = params['mode'] || 'edit';
+
+      if (templateId) {
+        // Edit or view existing template mode
+        console.log(`Loading template ${templateId} in ${mode} mode`);
+        this.loadExistingTemplate(templateId, mode);
+      } else if (newTemplate) {
+        // New template creation mode
+        console.log(
+          'Creating new template with business type:',
+          urlBusinessType
+        );
+        this.initializeNewTemplate(urlBusinessType);
+      } else if (urlBusinessType) {
+        // Just a business type selection but no template action yet
+        // Still proceed with initialization to ensure proper UI state
+        console.log('Business type selected but no template action specified');
+        this.loadThemesForBusinessType(urlBusinessType);
+        this.hasStartedBuilding.set(true);
+        this.currentStep.set(3); // Business type selection + plan are done
+        this.showLoadingOverlay.set(false);
+      } else {
+        // No template ID, creation flag, or business type - show business type selector
+        console.log(
+          'No template parameters found, showing business type selector'
+        );
+        this.currentStep.set(2); // Business type selection step
+        this.showBusinessTypeSelector.set(true);
+        this.showLoadingOverlay.set(false);
+      }
+    });
+  }
+
+  /**
+   * Load an existing template from the API with improved error handling
+   */
+  private loadExistingTemplate(templateId: string, mode: string): void {
+    // Show loading state
+    this.showLoadingOverlay.set(true);
+    this.loadingOverlayClass.set('active');
+
+    console.log(`Loading template with ID ${templateId} in ${mode} mode`);
+
+    this.userTemplateService
+      .getUserTemplateById(templateId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (template) => {
+          console.log('Loaded user template from API:', template);
+
+          if (!template) {
+            this.handleTemplateLoadError('Template not found');
+            return;
+          }
+
+          // Store the template ID and name regardless of whether config parsing succeeds
+          this.currentUserTemplateId.set(template.id);
+          this.currentTemplateName.set(template.name);
+
+          // Update consolidated state
+          this.templateState.update((state) => ({
+            ...state,
+            id: template.id,
+            name: template.name,
+          }));
+
+          // Set business type based on template data
+          if (template.template?.templateType?.key) {
+            const templateType = template.template.templateType.key;
+            this.businessType.set(templateType);
+
+            // Update consolidated state
+            this.templateState.update((state) => ({
+              ...state,
+              businessType: templateType,
+            }));
+
+            // Get the display name for the business type
+            this.setBusinessTypeDisplayName(templateType);
+
+            // Load themes for this business type
+            this.loadThemesForBusinessType(templateType);
+          }
+
+          // Process the config if available
+          if (template.config) {
+            try {
+              // Safely parse the config string
+              const configStr = template.config.trim();
+              console.log(
+                'Template config string:',
+                configStr.substring(0, 100) + '...'
+              );
+
+              let customizationsData;
+              // Make sure it's a valid JSON string before parsing
+              if (configStr.startsWith('{') && configStr.endsWith('}')) {
+                customizationsData = JSON.parse(configStr);
+              } else {
+                throw new Error('Invalid config format');
+              }
+
+              // Apply the loaded customizations
+              this.customizations.set(customizationsData);
+
+              // Update font if available
+              if (customizationsData.fontConfig) {
+                const fontConfig = customizationsData.fontConfig;
+                this.selectedFont.set({
+                  id: fontConfig.fontId,
+                  family: fontConfig.family,
+                  fallback: fontConfig.fallback,
+                });
+              }
+
+              // Update tracking state
+              this.lastSavedState.set(structuredClone(customizationsData));
+              this.currentEditingState.set(structuredClone(customizationsData));
+
+              console.log(
+                'Successfully loaded and applied template configuration'
+              );
+
+              // Set appropriate flags for editing flow
+              this.hasStartedBuilding.set(true);
+              this.hasSavedChangesFlag.set(true);
+              this.currentStep.set(3); // Move to editing step
+
+              // Switch to appropriate mode after a short delay
+              setTimeout(() => {
+                if (mode === 'edit') {
+                  this.editBuilding();
+                } else if (mode === 'view') {
+                  this.openViewOnly();
+                }
+
+                // Hide loading state inside the timeout to ensure smooth transition
+                this.showLoadingOverlay.set(false);
+              }, 300);
+            } catch (e) {
+              console.error('Error processing template config:', e);
+
+              // Even if config parsing fails, initialize with defaults and proceed
+              this.initializeDefaultCustomizations();
+
+              this.confirmationService.showConfirmation(
+                'Error processing template configuration. Using default settings.',
+                'warning',
+                5000
+              );
+
+              // Hide loading and set the appropriate mode
+              this.showLoadingOverlay.set(false);
+
+              // Still allow editing even with default settings
+              this.hasStartedBuilding.set(true);
+
+              // Switch to appropriate mode with default settings
+              setTimeout(() => {
+                if (mode === 'edit') {
+                  this.editBuilding();
+                } else if (mode === 'view') {
+                  this.openViewOnly();
+                }
+              }, 300);
+            }
+          } else {
+            console.warn('Template has no config:', template);
+            this.initializeDefaultCustomizations();
+            this.confirmationService.showConfirmation(
+              'Template has no configuration data. Using default settings.',
+              'warning',
+              3000
+            );
+
+            // Hide loading and set the appropriate mode
+            this.showLoadingOverlay.set(false);
+
+            // Still allow editing even with default settings
+            this.hasStartedBuilding.set(true);
+
+            // Switch to appropriate mode with default settings
+            setTimeout(() => {
+              if (mode === 'edit') {
+                this.editBuilding();
+              } else if (mode === 'view') {
+                this.openViewOnly();
+              }
+            }, 300);
+          }
+        },
+        error: (error) => {
+          this.handleTemplateLoadError(error);
+        },
+      });
+  }
+
+  /**
+   * Handle template loading errors with consistent messaging
+   */
+  private handleTemplateLoadError(error: any): void {
+    console.error('Error loading template from API:', error);
+    this.confirmationService.showConfirmation(
+      'Failed to load template: ' + (error.message || 'Unknown error'),
+      'error',
+      5000
+    );
+    this.showLoadingOverlay.set(false);
+
+    // Initialize with defaults so user can still work with the template
+    this.initializeDefaultCustomizations();
+    this.hasStartedBuilding.set(true);
+  }
+
+  /**
+   * Initialize state for creating a new template with improved handling
+   */
+  private initializeNewTemplate(businessType?: string): void {
+    // Show loading while we initialize
+    this.showLoadingOverlay.set(true);
+
+    // If business type is provided, initialize with it
+    if (businessType) {
+      // Set in both individual signals and consolidated state
+      this.businessType.set(businessType);
+
+      // Get business type display name
+      const businessTypeObj = this.businessTypes.find(
+        (t) => t.id === businessType
+      );
+
+      const displayName = businessTypeObj
+        ? businessTypeObj.name
+        : businessType.charAt(0).toUpperCase() + businessType.slice(1);
+
+      this.businessTypeDisplayName.set(displayName);
+
+      // Update consolidated state
+      this.templateState.update((state) => ({
+        ...state,
+        businessType: businessType,
+        businessTypeName: displayName,
+        name: `${displayName} Website`, // Use business type in the default name
+      }));
+
+      this.showBusinessTypeSelector.set(false);
+
+      // Load themes for this business type
+      this.loadThemesForBusinessType(businessType);
+
+      // Set to customization step
+      this.currentStep.set(3);
+    } else {
+      // Show business type selector since no type is provided
+      this.showBusinessTypeSelector.set(true);
+      this.currentStep.set(2);
+    }
+
+    // Initialize customizations with defaults - will use business type if set
+    this.initializeDefaultCustomizations();
+
+    // Set flags for new template flow
+    this.hasStartedBuilding.set(true);
+
+    // Enter fullscreen edit mode after a brief delay
+    setTimeout(() => {
+      this.showLoadingOverlay.set(false);
+      if (!this.isFullscreen()) {
+        this.toggleFullscreen();
+      }
+    }, 500);
+  }
+
+  /**
+   * Set the business type display name from the key
+   */
+  private setBusinessTypeDisplayName(businessTypeKey: string): void {
+    const businessTypeObj = this.businessTypes.find(
+      (type) => type.id === businessTypeKey
+    );
+    if (businessTypeObj) {
+      this.businessTypeDisplayName.set(businessTypeObj.name);
+    } else {
+      // Fall back to the key with first letter capitalized if no match
+      this.businessTypeDisplayName.set(
+        businessTypeKey.charAt(0).toUpperCase() + businessTypeKey.slice(1)
+      );
+    }
+  }
+
+  /**
+   * Initialize customizations with default values for the selected business type
+   */
+  private initializeDefaultCustomizations(): void {
+    const businessTypeKey = this.businessType();
+    const plan = this.currentPlan();
+
+    if (businessTypeKey) {
+      // Use BusinessConfigService to generate appropriate defaults
+      const defaultCustomizations =
+        this.businessConfigService.generateDefaultCustomizations(
+          businessTypeKey,
+          plan
+        );
+
+      this.customizations.set(defaultCustomizations);
+
+      // Set initial font from the default customizations
+      if (defaultCustomizations.fontConfig) {
+        this.selectedFont.set({
+          id: defaultCustomizations.fontConfig.fontId,
+          family: defaultCustomizations.fontConfig.family,
+          fallback: defaultCustomizations.fontConfig.fallback,
+        });
+      }
+
+      // Save these as the initial state
+      this.lastSavedState.set(structuredClone(defaultCustomizations));
+      this.currentEditingState.set(structuredClone(defaultCustomizations));
     }
   }
 
@@ -518,172 +817,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ======== AUTHENTICATION & USER STATE ========
-  /**
-   * Initialize user state based on authentication status
-   * and load saved customizations if they exist
-   */
-  private initializeUserState(): void {
-    // Check for business type in URL regardless of authentication status
-    const urlBusinessType = this.route.snapshot.queryParams['businessType'];
-
-    if (urlBusinessType) {
-      console.log('Business type provided in URL:', urlBusinessType);
-      this.businessType.set(urlBusinessType);
-      this.showBusinessTypeSelector.set(false);
-
-      // Load themes for this business type
-      this.loadThemesForBusinessType(urlBusinessType);
-    }
-
-    // Check if user is authenticated
-    if (this.isAuthenticated()) {
-      console.log('User is authenticated - checking for template ID');
-
-      // Check if template ID is provided in URL
-      const templateId = this.route.snapshot.queryParams['templateId'];
-
-      if (templateId) {
-        console.log('Template ID found:', templateId);
-
-        // Show loading overlay
-        this.showLoadingOverlay.set(true);
-        this.loadingOverlayClass.set('active');
-
-        // Load template from API
-        if (!this.userTemplateService) {
-          console.error('UserTemplateService not initialized');
-          this.showLoadingOverlay.set(false);
-          return;
-        }
-
-        this.userTemplateService.getUserTemplateById(templateId).subscribe({
-          next: (template) => {
-            if (template && template.config) {
-              console.log('Loaded user template from API:', template);
-
-              // Store the template ID for future updates
-              this.currentUserTemplateId = template.id;
-
-              // Set business type based on template data
-              if (template.template?.templateType?.key) {
-                const templateType = template.template.templateType.key;
-                this.businessType.set(templateType);
-
-                // Load themes for this business type if not already loaded
-                if (!urlBusinessType) {
-                  this.loadThemesForBusinessType(templateType);
-                }
-              }
-
-              // Parse the config string to get customizations
-              try {
-                const customizationsData = JSON.parse(template.config);
-
-                // Apply the loaded customizations
-                this.applyCustomizations(customizationsData);
-
-                // Update last saved state to track changes
-                this.lastSavedState.set(structuredClone(customizationsData));
-                this.currentEditingState.set(
-                  structuredClone(customizationsData)
-                );
-              } catch (e) {
-                console.error('Error parsing template config:', e);
-                this.confirmationService.showConfirmation(
-                  'Error parsing template configuration. Using default settings.',
-                  'error',
-                  5000
-                );
-              }
-
-              // Set appropriate flags for editing flow
-              this.hasStartedBuilding.set(true);
-              this.hasSavedChangesFlag.set(true);
-              this.currentStep.set(3); // Move to editing step
-
-              // Hide loading overlay
-              setTimeout(() => {
-                this.showLoadingOverlay.set(false);
-                this.loadingOverlayClass.set('');
-              }, 500);
-            } else {
-              console.warn('Template has no config:', template);
-              this.showLoadingOverlay.set(false);
-            }
-          },
-          error: (error) => {
-            console.error('Error loading template from API:', error);
-            this.confirmationService.showConfirmation(
-              'Failed to load template: ' + (error.message || 'Unknown error'),
-              'error',
-              5000
-            );
-            this.showLoadingOverlay.set(false);
-          },
-        });
-      } else {
-        // No template ID provided - show business type selector if not already set
-        if (!urlBusinessType) {
-          this.currentStep.set(2); // Step 2: Business Type Selection
-          this.showBusinessTypeSelector.set(true);
-        } else {
-          // Business type is set but no template - move to step 3 (Customize)
-          this.currentStep.set(3);
-        }
-      }
-    } else {
-      // User is not authenticated - redirect to login page
-      console.log('User is not authenticated - redirecting to login');
-
-      // Save the current URL as the return URL
-      this.router.navigate(['/auth/login'], {
-        queryParams: { returnUrl: this.router.url },
-      });
-    }
-  }
-
   // ======== BUSINESS TYPE HANDLING ========
-  /**
-   * Handle business type selection from the selector component
-   */
-  handleBusinessTypeSelection(type: string): void {
-    console.log('Business type selected:', type);
-
-    // If business type changed, update it
-    if (this.businessType() !== type) {
-      this.businessType.set(type);
-
-      // Clear the current theme cache to force reload of themes
-      this.availableThemes.set([]);
-
-      // Get themes for this business type
-      this.loadThemesForBusinessType(type);
-
-      // Update URL to reflect business type
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: { businessType: type },
-        queryParamsHandling: 'merge',
-      });
-
-      // Apply default menu items based on business type
-      this.updateMenuItemsForBusinessType(type);
-
-      // Advance to step 3 (Customize) after selecting business type
-      this.currentStep.set(3);
-
-      // Store current state in selectionStateService for potential auth flow redirects
-      this.selectionStateService.saveSelections(type, this.currentPlan());
-
-      // Always show the business type selector in compact mode when in fullscreen
-      if (!this.isFullscreen()) {
-        // If not in fullscreen, hide selector after choosing
-        this.showBusinessTypeSelector.set(false);
-      }
-    }
-  }
-
   /**
    * Load themes filtered by business type
    */
@@ -693,63 +827,229 @@ export class PreviewComponent implements OnInit, OnDestroy {
     // Always set loading state first
     this.availableThemes.set([]);
 
-    this.themeService
-      .getThemesByBusinessType(businessType, this.currentPlan())
-      .subscribe({
-        next: (themes) => {
-          console.log(
-            `Received ${
-              themes.length
-            } themes for ${businessType} with plan ${this.currentPlan()}`
-          );
+    // Get plan ID based on current plan
+    const planType = this.templateService.convertPlanType(this.currentPlan());
 
-          // Save themes to signal
-          this.availableThemes.set(themes);
+    this.templateService.getTemplatePlanId(planType).subscribe({
+      next: (planId) => {
+        // Search for templates with the given business type and plan
+        this.templateService.searchTemplates(businessType, planId).subscribe({
+          next: (response) => {
+            console.log(
+              `Received ${
+                response.content.length
+              } templates for ${businessType} with plan ${this.currentPlan()}`
+            );
 
-          // If we have themes, select the first one as default if no theme is currently selected
-          if (themes.length > 0) {
-            const themeToSelect = themes[0].id;
-            console.log(`Auto-selecting theme ID ${themeToSelect}`);
-            this.loadTheme(themeToSelect);
-          } else {
-            console.log('No themes available for this business type and plan');
+            // Save templates to signal
+            this.availableThemes.set(response.content);
 
-            // Try to use default theme for current plan
-            this.loadTheme(this.defaultThemeId());
-          }
-        },
-        error: (err) => {
-          console.error('Error loading themes for business type:', err);
-          // On error, load default theme
-          this.loadTheme(this.defaultThemeId());
-          // Set empty array to avoid undefined errors
-          this.availableThemes.set([]);
-        },
-      });
+            // If we have templates and no base template ID is selected yet, select the first one
+            if (response.content.length > 0 && !this.selectedBaseTemplateId()) {
+              const firstTemplateId = response.content[0].id;
+              console.log(`Auto-selecting template ID ${firstTemplateId}`);
+              this.selectedBaseTemplateId.set(firstTemplateId);
+              this.loadBaseTemplate(firstTemplateId);
+            }
+          },
+          error: (err) => {
+            console.error('Error loading templates for business type:', err);
+            // Set empty array to avoid undefined errors
+            this.availableThemes.set([]);
+            this.confirmationService.showConfirmation(
+              'Error loading templates. Please try again.',
+              'error',
+              3000
+            );
+          },
+        });
+      },
+      error: (err) => {
+        console.error('Error getting plan ID:', err);
+        this.confirmationService.showConfirmation(
+          'Error loading plan information. Please try again.',
+          'error',
+          3000
+        );
+      },
+    });
   }
 
   /**
-   * Update menu items based on business type and plan
+   * Load base template from API
+   *
+   * NOTE: This method assumes TemplateService.getTemplateById() exists in the API.
+   * If missing, implement it in TemplateService to fetch a Template by ID from endpoint:
+   * GET /template/{templateId}
    */
-  updateMenuItemsForBusinessType(businessType: string): void {
-    const plan = this.currentPlan();
+  loadBaseTemplate(templateId: string): void {
+    console.log(`Loading base template with ID ${templateId}`);
 
-    // Use business config service to get menu items
-    const menuItems = this.businessConfigService.getMenuItemsForBusinessType(
-      businessType,
-      plan
-    );
+    // Check if we have a current user template ID (editing existing template)
+    if (this.currentUserTemplateId()) {
+      console.log(
+        'Skipping base template load since we are editing an existing template'
+      );
+      return;
+    }
 
-    // Update the customizations with the new menu items
-    this.customizations.update((current) => {
-      return {
-        ...current,
-        header: {
-          ...current.header,
-          menuItems: menuItems,
-        },
-      };
+    // Check if we should prevent template from overriding saved customizations
+    if (this.preventThemeOverride()) {
+      console.log('🛡️ Template override prevention active - skipping');
+      return;
+    }
+
+    this.templateService.getTemplateById(templateId).subscribe({
+      next: (template: Template) => {
+        console.log('Base template loaded successfully:', template);
+
+        // Store the template ID
+        this.selectedBaseTemplateId.set(template.id);
+
+        // Get business type from template if not already set
+        if (!this.businessType() && template.templateType?.key) {
+          this.businessType.set(template.templateType.key);
+          this.setBusinessTypeDisplayName(template.templateType.key);
+        }
+
+        // Parse config if available
+        if (template.config) {
+          try {
+            const templateCustomizations = JSON.parse(template.config);
+
+            if (!this.customizations()) {
+              // No existing customizations, use template as base
+              this.customizations.set(templateCustomizations);
+
+              // Update font if available
+              if (templateCustomizations.fontConfig) {
+                const fontConfig = templateCustomizations.fontConfig;
+                this.selectedFont.set({
+                  id: fontConfig.fontId,
+                  family: fontConfig.family,
+                  fallback: fontConfig.fallback,
+                });
+              }
+
+              // Update tracking state
+              this.lastSavedState.set(structuredClone(templateCustomizations));
+              this.currentEditingState.set(
+                structuredClone(templateCustomizations)
+              );
+            } else {
+              // Existing customizations - only apply theme and structural elements
+              // but preserve user content changes
+              this.customizations.update((current) => {
+                if (!current) return templateCustomizations;
+
+                // Create a merged customization object preserving user content
+                // This is a simplified merge - a more complex merge might be needed
+                const merged = structuredClone(templateCustomizations);
+
+                // Preserve user content from existing customizations
+                if (current.pages?.home?.hero1) {
+                  merged.pages.home.hero1.title =
+                    current.pages.home.hero1.title;
+                  merged.pages.home.hero1.subtitle =
+                    current.pages.home.hero1.subtitle;
+                }
+
+                if (current.pages?.home?.about) {
+                  merged.pages.home.about.title =
+                    current.pages.home.about.title;
+                  merged.pages.home.about.subtitle =
+                    current.pages.home.about.subtitle;
+                  merged.pages.home.about.storyText =
+                    current.pages.home.about.storyText;
+                  merged.pages.home.about.missionText =
+                    current.pages.home.about.missionText;
+                }
+
+                return merged;
+              });
+            }
+          } catch (e) {
+            console.error('Error parsing template config:', e);
+            // If we can't parse the config, initialize with defaults
+            this.initializeDefaultCustomizations();
+          }
+        } else {
+          // No config, initialize with defaults
+          this.initializeDefaultCustomizations();
+        }
+      },
+      error: (err: Error) => {
+        console.error('Error loading base template:', err);
+        // Initialize with defaults if template loading fails
+        this.initializeDefaultCustomizations();
+      },
     });
+  }
+
+  /**
+   * Handle business type selection from the selector component
+   */
+  handleBusinessTypeSelection(type: string): void {
+    console.log('Business type selected:', type);
+
+    // If business type changed, update it
+    if (this.businessType() !== type) {
+      // Update both individual signals and template state
+      this.businessType.set(type);
+
+      // Get business type display name
+      const businessTypeObj = this.businessTypes.find((t) => t.id === type);
+
+      const displayName = businessTypeObj
+        ? businessTypeObj.name
+        : type.charAt(0).toUpperCase() + type.slice(1);
+
+      this.businessTypeDisplayName.set(displayName);
+
+      // Clear the current available themes to force reload
+      this.availableThemes.set([]);
+      this.selectedBaseTemplateId.set(null);
+
+      // Demonstrate updating the consolidated state directly
+      // In a fully refactored approach, we would only use this method:
+      this.templateState.update((state) => ({
+        ...state,
+        businessType: type,
+        businessTypeName: displayName,
+        baseId: null,
+      }));
+
+      // Load themes for this business type
+      this.loadThemesForBusinessType(type);
+
+      // Update URL to reflect business type (without navigation)
+      this.updateUrlParams({ businessType: type });
+
+      // Initialize with default customizations for this business type
+      this.initializeDefaultCustomizations();
+
+      // Advance to step 3 (Customize) after selecting business type
+      this.currentStep.set(3);
+
+      // Hide selector after choosing in non-fullscreen mode
+      if (!this.isFullscreen()) {
+        this.showBusinessTypeSelector.set(false);
+      }
+    }
+  }
+
+  /**
+   * Helper method to update URL parameters without navigation
+   */
+  private updateUrlParams(params: { [key: string]: string }): void {
+    // Get current params
+    const urlTree = this.router.createUrlTree([], {
+      queryParams: params,
+      queryParamsHandling: 'merge',
+    });
+
+    // Update URL without navigation
+    this.location.go(urlTree.toString());
   }
 
   // ======== SESSION STATE MANAGEMENT ========
@@ -780,14 +1080,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Start building new website
+   * Start building a new website
    */
   startBuilding(): void {
     console.log('Starting building process');
     this.showLoadingOverlay.set(true);
-
-    // Clean up any old session storage data
-    this.cleanupSessionStorage();
 
     // Set view mode to editing
     this.isViewOnlyStateService.setIsOnlyViewMode(false);
@@ -795,8 +1092,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     // Set building flag
     this.hasStartedBuilding.set(true);
 
-    // Make sure we load the themes for the current business type BEFORE entering fullscreen
-    // This ensures the theme dropdown has correct options immediately
+    // Check if we have a business type selected
     const currentBusinessType = this.businessType();
     if (currentBusinessType) {
       console.log(
@@ -813,22 +1109,21 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
     // Give time for themes to load before entering fullscreen
     setTimeout(() => {
-      console.log('3 seconds passed, now toggling fullscreen');
+      console.log('Toggling fullscreen');
 
-      // Load default theme for the selected plan
-      this.loadTheme(this.defaultThemeId());
+      // Initialize customizations if not already done
+      if (!this.customizations()) {
+        this.initializeDefaultCustomizations();
+      }
 
-      // Store default state before any edits
+      // Store current state for potential restore
       this.lastSavedState.set(structuredClone(this.customizations()));
-
-      // Also cache the current state for potential restore
       this.currentEditingState.set(structuredClone(this.customizations()));
 
       this.loadingOverlayClass.set('fade-out');
-
       this.showLoadingOverlay.set(false);
       this.toggleFullscreen();
-    }, 2100);
+    }, 1000);
   }
 
   /**
@@ -841,30 +1136,16 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.showLoadingOverlay.set(true);
     this.loadingOverlayClass.set('transition-overlay');
 
-    // IMPORTANT: Reset view-only flag to ensure we're in edit mode
+    // Reset view-only flag to ensure we're in edit mode
     this.isViewOnlyStateService.setIsOnlyViewMode(false);
 
     // Set the flag to prevent theme from overriding saved customizations
     this.preventThemeOverride.set(true);
 
-    // Check if we have a template ID and load it
-    const templateId =
-      this.currentUserTemplateId ||
-      sessionStorage.getItem('selectedTemplateId');
-    if (templateId) {
-      // If we have a template ID, load it from the API
-      this.loadStoredCustomizations();
-    } else {
-      // No template ID - use the default theme
-      console.log('🔍 No template ID found - loading default theme');
-      this.preventThemeOverride.set(false);
-      this.loadTheme(this.defaultThemeId());
-    }
-
     // Update URL parameters to indicate we're in edit mode
     this.updateUrlParams({ viewOnly: 'false', mode: 'edit' });
 
-    // Enter fullscreen mode after a short delay to allow theme loading
+    // Enter fullscreen mode after a short delay
     setTimeout(() => {
       // Remove loading overlay
       this.showLoadingOverlay.set(false);
@@ -875,198 +1156,58 @@ export class PreviewComponent implements OnInit, OnDestroy {
       }
     }, 800);
 
-    // Keep prevention active for a short time to ensure all theme load operations respect it
+    // Keep prevention active for a short time
     setTimeout(() => {
       console.log('🔍 Theme override prevention disabled after initialization');
       this.preventThemeOverride.set(false);
     }, 1000);
   }
 
-  // ======== THEME & CUSTOMIZATION MANAGEMENT ========
   /**
-   * Load theme CSS from backend and apply global styles
+   * Enter view-only mode without editing controls
    */
-  loadTheme(themeId: number): void {
-    console.log(`Loading theme with ID ${themeId}`);
+  openViewOnly(): void {
+    // Set view mode flag
+    this.isViewOnlyStateService.setIsOnlyViewMode(true);
 
-    // Check if we should prevent theme customizations from overriding saved ones
-    if (this.preventThemeOverride()) {
-      console.log('🛡️ Theme override prevention active - loading CSS only');
+    // Update URL parameters
+    this.updateUrlParams({ viewOnly: 'true', mode: 'view' });
 
-      this.themeService.getById(themeId).subscribe({
-        next: (theme) => {
-          console.log('🛡️ Theme CSS loaded without overriding customizations');
-          // Apply CSS styles only, without overriding customizations
-          this.applyGlobalStyles(theme.cssContent);
-        },
-        error: (err) => {
-          console.error('Error loading theme CSS:', err);
-        },
-      });
-      return;
+    // Then enter fullscreen to show the view
+    if (!this.isFullscreen()) {
+      this.toggleFullscreen();
     }
-
-    // Normal theme loading with customizations
-    this.themeService.getById(themeId).subscribe({
-      next: (theme) => {
-        console.log('Theme loaded successfully:', theme.name);
-
-        // Apply CSS styles
-        this.applyGlobalStyles(theme.cssContent);
-
-        // Update customizations from theme data
-        if (theme.customizations) {
-          console.log('Setting customizations from theme');
-          this.customizations.set(theme.customizations);
-
-          // Update selectedFont signal if fontConfig exists in the loaded theme
-          if (theme.customizations.fontConfig) {
-            const fontConfig = theme.customizations.fontConfig;
-            this.selectedFont.set({
-              id: fontConfig.fontId,
-              family: fontConfig.family,
-              fallback: fontConfig.fallback,
-            });
-          }
-        }
-      },
-      error: (err) => {
-        console.error('Error loading theme:', err);
-      },
-    });
   }
 
   /**
-   * Direct application of customizations without loading from theme service
-   * This is critical for preventing saved customizations from being overridden
+   * Exit view-only mode and switch to edit mode
    */
-  applyCustomizations(customizationsData: Customizations): void {
-    console.log('🔍 Directly applying customizations', customizationsData);
+  exitViewOnly(): void {
+    console.log('🔍 Exiting view-only mode');
 
-    // Temporarily prevent theme override
-    this.preventThemeOverride.set(true);
+    // Show loading overlay for visual feedback
+    this.showLoadingOverlay.set(true);
+    this.loadingOverlayClass.set('transition-overlay');
 
-    // Update the customizations signal
-    this.customizations.set(customizationsData);
+    // Reset view-only state
+    this.isViewOnlyStateService.setIsOnlyViewMode(false);
 
-    // Update font if available
-    if (customizationsData.fontConfig) {
-      const fontConfig = customizationsData.fontConfig;
-      this.selectedFont.set({
-        id: fontConfig.fontId,
-        family: fontConfig.family,
-        fallback: fontConfig.fallback,
-      });
+    // Ensure we're in desktop view for editing
+    if (this.viewMode() !== 'view-desktop') {
+      this.viewMode.set('view-desktop');
     }
 
-    // Also update in-memory state
-    this.currentEditingState.set(structuredClone(customizationsData));
+    // Update URL params
+    this.updateUrlParams({ viewOnly: 'false', mode: 'edit' });
 
-    // Ensure we have these customizations in currentCustomizations too
-    const freshData = {
-      customizations: customizationsData,
-      themeId: this.defaultThemeId(),
-    };
-    sessionStorage.setItem('currentCustomizations', JSON.stringify(freshData));
-
-    // Reset prevention after a short delay
+    // Hide loading overlay after a short delay
     setTimeout(() => {
-      this.preventThemeOverride.set(false);
+      this.showLoadingOverlay.set(false);
     }, 500);
   }
 
   /**
-   * Load template customizations from API
-   */
-  loadStoredCustomizations(): void {
-    // Check authentication first
-    if (!this.isAuthenticated()) {
-      console.log('User not authenticated, cannot load customizations');
-      return;
-    }
-
-    // Get template ID from route params or stored ID
-    const templateId =
-      this.route.snapshot.queryParams['templateId'] ||
-      this.currentUserTemplateId ||
-      sessionStorage.getItem('selectedTemplateId');
-
-    if (!templateId) {
-      console.log('No template ID found, cannot load customizations');
-      return;
-    }
-
-    this.showLoadingOverlay.set(true);
-    this.loadingOverlayClass.set('active');
-
-    // Load template from API
-    if (!this.userTemplateService) {
-      console.error('UserTemplateService not initialized');
-      this.showLoadingOverlay.set(false);
-      return;
-    }
-
-    this.userTemplateService.getUserTemplateById(templateId).subscribe({
-      next: (template) => {
-        if (template && template.config) {
-          console.log('Loaded user template from API:', template);
-
-          // Store the template ID for future updates
-          this.currentUserTemplateId = template.id;
-
-          // Parse the config string to get customizations
-          try {
-            const customizationsData = JSON.parse(template.config);
-
-            // Set business type based on template data
-            if (template.template?.templateType?.key) {
-              this.businessType.set(template.template.templateType.key);
-            }
-
-            // Apply the loaded customizations
-            this.applyCustomizations(customizationsData);
-
-            // Update last saved state to track changes
-            this.lastSavedState.set(structuredClone(customizationsData));
-            this.currentEditingState.set(structuredClone(customizationsData));
-          } catch (e) {
-            console.error('Error parsing template config:', e);
-            this.confirmationService.showConfirmation(
-              'Error parsing template configuration. Using default settings.',
-              'error',
-              5000
-            );
-          }
-
-          // Set appropriate flags for editing flow
-          this.hasStartedBuilding.set(true);
-          this.hasSavedChangesFlag.set(true);
-          this.currentStep.set(3); // Move to editing step
-
-          // Hide loading overlay
-          setTimeout(() => {
-            this.showLoadingOverlay.set(false);
-            this.loadingOverlayClass.set('');
-          }, 500);
-        } else {
-          console.warn('Template has no config:', template);
-          this.showLoadingOverlay.set(false);
-        }
-      },
-      error: (error) => {
-        console.error('Error loading template from API:', error);
-        this.confirmationService.showConfirmation(
-          'Failed to load template: ' + (error.message || 'Unknown error'),
-          'error',
-          5000
-        );
-        this.showLoadingOverlay.set(false);
-      },
-    });
-  }
-
-  /**
-   * Apply global CSS styles
+   * Apply global CSS styles from a template
    */
   applyGlobalStyles(cssContent: string): void {
     let styleTag = document.getElementById(
@@ -1080,140 +1221,441 @@ export class PreviewComponent implements OnInit, OnDestroy {
     styleTag.innerHTML = cssContent;
   }
 
-  // ======== COMPONENT CUSTOMIZATION HANDLERS ========
   /**
-   * Handler for selection coming from the child structure component
+   * Toggle between fullscreen and normal mode
    */
-  handleComponentSelection(selected: {
-    key: string;
-    name: string;
-    path?: string;
-  }): void {
-    // Key being emitted should be one of the keys in Customizations
-    this.selectedComponent.set({
-      key: selected.key as keyof Customizations,
-      name: selected.name,
-      path: selected.path,
-    });
-  }
+  toggleFullscreen(): void {
+    if (!this.isFullscreen()) {
+      // ENTERING FULLSCREEN
+      console.log('🔍 Entering fullscreen mode');
 
-  /**
-   * Handler for updates coming from the modal (using selectedCustomization)
-   */
-  handleComponentUpdate(update: any): void {
-    const selected = this.selectedComponent();
-    if (!selected) return;
+      // Store scroll position for later restoration
+      this.preFullscreenScrollPosition = window.scrollY;
 
-    console.log('Updating component:', selected, 'with data:', update);
+      // Update state
+      this.fullscreenState.set(true);
 
-    // If there's a path, update the nested data
-    if (selected.path) {
-      const pathParts = selected.path.split('.');
+      // UI adjustments
+      const mainHeader = document.querySelector('.header') as HTMLElement;
+      if (mainHeader) {
+        mainHeader.style.zIndex = '500';
+        document.body.style.overflow = 'hidden';
+      }
 
-      this.customizations.update((current) => {
-        // Create a deep copy to avoid mutating the original
-        const updated = structuredClone(current);
-
-        // Navigate to the parent object that contains the property to update
-        let target: any = updated;
-        for (let i = 0; i < pathParts.length - 1; i++) {
-          const part = pathParts[i];
-          // Create objects along the path if they don't exist
-          if (!target[part]) {
-            console.log(`Creating missing object at path part: ${part}`);
-            target[part] = {};
-          }
-          target = target[part];
-        }
-
-        // Update the property
-        const lastPart = pathParts[pathParts.length - 1];
-
-        // Use a merge approach to avoid overwriting existing properties
-        if (!target[lastPart]) {
-          console.log(
-            `Creating missing object at final path part: ${lastPart}`
-          );
-          target[lastPart] = {};
-        }
-
-        // Merge the update with the existing data
-        target[lastPart] = { ...target[lastPart], ...update };
-
-        console.log('Updated customizations at path:', selected.path);
-        console.log('Updated data:', target[lastPart]);
-
-        return updated;
-      });
+      // Add fullscreen class to body
+      document.body.classList.add('fullscreen-mode');
     } else {
-      // Original logic for top-level properties
-      this.customizations.update((current) => {
-        const updated = {
-          ...current,
-          [selected.key]: {
-            ...current[selected.key],
-            ...update,
-          },
-        };
-        console.log('Updated top-level customizations:', updated);
-        return updated;
+      // EXITING FULLSCREEN
+      console.log('🔍 Exiting fullscreen mode');
+
+      // Update state
+      this.fullscreenState.set(false);
+
+      // UI adjustments
+      const mainHeader = document.querySelector('.header') as HTMLElement;
+      if (mainHeader) {
+        mainHeader.style.zIndex = '1000';
+        document.body.style.overflow = '';
+      }
+
+      // Reset scroll positions
+      const previewWrapper = document.querySelector('.preview-wrapper');
+      if (previewWrapper) {
+        previewWrapper.scrollTop = 0;
+      }
+
+      // Restore main page scroll position
+      setTimeout(() => {
+        window.scrollTo({
+          top: this.preFullscreenScrollPosition,
+          behavior: 'auto',
+        });
+      }, 0);
+
+      // Remove fullscreen class from body
+      document.body.classList.remove('fullscreen-mode');
+    }
+  }
+
+  /**
+   * Handle fullscreen change events from browser
+   */
+  handleFullscreenChange = (): void => {
+    if (!document.fullscreenElement && this.isFullscreen()) {
+      // Browser exited fullscreen - update our state
+      this.fullscreenState.set(false);
+      const mainHeader = document.querySelector('.header') as HTMLElement;
+      if (mainHeader) {
+        mainHeader.style.zIndex = '1000';
+        document.body.style.overflow = '';
+      }
+      setTimeout(() => {
+        window.scrollTo({
+          top: this.preFullscreenScrollPosition,
+          behavior: 'auto',
+        });
+      }, 0);
+
+      // Remove fullscreen class from body
+      document.body.classList.remove('fullscreen-mode');
+    }
+  };
+
+  /**
+   * Update mobile view signal on window resize
+   */
+  updateIsMobile(): void {
+    const isNowMobile = window.innerWidth <= 768;
+    if (this.isMobileView() !== isNowMobile) {
+      this.isMobileView.set(isNowMobile);
+
+      // If switching to mobile, ensure we're in desktop view mode
+      // since editing is not allowed in mobile view
+      if (isNowMobile && this.viewMode() === 'view-mobile') {
+        this.viewMode.set('view-desktop');
+      }
+    }
+  }
+
+  /**
+   * Toggle between desktop and mobile view modes
+   */
+  toggleView(mode: 'view-desktop' | 'view-mobile'): void {
+    // If switching to mobile view, close any open component editor
+    if (mode === 'view-mobile' && this.selectedComponent()) {
+      this.selectedComponent.set(null);
+    }
+
+    this.viewMode.set(mode);
+  }
+
+  // ======== VIEWING & EDITING MODES ========
+  /**
+   * Called when loading overlay animation completes
+   */
+  onLoadingOverlayFinished(): void {
+    // Remove the overlay by setting the controlling signal to false
+    this.showLoadingOverlay.set(false);
+  }
+
+  /**
+   * Save all customizations to the API with improved error handling
+   */
+  saveAllChanges(): void {
+    if (!this.customizations()) {
+      this.confirmationService.showConfirmation(
+        'No customizations to save',
+        'error',
+        3000
+      );
+      return;
+    }
+
+    // Check if we have a business type - it's required for template creation/update
+    if (!this.businessType()) {
+      this.confirmationService.showConfirmation(
+        'Please select a business type before saving',
+        'warning',
+        3000
+      );
+      return;
+    }
+
+    console.log('Saving customizations to API');
+
+    // Show loading state
+    this.showLoadingOverlay.set(true);
+    this.loadingOverlayClass.set('active');
+
+    // Create a deep copy of customizations to modify before saving
+    const customizationsToSave = structuredClone(this.customizations());
+
+    // Remove any problematic data (like large data URLs)
+    this.sanitizeCustomizationsForStorage(customizationsToSave);
+
+    // Check if this is a new template (first save)
+    const isNewTemplate = !this.currentUserTemplateId();
+
+    // If this is a new template, we should prompt for a name
+    let templateName =
+      this.currentTemplateName() ||
+      `${this.businessTypeDisplayName() || 'My'} Website`;
+
+    if (isNewTemplate) {
+      // For simplicity, we'll use the browser's prompt
+      // In a production app, this would be a proper modal dialog
+      const suggestedName = templateName;
+      const userProvidedName = prompt(
+        'Enter a name for your template:',
+        suggestedName
+      );
+
+      // If user cancels, abort the save
+      if (userProvidedName === null) {
+        this.showLoadingOverlay.set(false);
+        return;
+      }
+
+      // Use user provided name if not empty, otherwise keep the original
+      templateName = userProvidedName?.trim() || templateName;
+
+      // Update the template name
+      this.currentTemplateName.set(templateName);
+
+      // Update consolidated state
+      this.templateState.update((state) => ({
+        ...state,
+        name: templateName,
+      }));
+    }
+
+    // Determine if we're creating or updating a template
+    const currentTemplateId = this.currentUserTemplateId();
+    const baseTemplateId = this.selectedBaseTemplateId();
+
+    console.log(
+      `Saving template with ${isNewTemplate ? 'creation' : 'update'} mode:`
+    );
+    console.log(`- Name: ${templateName}`);
+    console.log(`- Current ID: ${currentTemplateId || 'N/A'}`);
+    console.log(`- Base Template ID: ${baseTemplateId || 'N/A'}`);
+    console.log(`- Business Type: ${this.businessType()}`);
+
+    if (isNewTemplate && !baseTemplateId) {
+      this.confirmationService.showConfirmation(
+        'Unable to save: No base template ID available for creation',
+        'error',
+        3000
+      );
+      this.showLoadingOverlay.set(false);
+      return;
+    }
+
+    // Save to the API
+    this.userTemplateService
+      .saveUserTemplate(
+        baseTemplateId || '', // Use base template ID for creation
+        templateName,
+        customizationsToSave,
+        currentTemplateId || undefined // Use current ID for updates
+      )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (savedTemplate) => {
+          console.log('Template saved successfully:', savedTemplate);
+
+          // Update template ID and name in both approaches
+          this.currentUserTemplateId.set(savedTemplate.id);
+          this.currentTemplateName.set(savedTemplate.name);
+
+          // Update consolidated state
+          this.templateState.update((state) => ({
+            ...state,
+            id: savedTemplate.id,
+            name: savedTemplate.name,
+          }));
+
+          // Update state flags
+          this.hasStartedBuilding.set(true);
+          this.hasSavedChangesFlag.set(true);
+
+          // Update last saved state for change tracking
+          this.lastSavedState.set(structuredClone(this.customizations()));
+          this.currentEditingState.set(structuredClone(this.customizations()));
+
+          // Update progress step
+          this.currentStep.set(4);
+
+          // Update URL to include the template ID without refreshing
+          this.updateUrlParams({
+            templateId: savedTemplate.id,
+            mode: 'edit',
+          });
+
+          // Hide loading state
+          this.showLoadingOverlay.set(false);
+
+          // Show success message
+          this.confirmationService.showConfirmation(
+            `Your website ${
+              isNewTemplate ? 'has been created' : 'changes have been saved'
+            } successfully!`,
+            'success',
+            3000
+          );
+
+          // Exit fullscreen mode if active
+          if (this.isFullscreen()) {
+            this.toggleFullscreen();
+          }
+        },
+        error: (error) => {
+          console.error('Error saving template:', error);
+
+          // Hide loading state
+          this.showLoadingOverlay.set(false);
+
+          // Show error message
+          this.confirmationService.showConfirmation(
+            'Failed to save your website: ' +
+              (error.message || 'Unknown error'),
+            'error',
+            5000
+          );
+        },
       });
-    }
-
-    // Update currentEditingState with latest changes
-    // but don't save to sessionStorage until explicit save
-    this.currentEditingState.set(structuredClone(this.customizations()));
   }
 
   /**
-   * Update font selection
+   * Reset customizations to their last saved state or defaults
    */
-  handleFontUpdate(font: FontOption): void {
-    this.selectedFont.set(font);
-    this.customizations.update((current) => ({
-      ...current,
-      fontConfig: {
-        fontId: font.id,
-        family: font.family,
-        fallback: font.fallback,
-      },
-    }));
+  resetCustomizations(): void {
+    // Ask for confirmation first
+    if (!confirm('Are you sure you want to reset all changes?')) {
+      return;
+    }
 
-    // Update currentEditingState with font changes
-    this.currentEditingState.set(structuredClone(this.customizations()));
+    // Show loading state
+    this.showLoadingOverlay.set(true);
+    this.loadingOverlayClass.set('active');
+
+    // Check if we have a saved template ID
+    const templateId = this.currentUserTemplateId();
+    if (templateId) {
+      console.log(`Resetting to saved template with ID ${templateId}`);
+
+      // Reload the template from the API
+      this.userTemplateService
+        .getUserTemplateById(templateId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (template) => {
+            if (!template) {
+              this.handleResetError('Template not found');
+              return;
+            }
+
+            if (template.config) {
+              try {
+                // Safely parse the config string
+                const configStr = template.config.trim();
+                let savedCustomizations;
+
+                // Make sure it's a valid JSON string before parsing
+                if (configStr.startsWith('{') && configStr.endsWith('}')) {
+                  savedCustomizations = JSON.parse(configStr);
+                } else {
+                  throw new Error('Invalid config format');
+                }
+
+                console.log('Successfully parsed saved template config');
+
+                // Apply the saved configuration
+                this.customizations.set(savedCustomizations);
+
+                // Update font if available
+                if (savedCustomizations.fontConfig) {
+                  const fontConfig = savedCustomizations.fontConfig;
+                  this.selectedFont.set({
+                    id: fontConfig.fontId,
+                    family: fontConfig.family,
+                    fallback: fontConfig.fallback,
+                  });
+                }
+
+                // Update tracking state
+                this.lastSavedState.set(structuredClone(savedCustomizations));
+                this.currentEditingState.set(
+                  structuredClone(savedCustomizations)
+                );
+
+                // Remove component selection
+                this.selectedComponent.set(null);
+
+                // Hide loading
+                this.showLoadingOverlay.set(false);
+
+                // Show confirmation
+                this.confirmationService.showConfirmation(
+                  'Customizations have been reset to the last saved version',
+                  'success',
+                  3000
+                );
+              } catch (error: any) {
+                this.handleResetError(
+                  `Error parsing saved template config: ${
+                    error.message || 'Unknown error'
+                  }`
+                );
+              }
+            } else {
+              this.handleResetError('No saved configuration found');
+            }
+          },
+          error: (error) => {
+            this.handleResetError(
+              `Error loading saved template: ${
+                error.message || 'Unknown error'
+              }`
+            );
+          },
+        });
+    } else {
+      // No saved template - reset to default customizations
+      console.log('No saved template ID found, resetting to defaults');
+      this.initializeDefaultCustomizations();
+      this.selectedComponent.set(null);
+      this.showLoadingOverlay.set(false);
+
+      this.confirmationService.showConfirmation(
+        'Customizations have been reset to defaults',
+        'info',
+        3000
+      );
+    }
   }
 
-  // ======== PLAN SELECTION ========
   /**
-   * Select a plan (standard or premium)
-   * @param plan The plan type to select
+   * Handle errors during reset operation
    */
-  selectPlan(plan: 'standard' | 'premium'): void {
-    this.currentPlan.set(plan);
+  private handleResetError(message: string): void {
+    console.error(message);
+    this.showLoadingOverlay.set(false);
 
-    // If user changes plan after starting, we need to update the theme
-    if (this.hasStartedBuilding()) {
-      this.loadTheme(this.defaultThemeId());
-    }
+    // Show error message
+    this.confirmationService.showConfirmation(message, 'error', 3000);
 
-    // Update current step if we're just starting
-    if (this.currentStep() === 1) {
-      this.currentStep.set(2);
-    }
-
-    // Update URL to reflect plan change
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { plan },
-      queryParamsHandling: 'merge',
-    });
+    // Fallback to default customizations
+    this.initializeDefaultCustomizations();
+    this.selectedComponent.set(null);
   }
 
-  upgradeNow(): void {
-    this.selectPlan('premium');
+  /**
+   * Helper method to sanitize customizations for API storage
+   * Removes large data URLs and other problematic data
+   */
+  private sanitizeCustomizationsForStorage(
+    customizations: Customizations
+  ): void {
+    // Handle video data in hero sections
+    if (customizations.pages?.home?.hero1?.backgroundVideo) {
+      const videoSrc = customizations.pages?.home.hero1.backgroundVideo;
+
+      // If it's a data URL (usually very large), replace with a flag
+      if (typeof videoSrc === 'string' && videoSrc.startsWith('data:video')) {
+        console.log('Removing large video data URL before API storage');
+        // Mark with a placeholder
+        (customizations.pages?.home.hero1 as any)._videoPlaceholder =
+          'VIDEO_DATA_PLACEHOLDER';
+        delete customizations.pages?.home.hero1.backgroundVideo;
+      }
+    }
+
+    // Process other large images if needed
+    // This would involve uploading them through the attachment API
+    // and replacing the data URLs with references to the uploaded files
   }
 
-  // ======== CHECKOUT PROCESS ========
   /**
    * Check if user has saved changes
    */
@@ -1222,24 +1664,59 @@ export class PreviewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Proceed to checkout after saving website changes
+   * Select a plan (standard or premium) with improved state handling
    */
-  proceedToCheckout(): void {
-    // Check if user is authenticated
-    if (!this.isAuthenticated()) {
-      this.confirmationService.showConfirmation(
-        'Please log in or sign up to publish your website.',
-        'info',
-        4000
-      );
-      this.router.navigate(['/auth/login'], {
-        queryParams: { returnUrl: this.router.url },
-      });
-      return;
+  selectPlan(plan: 'standard' | 'premium'): void {
+    // Update both individual signal and consolidated state
+    this.currentPlan.set(plan);
+
+    // Update consolidated state
+    this.templateState.update((state) => ({
+      ...state,
+      plan: plan,
+    }));
+
+    // If user changes plan after starting, we need to update the theme
+    if (this.hasStartedBuilding()) {
+      // Reset base template ID since plan changed
+      this.selectedBaseTemplateId.set(null);
+
+      // Update consolidated state
+      this.templateState.update((state) => ({
+        ...state,
+        baseId: null,
+      }));
+
+      // Load new themes for the business type with new plan
+      const currentBusinessType = this.businessType();
+      if (currentBusinessType) {
+        this.loadThemesForBusinessType(currentBusinessType);
+      }
     }
 
-    // Check if we have a currentUserTemplateId
-    if (!this.currentUserTemplateId) {
+    // Update current step if we're just starting
+    if (this.currentStep() === 1) {
+      this.currentStep.set(2);
+    }
+
+    // Update URL to reflect plan change
+    this.updateUrlParams({ plan });
+  }
+
+  /**
+   * Upgrade from standard to premium plan
+   */
+  upgradeNow(): void {
+    this.selectPlan('premium');
+  }
+
+  /**
+   * Proceed to checkout after saving website changes
+   * This creates a build and publishes the website
+   */
+  proceedToCheckout(): void {
+    // Ensure we have a currentUserTemplateId
+    if (!this.currentUserTemplateId()) {
       // Try to save first
       this.confirmationService.showConfirmation(
         'Please save your changes before publishing.',
@@ -1262,29 +1739,16 @@ export class PreviewComponent implements OnInit, OnDestroy {
       premium: 'ADVANCED',
     };
 
-    // We need to update this mapping once backend is updated
+    // Map to backend subscription type
     const subscriptionType = planMapping[this.currentPlan()];
-
-    if (!this.subscriptionService) {
-      console.error('SubscriptionService not initialized');
-      return;
-    }
 
     this.subscriptionService
       .getDefaultSubscription(subscriptionType)
       .pipe(
         switchMap((subscription) => {
-          // Now we have the subscription, let's create and publish the build
-          if (!this.userBuildService) {
-            throw new Error('UserBuildService not initialized');
-          }
-
-          if (!this.currentUserTemplateId) {
-            throw new Error('No user template ID found');
-          }
-
+          // Now create and publish the build
           return this.userBuildService.buildAndPublishTemplate(
-            this.currentUserTemplateId,
+            this.currentUserTemplateId()!,
             subscription.id
           );
         })
@@ -1293,17 +1757,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
         next: (build) => {
           console.log('Build completed successfully:', build);
 
-          // Set flag for completed checkout
-          sessionStorage.setItem('hasCompletedCheckout', 'true');
-
           // Update step to 4 (final step)
           this.currentStep.set(4);
 
-          // Store the published URL
+          // Show success message with the URL if available
           if (build.address?.address) {
-            sessionStorage.setItem('publishedUrl', build.address.address);
-
-            // Show success message with the URL
             this.confirmationService.showConfirmation(
               `Your website has been successfully published! You can view it at ${build.address.address}`,
               'success',
@@ -1333,427 +1791,224 @@ export class PreviewComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ======== SAVE & RESET ACTIONS ========
-  /**
-   * Save customizations
-   * For authenticated users - save to backend
-   */
-  saveAllChanges(): void {
-    console.log('Saving customizations:', this.customizations());
+  // Add this property at the beginning of the class, after the state signals
 
-    if (this.isAuthenticated()) {
-      // Use the userTemplateService to save to backend
-      const templateId = sessionStorage.getItem('selectedTemplateId') || '1'; // Default to template ID 1 if not set
-      const templateName = 'My Webcraft Website'; // TODO: Get from user input
-
-      if (!this.userTemplateService) {
-        console.error('UserTemplateService not initialized');
-        return;
-      }
-
-      // Create a deep copy of customizations to modify before saving
-      const customizationsToSave = structuredClone(this.customizations());
-
-      // Clean up video data which might exceed API limits
-      this.sanitizeCustomizationsForStorage(customizationsToSave);
-
-      this.userTemplateService
-        .saveUserTemplate(
-          templateId,
-          templateName,
-          customizationsToSave,
-          this.currentUserTemplateId
-        )
-        .subscribe({
-          next: (savedTemplate) => {
-            console.log(
-              'Template saved successfully to backend:',
-              savedTemplate
-            );
-
-            // Store the user template ID for future updates
-            this.currentUserTemplateId = savedTemplate.id;
-
-            // Set flags to indicate successful save
-            this.hasStartedBuilding.set(true);
-            this.hasSavedChangesFlag.set(true);
-
-            // Update progress step
-            this.currentStep.set(4);
-
-            // Update lastSavedState to track what was saved
-            this.lastSavedState.set(structuredClone(this.customizations()));
-            this.currentEditingState.set(
-              structuredClone(this.customizations())
-            );
-
-            // Show confirmation message
-            this.confirmationService.showConfirmation(
-              'Your website changes have been saved successfully!',
-              'success',
-              4000
-            );
-
-            // Exit fullscreen mode if needed
-            if (this.isFullscreen()) {
-              this.toggleFullscreen();
-            }
-          },
-          error: (error) => {
-            console.error('Error saving template to backend:', error);
-            this.confirmationService.showConfirmation(
-              'Failed to save your website: ' +
-                (error.message || 'Unknown error'),
-              'error',
-              5000
-            );
-          },
-        });
-    } else {
-      // For unauthenticated users, redirect to login
-      this.confirmationService.showConfirmation(
-        'Please log in or sign up to save your website.',
-        'info',
-        4000
-      );
-      this.router.navigate(['/auth/login'], {
-        queryParams: { returnUrl: this.router.url },
-      });
-    }
-
-    // Exit fullscreen mode
-    if (this.isFullscreen()) {
-      this.toggleFullscreen();
-    }
-  }
+  // Local reference to business types for display names
+  private businessTypes = BUSINESS_TYPES;
 
   /**
-   * Helper method to sanitize customizations for API storage
-   * Removes large data URLs and other problematic data
-   */
-  private sanitizeCustomizationsForStorage(
-    customizations: Customizations
-  ): void {
-    // Handle video data in hero sections
-    if (customizations.pages?.home?.hero1?.backgroundVideo) {
-      const videoSrc = customizations.pages.home.hero1.backgroundVideo;
-
-      // If it's a data URL (usually very large), replace with a flag
-      if (typeof videoSrc === 'string' && videoSrc.startsWith('data:video')) {
-        console.log('Removing large video data URL before API storage');
-        // Mark with a placeholder
-        (customizations.pages.home.hero1 as any)._videoPlaceholder =
-          'VIDEO_DATA_PLACEHOLDER';
-        delete customizations.pages.home.hero1.backgroundVideo;
-      }
-    }
-
-    // TODO: Process other large images if needed
-    // This would involve uploading them through the attachment API
-    // and replacing the data URLs with references to the uploaded files
-  }
-
-  /**
-   * Reset customizations and clear selected component
-   */
-  resetCustomizations(): void {
-    if (confirm('Are you sure you want to reset all changes?')) {
-      // TODO: For authenticated users, prompt if they want to reset to one of their saved templates
-
-      // Remove all stored customizations
-      sessionStorage.removeItem('currentCustomizations');
-      sessionStorage.removeItem('savedCustomizations');
-      sessionStorage.removeItem('hasCompletedCheckout');
-
-      // Reset hasStartedBuilding flag
-      sessionStorage.removeItem('hasStartedBuilding');
-      this.hasStartedBuilding.set(false);
-      this.hasSavedChangesFlag.set(false);
-
-      // remove loading overlay
-      this.showLoadingOverlay.set(false);
-      this.loadingOverlayClass.set('');
-
-      // Reset progress step
-      this.currentStep.set(2);
-      this.showBusinessTypeSelector.set(true);
-      this.businessType.set('');
-
-      // Reset in-memory states
-      this.lastSavedState.set(null);
-      this.currentEditingState.set(null);
-
-      // Reset to default theme
-      this.loadTheme(this.defaultThemeId());
-      this.selectedComponent.set(null);
-
-      // Exit fullscreen mode
-      if (this.isFullscreen()) {
-        this.toggleFullscreen();
-      }
-
-      // Remove 'businessType' from the URL without triggering navigation
-      const currentParams = { ...this.route.snapshot.queryParams };
-      if (currentParams['businessType']) {
-        delete currentParams['businessType'];
-        const baseUrl = this.router.url.split('?')[0];
-        const newQueryString = new URLSearchParams(currentParams).toString();
-        this.location.replaceState(baseUrl, newQueryString);
-      }
-
-      // Show confirmation message
-      this.confirmationService.showConfirmation(
-        'All customizations have been reset',
-        'info',
-        3000
-      );
-    }
-  }
-
-  /**
-   * Ensure the customization object has all the required nested objects
-   * This prevents "undefined" errors when accessing deeply nested properties
+   * Ensures all required customization structure objects exist
+   * Creates any missing paths in the customization object
    */
   private ensureCompleteCustomizationStructure(): void {
     this.customizations.update((current) => {
-      // Use the business config service to ensure all required objects exist
-      return this.businessConfigService.ensureCompleteCustomizationStructure(
-        current,
-        this.businessType(),
-        this.currentPlan()
-      );
+      const updated = structuredClone(current || {});
+
+      // Ensure pages structure exists
+      if (!updated.pages) {
+        updated.pages = {};
+      }
+
+      // Ensure home page structure exists
+      if (!updated.pages.home) {
+        updated.pages.home = {};
+      }
+
+      // Ensure key sections exist
+      if (!updated.pages.home.hero1) {
+        updated.pages.home.hero1 = {
+          backgroundImage: 'assets/standard-hero1/background-image1.jpg',
+          title: 'Grow Your Business With Us',
+          subtitle: 'Professional solutions tailored to your business needs',
+          layout: 'center',
+          showLogo: true,
+          titleColor: '#ffffff',
+          subtitleColor: '#f0f0f0',
+          textShadow: 'medium',
+        };
+      }
+
+      if (!updated.pages.home.about) {
+        updated.pages.home.about = {
+          title: 'About Us',
+          subtitle: 'Our Story',
+          storyTitle: 'Our Story',
+          storyText:
+            'We are dedicated to providing exceptional service and quality.',
+          missionTitle: 'Our Mission',
+          missionText:
+            'Our mission is to provide high-quality services that exceed expectations.',
+          imageUrl: 'assets/standard-hero1/background-image1.jpg',
+          backgroundColor: '#ffffff',
+          textColor: '#333333',
+        };
+      }
+
+      // Ensure other required structures
+      if (!updated.header) {
+        updated.header = {
+          backgroundColor: '#161b33',
+          textColor: '#f5f5f5',
+          logoUrl: '',
+          menuItems: [
+            { id: 1, label: 'Home', link: '/' },
+            { id: 2, label: 'About', link: '/about' },
+            { id: 3, label: 'Contact', link: '/contact' },
+          ],
+        };
+      }
+
+      if (!updated.footer) {
+        updated.footer = {
+          backgroundColor: '#1a1a1a',
+          textColor: '#ffffff',
+          copyrightText: '© 2025 Your Company',
+          logoUrl: '',
+          tagline: '',
+          address: '',
+          phone: '',
+          email: '',
+          showSocialLinks: true,
+          menuItems: [],
+          socialUrls: {},
+          socialLinks: [],
+        };
+      }
+
+      return updated;
     });
   }
 
-  private generateDefaultTheme(businessType: string, planType: string): any {
-    return {
-      id: 1,
-      name: 'Default theme',
-      cssContent: '',
-      businessType: businessType,
-      customizations: this.businessConfigService.generateDefaultCustomizations(
-        businessType,
-        planType as 'standard' | 'premium'
-      ),
-    };
-  }
-
-  private applyTheme(theme: ThemeData): void {
-    // Process customizations
-    if (theme.customizations) {
-      // Update global customizations signal
-      this.customizations.set(theme.customizations);
-    }
-
-    console.log('Applied theme:', theme.name);
+  /**
+   * Handle component selection from the structure components
+   */
+  handleComponentSelection(component: {
+    key: string;
+    name: string;
+    path?: string;
+  }): void {
+    console.log('Component selected for editing:', component);
+    this.selectedComponent.set(component);
   }
 
   /**
-   * Initialize menu items based on business type
+   * Handle component updates from the customizer
    */
-  private initializeMenuItemsByBusinessType(): Array<{
-    id: number;
-    label: string;
-    link: string;
-  }> {
-    return this.businessConfigService.getMenuItemsForBusinessType(
-      this.businessType(),
-      this.currentPlan()
-    );
-  }
+  handleComponentUpdate(update: {
+    key: string;
+    data: any;
+    path?: string;
+  }): void {
+    console.log('Updating component with new data:', update);
 
-  // In class definition after isSaving signal
-  currentUserTemplateId: string | undefined;
+    this.customizations.update((current) => {
+      if (!current) return current;
 
-  // Fix: Convert from property to signal
-  currentScreenSize = signal<ScreenSize>(ScreenSize.DESKTOP);
+      const updated = structuredClone(current);
 
-  // ======== FULLSCREEN & VIEW MODE MANAGEMENT ========
-  /**
-   * Handle fullscreen change events from browser
-   */
-  handleFullscreenChange = (): void => {
-    if (!document.fullscreenElement && this.isFullscreen()) {
-      this.fullscreenState.set(false);
-      const mainHeader = document.querySelector('.header') as HTMLElement;
-      if (mainHeader) {
-        mainHeader.style.zIndex = '1000';
-        document.body.style.overflow = '';
-      }
-      setTimeout(() => {
-        window.scrollTo({
-          top: this.preFullscreenScrollPosition,
-          behavior: 'auto',
-        });
-      }, 0);
-    }
-    if (this.isFullscreen()) {
-      document.body.classList.add('fullscreen-mode');
-    } else {
-      document.body.classList.remove('fullscreen-mode');
-    }
-  };
+      // If there's a path, update the nested structure
+      if (update.path) {
+        const pathParts = update.path.split('.');
+        let target = updated as any;
 
-  /**
-   * Toggle between fullscreen and normal mode
-   */
-  toggleFullscreen(): void {
-    if (!this.isFullscreen()) {
-      // ENTERING FULLSCREEN
-      console.log('🔍 Entering fullscreen mode');
+        // Navigate to the parent object
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          if (!target[pathParts[i]]) {
+            target[pathParts[i]] = {};
+          }
+          target = target[pathParts[i]];
+        }
 
-      // Store scroll position for later restoration
-      this.preFullscreenScrollPosition = window.scrollY;
-
-      // Update state
-      this.fullscreenState.set(true);
-
-      // UI adjustments
-      const mainHeader = document.querySelector('.header') as HTMLElement;
-      if (mainHeader) {
-        mainHeader.style.zIndex = '500';
-        document.body.style.overflow = 'hidden';
-      }
-    } else {
-      // EXITING FULLSCREEN
-      console.log('🔍 Exiting fullscreen mode');
-
-      // Check if we're in view mode or edit mode
-      if (this.isViewOnlyStateService.isOnlyViewMode()) {
-        // In view-only mode, just exit fullscreen without state changes
-        console.log('🔍 Exiting view-only mode - no state changes');
+        // Update the final property
+        const lastPart = pathParts[pathParts.length - 1];
+        target[lastPart] = update.data;
       } else {
-        // In edit mode, we may need to refresh the UI
-        console.log('🔍 Exiting edit mode');
-        // No need to revert to saved customizations as we're using API now
+        // Otherwise update the top-level property using a type assertion
+        // Since we're using string keys, we need to assert the type
+        (updated as any)[update.key] = update.data;
       }
 
-      // Update state
-      this.fullscreenState.set(false);
+      // Update the current editing state
+      this.currentEditingState.set(structuredClone(updated));
 
-      // UI adjustments
-      const mainHeader = document.querySelector('.header') as HTMLElement;
-      if (mainHeader) {
-        mainHeader.style.zIndex = '1000';
-        document.body.style.overflow = '';
-      }
-
-      // Reset scroll positions
-      const previewWrapper = document.querySelector('.preview-wrapper');
-      if (previewWrapper) {
-        previewWrapper.scrollTop = 0;
-      }
-
-      // Restore main page scroll position
-      if (!this.showBusinessTypeSelector())
-        setTimeout(() => {
-          window.scrollTo({
-            top: this.preFullscreenScrollPosition,
-            behavior: 'auto',
-          });
-        }, 0);
-    }
-  }
-
-  /**
-   * Ensure view mode is valid for current screen size
-   */
-  ensureValidViewMode(): void {
-    if (!this.isMobileView() && this.viewMode() === 'view-mobile') {
-      this.viewMode.set('view-desktop');
-    }
-  }
-
-  /**
-   * Update mobile view signal on window resize
-   */
-  updateIsMobile(): void {
-    const isNowMobile = window.innerWidth <= 768;
-    if (this.isMobileView() !== isNowMobile) {
-      this.isMobileView.set(isNowMobile);
-      this.ensureValidViewMode();
-    }
-  }
-
-  /**
-   * Toggle between desktop and mobile view modes
-   */
-  toggleView(mode: 'view-desktop' | 'view-mobile'): void {
-    this.viewMode.set(mode);
-  }
-
-  // ======== VIEWING & EDITING MODES ========
-  /**
-   * Enter view-only mode without editing controls
-   */
-  openViewOnly(): void {
-    // Set view mode flag
-    this.isViewOnlyStateService.setIsOnlyViewMode(true);
-
-    // Then enter fullscreen to show the view
-    if (!this.isFullscreen()) {
-      this.toggleFullscreen();
-    }
-  }
-
-  /**
-   * Exit view-only mode and switch to edit mode
-   * Enhanced to ensure complete state transition
-   */
-  exitViewOnly(): void {
-    console.log('🔍 Exiting view-only mode');
-
-    // Show loading overlay for visual feedback
-    this.showLoadingOverlay.set(true);
-    this.loadingOverlayClass.set('transition-overlay');
-
-    // Reset view-only state
-    this.isViewOnlyStateService.setIsOnlyViewMode(false);
-
-    // Ensure we're in desktop view for editing
-    if (this.currentScreenSize() !== ScreenSize.DESKTOP) {
-      this.currentScreenSize.set(ScreenSize.DESKTOP);
-    }
-
-    // If we're in fullscreen, update URL params without full navigation
-    if (this.isFullscreen()) {
-      this.updateUrlParams({ viewOnly: 'false', mode: 'edit' });
-    }
-
-    // Hide loading overlay after a short delay
-    setTimeout(() => {
-      this.showLoadingOverlay.set(false);
-
-      // Consider the user has just arrived at step 2 in the building process
-      this.currentStep.set(2);
-
-      // If user came from view-only with business type selected,
-      // ensure the app knows we're editing with a type
-      if (this.businessType()) {
-        console.log('Business type already selected:', this.businessType());
-      }
-    }, 800);
-  }
-
-  /**
-   * Helper method to update URL parameters without navigation
-   */
-  private updateUrlParams(params: { [key: string]: string }): void {
-    // Get current params
-    const urlTree = this.router.createUrlTree([], {
-      queryParams: params,
-      queryParamsHandling: 'merge',
+      return updated;
     });
-
-    // Update URL without navigation
-    this.location.go(urlTree.toString());
   }
 
   /**
-   * Called when loading overlay animation completes
+   * Apply a theme/font update
    */
-  onLoadingOverlayFinished(): void {
-    // Remove the overlay by setting the controlling signal to false
-    this.showLoadingOverlay.set(false);
+  loadTheme(theme: any): void {
+    console.log('Loading theme:', theme);
+
+    // Store the base template ID
+    if (theme.id) {
+      this.selectedBaseTemplateId.set(theme.id);
+      this.loadBaseTemplate(theme.id);
+    }
   }
+
+  /**
+   * Handle font selection
+   */
+  handleFontUpdate(font: FontOption): void {
+    console.log('Updating font to:', font);
+
+    this.selectedFont.set(font);
+
+    // Update the customizations with the new font
+    this.customizations.update((current) => {
+      if (!current) return current;
+
+      const updated = structuredClone(current);
+      if (!updated.fontConfig) {
+        updated.fontConfig = {
+          fontId: font.id,
+          family: font.family,
+          fallback: font.fallback || 'sans-serif',
+        };
+      } else {
+        updated.fontConfig.fontId = font.id;
+        updated.fontConfig.family = font.family;
+        updated.fontConfig.fallback = font.fallback || 'sans-serif';
+      }
+
+      return updated;
+    });
+  }
+
+  // Consolidated template state
+  templateState = signal<TemplateState>({
+    id: null,
+    name: 'Untitled Template',
+    baseId: null,
+    businessType: '',
+    businessTypeName: '',
+    plan: 'standard',
+  });
+
+  // Effect to keep consolidated state in sync with individual signals
+  private setupTemplateStateSync = effect(
+    () => {
+      this.templateState.set({
+        id: this.currentUserTemplateId(),
+        name: this.currentTemplateName() || 'Untitled Template',
+        baseId: this.selectedBaseTemplateId(),
+        businessType: this.businessType(),
+        businessTypeName: this.businessTypeDisplayName(),
+        plan: this.currentPlan(),
+      });
+    },
+    { allowSignalWrites: true }
+  );
+}
+
+// Define a structured interface for template state management
+interface TemplateState {
+  id: string | null;
+  name: string;
+  baseId: string | null;
+  businessType: string;
+  businessTypeName: string;
+  plan: 'standard' | 'premium';
 }

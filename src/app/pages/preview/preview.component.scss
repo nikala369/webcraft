@@ -305,6 +305,31 @@ $z-layers: (
       display: flex;
       align-items: center;
     }
+
+    .template-info {
+      display: flex;
+      flex-direction: column;
+      padding: 0 15px;
+
+      .template-name,
+      .business-type {
+        font-size: 14px;
+        margin: 0 0 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+
+        strong {
+          margin-right: 5px;
+          color: #9e6aff; // Premium-like color for emphasis
+        }
+      }
+
+      .template-name {
+        font-weight: 500;
+      }
+    }
   }
 
   // Main Preview Area

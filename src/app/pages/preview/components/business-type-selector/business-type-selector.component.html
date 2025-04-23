@@ -2,6 +2,7 @@
   class="business-type-selector"
   [class.compact-mode]="compactMode"
   [class.loading]="loading"
+  [class.disabled]="isDisabled"
 >
   <!-- Loading Overlay -->
   <div class="loading-overlay" [class.visible]="loading">
@@ -38,6 +39,7 @@
         *ngFor="let type of businessTypes"
         class="business-type-card"
         [class.selected]="isSelected(type.id)"
+        [class.disabled]="isDisabled"
         (click)="selectBusinessType(type.id)"
         [style.border-color]="isSelected(type.id) ? accentColor : ''"
       >
@@ -115,6 +117,7 @@
         class="selected-type"
         (click)="toggleDropdown()"
         [class.open]="dropdownOpen"
+        [class.disabled]="isDisabled"
       >
         <div class="business-type-icon">
           <!-- Restaurant icon -->
@@ -205,8 +208,8 @@
         </div>
       </div>
 
-      <!-- Dropdown for compact mode - Update to never show loading state -->
-      <div class="business-types-dropdown" *ngIf="dropdownOpen">
+      <!-- Dropdown for compact mode -->
+      <div class="business-types-dropdown" *ngIf="dropdownOpen && !isDisabled">
         <div
           *ngFor="let type of businessTypes"
           class="dropdown-item"

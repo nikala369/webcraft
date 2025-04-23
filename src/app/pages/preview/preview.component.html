@@ -66,7 +66,9 @@
     >
       <!-- Theme Selector -->
       <app-theme-switcher
-        *ngIf="!isViewOnlyStateService.isOnlyViewMode()"
+        *ngIf="
+          !isViewOnlyStateService.isOnlyViewMode() && !currentUserTemplateId()
+        "
         class="preview-header__left"
         (themeChange)="loadTheme($event)"
         [defaultThemeId]="defaultThemeId()"
@@ -76,9 +78,26 @@
       >
       </app-theme-switcher>
 
-      <!-- Business Type Selector (Always shown in fullscreen edit mode) -->
+      <!-- Template Info (Display when editing existing template) -->
+      <div
+        *ngIf="
+          currentUserTemplateId() && !isViewOnlyStateService.isOnlyViewMode()
+        "
+        class="preview-header__left template-info"
+      >
+        <div class="template-name">
+          <strong>Template:</strong> {{ currentTemplateName() }}
+        </div>
+        <div class="business-type">
+          <strong>Business:</strong> {{ businessTypeDisplayName() }}
+        </div>
+      </div>
+
+      <!-- Business Type Selector (Only shown when creating new template) -->
       <app-business-type-selector
-        *ngIf="!isViewOnlyStateService.isOnlyViewMode()"
+        *ngIf="
+          !isViewOnlyStateService.isOnlyViewMode() && !currentUserTemplateId()
+        "
         class="preview-header__center-left"
         [currentPlan]="currentPlan()"
         [selectedBusinessType]="businessType()"
