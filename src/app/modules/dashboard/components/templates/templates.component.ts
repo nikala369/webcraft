@@ -97,24 +97,37 @@ export class TemplatesComponent implements OnInit {
    * Navigate to the template editing page
    */
   editTemplate(template: UserTemplate): void {
+    // Show loading before navigation
+    this.loading = true;
+
+    // Navigate to the template editing page
     this.router.navigate(['/preview'], {
       queryParams: {
         templateId: template.id,
         mode: 'edit',
+        step: '4', // Explicitly set the step to 4 for editing
       },
     });
+
+    // Note: We don't set loading = false here because we're navigating away
   }
 
   /**
    * Navigate to the template view page
    */
   viewTemplate(template: UserTemplate): void {
+    // Show loading before navigation
+    this.loading = true;
+
     this.router.navigate(['/preview'], {
       queryParams: {
         templateId: template.id,
         mode: 'view',
+        step: '3', // View mode is step 3
       },
     });
+
+    // Note: We don't set loading = false here because we're navigating away
   }
 
   /**

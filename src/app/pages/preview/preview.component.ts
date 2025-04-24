@@ -456,6 +456,9 @@ export class PreviewComponent implements OnInit, OnDestroy {
         plan: plan as 'standard' | 'premium',
       }));
 
+      // Set step from URL if provided, otherwise it will be calculated based on context
+      const urlStep = params['step'] ? parseInt(params['step'], 10) : null;
+
       // Handle business type from params
       const urlBusinessType = params['businessType'];
       if (urlBusinessType) {
@@ -493,16 +496,24 @@ export class PreviewComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // Set steps based on operation mode
       if (templateId) {
-        // Edit or view existing template mode
+        // Edit or view existing template mode - should be on step 3 or 4
         console.log(`Loading template ${templateId} in ${mode} mode`);
+        // If step isn't explicitly provided, set to editing step (3) or completed step (4)
+        if (!urlStep) {
+          this.currentStep.set(params['mode'] === 'view' ? 3 : 4);
+        } else {
+          this.currentStep.set(urlStep);
+        }
         this.loadExistingTemplate(templateId, mode);
       } else if (newTemplate) {
-        // New template creation mode
+        // New template creation mode - should be on step 3
         console.log(
           'Creating new template with business type:',
           urlBusinessType
         );
+        this.currentStep.set(urlStep || 3); // Default to step 3 if not specified
         this.initializeNewTemplate(urlBusinessType);
       } else if (urlBusinessType) {
         // Just a business type selection but no template action yet
@@ -510,16 +521,21 @@ export class PreviewComponent implements OnInit, OnDestroy {
         console.log('Business type selected but no template action specified');
         this.loadThemesForBusinessType(urlBusinessType);
         this.hasStartedBuilding.set(true);
-        this.currentStep.set(3); // Business type selection + plan are done
+        this.currentStep.set(urlStep || 3); // Business type selection + plan are done
         this.showLoadingOverlay.set(false);
       } else {
         // No template ID, creation flag, or business type - show business type selector
         console.log(
           'No template parameters found, showing business type selector'
         );
-        this.currentStep.set(2); // Business type selection step
+        this.currentStep.set(urlStep || 2); // Business type selection step
         this.showBusinessTypeSelector.set(true);
         this.showLoadingOverlay.set(false);
+      }
+
+      // Update URL with current step if not already there
+      if (this.currentStep() && !urlStep) {
+        this.updateUrlParams({ step: this.currentStep().toString() });
       }
     });
   }
@@ -743,10 +759,16 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
       // Set to customization step
       this.currentStep.set(3);
+
+      // Update URL with step
+      this.updateUrlParams({ step: '3' });
     } else {
       // Show business type selector since no type is provided
       this.showBusinessTypeSelector.set(true);
       this.currentStep.set(2);
+
+      // Update URL with step
+      this.updateUrlParams({ step: '2' });
     }
 
     // Initialize customizations with defaults - will use business type if set
@@ -1082,7 +1104,10 @@ export class PreviewComponent implements OnInit, OnDestroy {
       this.loadThemesForBusinessType(type);
 
       // Update URL to reflect business type (without navigation)
-      this.updateUrlParams({ businessType: type });
+      this.updateUrlParams({
+        businessType: type,
+        step: '3', // Update step to 3 when business type is selected
+      });
 
       // Initialize with default customizations for this business type
       this.initializeDefaultCustomizations();
@@ -1222,18 +1247,26 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.preventThemeOverride.set(true);
 
     // Update URL parameters to indicate we're in edit mode
-    this.updateUrlParams({ viewOnly: 'false', mode: 'edit' });
+    this.updateUrlParams({
+      viewOnly: 'false',
+      mode: 'edit',
+      step: '4', // Update step when editing
+    });
 
-    // Enter fullscreen mode after a short delay
-    setTimeout(() => {
-      // Remove loading overlay
-      this.showLoadingOverlay.set(false);
+    // Enter fullscreen mode
+    if (!this.isFullscreen()) {
+      this.toggleFullscreen();
 
-      // Enter fullscreen mode if not already in it
-      if (!this.isFullscreen()) {
-        this.toggleFullscreen();
-      }
-    }, 800);
+      // Keep loading visible for a bit after entering fullscreen to ensure smooth transition
+      setTimeout(() => {
+        this.showLoadingOverlay.set(false);
+      }, 600);
+    } else {
+      // If already in fullscreen, just hide the loading after a short delay
+      setTimeout(() => {
+        this.showLoadingOverlay.set(false);
+      }, 300);
+    }
 
     // Keep prevention active for a short time
     setTimeout(() => {

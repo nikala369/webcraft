@@ -1,184 +1,285 @@
-# Backend Integration Guide
+# Webcraft Backend Integration Guide
 
-This document provides details on how Webcraft's Angular frontend integrates with the Java Spring Boot backend API. It serves as a guide for developers working on connecting UI components to the appropriate backend services.
+## Overview
 
-## API Base URL
+This guide documents how the Webcraft frontend application communicates with the Java Spring Boot backend API. All data persistence, authentication, and business logic operations are handled by the backend.
 
-The API is configured in `environment.ts`:
+## API Communication Pattern
+
+The frontend uses Angular's HttpClient to interact with the backend REST API. All API calls follow this pattern:
+
+1. Frontend sends authenticated requests to backend endpoints
+2. Backend performs validation and business logic
+3. Backend returns data or error responses
+4. Frontend processes responses and updates UI accordingly
+
+## Base URL Configuration
+
+API URLs are configured in the environment files:
 
 ```typescript
+// environment.ts (development)
 export const environment = {
   production: false,
-  apiUrl: "http://localhost:4200", // Proxy to backend at http://localhost:8080
+  apiUrl: "http://localhost:8080",
   apiPrefix: "/api",
-  // ...other config
+};
+
+// environment.prod.ts (production)
+export const environment = {
+  production: true,
+  apiUrl: "https://api.webcraft.com",
+  apiPrefix: "/api",
 };
 ```
 
-## Authentication Flow
+## Authentication
 
-### Core Authentication Services
+Authentication is handled by the `AuthService` using JWT tokens:
 
-- `AuthService`: Main service for authentication operations
-- `TokenService`: Handles JWT token storage and validation
-
-### Endpoints
-
-| Endpoint                                       | Method | Purpose                    | Service Method                       |
-| ---------------------------------------------- | ------ | -------------------------- | ------------------------------------ |
-| `/api/security/user/creator`                   | POST   | Register new user          | `AuthService.register()`             |
-| `/api/security/user/login`                     | POST   | Login user                 | `AuthService.login()`                |
-| `/api/security/user`                           | GET    | Fetch current user details | `AuthService.fetchCurrentUser()`     |
-| `/api/security/user/activate/{activationCode}` | POST   | Activate user account      | `AuthService.activateUser()`         |
-| `/api/security/user/changePassword`            | POST   | Change user password       | `AuthService.changePassword()`       |
-| `/api/security/user/request-reset-password`    | POST   | Request password reset     | `AuthService.requestPasswordReset()` |
-| `/api/security/user/reset-password`            | POST   | Reset password with code   | `AuthService.resetPassword()`        |
-| `/api/security/user/search`                    | GET    | Search users (admin only)  | N/A                                  |
+- **Login**: `POST /api/security/user/login`
+- **Register**: `POST /api/security/user/creator`
+- **Verify Email**: `POST /api/security/user/confirm-email`
+- **Reset Password**: `POST /api/security/user/reset-password`
 
 ### Authentication Flow
 
-1. User registers via `register()`, which returns a success message with activation instructions
-2. User activates account via email link or by entering activation code
-3. User logs in via `login()`, which returns a JWT token
-4. Token is stored in local storage via `TokenService`
-5. HTTP interceptor attaches token to all subsequent API requests
-6. App initializer checks token validity on app start
-7. User is automatically logged out if token is invalid or expired
+1. User submits credentials via login form
+2. Frontend sends credentials to backend
+3. Backend validates credentials and returns JWT token
+4. Frontend stores token in localStorage
+5. Subsequent requests include token in Authorization header
 
-## Template Management
+### JWT Token Handling
 
-### Core Template Services
+```typescript
+// Adding token to HTTP requests
+const token = localStorage.getItem("jwt_token");
+const headers = new HttpHeaders().set("Authorization", `Bearer ${token}`);
+```
 
-- `TemplateService`: Fetches template types, plans, and master templates
-- `UserTemplateService`: Manages user-specific template customizations
+## Core API Services
 
-### Endpoints
+### Template Services
 
-| Endpoint                                            | Method | Purpose                         | Service Method                              |
-| --------------------------------------------------- | ------ | ------------------------------- | ------------------------------------------- |
-| `/api/template/type/all`                            | GET    | Fetch all template types        | `TemplateService.getAllTemplateTypes()`     |
-| `/api/template/type/{id}`                           | GET    | Fetch specific template type    | `TemplateService.getTemplateTypeById()`     |
-| `/api/template/template-plan/all`                   | GET    | Fetch all template plans        | `TemplateService.getAllTemplatePlans()`     |
-| `/api/template/search`                              | GET    | Search for templates            | `TemplateService.searchTemplates()`         |
-| `/api/template/user-template`                       | POST   | Create new user template        | `UserTemplateService.createUserTemplate()`  |
-| `/api/template/user-template/{id}`                  | GET    | Get user template by ID         | `UserTemplateService.getUserTemplateById()` |
-| `/api/template/user-template/{id}`                  | PUT    | Update user template            | `UserTemplateService.updateUserTemplate()`  |
-| `/api/template/user-template/search`                | GET    | Search user templates           | `UserTemplateService.searchUserTemplates()` |
-| `/api/template/user-template/attachment`            | POST   | Upload user template attachment | `UserTemplateService.uploadAttachment()`    |
-| `/api/template/user-template/attachment/{objectId}` | GET    | Get user template attachment    | `UserTemplateService.getAttachmentUrl()`    |
+Templates represent the website templates that users can customize:
 
-### Template Selection Flow
+#### TemplateService
 
-1. Fetch template types via `TemplateService.getAllTemplateTypes()`
-2. User selects business type, which is stored in state
-3. Fetch template plans via `TemplateService.getAllTemplatePlans()`
-4. User selects plan (standard or premium), which is stored in state
-5. Search templates based on selected type and plan via `TemplateService.searchTemplates()`
-6. User selects a template, which loads the default configuration
+- **Get Template Types**: `GET /api/template/type/all`
+- **Get Template Plans**: `GET /api/template/template-plan/all`
+- **Search Templates**: `GET /api/template/search`
+- **Get Template by ID**: `GET /api/template/{id}`
 
-### Template Saving Flow
+#### UserTemplateService
 
-1. User customizes template in editor
-2. Customizations are tracked via Angular Signals
-3. When user saves, configuration is serialized to JSON via `JSON.stringify()`
-4. If saving for the first time, call `UserTemplateService.createUserTemplate()`
-5. If updating existing template, call `UserTemplateService.updateUserTemplate()`
-6. Template ID is stored for future updates
+- **Create User Template**: `POST /api/template/user-template`
+- **Update User Template**: `PUT /api/template/user-template/{id}`
+- **Get User Template**: `GET /api/template/user-template/{id}`
+- **Search User Templates**: `GET /api/template/user-template/search`
+- **Delete User Template**: `DELETE /api/template/user-template/{id}`
 
-## Website Publishing
+### Build Services
 
-### Core Build Services
+Builds represent the process of generating a website from a template:
 
-- `UserBuildService`: Manages build creation and publishing
-- `SubscriptionService`: Manages subscriptions for builds
+#### UserBuildService
 
-### Endpoints
+- **Create Build**: `POST /api/user-build`
+- **Get Build**: `GET /api/user-build/{id}`
+- **Publish Build**: `POST /api/user-build/{id}/publish`
+- **Search Builds**: `GET /api/user-build/search`
 
-| Endpoint                       | Method | Purpose                 | Service Method                              |
-| ------------------------------ | ------ | ----------------------- | ------------------------------------------- |
-| `/api/subscription/all`        | GET    | Fetch all subscriptions | `SubscriptionService.getAllSubscriptions()` |
-| `/api/subscription`            | POST   | Create new subscription | `SubscriptionService.createSubscription()`  |
-| `/api/user-build`              | POST   | Create new build        | `UserBuildService.createUserBuild()`        |
-| `/api/user-build/{id}/publish` | POST   | Publish build           | `UserBuildService.publishUserBuild()`       |
-| `/api/user-build/search`       | GET    | Search/monitor builds   | `UserBuildService.searchUserBuilds()`       |
+### Subscription Services
 
-### Publishing Flow
+Subscriptions manage the user's plan type and billing information:
 
-1. User saves their template customizations
-2. User initiates publishing process via "Publish" button
-3. System fetches appropriate subscription via `SubscriptionService.getDefaultSubscription()`
-4. System creates build via `UserBuildService.createUserBuild()`
-5. System publishes build via `UserBuildService.publishUserBuild()`
-6. System polls build status via `UserBuildService.searchUserBuilds()`
-7. When build completes, user is presented with the published URL
+#### SubscriptionService
 
-## File Attachment Handling
+- **Get Subscriptions**: `GET /api/subscription/all`
+- **Get Default Subscription**: `GET /api/subscription/default/{type}`
+- **Create Subscription**: `POST /api/subscription`
 
-Webcraft handles file uploads through dedicated attachment endpoints:
+## Data Models
 
-### Endpoints
+### Template Data Models
 
-| Endpoint                                            | Method | Purpose                  | Service Method                           |
-| --------------------------------------------------- | ------ | ------------------------ | ---------------------------------------- |
-| `/api/template/user-template/attachment`            | POST   | Upload file attachment   | `UserTemplateService.uploadAttachment()` |
-| `/api/template/user-template/attachment/{objectId}` | GET    | Retrieve file attachment | `UserTemplateService.getAttachmentUrl()` |
+```typescript
+// Template Type (business type)
+export interface TemplateType {
+  id: string;
+  name: string;
+  key: string; // e.g., 'restaurant', 'salon'
+}
 
-### Attachment Types
+// Template Plan (standard/premium)
+export interface TemplatePlan {
+  id: string;
+  type: "BASIC" | "PREMIUM";
+  description: string;
+  priceCents: number;
+}
 
-- `USER_TEMPLATE_IMAGE`: Images used in user templates
-- `USER_TEMPLATE_VIDEO`: Videos used in user templates
+// Template (base template)
+export interface Template {
+  id: string;
+  name: string;
+  description: string;
+  config: string; // JSON string
+  templateType: TemplateType;
+  templatePlan: TemplatePlan;
+}
 
-### Attachment Flow
+// User Template (saved templates)
+export interface UserTemplate {
+  id: string;
+  template: {
+    id: string;
+    name: string;
+    description: string;
+    templateType: TemplateType;
+    templatePlan: TemplatePlan;
+  };
+  config: string; // JSON string
+  name: string;
+}
+```
 
-1. User uploads file via file input
-2. File is converted to FormData
-3. File is uploaded via `UserTemplateService.uploadAttachment()`
-4. Server returns a file ID
-5. File ID is stored in the template configuration
-6. When displaying the template, file is retrieved via `getAttachmentUrl()`
+### Customizations Data Model
+
+The `config` field in templates is a JSON string that should be parsed to a `Customizations` object:
+
+```typescript
+// Simplified example of Customizations interface
+export interface Customizations {
+  fontConfig: {
+    fontId: number;
+    family: string;
+    fallback: string;
+  };
+  header: {
+    backgroundColor: string;
+    textColor: string;
+    logoUrl: string;
+    menuItems: { id: number; label: string; link: string }[];
+  };
+  pages: {
+    home: {
+      hero1: {
+        /* Hero section data */
+      };
+      about: {
+        /* About section data */
+      };
+      // Other sections...
+    };
+    // Other pages...
+  };
+  footer: {
+    backgroundColor: string;
+    textColor: string;
+    // Other footer properties...
+  };
+}
+```
 
 ## Error Handling
 
-All service methods use RxJS's `catchError` operator to handle errors. The error handling flow typically involves:
-
-1. Logging error to console
-2. Returning appropriate error message to UI
-3. Using `throwError` to propagate error through RxJS chain
-
-Example error handling pattern:
+All API calls should include proper error handling:
 
 ```typescript
-return this.http.post<UserTemplate>(this.USER_TEMPLATE_BASE, createDto).pipe(
+this.http.get<UserTemplate>(`${this.USER_TEMPLATE_BASE}/${templateId}`).pipe(
   catchError((error) => {
-    console.error("Error creating user template:", error);
+    console.error(`Error fetching user template with ID ${templateId}:`, error);
     return throwError(() => error);
   })
 );
 ```
 
-## Plan Type Mapping
+## API Request Examples
 
-The frontend and backend use different terminology for plans:
+### Creating a User Template
 
-| Frontend | Backend          |
-| -------- | ---------------- |
-| standard | BASIC            |
-| premium  | ADVANCED/PREMIUM |
+```typescript
+createUserTemplate(
+  templateId: string,
+  name: string,
+  config: Customizations
+): Observable<UserTemplate> {
+  const createDto = {
+    templateId,
+    name,
+    config: JSON.stringify(config),
+  };
 
-This mapping is handled in the appropriate services to ensure consistency.
+  return this.http
+    .post<UserTemplate>(this.USER_TEMPLATE_BASE, createDto)
+    .pipe(
+      catchError((error) => {
+        console.error('Error creating user template:', error);
+        return throwError(() => error);
+      })
+    );
+}
+```
 
-## Authentication Guards
+### Loading Templates by Business Type
 
-Protected routes are guarded using:
+```typescript
+searchTemplates(
+  templateTypeId: string,
+  templatePlanId: string,
+  page: number = 0,
+  size: number = 10
+): Observable<PageResponse<TemplateSearch>> {
+  let params = new HttpParams()
+    .set('page', page.toString())
+    .set('size', size.toString())
+    .set('templateTypeId', templateTypeId)
+    .set('templatePlanId', templatePlanId);
 
-- `AuthGuard`: Ensures user is authenticated
-- `RoleGuard`: Ensures user has appropriate role
-- `PublicGuard`: Ensures user is not authenticated (for login/register pages)
+  return this.http
+    .get<PageResponse<TemplateSearch>>(this.TEMPLATE_SEARCH, { params })
+    .pipe(
+      catchError((error) => {
+        console.error('Error searching templates:', error);
+        return throwError(() => error);
+      })
+    );
+}
+```
 
-## Next Steps for Backend Integration
+## Attachment Handling
 
-- Implement file upload progress tracking
-- Add offline support with synchronization
-- Implement WebSocket for real-time build status updates
-- Add domain management for published websites
-- Implement analytics integration
+For file uploads (images, videos), use the attachment endpoints:
+
+```typescript
+uploadAttachment(
+  file: File,
+  type: 'USER_TEMPLATE_IMAGE' | 'USER_TEMPLATE_VIDEO'
+): Observable<{ fileId: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('type', type);
+
+  return this.http
+    .post<{ fileId: string }>(this.USER_TEMPLATE_ATTACHMENT, formData)
+    .pipe(
+      catchError((error) => {
+        console.error('Error uploading attachment:', error);
+        return throwError(() => error);
+      })
+    );
+}
+```
+
+## Best Practices
+
+1. **Authentication**: Ensure all API calls include the JWT token
+2. **Error Handling**: Properly handle and log all errors
+3. **Loading States**: Show loading indicators during API calls
+4. **Response Parsing**: Validate API responses before using them
+5. **Cachability**: Cache responses where appropriate (e.g., template types)
+6. **Retry Logic**: Implement retry logic for critical operations
+7. **Logging**: Log all important API interactions
+8. **Fallbacks**: Provide default values when API calls fail

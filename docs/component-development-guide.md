@@ -1,322 +1,245 @@
-# Component Development Guide
+# Webcraft Component Development Guide
 
-This guide explains how to develop new components for the website builder. Follow these patterns to ensure consistency and maintainability.
+## Overview
+
+This guide outlines best practices for developing components for the Webcraft template-based website builder. All components should follow these guidelines to ensure consistency, maintainability, and optimal performance.
+
+## Core Principles
+
+1. **Template-Based, Not Drag-and-Drop**: Webcraft uses a template-based approach where users configure predefined sections, not a freestyle drag-and-drop editor
+2. **Signal-Based State Management**: Use Angular Signals for reactive state management
+3. **Standalone Components**: Prefer standalone components with explicit imports
+4. **Type Safety**: Ensure proper typing with TypeScript interfaces
+5. **Responsive Design**: All components must work across desktop and mobile
+
+## Component Types
+
+### 1. Structure Components
+
+These components define the overall structure of a template:
+
+- `StandardStructureComponent`: Main structure for standard plan templates
+- `PremiumStructureComponent`: Main structure for premium plan templates
+
+### 2. Section Components
+
+These are major website sections that users can customize:
+
+- `HeroSectionComponent`: Hero/banner sections
+- `AboutSectionComponent`: About/introduction sections
+- `ServicesSectionComponent`: Services/offerings sections
+- `MenuSectionComponent`: Menu/product listings (especially for restaurants)
+- `ContactSectionComponent`: Contact information and forms
+- `GallerySectionComponent`: Image galleries
+
+### 3. UI Controls
+
+These components provide UI for customization:
+
+- `ThemeSwitcherComponent`: For selecting website themes
+- `BusinessTypeSelectorComponent`: For selecting business types
+- `ComponentCustomizerComponent`: Modal for editing sections
+- `FontSelectorComponent`: For selecting website fonts
 
 ## Component Structure
 
-Each section component should follow this general structure:
-
-1. **Component Class**: Contains logic and data handling
-2. **HTML Template**: Defines the UI structure
-3. **SCSS Styles**: Defines component styling
-4. **Interface**: Defines the component's data model
-
-## Standard Section Component Template
-
-### 1. Component Class
+Each component should follow this basic structure:
 
 ```typescript
-import { Component, Input, Output, EventEmitter } from "@angular/core";
+import { Component, Input, Output, EventEmitter, signal, computed } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { SectionHoverWrapperComponent } from "../../../../components/section-hover-wrapper/section-hover-wrapper.component";
-import { Customizations, MyComponentData } from "../../../../../../core/models/website-customizations";
 
 @Component({
-  selector: "app-my-component",
+  selector: "app-component-name",
   standalone: true,
-  imports: [CommonModule, SectionHoverWrapperComponent],
-  templateUrl: "./my-component.component.html",
-  styleUrls: ["./my-component.component.scss"],
+  imports: [CommonModule /* other dependencies */],
+  templateUrl: "./component-name.component.html",
+  styleUrls: ["./component-name.component.scss"],
 })
-export class MyComponentComponent {
-  @Input() customizations!: Customizations;
-  @Input() myComponentData: Partial<MyComponentData> = {};
-  @Input() isMobileLayout: boolean = false;
-  @Input() planType: "standard" | "premium" = "standard";
-  @Input() businessType: string = "";
-  @Output() sectionSelected = new EventEmitter<{
-    key: string;
-    name: string;
-    path?: string;
-  }>();
-
-  // Default assets and values
-  defaultImage = "assets/placeholders/my-component-image.jpg";
-
-  /**
-   * Handle section selection
-   */
-  handleSectionSelection(event: { key: string; name: string; path?: string }) {
-    console.log(`${this.constructor.name} - handling section selection:`, event);
-
-    // Ensure we have the correct path
-    const path = event.path || "pages.home.myComponent";
-
-    this.sectionSelected.emit({
-      key: event.key,
-      name: event.name,
-      path: path,
-    });
+export class ComponentNameComponent {
+  // Inputs
+  @Input() set data(value: any) {
+    this.internalData.set(value);
   }
 
-  /**
-   * Get component title or fallback
-   */
-  getTitle(): string {
-    return this.myComponentData?.title || this.getDefaultTitle();
-  }
+  // Signals for state management
+  private internalData = signal<any>(null);
 
-  /**
-   * Get component subtitle or fallback
-   */
-  getSubtitle(): string {
-    return this.myComponentData?.subtitle || this.getDefaultSubtitle();
-  }
+  // Computed values
+  displayValue = computed(() => {
+    const data = this.internalData();
+    return data ? data.someValue : "Default Value";
+  });
 
-  /**
-   * Get business-type specific default title
-   */
-  private getDefaultTitle(): string {
-    const titles = {
-      restaurant: "Default Restaurant Title",
-      salon: "Default Salon Title",
-      // Add other business types as needed
-    };
+  // Outputs
+  @Output() dataChange = new EventEmitter<any>();
 
-    return titles[this.businessType as keyof typeof titles] || "Default Title";
-  }
+  // Methods
+  updateData(newValue: any): void {
+    // Update state
+    const updatedData = { ...this.internalData(), ...newValue };
+    this.internalData.set(updatedData);
 
-  /**
-   * Get business-type specific default subtitle
-   */
-  private getDefaultSubtitle(): string {
-    const subtitles = {
-      restaurant: "Default restaurant subtitle text",
-      salon: "Default salon subtitle text",
-      // Add other business types as needed
-    };
-
-    return subtitles[this.businessType as keyof typeof subtitles] || "Default subtitle";
+    // Emit change
+    this.dataChange.emit(updatedData);
   }
 }
 ```
 
-### 2. HTML Template
+## Data Flow
 
-```html
-<app-section-hover-wrapper [sectionKey]="'myComponent'" [sectionName]="'My Component Section'" [editable]="true" [currentPlan]="planType" [sectionPath]="'pages.home.myComponent'" (sectionSelected)="handleSectionSelection($event)">
-  <section class="my-component-section">
-    <div class="section-container">
-      <!-- Section header -->
-      <div class="section-header">
-        <h2 class="section-title">{{ getTitle() }}</h2>
-        <div class="title-underline"></div>
-        <p class="section-subtitle">{{ getSubtitle() }}</p>
-      </div>
+Components should follow a unidirectional data flow pattern:
 
-      <!-- Section content -->
-      <div class="section-content">
-        <!-- Your component specific content here -->
-      </div>
-    </div>
-  </section>
-</app-section-hover-wrapper>
+1. Parent components pass data to child components via `@Input()`
+2. Child components notify parents of changes via `@Output()`
+3. Data flows down, events flow up
+
+```
+Parent Component
+   │
+   ▼
+Child Component (receives data via @Input)
+   │
+   ▼
+User Interaction
+   │
+   ▼
+Child Component (emits event via @Output)
+   │
+   ▼
+Parent Component (updates data)
 ```
 
-### 3. SCSS Styles
+## State Management
 
-```scss
-// Define variables for consistent styling
-:host {
-  --section-bg-color: #ffffff;
-  --section-text-color: #333333;
-  --section-accent-color: var(--primary-accent-color);
+- Use Angular Signals for reactive state management
+- Define internal signals for component-specific state
+- Use computed signals for derived values
+- Avoid direct mutation of input properties
+
+```typescript
+// Good
+@Input() set config(value: Config) {
+  this.configSignal.set(value);
+}
+private configSignal = signal<Config | null>(null);
+
+// Bad
+@Input() config: Config;
+```
+
+## Templates
+
+- Use conditional rendering (`*ngIf`) for optional elements
+- Use template references (`#templateRef`) for complex template structures
+- Avoid excessive nesting of structural directives
+
+## Styling
+
+- Use component-scoped styles with the component's style file
+- Use CSS variables for theme consistency
+- Implement responsive designs with mobile-first approach
+- Use SCSS features like mixins and functions for reusable styles
+
+## Customization
+
+Components should expose a clear customization API:
+
+- Color properties (background, text, accent)
+- Content properties (text, images, links)
+- Layout options (alignment, spacing)
+- Business-type specific customizations
+
+## Plan Differences
+
+- Clearly indicate Premium-only features with appropriate UI elements
+- Implement conditional logic for plan-specific features
+- Use `*ngIf="isPremium"` or similar conditions to show/hide premium content
+
+## Error Handling
+
+- Provide fallback content for missing data
+- Add graceful error handling for API calls
+- Log errors to the console in development
+
+## Performance
+
+- Implement OnPush change detection where appropriate
+- Minimize DOM manipulation in Angular components
+- Use trackBy with ngFor for better performance
+- Lazy load media assets
+
+## Documentation
+
+Every component should include:
+
+- Class-level JSDoc comment explaining its purpose
+- Property documentation for inputs and outputs
+- Method documentation for public methods
+
+## Testing
+
+- Write unit tests for component logic
+- Test different scenarios (missing data, error states, etc.)
+- Test both standard and premium plan scenarios
+
+## Example: Section Component
+
+```typescript
+import { Component, Input, Output, EventEmitter, signal, computed } from "@angular/core";
+import { CommonModule } from "@angular/common";
+
+interface SectionConfig {
+  title: string;
+  subtitle?: string;
+  backgroundColor: string;
+  textColor: string;
 }
 
-.my-component-section {
-  background-color: var(--section-bg-color);
-  color: var(--section-text-color);
-  padding: 80px 0;
-  overflow: hidden;
-
-  .section-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-  }
-
-  .section-header {
-    text-align: center;
-    margin-bottom: 60px;
-
-    .section-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 15px;
-    }
-
-    .title-underline {
-      height: 3px;
-      width: 80px;
-      background-color: var(--section-accent-color);
-      margin: 0 auto 20px;
-    }
-
-    .section-subtitle {
-      font-size: 1.2rem;
-      font-weight: 300;
-      max-width: 800px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
-  }
-
-  // Add responsive styling
-  @media (max-width: 992px) {
-    padding: 60px 0;
-
-    .section-header {
-      margin-bottom: 40px;
-
+@Component({
+  selector: "app-section",
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <section class="section" [style.background-color]="config()?.backgroundColor" [style.color]="config()?.textColor">
+      <h2 class="section-title">{{ config()?.title || "Default Title" }}</h2>
+      <p *ngIf="config()?.subtitle" class="section-subtitle">
+        {{ config()?.subtitle }}
+      </p>
+      <button (click)="edit.emit()">Edit Section</button>
+      <ng-content></ng-content>
+    </section>
+  `,
+  styles: [
+    `
+      .section {
+        padding: 2rem;
+        margin-bottom: 1rem;
+      }
       .section-title {
-        font-size: 2.2rem;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
       }
-
-      .section-subtitle {
-        font-size: 1.1rem;
-      }
-    }
-  }
-
-  @media (max-width: 768px) {
-    padding: 50px 0;
-
-    .section-header {
-      margin-bottom: 30px;
-
-      .section-title {
-        font-size: 1.8rem;
-      }
-
       .section-subtitle {
         font-size: 1rem;
+        margin-bottom: 1.5rem;
       }
-    }
-  }
-}
-```
+    `,
+  ],
+})
+export class SectionComponent {
+  // Internal signals
+  private configSignal = signal<SectionConfig | null>(null);
 
-### 4. Data Interface
+  // Public readonly computed values
+  config = computed(() => this.configSignal());
 
-Add to `website-customizations.ts`:
-
-```typescript
-/**
- * My Component section data model
- */
-export interface MyComponentData {
-  title: string;
-  subtitle: string;
-  // Add additional properties specific to your component
-  backgroundColor?: string;
-  textColor?: string;
-}
-
-// Update the Customizations interface to include your component
-export interface Customizations {
-  // ...existing properties
-  pages?: {
-    home?: {
-      // ...existing properties
-      myComponent?: MyComponentData;
-      // ...
-    };
-    // ...
-  };
-  // ...
-}
-```
-
-## Adding Customization Fields
-
-To make your component customizable, add its configuration to `customizing-form-config.ts`:
-
-```typescript
-// Add fields for your component
-export const myComponentConfig: FieldConfig[] = [
-  // CONTENT category
-  {
-    key: "title",
-    label: "Section Title",
-    type: "text",
-    category: "content",
-    defaultValue: "My Component",
-    required: true,
-  },
-  {
-    key: "subtitle",
-    label: "Section Subtitle",
-    type: "text",
-    category: "content",
-    defaultValue: "This is my new component",
-  },
-  // Add more fields as needed
-];
-
-// Add your config to the main config object
-export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
-  // ...existing configs
-  "pages.home.myComponent": myComponentConfig,
-};
-```
-
-## Integration with BusinessConfigService
-
-Update the `BusinessConfigService` to include your component:
-
-```typescript
-// Add default data method
-getDefaultMyComponentData(businessType: string): MyComponentData {
-  return {
-    title: 'My Component',
-    subtitle: 'This is my component subtitle',
-    // Add business-specific defaults as needed
-    backgroundColor: '#ffffff',
-    textColor: '#333333',
-  };
-}
-
-// Update ensureCompleteCustomizationStructure method
-ensureCompleteCustomizationStructure(customizations: Customizations, businessType: string, plan: 'standard' | 'premium'): Customizations {
-  // ...existing code
-
-  // Add your component
-  if (!updated.pages!.home!.myComponent) {
-    updated.pages!.home!.myComponent = this.getDefaultMyComponentData(businessType);
+  // Inputs
+  @Input() set data(value: SectionConfig) {
+    this.configSignal.set(value);
   }
 
-  return updated;
-}
-
-// Update getAvailableSectionsForBusinessType to include your component
-getAvailableSectionsForBusinessType(businessType: string, plan: 'standard' | 'premium'): string[] {
-  // Add your component to the appropriate business types
-  // ...
+  // Outputs
+  @Output() edit = new EventEmitter<void>();
 }
 ```
-
-## Testing Your Component
-
-1. **Unit Testing**: Create unit tests for your component logic
-2. **Integration Testing**: Test the component in the context of the full application
-3. **Cross-browser Testing**: Ensure your component works across different browsers
-4. **Responsive Testing**: Verify your component looks good on all screen sizes
-
-## Best Practices
-
-1. **Consistent Naming**: Follow the established naming conventions
-2. **Fallbacks**: Always provide default values for all properties
-3. **Business Type Tailoring**: Customize content based on business type
-4. **Responsive Design**: Ensure your component looks good on all devices
-5. **Performance**: Optimize image sizes and avoid unnecessary DOM operations
-6. **A11y**: Ensure your component is accessible (use proper semantic HTML, add ARIA attributes when needed)
