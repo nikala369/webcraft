@@ -3,16 +3,28 @@
   <div class="custom-dropdown" [class.active]="dropdownOpen()">
     <button class="selected-option" (click)="toggleDropdown()">
       {{ selectedTheme().name }}
-      <svg class="arrow" [class.active]="dropdownOpen()" width="12" height="8" viewBox="0 0 12 8">
-        <path fill="currentColor" d="M6 7.4L0.6 2 2 0.6l4 4 4-4 1.4 1.4z"/>
+      <svg
+        class="arrow"
+        [class.active]="dropdownOpen()"
+        width="12"
+        height="8"
+        viewBox="0 0 12 8"
+      >
+        <path fill="currentColor" d="M6 7.4L0.6 2 2 0.6l4 4 4-4 1.4 1.4z" />
       </svg>
     </button>
 
-    <div class="dropdown-options" *ngIf="dropdownOpen()" (click)="$event.stopPropagation()">
-      <div *ngFor="let theme of filteredThemes()"
-           class="custom-option"
-           [class.active]="theme.id === selectedTheme().id"
-           (click)="selectTheme(theme)">
+    <div
+      class="dropdown-options"
+      *ngIf="dropdownOpen()"
+      (click)="$event.stopPropagation()"
+    >
+      <div
+        *ngFor="let theme of filteredThemes()"
+        class="custom-option"
+        [class.active]="theme.id === selectedTheme().id"
+        (click)="selectTheme(theme)"
+      >
         {{ theme.name }}
       </div>
     </div>

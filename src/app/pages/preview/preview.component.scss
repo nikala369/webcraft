@@ -246,8 +246,8 @@ $z-layers: (
         justify-content: center;
         align-items: center;
         cursor: pointer;
-        padding: 10px; // Increased padding
-        border-radius: 10px; // Slightly rounded corners
+        padding: 8px;
+        border-radius: 10px;
         transition: all 0.25s ease;
         color: rgba(255, 255, 255, 0.75);
 
@@ -358,6 +358,7 @@ $z-layers: (
       transition: background 0.3s ease;
       z-index: map-get($z-layers, component-overlay);
       pointer-events: all;
+      gap: 15px;
 
       // Show it on hover
       &:hover {
@@ -373,7 +374,7 @@ $z-layers: (
         background: #0984e3;
         color: white;
         border: none;
-        padding: 12px 24px;
+        padding: 10px 20px;
         font-size: 16px;
         font-weight: 600;
         border-radius: 6px;
@@ -394,7 +395,7 @@ $z-layers: (
         background: #0984e3;
         color: white;
         border: none;
-        padding: 10px 17.5px;
+        padding: 7.5px 17.5px;
         font-size: 15px;
         font-weight: 600;
         border-radius: 6px;
@@ -422,7 +423,7 @@ $z-layers: (
         background: #3a3a3a; // Subtle dark gray
         color: #ffffff;
         border: none; // Keep a clean look
-        padding: 12px 20px; // Same padding as "Continue Editing"
+        padding: 12px 35px; // Same padding as "Continue Editing"
         font-size: 15px;
         font-weight: 600;
         border-radius: 6px;

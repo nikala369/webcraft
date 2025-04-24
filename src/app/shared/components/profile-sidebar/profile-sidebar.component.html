@@ -14,7 +14,21 @@
 >
   <div class="profile-sidebar__header">
     <button class="close-button" aria-label="Close sidebar" (click)="close()">
-      <span class="close-icon">×</span>
+      <svg
+        class="close-icon"
+        width="12"
+        height="12"
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path
+          d="M2 2 L14 14 M14 2 L2 14"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+        />
+      </svg>
     </button>
 
     <div class="user-profile">

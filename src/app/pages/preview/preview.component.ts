@@ -161,7 +161,9 @@ export class PreviewComponent implements OnInit, OnDestroy {
   private preFullscreenScrollPosition = 0;
 
   // Theme management
-  defaultThemeId = computed(() => (this.currentPlan() === 'standard' ? 1 : 4));
+  defaultThemeId = computed(() =>
+    this.currentPlan() === 'standard' ? '1' : '4'
+  );
 
   // Flag to prevent theme service from overriding user customizations
   private preventThemeOverride = signal<boolean>(false);
@@ -427,15 +429,8 @@ export class PreviewComponent implements OnInit, OnDestroy {
       document.body.classList.add('fullscreen-mode');
     }
 
-    // Check if user is authenticated - require auth for all operations
-    if (!this.authService.isAuthenticated()) {
-      console.log('User is not authenticated - redirecting to login');
-      // Save the current URL as the return URL
-      this.router.navigate(['/auth/login'], {
-        queryParams: { returnUrl: this.router.url },
-      });
-      return;
-    }
+    // Don't require authentication for initial preview view
+    // Only check authentication when starting to build or accessing specific functionality
 
     // Parse route parameters to determine the operation mode
     this.parseRouteParameters();
@@ -485,6 +480,18 @@ export class PreviewComponent implements OnInit, OnDestroy {
       const templateId = params['templateId'];
       const newTemplate = params['newTemplate'] === 'true';
       const mode = params['mode'] || 'edit';
+
+      // Check if authentication is required for this operation
+      const requiresAuth = templateId || newTemplate || mode === 'edit';
+
+      if (requiresAuth && !this.authService.isAuthenticated()) {
+        console.log(
+          'Authentication required for this operation - showing preview without editing'
+        );
+        // Don't redirect yet, allow preview and redirect only when they try to edit
+        this.showLoadingOverlay.set(false);
+        return;
+      }
 
       if (templateId) {
         // Edit or view existing template mode
@@ -821,43 +828,94 @@ export class PreviewComponent implements OnInit, OnDestroy {
   /**
    * Load themes filtered by business type
    */
-  loadThemesForBusinessType(businessType: string): void {
-    console.log(`Loading themes for business type: ${businessType}`);
+  loadThemesForBusinessType(businessTypeKey: string): void {
+    console.log(`Loading themes for business type key: ${businessTypeKey}`);
 
     // Always set loading state first
     this.availableThemes.set([]);
 
-    // Get plan ID based on current plan
-    const planType = this.templateService.convertPlanType(this.currentPlan());
+    // First, we need to get the template type ID that corresponds to the business type key
+    this.templateService.getAllTemplateTypes().subscribe({
+      next: (templateTypes) => {
+        // Find the template type with matching key
+        const templateType = templateTypes.find(
+          (type) => type.key === businessTypeKey
+        );
 
-    this.templateService.getTemplatePlanId(planType).subscribe({
-      next: (planId) => {
-        // Search for templates with the given business type and plan
-        this.templateService.searchTemplates(businessType, planId).subscribe({
-          next: (response) => {
-            console.log(
-              `Received ${
-                response.content.length
-              } templates for ${businessType} with plan ${this.currentPlan()}`
-            );
+        if (!templateType) {
+          console.error(
+            `No template type found for business type key: ${businessTypeKey}`
+          );
+          this.availableThemes.set([]);
+          this.confirmationService.showConfirmation(
+            'Error finding template type. Please try again.',
+            'error',
+            3000
+          );
+          return;
+        }
 
-            // Save templates to signal
-            this.availableThemes.set(response.content);
+        console.log(
+          `Found template type ID: ${templateType.id} for business type key: ${businessTypeKey}`
+        );
 
-            // If we have templates and no base template ID is selected yet, select the first one
-            if (response.content.length > 0 && !this.selectedBaseTemplateId()) {
-              const firstTemplateId = response.content[0].id;
-              console.log(`Auto-selecting template ID ${firstTemplateId}`);
-              this.selectedBaseTemplateId.set(firstTemplateId);
-              this.loadBaseTemplate(firstTemplateId);
-            }
+        // Get plan ID based on current plan
+        const planType = this.templateService.convertPlanType(
+          this.currentPlan()
+        );
+
+        this.templateService.getTemplatePlanId(planType).subscribe({
+          next: (planId) => {
+            // Now search using the actual template type ID from the API
+            this.templateService
+              .searchTemplates(templateType.id, planId, 0, 5)
+              .subscribe({
+                next: (response) => {
+                  console.log(
+                    `Received ${
+                      response.content.length
+                    } templates for type ID ${
+                      templateType.id
+                    } with plan ${this.currentPlan()}`
+                  );
+
+                  // Save templates to signal
+                  this.availableThemes.set(response.content);
+
+                  // If we have templates and no base template ID is selected yet, select the first one
+                  // Only auto-select if we don't have an existing template ID (new creation flow)
+                  if (
+                    response.content.length > 0 &&
+                    !this.selectedBaseTemplateId() &&
+                    !this.currentUserTemplateId()
+                  ) {
+                    const firstTemplateId = response.content[0].id;
+                    console.log(
+                      `Auto-selecting template ID ${firstTemplateId}`
+                    );
+                    this.selectedBaseTemplateId.set(firstTemplateId);
+                    this.loadBaseTemplate(firstTemplateId);
+                  }
+                },
+                error: (err) => {
+                  console.error(
+                    'Error loading templates for business type:',
+                    err
+                  );
+                  // Set empty array to avoid undefined errors
+                  this.availableThemes.set([]);
+                  this.confirmationService.showConfirmation(
+                    'Error loading templates. Please try again.',
+                    'error',
+                    3000
+                  );
+                },
+              });
           },
           error: (err) => {
-            console.error('Error loading templates for business type:', err);
-            // Set empty array to avoid undefined errors
-            this.availableThemes.set([]);
+            console.error('Error getting plan ID:', err);
             this.confirmationService.showConfirmation(
-              'Error loading templates. Please try again.',
+              'Error loading plan information. Please try again.',
               'error',
               3000
             );
@@ -865,12 +923,13 @@ export class PreviewComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => {
-        console.error('Error getting plan ID:', err);
+        console.error('Error loading template types:', err);
         this.confirmationService.showConfirmation(
-          'Error loading plan information. Please try again.',
+          'Error loading template types. Please try again.',
           'error',
           3000
         );
+        this.availableThemes.set([]);
       },
     });
   }
@@ -1041,10 +1100,20 @@ export class PreviewComponent implements OnInit, OnDestroy {
   /**
    * Helper method to update URL parameters without navigation
    */
-  private updateUrlParams(params: { [key: string]: string }): void {
-    // Get current params
+  private updateUrlParams(params: { [key: string]: string | null }): void {
+    // Get current params and filter out null values
+    const cleanParams: { [key: string]: string } = {};
+
+    // Process params to handle null values (removes the parameter)
+    Object.keys(params).forEach((key) => {
+      if (params[key] !== null) {
+        cleanParams[key] = params[key] as string;
+      }
+    });
+
+    // Create URL tree with cleaned params
     const urlTree = this.router.createUrlTree([], {
-      queryParams: params,
+      queryParams: cleanParams,
       queryParamsHandling: 'merge',
     });
 
@@ -1084,6 +1153,16 @@ export class PreviewComponent implements OnInit, OnDestroy {
    */
   startBuilding(): void {
     console.log('Starting building process');
+
+    // Check authentication before starting build process
+    if (!this.authService.isAuthenticated()) {
+      console.log('User not authenticated - redirecting to login');
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+
     this.showLoadingOverlay.set(true);
 
     // Set view mode to editing
@@ -1411,7 +1490,14 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
     // Determine if we're creating or updating a template
     const currentTemplateId = this.currentUserTemplateId();
-    const baseTemplateId = this.selectedBaseTemplateId();
+    let baseTemplateId = this.selectedBaseTemplateId();
+
+    // If we're creating a new template but don't have a selected base template ID,
+    // try to get the first available template ID from availableThemes
+    if (isNewTemplate && !baseTemplateId && this.availableThemes().length > 0) {
+      baseTemplateId = this.availableThemes()[0].id;
+      console.log(`Using first available template ID: ${baseTemplateId}`);
+    }
 
     console.log(
       `Saving template with ${isNewTemplate ? 'creation' : 'update'} mode:`
@@ -1423,7 +1509,23 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
     if (isNewTemplate && !baseTemplateId) {
       this.confirmationService.showConfirmation(
-        'Unable to save: No base template ID available for creation',
+        'Unable to save: No base template ID available for creation. Please select a template first.',
+        'error',
+        3000
+      );
+      this.showLoadingOverlay.set(false);
+      return;
+    }
+
+    // Make sure baseTemplateId is valid for creation
+    if (
+      isNewTemplate &&
+      (!baseTemplateId ||
+        baseTemplateId === 'undefined' ||
+        baseTemplateId === 'null')
+    ) {
+      this.confirmationService.showConfirmation(
+        'Invalid base template selected. Please try selecting a template again.',
         'error',
         3000
       );
@@ -1470,6 +1572,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
           this.updateUrlParams({
             templateId: savedTemplate.id,
             mode: 'edit',
+            newTemplate: null, // Remove the newTemplate flag
           });
 
           // Hide loading state
@@ -1491,6 +1594,12 @@ export class PreviewComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error saving template:', error);
+          console.error(
+            'Error details:',
+            error.error?.message || error.message
+          );
+          console.error('Error status:', error.status);
+          console.error('Error response:', error.error);
 
           // Hide loading state
           this.showLoadingOverlay.set(false);
@@ -1498,7 +1607,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
           // Show error message
           this.confirmationService.showConfirmation(
             'Failed to save your website: ' +
-              (error.message || 'Unknown error'),
+              (error.error?.message || error.message || 'Unknown error'),
             'error',
             5000
           );
@@ -1511,7 +1620,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
    */
   resetCustomizations(): void {
     // Ask for confirmation first
-    if (!confirm('Are you sure you want to reset all changes?')) {
+    if (
+      !confirm(
+        'Are you sure you want to reset all changes? This will start a new template with the same business type and plan.'
+      )
+    ) {
       return;
     }
 
@@ -1519,100 +1632,53 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.showLoadingOverlay.set(true);
     this.loadingOverlayClass.set('active');
 
-    // Check if we have a saved template ID
-    const templateId = this.currentUserTemplateId();
-    if (templateId) {
-      console.log(`Resetting to saved template with ID ${templateId}`);
+    // Preserve current business type and plan
+    const currentBusinessType = this.businessType();
+    const currentPlan = this.currentPlan();
 
-      // Reload the template from the API
-      this.userTemplateService
-        .getUserTemplateById(templateId)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (template) => {
-            if (!template) {
-              this.handleResetError('Template not found');
-              return;
-            }
+    // Clear template ID and name to start fresh
+    this.currentUserTemplateId.set(null);
+    this.currentTemplateName.set(null);
 
-            if (template.config) {
-              try {
-                // Safely parse the config string
-                const configStr = template.config.trim();
-                let savedCustomizations;
+    // Manually update the browser URL by completely removing the template-related parameters
+    // This is more thorough than just setting them to null with updateUrlParams
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete('templateId');
+    currentUrl.searchParams.delete('mode');
+    currentUrl.searchParams.delete('viewOnly');
+    // Make sure we keep or set the business type and plan
+    currentUrl.searchParams.set('businessType', currentBusinessType);
+    currentUrl.searchParams.set('plan', currentPlan);
+    currentUrl.searchParams.set('newTemplate', 'true');
 
-                // Make sure it's a valid JSON string before parsing
-                if (configStr.startsWith('{') && configStr.endsWith('}')) {
-                  savedCustomizations = JSON.parse(configStr);
-                } else {
-                  throw new Error('Invalid config format');
-                }
+    // Use history API to update URL without navigation
+    window.history.replaceState({}, '', currentUrl.toString());
 
-                console.log('Successfully parsed saved template config');
+    // Set flag to create new template
+    this.hasStartedBuilding.set(false);
+    this.hasSavedChangesFlag.set(false);
 
-                // Apply the saved configuration
-                this.customizations.set(savedCustomizations);
+    // Initialize with defaults for the current business type
+    this.initializeDefaultCustomizations();
 
-                // Update font if available
-                if (savedCustomizations.fontConfig) {
-                  const fontConfig = savedCustomizations.fontConfig;
-                  this.selectedFont.set({
-                    id: fontConfig.fontId,
-                    family: fontConfig.family,
-                    fallback: fontConfig.fallback,
-                  });
-                }
+    // Reset selected component
+    this.selectedComponent.set(null);
 
-                // Update tracking state
-                this.lastSavedState.set(structuredClone(savedCustomizations));
-                this.currentEditingState.set(
-                  structuredClone(savedCustomizations)
-                );
+    // Reset view mode
+    this.isViewOnlyStateService.setIsOnlyViewMode(false);
 
-                // Remove component selection
-                this.selectedComponent.set(null);
-
-                // Hide loading
-                this.showLoadingOverlay.set(false);
-
-                // Show confirmation
-                this.confirmationService.showConfirmation(
-                  'Customizations have been reset to the last saved version',
-                  'success',
-                  3000
-                );
-              } catch (error: any) {
-                this.handleResetError(
-                  `Error parsing saved template config: ${
-                    error.message || 'Unknown error'
-                  }`
-                );
-              }
-            } else {
-              this.handleResetError('No saved configuration found');
-            }
-          },
-          error: (error) => {
-            this.handleResetError(
-              `Error loading saved template: ${
-                error.message || 'Unknown error'
-              }`
-            );
-          },
-        });
-    } else {
-      // No saved template - reset to default customizations
-      console.log('No saved template ID found, resetting to defaults');
-      this.initializeDefaultCustomizations();
-      this.selectedComponent.set(null);
-      this.showLoadingOverlay.set(false);
-
-      this.confirmationService.showConfirmation(
-        'Customizations have been reset to defaults',
-        'info',
-        3000
-      );
+    // Hide loading and exit fullscreen mode
+    this.showLoadingOverlay.set(false);
+    if (this.isFullscreen()) {
+      this.toggleFullscreen();
     }
+
+    // Show confirmation
+    this.confirmationService.showConfirmation(
+      'Template has been reset. You can now start creating a new template.',
+      'info',
+      3000
+    );
   }
 
   /**

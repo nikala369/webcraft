@@ -48,18 +48,20 @@
       position: absolute;
       top: 1rem;
       right: 1rem;
-      background: rgba(255, 255, 255, 0.15);
-      border: none;
-      font-size: 1.5rem;
-      color: var(--text-color);
-      cursor: pointer;
-      transition: all 0.3s ease;
       width: 32px;
       height: 32px;
+      border: none;
       border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
+
+      /* smooth transitions for both background and rotation */
+      transition: background 0.3s ease, transform 0.3s ease;
+      transform-origin: center center;
+      will-change: background, transform;
 
       &:hover {
         background: rgba(255, 255, 255, 0.25);
@@ -67,10 +69,9 @@
       }
 
       .close-icon {
-        line-height: 0;
-        position: relative;
-        top: -1px;
-        color: white;
+        /* remove any manual nudges so it stays centered */
+        line-height: 1;
+        color: #fff;
       }
     }
 
@@ -208,32 +209,37 @@
   }
 }
 
-// Close button
 .close-button {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 36px;
-  height: 36px;
-  background-color: rgba(255, 255, 255, 0.15);
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.3s;
-  z-index: 2;
+  transition: background 0.3s ease;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.25);
-    transform: rotate(90deg);
+    background: rgba(255, 255, 255, 0.25);
   }
 
   .close-icon {
-    font-size: 24px;
-    line-height: 1;
-    color: rgba(255, 255, 255, 0.9);
+    // Centered inline-block so transform origin works
+    display: inline-block;
+    color: #fff;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center center;
+    will-change: transform;
+  }
+
+  // On hover, rotate + gently scale up
+  &:hover .close-icon {
+    transform: rotate(90deg) scale(1.2);
   }
 }
 

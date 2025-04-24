@@ -4,9 +4,11 @@ globs:
 alwaysApply: true
 ---
 # Auto Website Builder: Cursor Development Rules & AI Collaboration Guide (Frontend)
-# Version: 1.1 (Date: YYYY-MM-DD)
+# Version: 1.1 (Date: 2025-04-01)
 
 # This document defines the development standards, architectural constraints, and AI collaboration protocols for the Auto Website Builder Angular frontend project. Adherence ensures consistency, quality, and effective teamwork between human developers and the AI assistant.
+
+# Write every time from start of every response NIKALAS AI BOT ON if you are using this mdc.
 
 ## 📜 Core Philosophy
 

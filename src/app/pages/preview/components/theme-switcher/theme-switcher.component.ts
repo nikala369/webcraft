@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../../../core/services/theme/theme.service';
-import { ThemeListItem } from '../../../../core/services/theme/theme';
 import { ThemeColorsService } from '../../../../core/services/theme/theme-colors.service';
 import {
   PageResponse,
@@ -20,6 +19,15 @@ import {
 } from '../../../../core/services/template/template.service';
 import { catchError, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
+
+// Update interface to use string IDs for compatibility with UUIDs
+export interface ThemeListItem {
+  id: string;
+  name: string;
+  planType: 'standard' | 'premium';
+  businessType: string;
+  description?: string;
+}
 
 @Component({
   selector: 'app-theme-switcher',
@@ -37,7 +45,7 @@ export class ThemeSwitcherComponent implements OnInit {
   dropdownOpen = signal(false);
   private planSignal = signal<'standard' | 'premium'>('standard');
   private businessTypeSignal = signal<string>('');
-  @Input() defaultThemeId?: number;
+  @Input() defaultThemeId?: string;
   accentColor = '';
 
   // Allow passing in pre-filtered themes
@@ -82,7 +90,7 @@ export class ThemeSwitcherComponent implements OnInit {
     }
   }
 
-  @Output() themeChange = new EventEmitter<number>();
+  @Output() themeChange = new EventEmitter<string>();
 
   // Filtered themes based on the selected plan
   filteredThemes = computed(() => {
@@ -90,7 +98,7 @@ export class ThemeSwitcherComponent implements OnInit {
   });
 
   selectedTheme = signal<ThemeListItem>({
-    id: 0,
+    id: '0',
     name: 'Loading...',
     planType: 'standard',
     businessType: '',
@@ -199,7 +207,7 @@ export class ThemeSwitcherComponent implements OnInit {
             // Map search results to theme list items
             const mappedThemes: ThemeListItem[] = response.content.map(
               (template: TemplateSearch) => ({
-                id: parseInt(template.id) || Math.floor(Math.random() * 1000), // Fallback ID if parsing fails
+                id: template.id,
                 name: template.name,
                 planType:
                   template.templatePlan.type === 'PREMIUM'
@@ -238,19 +246,19 @@ export class ThemeSwitcherComponent implements OnInit {
     const mockThemesByBusinessType: Record<string, ThemeListItem[]> = {
       restaurant: [
         {
-          id: 101,
+          id: '101',
           name: 'Restaurant Light',
           planType: 'standard',
           businessType: 'restaurant',
         },
         {
-          id: 102,
+          id: '102',
           name: 'Restaurant Dark',
           planType: 'standard',
           businessType: 'restaurant',
         },
         {
-          id: 103,
+          id: '103',
           name: 'Restaurant Premium',
           planType: 'premium',
           businessType: 'restaurant',
@@ -258,19 +266,19 @@ export class ThemeSwitcherComponent implements OnInit {
       ],
       salon: [
         {
-          id: 201,
+          id: '201',
           name: 'Salon Elegant',
           planType: 'standard',
           businessType: 'salon',
         },
         {
-          id: 202,
+          id: '202',
           name: 'Salon Modern',
           planType: 'standard',
           businessType: 'salon',
         },
         {
-          id: 203,
+          id: '203',
           name: 'Salon Premium',
           planType: 'premium',
           businessType: 'salon',
@@ -278,19 +286,19 @@ export class ThemeSwitcherComponent implements OnInit {
       ],
       portfolio: [
         {
-          id: 301,
+          id: '301',
           name: 'Portfolio Light',
           planType: 'standard',
           businessType: 'portfolio',
         },
         {
-          id: 302,
+          id: '302',
           name: 'Portfolio Dark',
           planType: 'standard',
           businessType: 'portfolio',
         },
         {
-          id: 303,
+          id: '303',
           name: 'Portfolio Premium',
           planType: 'premium',
           businessType: 'portfolio',
@@ -298,19 +306,19 @@ export class ThemeSwitcherComponent implements OnInit {
       ],
       architecture: [
         {
-          id: 501,
+          id: '501',
           name: 'Architecture Minimal',
           planType: 'standard',
           businessType: 'architecture',
         },
         {
-          id: 502,
+          id: '502',
           name: 'Architecture Bold',
           planType: 'standard',
           businessType: 'architecture',
         },
         {
-          id: 503,
+          id: '503',
           name: 'Architecture Premium',
           planType: 'premium',
           businessType: 'architecture',
@@ -321,25 +329,25 @@ export class ThemeSwitcherComponent implements OnInit {
     // Default themes if no business type is selected yet
     const defaultThemes: ThemeListItem[] = [
       {
-        id: 1,
+        id: '1',
         name: 'Business Blue',
         planType: 'standard' as 'standard' | 'premium',
         businessType: 'all',
       },
       {
-        id: 2,
+        id: '2',
         name: 'Modern Green',
         planType: 'standard' as 'standard' | 'premium',
         businessType: 'all',
       },
       {
-        id: 3,
+        id: '3',
         name: 'Creative Purple',
         planType: 'standard' as 'standard' | 'premium',
         businessType: 'all',
       },
       {
-        id: 4,
+        id: '4',
         name: 'Premium Corporate',
         planType: 'premium' as 'standard' | 'premium',
         businessType: 'all',

@@ -71,17 +71,30 @@ export class UserTemplateService {
     name: string,
     config: Customizations
   ): Observable<UserTemplate> {
+    console.log(`Creating user template with base template ID: ${templateId}`);
+    console.log(`Template name: ${name}`);
+    console.log(`Config size: ${JSON.stringify(config).length} characters`);
+
     const createDto: UserTemplateCreateDto = {
       templateId,
       name,
       config: JSON.stringify(config),
     };
 
+    console.log('CreateUserTemplate request payload:', createDto);
+    console.log('API endpoint:', this.USER_TEMPLATE_BASE);
+
     return this.http
       .post<UserTemplate>(this.USER_TEMPLATE_BASE, createDto)
       .pipe(
         catchError((error) => {
           console.error('Error creating user template:', error);
+          console.error(
+            'Error details:',
+            error.error?.message || error.message
+          );
+          console.error('Error status:', error.status);
+          console.error('Error response:', error.error);
           return throwError(() => error);
         })
       );
@@ -202,12 +215,24 @@ export class UserTemplateService {
     config: Customizations,
     currentUserTemplateId?: string
   ): Observable<UserTemplate> {
+    console.log('saveUserTemplate called with:');
+    console.log('- Base template ID:', templateId);
+    console.log('- Template name:', name);
+    console.log(
+      '- Current user template ID:',
+      currentUserTemplateId || 'N/A (creating new)'
+    );
+
     // If we have a current template ID, we're updating
     if (currentUserTemplateId) {
+      console.log(
+        `Updating existing template with ID: ${currentUserTemplateId}`
+      );
       return this.updateUserTemplate(currentUserTemplateId, name, config);
     }
 
     // Otherwise, we're creating a new template
+    console.log(`Creating new template based on template ID: ${templateId}`);
     return this.createUserTemplate(templateId, name, config);
   }
 

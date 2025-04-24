@@ -67,44 +67,27 @@
       <circle cx="12" cy="20" r="1" fill="currentColor" />
     </ng-container>
 
-    <!-- Enter Fullscreen icon -->
-    <ng-container *ngSwitchCase="'enterFullscreen'">
-      <path
-        d="M8 3H5C3.89543 3 3 3.89543 3 5V8"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M16 3H19C20.1046 3 21 3.89543 21 5V8"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M8 21H5C3.89543 21 3 20.1046 3 19V16"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M16 21H19C20.1046 21 21 20.1046 21 19V16"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </ng-container>
-
-    <!-- Exit Fullscreen icon -->
+    <!-- Exit Fullscreen icon – simple, elegant X -->
     <ng-container *ngSwitchCase="'exitFullscreen'">
-      <polyline points="16 4 12 8 8 4" />
-      <polyline points="16 20 12 16 8 20" />
-      <polyline points="4 8 8 12 4 16" />
-      <polyline points="20 8 16 12 20 16" />
+      <!-- Diagonal lines crossing at center -->
+      <line
+        x1="7"
+        y1="7"
+        x2="17"
+        y2="17"
+        stroke-width="2.5"
+        stroke="#ef4444"
+        stroke-linecap="round"
+      />
+      <line
+        x1="17"
+        y1="7"
+        x2="7"
+        y2="17"
+        stroke-width="2.5"
+        stroke="#ef4444"
+        stroke-linecap="round"
+      />
     </ng-container>
 
     <!-- Star/Start Building icon -->
@@ -343,7 +326,7 @@
       <path
         d="M12 4v16m8-8H4"
         stroke="currentColor"
-        stroke-width="1.5"
+        stroke-width="2.5"
         stroke-linecap="round"
         stroke-linejoin="round"
       />
