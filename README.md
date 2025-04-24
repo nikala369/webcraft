@@ -20,7 +20,7 @@ Webcraft is a powerful template-based website builder that allows users to creat
 - **State Management**: Angular Signals for reactive state management
 - **Authentication**: JWT-based authentication
 
-## Architecture
+## Application Architecture
 
 ### Frontend Architecture
 
@@ -33,7 +33,7 @@ The Webcraft frontend is built on Angular and follows a component-based architec
 
 ### Key Components
 
-- **Preview Component**: The main website builder interface where users customize their templates
+- **PreviewComponent**: The main website builder interface where users customize their templates
 - **Theme Switcher**: Allows users to select different themes for their website
 - **Business Type Selector**: Helps users choose their business category
 - **Component Customizer**: Modal interface for editing specific website sections
@@ -57,7 +57,59 @@ The frontend communicates with a Java Spring Boot backend API for:
 - Business type and template type management
 - Website publishing and deployment
 
-## Development Guide
+## Application Features
+
+### Authentication-Only Flow
+
+- Strict authentication checks in PreviewComponent
+- Redirection to login for unauthenticated users
+- API-based persistence instead of sessionStorage
+
+### Mobile Experience
+
+- Mobile view preview of websites
+- Editing restrictions in mobile view
+- Responsive design for all screen sizes
+
+### State Management
+
+- Signal-based reactive state
+- Computed properties for derived state
+- Effects for side-effect management
+
+### Security Considerations
+
+- JWT authentication with the backend
+- Client-side validation for UX with server-side validation for security
+- No secrets stored in frontend code
+
+## Development Guidelines
+
+### Component Structure
+
+- Standalone Angular components
+- Clear separation between presentational and container components
+- Signal-based state management within components
+
+### API Integration
+
+- Strong typing for API requests and responses
+- Comprehensive error handling
+- Retry mechanisms for transient failures
+
+### Code Organization
+
+- Components limited to 300 lines of code where possible
+- Logical grouping of related functionality
+- Comprehensive documentation of complex logic
+
+### Testing Strategy
+
+- Component testing with Angular TestBed
+- Manual validation of UI flows
+- API integration testing
+
+## Setup and Development
 
 ### Setup
 
@@ -65,25 +117,13 @@ The frontend communicates with a Java Spring Boot backend API for:
 2. Install dependencies: `npm install`
 3. Start the development server: `npm start`
 
-### Key Development Notes
+### Development Workflow
 
-- **Template-Based Approach**: Webcraft is specifically designed as a template-based builder, not a drag-and-drop editor
-- **API Integration**: The frontend consumes a Java backend API - see `src/app/core/services` for implementation details
-- **State Management**: Use Angular Signals for state management to ensure reactivity and performance
-- **Component Guidelines**: Follow the component structure in `docs/component-development-guide.md`
-- **Backend Integration**: Refer to `docs/backend-integration-guide.md` for details on API communication
-
-### Building & Deployment
-
-1. Build the project: `npm run build`
-2. Deploy the static files to your hosting platform
-
-## User Flow
-
-1. **Plan Selection**: Choose between Standard or Premium plan
-2. **Business Type Selection**: Select your business category
-3. **Customization**: Customize your website template with your content and styling preferences
-4. **Publishing**: Save and publish your website
+1. **Authentication**: Ensure you're logged in to test restricted features
+2. **Template Selection**: Start by selecting a business type and template
+3. **Customization**: Use the component customizer to modify sections
+4. **Preview**: Test in both desktop and mobile views
+5. **Publish**: Test the publishing flow
 
 ## Contributing
 
@@ -91,7 +131,7 @@ Please review the development guides before contributing to the project:
 
 - Component Development: `docs/component-development-guide.md`
 - Backend Integration: `docs/backend-integration-guide.md`
-- Customization Schema: `standard-customization-schema.json`
+- Customization Schema: `docs/standard-customization-schema.json`
 
 ## License
 

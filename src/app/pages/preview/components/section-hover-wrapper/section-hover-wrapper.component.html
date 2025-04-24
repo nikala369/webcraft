@@ -1,7 +1,7 @@
 <div
   class="section-hover-wrapper"
   [class.hover-active]="
-    isHovered && !this.isViewOnlyStateService.isOnlyViewMode() && editable
+    isHovered && !isViewOnlyStateService.isOnlyViewMode() && editable
   "
   [class.view-mobile]="isMobileView === 'view-mobile'"
   (mouseenter)="isHovered = true"
@@ -12,7 +12,7 @@
 
   <!-- Edit button (no full overlay) -->
   <button
-    *ngIf="!this.isViewOnlyStateService.isOnlyViewMode() && editable"
+    *ngIf="!isViewOnlyStateService.isOnlyViewMode() && editable"
     class="edit-button"
     [class.visible]="isHovered"
     (click)="handleEdit(); $event.stopPropagation()"

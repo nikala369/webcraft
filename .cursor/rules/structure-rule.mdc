@@ -4,7 +4,7 @@ globs:
 alwaysApply: true
 ---
 # Auto Website Builder: Cursor Development Rules & AI Collaboration Guide (Frontend)
-# Version: 1.1 (Date: 2025-04-01)
+# Version: 2.0 (Date: 2025-04-15)
 
 # This document defines the development standards, architectural constraints, and AI collaboration protocols for the Auto Website Builder Angular frontend project. Adherence ensures consistency, quality, and effective teamwork between human developers and the AI assistant.
 
@@ -26,8 +26,8 @@ alwaysApply: true
         *   `README.md`: Project overview, setup, tech stack (Angular/Signals frontend, Java backend consumer), NO Drag-and-Drop clarification, core user flow, high-level architecture, links to other docs.
         *   `docs/component-development-guide.md`: Guidelines for creating/structuring Angular components.
         *   `docs/backend-integration-guide.md`: Details on **consuming** the Java Spring Boot API (endpoints, request/response formats, frontend authentication methods).
-        *   `standard-customization-schema.json`: Data contracts for section configurations.
-        *   `docs/tasks.md` (or similar task tracker): Current task definitions, requirements, acceptance criteria.
+        *   `docs/standard-customization-schema.json`: Data contracts for section configurations.
+        *   `docs/component-data-flow.md`: Understanding of data flow between components.
     *   **Clarification Required:** If documentation is missing, unclear, outdated, or conflicts with the request, **immediately ask for clarification** before proceeding.
 2.  **Architectural Adherence:**
     *   **Frontend Responsibility:** The Angular application handles presentation, user interaction, client-side state management (preferring **Angular Signals**), and communication with the backend API.
@@ -43,14 +43,14 @@ alwaysApply: true
 
 ## ⚙️ Task Execution & Workflow
 
-1.  **Task Definition Clarity:** Ensure a clear understanding of requirements, acceptance criteria, affected user flows, and API dependencies from `docs/tasks.md` and PRDs.
+1.  **Task Definition Clarity:** Ensure a clear understanding of requirements, acceptance criteria, affected user flows, and API dependencies from documentation and project requirements.
 2.  **Systematic Change Protocol (Frontend):**
     *   **Identify Impact:** Determine affected Angular components, services, signals, state, user flows, and API interactions. Assess potential side effects (especially Standard vs. Premium differences).
     *   **Plan:** Outline implementation steps. Address state management needs (Signals) and API call requirements upfront. Tackle one logical change at a time.
     *   **Verify Validation Method:** Confirm how the change will be validated (primarily manual functional testing, API interaction verification via DevTools).
 3.  **Progress Tracking:**
-    *   Maintain `docs/status.md` (or similar) with task status, blockers (e.g., API issues), and completed items.
-    *   Update `docs/tasks.md` upon completion or if requirements evolve.
+    *   Document changes made, issues encountered, and solutions implemented.
+    *   Report completion status and any remaining tasks or considerations.
 
 ## ✨ Code Quality & Style
 
@@ -63,6 +63,7 @@ alwaysApply: true
 7.  **Pattern Consistency:** Adhere rigorously to established project patterns (Signals usage, service structure, API interaction patterns). Discuss significant new pattern introductions before implementation.
 8.  **File Naming:** Follow Angular conventions precisely (e.g., `feature.component.ts`, `data.service.ts`, `core.config.ts`, `user.model.ts`). Avoid vague or temporary names in committed code.
 9.  **No Utility Scripts in `src/`:** Commit utility or one-off scripts to a separate top-level `scripts/` directory with clear documentation, not within the main application source.
+10. **Signal-Based State Management:** Organize signals in logical groups within components. Utilize computed signals for derived state and effects for side effects.
 
 ## ♻️ Refactoring
 
@@ -70,6 +71,7 @@ alwaysApply: true
 2.  **Holistic Review:** When refactoring an area, look for related opportunities for consolidation or improvement in adjacent components or services.
 3.  **Modify In-Place:** Edit existing files directly. Do not duplicate files with version suffixes (e.g., `component-v2.ts`). Rely on version control for history.
 4.  **Comprehensive Verification:** After refactoring, meticulously verify all affected functionality through manual testing. **Crucially, confirm that interactions with backend APIs remain correct and data integrity is preserved.**
+5.  **Logical Organization for Large Components:** For large components (like PreviewComponent), organize methods in logical groups using clear comment-based sections. Group related functionality together.
 
 ## 🐛 Debugging & Troubleshooting
 
@@ -77,9 +79,9 @@ alwaysApply: true
 2.  **Leverage Developer Tools:** Systematically use the browser's developer console (check for errors, warnings, logs) and the Network tab (inspect API requests/responses/statuses). Utilize Angular DevTools for component state inspection (especially Signals) and hierarchy analysis.
 3.  **Targeted Logging:** Add specific `console.log` statements strategically within component lifecycle hooks, service methods, Signal computations (`effect`), event handlers, and RxJS pipes (`tap(console.log)`) to trace execution flow and variable states. *Remove temporary logs before committing.*
 4.  **Isolate the Problem:** Attempt to reproduce the bug in a minimal context. Determine if the issue lies within component logic, service interaction, Signal updates, API communication, data transformation, or CSS/template rendering.
-5.  **Check for Prior Fixes:** Before extensive debugging, quickly check internal documentation (`docs/fixes/` if used), commit history, or task notes for similar previously resolved issues.
+5.  **Check for Prior Fixes:** Before extensive debugging, quickly check internal documentation, commit history, or task notes for similar previously resolved issues.
 6.  **Document Complex Fixes:** For bugs requiring significant investigation (e.g., complex state interactions, subtle API issues), create a concise `.md` file (e.g., in `docs/fixes/`) outlining the problem, steps taken, and the final solution for future reference.
-7.  **Utilize Resources:** Consult official Angular documentation (especially for Signals), relevant project guides (`backend-integration-guide.md`), and reputable community resources (Stack Overflow, blogs) when encountering unfamiliar issues or seeking best practices.
+7.  **Utilize Resources:** Consult official Angular documentation (especially for Signals), relevant project guides, and reputable community resources when encountering unfamiliar issues or seeking best practices.
 
 ## 🔒 Security (Frontend Perspective)
 
@@ -93,7 +95,60 @@ alwaysApply: true
     *   Avoid using `[innerHTML]` binding with potentially unsanitized content, especially user-generated content retrieved from the API, unless absolutely necessary and the content is guaranteed to be sanitized server-side or via Angular's `DomSanitizer`.
 4.  **Client-Side Validation for UX Only:** Implement Angular forms validation (template-driven or reactive) to provide immediate user feedback and improve UX. However, **recognize this is purely cosmetic** and can be bypassed; **authoritative validation must occur on the backend**.
 5.  **Dependency Management:** Be mindful of `npm` dependencies. Use reputable libraries. Periodically run `npm audit` and address reported vulnerabilities, especially high/critical ones affecting production dependencies.
-6.  **No Secrets in Frontend Code:** **Absolutely never** embed API keys, secret tokens, passwords, or any other sensitive credentials directly within the Angular source code, including environment files (`environment.ts`, `environment.prod.ts`). These files are bundled and delivered to the client browser. Secure credentials must be handled server-side or obtained dynamically post-authentication via secure API calls if necessary for specific client-side integrations (and handled with extreme care).
+6.  **No Secrets in Frontend Code:** **Absolutely never** embed API keys, secret tokens, passwords, or any other sensitive credentials directly within the Angular source code, including environment files. These files are bundled and delivered to the client browser. Secure credentials must be handled server-side or obtained dynamically post-authentication via secure API calls if necessary for specific client-side integrations (and handled with extreme care).
+
+## 🖥️ Component Architecture and State Management
+
+1. **State Management Philosophy:**
+   * Use a combination of signals, computed values, and effects for managing component state.
+   * Prefer local state in components when possible, service-level state when shared across components.
+   * The PreviewComponent acts as the main container for website customization state.
+
+2. **PreviewComponent as Central Hub:**
+   * PreviewComponent manages the overall state of the website building process.
+   * It coordinates between different parts of the application (selection, customization, viewing, saving).
+   * Follows clear logical organization of methods and state.
+
+3. **Authentication Workflow:**
+   * Always check user authentication before allowing editing operations.
+   * Redirect to login when appropriate, preserving the return URL.
+   * Maintain clear authentication-dependent UI states.
+
+4. **Mobile Responsive Behavior:**
+   * Disable editing in mobile view mode.
+   * Provide clear transitions between desktop and mobile views.
+   * Ensure all UI elements behave appropriately at different screen sizes.
+
+5. **Template Structure Organization:**
+   * StandardStructureComponent and PremiumStructureComponent handle different plan levels.
+   * Each section within these components should be modular and independent.
+   * Sections receive customization data and emit selection events.
+
+## 🧩 Project-Specific Patterns to Follow
+
+1. **ScrollService for ViewOnly Mode:**
+   * Use ScrollService.isOnlyViewMode for controlling view-only states.
+   * Apply the same pattern when creating new view modes or UI flags.
+
+2. **Template Loading Flow:**
+   * Follow the established pattern for loading templates from the API.
+   * Honor the preventThemeOverride flag to avoid data loss.
+   * Maintain proper error handling and fallbacks.
+
+3. **Business Type Selection:**
+   * Use BusinessTypeSelectorComponent consistently.
+   * Follow the established patterns for business type display names.
+   * Respect the isBusinessTypeReadonly constraints.
+
+4. **Customization Pattern:**
+   * Use the handleComponentSelection and handleComponentUpdate methods.
+   * Follow the path-based pattern for accessing nested customization data.
+   * Implement special handling for specific sections (hero, about) as needed.
+
+5. **URL Parameter Management:**
+   * Use updateUrlParams to maintain URL state without navigation.
+   * Follow the existing pattern for query parameter handling.
+   * Preserve user context in URLs.
 
 ---
-*End of Auto Website Builder Cursor Rules (Version 1.1)*
+*End of Auto Website Builder Cursor Rules (Version 2.0)*

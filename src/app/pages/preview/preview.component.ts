@@ -15,7 +15,24 @@ import {
   NavigationEnd,
   RouterModule,
 } from '@angular/router';
+import { CommonModule, UpperCasePipe } from '@angular/common';
+import { filter, takeUntil } from 'rxjs/operators';
+import { Subject, switchMap } from 'rxjs';
+
+// Services
 import { ThemeService } from '../../core/services/theme/theme.service';
+import { ThemeColorsService } from '../../core/services/theme/theme-colors.service';
+import { ScrollService } from '../../core/services/shared/scroll/scroll.service';
+import { ConfirmationService } from '../../core/services/shared/confirmation/confirmation.service';
+import { BusinessConfigService } from '../../core/services/business-config/business-config.service';
+import { UserTemplateService } from '../../core/services/template/user-template.service';
+import { UserBuildService } from '../../core/services/build/user-build.service';
+import { SubscriptionService } from '../../core/services/subscription/subscription.service';
+import { AuthService } from '../../core/services/auth/auth.service';
+import { SelectionStateService } from '../../core/services/selection/selection-state.service';
+import { TemplateService } from '../../core/services/template/template.service';
+
+// Components
 import { ThemeSwitcherComponent } from './components/theme-switcher/theme-switcher.component';
 import {
   FontOption,
@@ -25,11 +42,6 @@ import { PreviewViewToggleComponent } from './components/preview-view-toggle/pre
 import { ComponentCustomizerComponent } from './components/component-customizer/component-customizer.component';
 import { PremiumStructureComponent } from './premium-structure/premium-structure.component';
 import { StandardStructureComponent } from './standard-structure/standard-structure.component';
-import { CommonModule, UpperCasePipe } from '@angular/common';
-import { filter, takeUntil } from 'rxjs/operators';
-import { Subject, switchMap } from 'rxjs';
-import { ScrollService } from '../../core/services/shared/scroll/scroll.service';
-import { ConfirmationService } from '../../core/services/shared/confirmation/confirmation.service';
 import { PlanBadgeComponent } from '../../shared/components/plan-badge/plan-badge.component';
 import { FeaturesSectionComponent } from '../../shared/components/features-section/features-section.component';
 import { CheckoutPanelComponent } from '../../shared/components/checkout-panel/checkout-panel.component';
@@ -37,24 +49,20 @@ import { BuildStepsComponent } from '../../shared/components/build-steps/build-s
 import { FloatingCheckoutButtonComponent } from '../../shared/components/floating-checkout-button/floating-checkout-button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { BusinessTypeSelectorComponent } from './components/business-type-selector/business-type-selector.component';
-import { BUSINESS_TYPE_MENU_ITEMS } from '../../core/models/business-types';
-import { ThemeColorsService } from '../../core/services/theme/theme-colors.service';
 import { WebcraftLoadingComponent } from '../../shared/components/webcraft-loading/webcraft-loading.component';
+
+// Models
 import {
   Customizations,
   ThemeData,
 } from '../../core/models/website-customizations';
-import { BusinessConfigService } from '../../core/services/business-config/business-config.service';
-import { UserTemplateService } from '../../core/services/template/user-template.service';
-import { UserBuildService } from '../../core/services/build/user-build.service';
-import { SubscriptionService } from '../../core/services/subscription/subscription.service';
-import { AuthService } from '../../core/services/auth/auth.service';
-import { SelectionStateService } from '../../core/services/selection/selection-state.service';
-import { TemplateService } from '../../core/services/template/template.service';
-// Fixed import directly from service to avoid module resolution issues
+import {
+  BUSINESS_TYPE_MENU_ITEMS,
+  BUSINESS_TYPES,
+} from '../../core/models/business-types';
+// Types
 import type { UserTemplate } from '../../core/services/template/user-template.service';
 import type { Template } from '../../core/services/template/template.service';
-import { BUSINESS_TYPES } from '../../core/models/business-types';
 
 /**
  * PreviewComponent is the main interface for the website builder.
@@ -114,70 +122,85 @@ export class PreviewComponent implements OnInit, OnDestroy {
   private selectionStateService = inject(SelectionStateService);
 
   // ======== CORE STATE SIGNALS ========
-  // View state
+
+  /**
+   * Template state management using consolidated signal pattern
+   * This represents the single source of truth for template state
+   */
+  templateState = signal<TemplateState>({
+    id: null,
+    name: 'Untitled Template',
+    baseId: null,
+    businessType: '',
+    businessTypeName: '',
+    plan: 'standard',
+  });
+
+  // ---- View and UI State ----
+  /** Controls whether the mobile view is active */
   isMobileView = signal(window.innerWidth <= 768);
+
+  /** Controls desktop vs mobile preview mode */
   viewMode = signal<'view-desktop' | 'view-mobile'>('view-desktop');
 
-  // Authentication state
-  isAuthenticated = computed(() => this.authService.isAuthenticated());
+  /** Whether fullscreen mode is active */
+  private fullscreenState = signal(false);
+  isFullscreen = this.fullscreenState.asReadonly();
 
-  // Building process state
-  hasStartedBuilding = signal<boolean>(false);
-  private lastSavedState = signal<Customizations | null>(null);
-  private currentEditingState = signal<Customizations | null>(null);
-  currentStep = signal<number>(1); // Tracks progress in the website building flow
-  private hasSavedChangesFlag = signal<boolean>(false); // Tracks if changes were saved
+  /** Position to restore after exiting fullscreen */
+  private preFullscreenScrollPosition = 0;
 
-  // Template identification state
-  currentUserTemplateId = signal<string | null>(null);
-  currentTemplateName = signal<string | null>(null);
-  selectedBaseTemplateId = signal<string | null>(null);
-  businessTypeDisplayName = signal<string>('');
+  /** Whether the business type selector should be shown */
+  showBusinessTypeSelector = signal<boolean>(false);
 
-  // UI state
+  /** Selected component for customization in the editor */
   selectedComponent = signal<{
     key: string;
     name: string;
     path?: string;
   } | null>(null);
 
-  // Product configuration
+  // ---- Authentication and Build State ----
+  /** Whether the user is authenticated */
+  isAuthenticated = computed(() => this.authService.isAuthenticated());
+
+  /** Whether the user has started building their website */
+  hasStartedBuilding = signal<boolean>(false);
+
+  /** Whether the user has saved changes */
+  private hasSavedChangesFlag = signal<boolean>(false);
+
+  /** Progress step in the website building flow */
+  currentStep = signal<number>(1);
+
+  // ---- Template Identification ----
+  /** ID of the current user template (if editing existing) */
+  currentUserTemplateId = signal<string | null>(null);
+
+  /** Name of the current template */
+  currentTemplateName = signal<string | null>(null);
+
+  /** ID of the selected base template */
+  selectedBaseTemplateId = signal<string | null>(null);
+
+  /** Display name for the selected business type */
+  businessTypeDisplayName = signal<string>('');
+
+  // ---- Product Configuration ----
+  /** Current plan (standard or premium) */
   currentPlan = signal<'standard' | 'premium'>('standard');
-  businessType = signal<string>(''); // Selected business type
-  showBusinessTypeSelector = signal<boolean>(false); // Control visibility of business type selector
+
+  /** Selected business type key */
+  businessType = signal<string>('');
+
+  /** Current page being edited */
   currentPage = signal<string>('home');
+
+  /** Selected font for the template */
   selectedFont = signal<FontOption | null>(null);
 
-  // Loading state
-  showLoadingOverlay = signal<boolean>(false);
-  loadingOverlayClass = signal<string>('');
-
-  // Themes based on business type
-  availableThemes = signal<any[]>([]);
-
-  // Fullscreen state management
-  private fullscreenState = signal(false);
-  isFullscreen = this.fullscreenState.asReadonly();
-  private preFullscreenScrollPosition = 0;
-
-  // Theme management
-  defaultThemeId = computed(() =>
-    this.currentPlan() === 'standard' ? '1' : '4'
-  );
-
-  // Flag to prevent theme service from overriding user customizations
-  private preventThemeOverride = signal<boolean>(false);
-
-  // Check if editing is allowed (disabled when in mobile view)
-  isEditingAllowed = computed(() => this.viewMode() === 'view-desktop');
-
-  // Readonly state for preventing changes to businessType after creation
-  isBusinessTypeReadonly = computed(
-    () => this.currentUserTemplateId() !== null || this.isFullscreen()
-  );
-
-  // ======== DEFAULT CUSTOMIZATIONS ========
-  // Default customization values when no saved state exists
+  // ---- Customization State ----
+  /** Latest customizations being edited */
   customizations = signal<Customizations>({
     fontConfig: {
       fontId: 1,
@@ -247,8 +270,51 @@ export class PreviewComponent implements OnInit, OnDestroy {
     },
   });
 
+  /** Previously saved state for comparison */
+  private lastSavedState = signal<Customizations | null>(null);
+
+  /** Current editing state for tracking changes */
+  private currentEditingState = signal<Customizations | null>(null);
+
+  // ---- Loading State ----
+  /** Controls the visibility of the loading overlay */
+  showLoadingOverlay = signal<boolean>(false);
+
+  /** CSS class for the loading overlay */
+  loadingOverlayClass = signal<string>('');
+
+  // ---- Themes and Settings ----
+  /** Available themes for the current business type */
+  availableThemes = signal<any[]>([]);
+
+  /** Default theme ID based on plan */
+  defaultThemeId = computed(() =>
+    this.currentPlan() === 'standard' ? '1' : '4'
+  );
+
+  /** Flag to prevent theme service from overriding user customizations */
+  private preventThemeOverride = signal<boolean>(false);
+
+  // ---- Computed UI State ----
+  /** Whether editing is allowed (disabled in mobile view) */
+  isEditingAllowed = computed(() => this.viewMode() === 'view-desktop');
+
+  /** Whether the business type can be changed */
+  isBusinessTypeReadonly = computed(
+    () => this.currentUserTemplateId() !== null || this.isFullscreen()
+  );
+
+  /**
+   * Reference to business types for display name mapping
+   */
+  private businessTypes = BUSINESS_TYPES;
+
   // ======== COMPUTED STATE ========
-  // Computed selection state for the component customizer modal
+
+  /**
+   * Provides the component data for the currently selected component
+   * Handles complex path traversal and special component-specific logic
+   */
   selectedCustomization = computed(() => {
     const selected = this.selectedComponent();
     if (!selected) return null;
@@ -397,8 +463,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
   });
 
   // ======== LIFECYCLE HOOKS ========
+  /**
+   * Initialize effects and state synchronization
+   */
   constructor() {
-    // Effect to open sidebar, change state based on component selection
+    // Effect to open sidebar when component is selected
     effect(
       () => {
         this.modalStateService.setModalOpen(this.selectedComponent() !== null);
@@ -413,8 +482,26 @@ export class PreviewComponent implements OnInit, OnDestroy {
       },
       { allowSignalWrites: true }
     );
+
+    // Effect to keep consolidated state in sync with individual signals
+    effect(
+      () => {
+        this.templateState.set({
+          id: this.currentUserTemplateId(),
+          name: this.currentTemplateName() || 'Untitled Template',
+          baseId: this.selectedBaseTemplateId(),
+          businessType: this.businessType(),
+          businessTypeName: this.businessTypeDisplayName(),
+          plan: this.currentPlan(),
+        });
+      },
+      { allowSignalWrites: true }
+    );
   }
 
+  /**
+   * Set up event listeners and initialize component based on route parameters
+   */
   ngOnInit(): void {
     console.log('PreviewComponent initializing');
 
@@ -429,13 +516,25 @@ export class PreviewComponent implements OnInit, OnDestroy {
       document.body.classList.add('fullscreen-mode');
     }
 
-    // Don't require authentication for initial preview view
-    // Only check authentication when starting to build or accessing specific functionality
-
     // Parse route parameters to determine the operation mode
     this.parseRouteParameters();
   }
 
+  /**
+   * Remove event listeners and clean up subscriptions
+   */
+  ngOnDestroy(): void {
+    // Clean up all event listeners and subscriptions
+    window.removeEventListener('resize', this.updateIsMobile.bind(this));
+    document.removeEventListener(
+      'fullscreenchange',
+      this.handleFullscreenChange
+    );
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ======== ROUTE PARAMETER HANDLING ========
   /**
    * Parse route parameters to determine operation mode and initialize component state
    */
@@ -540,8 +639,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ======== TEMPLATE MANAGEMENT ========
   /**
-   * Load an existing template from the API with improved error handling
+   * Load an existing template from the API
+   * @param templateId ID of the template to load
+   * @param mode View or edit mode
    */
   private loadExistingTemplate(templateId: string, mode: string): void {
     // Show loading state
@@ -705,7 +807,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle template loading errors with consistent messaging
+   * Handle template loading errors
    */
   private handleTemplateLoadError(error: any): void {
     console.error('Error loading template from API:', error);
@@ -722,7 +824,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Initialize state for creating a new template with improved handling
+   * Initialize state for creating a new template
    */
   private initializeNewTemplate(businessType?: string): void {
     // Show loading while we initialize
@@ -787,6 +889,114 @@ export class PreviewComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Load base template from API
+   */
+  loadBaseTemplate(templateId: string): void {
+    console.log(`Loading base template with ID ${templateId}`);
+
+    // Check if we have a current user template ID (editing existing template)
+    if (this.currentUserTemplateId()) {
+      console.log(
+        'Skipping base template load since we are editing an existing template'
+      );
+      return;
+    }
+
+    // Check if we should prevent template from overriding saved customizations
+    if (this.preventThemeOverride()) {
+      console.log('🛡️ Template override prevention active - skipping');
+      return;
+    }
+
+    this.templateService.getTemplateById(templateId).subscribe({
+      next: (template: Template) => {
+        console.log('Base template loaded successfully:', template);
+
+        // Store the template ID
+        this.selectedBaseTemplateId.set(template.id);
+
+        // Get business type from template if not already set
+        if (!this.businessType() && template.templateType?.key) {
+          this.businessType.set(template.templateType.key);
+          this.setBusinessTypeDisplayName(template.templateType.key);
+        }
+
+        // Parse config if available
+        if (template.config) {
+          try {
+            const templateCustomizations = JSON.parse(template.config);
+
+            if (!this.customizations()) {
+              // No existing customizations, use template as base
+              this.customizations.set(templateCustomizations);
+
+              // Update font if available
+              if (templateCustomizations.fontConfig) {
+                const fontConfig = templateCustomizations.fontConfig;
+                this.selectedFont.set({
+                  id: fontConfig.fontId,
+                  family: fontConfig.family,
+                  fallback: fontConfig.fallback,
+                });
+              }
+
+              // Update tracking state
+              this.lastSavedState.set(structuredClone(templateCustomizations));
+              this.currentEditingState.set(
+                structuredClone(templateCustomizations)
+              );
+            } else {
+              // Existing customizations - only apply theme and structural elements
+              // but preserve user content changes
+              this.customizations.update((current) => {
+                if (!current) return templateCustomizations;
+
+                // Create a merged customization object preserving user content
+                // This is a simplified merge - a more complex merge might be needed
+                const merged = structuredClone(templateCustomizations);
+
+                // Preserve user content from existing customizations
+                if (current.pages?.home?.hero1) {
+                  merged.pages.home.hero1.title =
+                    current.pages.home.hero1.title;
+                  merged.pages.home.hero1.subtitle =
+                    current.pages.home.hero1.subtitle;
+                }
+
+                if (current.pages?.home?.about) {
+                  merged.pages.home.about.title =
+                    current.pages.home.about.title;
+                  merged.pages.home.about.subtitle =
+                    current.pages.home.about.subtitle;
+                  merged.pages.home.about.storyText =
+                    current.pages.home.about.storyText;
+                  merged.pages.home.about.missionText =
+                    current.pages.home.about.missionText;
+                }
+
+                return merged;
+              });
+            }
+          } catch (e) {
+            console.error('Error parsing template config:', e);
+            // If we can't parse the config, initialize with defaults
+            this.initializeDefaultCustomizations();
+          }
+        } else {
+          // No config, initialize with defaults
+          this.initializeDefaultCustomizations();
+        }
+      },
+      error: (err: Error) => {
+        console.error('Error loading base template:', err);
+        // Initialize with defaults if template loading fails
+        this.initializeDefaultCustomizations();
+      },
+    });
+  }
+
+  // ======== BUSINESS TYPE MANAGEMENT ========
+  /**
    * Set the business type display name from the key
    */
   private setBusinessTypeDisplayName(businessTypeKey: string): void {
@@ -835,18 +1045,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    // Clean up all event listeners and subscriptions
-    window.removeEventListener('resize', this.updateIsMobile.bind(this));
-    document.removeEventListener(
-      'fullscreenchange',
-      this.handleFullscreenChange
-    );
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  // ======== BUSINESS TYPE HANDLING ========
   /**
    * Load themes filtered by business type
    */
@@ -957,117 +1155,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load base template from API
-   *
-   * NOTE: This method assumes TemplateService.getTemplateById() exists in the API.
-   * If missing, implement it in TemplateService to fetch a Template by ID from endpoint:
-   * GET /template/{templateId}
-   */
-  loadBaseTemplate(templateId: string): void {
-    console.log(`Loading base template with ID ${templateId}`);
-
-    // Check if we have a current user template ID (editing existing template)
-    if (this.currentUserTemplateId()) {
-      console.log(
-        'Skipping base template load since we are editing an existing template'
-      );
-      return;
-    }
-
-    // Check if we should prevent template from overriding saved customizations
-    if (this.preventThemeOverride()) {
-      console.log('🛡️ Template override prevention active - skipping');
-      return;
-    }
-
-    this.templateService.getTemplateById(templateId).subscribe({
-      next: (template: Template) => {
-        console.log('Base template loaded successfully:', template);
-
-        // Store the template ID
-        this.selectedBaseTemplateId.set(template.id);
-
-        // Get business type from template if not already set
-        if (!this.businessType() && template.templateType?.key) {
-          this.businessType.set(template.templateType.key);
-          this.setBusinessTypeDisplayName(template.templateType.key);
-        }
-
-        // Parse config if available
-        if (template.config) {
-          try {
-            const templateCustomizations = JSON.parse(template.config);
-
-            if (!this.customizations()) {
-              // No existing customizations, use template as base
-              this.customizations.set(templateCustomizations);
-
-              // Update font if available
-              if (templateCustomizations.fontConfig) {
-                const fontConfig = templateCustomizations.fontConfig;
-                this.selectedFont.set({
-                  id: fontConfig.fontId,
-                  family: fontConfig.family,
-                  fallback: fontConfig.fallback,
-                });
-              }
-
-              // Update tracking state
-              this.lastSavedState.set(structuredClone(templateCustomizations));
-              this.currentEditingState.set(
-                structuredClone(templateCustomizations)
-              );
-            } else {
-              // Existing customizations - only apply theme and structural elements
-              // but preserve user content changes
-              this.customizations.update((current) => {
-                if (!current) return templateCustomizations;
-
-                // Create a merged customization object preserving user content
-                // This is a simplified merge - a more complex merge might be needed
-                const merged = structuredClone(templateCustomizations);
-
-                // Preserve user content from existing customizations
-                if (current.pages?.home?.hero1) {
-                  merged.pages.home.hero1.title =
-                    current.pages.home.hero1.title;
-                  merged.pages.home.hero1.subtitle =
-                    current.pages.home.hero1.subtitle;
-                }
-
-                if (current.pages?.home?.about) {
-                  merged.pages.home.about.title =
-                    current.pages.home.about.title;
-                  merged.pages.home.about.subtitle =
-                    current.pages.home.about.subtitle;
-                  merged.pages.home.about.storyText =
-                    current.pages.home.about.storyText;
-                  merged.pages.home.about.missionText =
-                    current.pages.home.about.missionText;
-                }
-
-                return merged;
-              });
-            }
-          } catch (e) {
-            console.error('Error parsing template config:', e);
-            // If we can't parse the config, initialize with defaults
-            this.initializeDefaultCustomizations();
-          }
-        } else {
-          // No config, initialize with defaults
-          this.initializeDefaultCustomizations();
-        }
-      },
-      error: (err: Error) => {
-        console.error('Error loading base template:', err);
-        // Initialize with defaults if template loading fails
-        this.initializeDefaultCustomizations();
-      },
-    });
-  }
-
-  /**
    * Handle business type selection from the selector component
    */
   handleBusinessTypeSelection(type: string): void {
@@ -1122,31 +1209,20 @@ export class PreviewComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ======== URL AND NAVIGATION UTILITIES ========
   /**
    * Helper method to update URL parameters without navigation
    */
   private updateUrlParams(params: { [key: string]: string | null }): void {
-    // Get current params and filter out null values
-    const cleanParams: { [key: string]: string } = {};
-
-    // Process params to handle null values (removes the parameter)
-    Object.keys(params).forEach((key) => {
-      if (params[key] !== null) {
-        cleanParams[key] = params[key] as string;
-      }
-    });
-
-    // Create URL tree with cleaned params
     const urlTree = this.router.createUrlTree([], {
-      queryParams: cleanParams,
+      relativeTo:           this.route,
+      queryParams:          params,
       queryParamsHandling: 'merge',
     });
-
-    // Update URL without navigation
-    this.location.go(urlTree.toString());
+    // replaceState updates the address bar without adding a new history entry
+    this.location.replaceState(urlTree.toString());
   }
 
-  // ======== SESSION STATE MANAGEMENT ========
   /**
    * Clean up session storage usage
    * In the new fully-authenticated flow, we don't need to store customizations in sessionStorage
@@ -1173,6 +1249,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     return !!sessionStorage.getItem('selectedTemplateId');
   }
 
+  // ======== VIEW MODE MANAGEMENT ========
   /**
    * Start building a new website
    */
@@ -1318,6 +1395,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     }, 500);
   }
 
+  // ======== DISPLAY & UI MANAGEMENT ========
   /**
    * Apply global CSS styles from a template
    */
@@ -1441,7 +1519,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.viewMode.set(mode);
   }
 
-  // ======== VIEWING & EDITING MODES ========
   /**
    * Called when loading overlay animation completes
    */
@@ -1450,8 +1527,9 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.showLoadingOverlay.set(false);
   }
 
+  // ======== TEMPLATE SAVING & EDITING ========
   /**
-   * Save all customizations to the API with improved error handling
+   * Save all customizations to the API
    */
   saveAllChanges(): void {
     if (!this.customizations()) {
@@ -1649,10 +1727,10 @@ export class PreviewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Reset customizations to their last saved state or defaults
+   * Reset customizations to last-saved or defaults, clear out templateId/mode/viewOnly,
+   * keep businessType & plan, and flip into “newTemplate” flow.
    */
   resetCustomizations(): void {
-    // Ask for confirmation first
     if (
       !confirm(
         'Are you sure you want to reset all changes? This will start a new template with the same business type and plan.'
@@ -1661,52 +1739,42 @@ export class PreviewComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Show loading state
+    // show loading
     this.showLoadingOverlay.set(true);
     this.loadingOverlayClass.set('active');
 
-    // Preserve current business type and plan
+    // stash current type & plan
     const currentBusinessType = this.businessType();
-    const currentPlan = this.currentPlan();
+    const currentPlan         = this.currentPlan();
 
-    // Clear template ID and name to start fresh
+    // clear saved-template state
     this.currentUserTemplateId.set(null);
     this.currentTemplateName.set(null);
 
-    // Manually update the browser URL by completely removing the template-related parameters
-    // This is more thorough than just setting them to null with updateUrlParams
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.delete('templateId');
-    currentUrl.searchParams.delete('mode');
-    currentUrl.searchParams.delete('viewOnly');
-    // Make sure we keep or set the business type and plan
-    currentUrl.searchParams.set('businessType', currentBusinessType);
-    currentUrl.searchParams.set('plan', currentPlan);
-    currentUrl.searchParams.set('newTemplate', 'true');
+    // update URL: remove templateId/mode/viewOnly, keep type+plan, add newTemplate
+    this.updateUrlParams({
+      templateId:   null,
+      mode:         null,
+      viewOnly:     null,
+      businessType: currentBusinessType,
+      plan:         currentPlan,
+      newTemplate:  'true',
+    });
 
-    // Use history API to update URL without navigation
-    window.history.replaceState({}, '', currentUrl.toString());
-
-    // Set flag to create new template
+    // reset signals/UI
     this.hasStartedBuilding.set(false);
     this.hasSavedChangesFlag.set(false);
-
-    // Initialize with defaults for the current business type
     this.initializeDefaultCustomizations();
-
-    // Reset selected component
     this.selectedComponent.set(null);
-
-    // Reset view mode
     this.isViewOnlyStateService.setIsOnlyViewMode(false);
 
-    // Hide loading and exit fullscreen mode
+    // hide loading & exit fullscreen if needed
     this.showLoadingOverlay.set(false);
     if (this.isFullscreen()) {
       this.toggleFullscreen();
     }
 
-    // Show confirmation
+    // final toast
     this.confirmationService.showConfirmation(
       'Template has been reset. You can now start creating a new template.',
       'info',
@@ -1762,8 +1830,9 @@ export class PreviewComponent implements OnInit, OnDestroy {
     return this.hasSavedChangesFlag();
   }
 
+  // ======== PLAN AND PUBLISHING ========
   /**
-   * Select a plan (standard or premium) with improved state handling
+   * Select a plan (standard or premium)
    */
   selectPlan(plan: 'standard' | 'premium'): void {
     // Update both individual signal and consolidated state
@@ -1890,11 +1959,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Add this property at the beginning of the class, after the state signals
-
-  // Local reference to business types for display names
-  private businessTypes = BUSINESS_TYPES;
-
+  // ======== CUSTOMIZATION STRUCTURE MANAGEMENT ========
   /**
    * Ensures all required customization structure objects exist
    * Creates any missing paths in the customization object
@@ -1978,6 +2043,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ======== COMPONENT INTERACTIONS ========
   /**
    * Handle component selection from the structure components
    */
@@ -1987,6 +2053,17 @@ export class PreviewComponent implements OnInit, OnDestroy {
     path?: string;
   }): void {
     console.log('Component selected for editing:', component);
+
+    // Check if editing is allowed (mobile view restrictions)
+    if (!this.isEditingAllowed()) {
+      this.confirmationService.showConfirmation(
+        'Editing is not available in mobile preview mode. Please switch to desktop view to edit.',
+        'info',
+        3000
+      );
+      return;
+    }
+
     this.selectedComponent.set(component);
   }
 
@@ -2075,39 +2152,28 @@ export class PreviewComponent implements OnInit, OnDestroy {
       return updated;
     });
   }
-
-  // Consolidated template state
-  templateState = signal<TemplateState>({
-    id: null,
-    name: 'Untitled Template',
-    baseId: null,
-    businessType: '',
-    businessTypeName: '',
-    plan: 'standard',
-  });
-
-  // Effect to keep consolidated state in sync with individual signals
-  private setupTemplateStateSync = effect(
-    () => {
-      this.templateState.set({
-        id: this.currentUserTemplateId(),
-        name: this.currentTemplateName() || 'Untitled Template',
-        baseId: this.selectedBaseTemplateId(),
-        businessType: this.businessType(),
-        businessTypeName: this.businessTypeDisplayName(),
-        plan: this.currentPlan(),
-      });
-    },
-    { allowSignalWrites: true }
-  );
 }
 
-// Define a structured interface for template state management
+/**
+ * Interface for template state management
+ * This provides a structure for the consolidated state signal
+ */
 interface TemplateState {
+  /** ID of the user template (null for new templates) */
   id: string | null;
+
+  /** Display name of the template */
   name: string;
+
+  /** ID of the base template used (for new templates) */
   baseId: string | null;
+
+  /** Business type key */
   businessType: string;
+
+  /** Display name of the business type */
   businessTypeName: string;
+
+  /** Plan level (standard or premium) */
   plan: 'standard' | 'premium';
 }
