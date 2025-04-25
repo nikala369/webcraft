@@ -1,4 +1,38 @@
 <div class="image-uploader">
-  <label>Upload Image:</label>
-  <input type="file" (change)="handleFileInput($event)" />
+  <!-- Hidden file input, always present for the template reference -->
+  <input
+    #fileInput
+    type="file"
+    accept="image/jpeg,image/png,image/gif,image/webp"
+    (change)="handleFileInput($event)"
+    style="display: none"
+  />
+
+  <div
+    class="image-uploader__dropzone"
+    (click)="fileInput.click()"
+    *ngIf="!imageSrc"
+  >
+    <div class="image-uploader__dropzone-icon">
+      <i class="material-icons">cloud_upload</i>
+    </div>
+    <div class="image-uploader__dropzone-text">Click to upload an image</div>
+    <div class="image-uploader__dropzone-hint">
+      Supports: JPEG, PNG, GIF, WEBP (max 5MB)
+    </div>
+  </div>
+
+  <div class="image-uploader__preview" *ngIf="imageSrc">
+    <div class="image-uploader__preview-container">
+      <img [src]="imageSrc" alt="Preview" />
+    </div>
+    <div class="image-uploader__preview-caption">
+      <button (click)="fileInput.click()">Replace image</button>
+      <button (click)="clearImage()">Remove</button>
+    </div>
+  </div>
+
+  <div class="image-uploader__error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
 </div>

@@ -10,6 +10,7 @@ import {
   ElementRef,
   ViewChild,
   AfterViewInit,
+  Signal,
 } from '@angular/core';
 import { StructureHeaderComponent } from '../components/structure-header/structure-header.component';
 import { StructureFooterComponent } from '../components/structure-footer/structure-footer.component';
@@ -41,8 +42,8 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
   @ViewChild('structureContainer') structureContainer!: ElementRef;
   @ViewChild(HomeStandardComponent) homeComponent!: HomeStandardComponent;
 
-  // The parent passes in the customizations as a signal function for reactivity.
-  @Input() customizations!: () => Customizations;
+  // Accept the signal directly, allowing null
+  @Input({ required: true }) customizations!: Signal<Customizations | null>;
   @Input() isMobileLayout = false;
   @Input() isMobileView: any;
   @Input() isViewOnly: any;
@@ -66,9 +67,10 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
 
   constructor(private router: Router, private el: ElementRef) {}
 
-  // Create computed signals for each page's customizations
+  // Create computed signals based on the input signal
   homeCustomizationsSignal = computed(() => {
-    const homeData = this.customizations()?.pages?.home || {};
+    const cust = this.customizations(); // Read the input signal
+    const homeData = cust?.pages?.home || {};
     console.log(
       'Standard structure computed homeCustomizationsSignal:',
       homeData
@@ -76,19 +78,21 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
     return homeData;
   });
 
-  aboutCustomizationsSignal = computed(
-    () => this.customizations()?.pages?.home?.about || {}
-  );
-  contactCustomizationsSignal = computed(
-    () => this.customizations()?.pages?.home?.contact || {}
-  );
+  aboutCustomizationsSignal = computed(() => {
+    const cust = this.customizations();
+    return cust?.pages?.home?.about || {};
+  });
 
-  // Create a Signal from the customizations function
-  // This is the complete data structure for components that need it
+  contactCustomizationsSignal = computed(() => {
+    const cust = this.customizations();
+    return cust?.pages?.home?.contact || {};
+  });
+
+  // Computed signal for the whole data structure, handling null
   wholeDataSignal = computed(() => {
-    const fullData = this.customizations();
+    const fullData = this.customizations(); // Read the input signal
     console.log('Standard structure computed wholeDataSignal:', fullData);
-    return fullData;
+    return fullData; // Return the full data (or null)
   });
 
   // Computed signal for available sections based on business type

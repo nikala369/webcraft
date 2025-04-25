@@ -46,7 +46,7 @@ import { ComponentCustomizerComponent } from '../../components/component-customi
   styleUrl: './home-standard.component.scss',
 })
 export class HomeStandardComponent implements OnInit, OnChanges {
-  @Input() customizations: any;
+  @Input() pagesHomeData: any;
   @Input() wholeData: any;
   @Input() isMobileLayout: boolean = false;
   @Input() isMobileView: any;
@@ -66,7 +66,7 @@ export class HomeStandardComponent implements OnInit, OnChanges {
       'HomeStandardComponent initialized with businessType:',
       this.businessType
     );
-    console.log('Initial customizations:', this.customizations);
+    console.log('Initial customizations:', this.pagesHomeData);
     console.log('Initial wholeData:', this.wholeData);
 
     // Set the appropriate color based on plan
@@ -92,20 +92,20 @@ export class HomeStandardComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     // Track when customizations or wholeData change to help debug updates
-    if (changes['customizations'] || changes['wholeData']) {
+    if (changes['pagesHomeData'] || changes['wholeData']) {
       console.log(
-        'HomeStandard received changes:',
-        changes['customizations'] ? 'customizations changed' : '',
+        '[HomeStandard] Received changes:',
+        changes['pagesHomeData'] ? 'pagesHomeData changed' : '',
         changes['wholeData'] ? 'wholeData changed' : ''
       );
 
       this.lastCustomizationsUpdate.set(Date.now());
 
-      if (changes['customizations']) {
-        console.log('New customizations:', this.customizations);
+      if (changes['pagesHomeData']) {
+        console.log('[HomeStandard] New pagesHomeData:', this.pagesHomeData);
       }
       if (changes['wholeData']) {
-        console.log('New wholeData:', this.wholeData);
+        console.log('[HomeStandard] New wholeData:', this.wholeData);
       }
     }
 
@@ -163,12 +163,8 @@ export class HomeStandardComponent implements OnInit, OnChanges {
    */
   getHeroData(): Partial<HeroData> {
     // First check for direct hero1 property (for backward compatibility)
-    if (this.customizations?.hero1) {
-      console.log(
-        'Returning direct hero1 property:',
-        this.customizations.hero1
-      );
-      return this.customizations.hero1;
+    if (this.pagesHomeData?.hero1) {
+      return this.pagesHomeData.hero1;
     }
 
     // Then check for the proper nested path

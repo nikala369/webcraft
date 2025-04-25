@@ -9,10 +9,7 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FieldConfig,
-  getPlanSpecificConfig,
-} from './customizing-form-config';
+import { FieldConfig, getPlanSpecificConfig } from './customizing-form-config';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../core/services/toast/toast.service';
 import { ModalService } from '../../../../core/services/modal/modal.service';

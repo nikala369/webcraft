@@ -1,6 +1,6 @@
 <div class="home-standard">
   <!-- Fixed sections rendering based on business type -->
-  <ng-container *ngIf="customizations">
+  <ng-container *ngIf="pagesHomeData">
     <!-- 1. Hero Section (Always shown) -->
     <app-hero-section
       [customizations]="wholeData"
@@ -28,7 +28,7 @@
     <!-- Menu Section (Restaurant only) -->
     <app-menu-section
       *ngIf="businessType === 'restaurant'"
-      [customizations]="customizations"
+      [customizations]="pagesHomeData"
       [wholeData]="wholeData"
       [isMobileLayout]="isMobileLayout"
       [planType]="planType"

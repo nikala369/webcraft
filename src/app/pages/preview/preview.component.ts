@@ -201,74 +201,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
   // ---- Customization State ----
   /** Latest customizations being edited */
-  customizations = signal<Customizations>({
-    fontConfig: {
-      fontId: 1,
-      family: 'Arial',
-      fallback: 'sans-serif',
-    },
-    header: {
-      backgroundColor: '#161b33',
-      textColor: '#f5f5f5',
-      logoUrl: '',
-      menuItems: [
-        { id: 1, label: 'Home', link: '/' },
-        { id: 2, label: 'About', link: '/about' },
-        { id: 3, label: 'Contact', link: '/contact' },
-      ],
-    },
-    pages: {
-      home: {
-        hero1: {
-          backgroundImage: 'assets/standard-hero1/background-image1.jpg',
-          title: 'Grow Your Business With Us',
-          subtitle: 'Professional solutions tailored to your business needs',
-          layout: 'center',
-          showLogo: true,
-          titleColor: '#ffffff',
-          subtitleColor: '#f0f0f0',
-          textShadow: 'medium',
-        },
-        about: {
-          title: 'About Us',
-          subtitle: 'Our Story',
-          storyTitle: 'Our Story',
-          storyText:
-            'We are dedicated to providing exceptional service and quality. Our commitment to excellence has made us a trusted choice in the industry.',
-          missionTitle: 'Our Mission',
-          missionText:
-            "Our mission is to provide high-quality services that exceed our clients' expectations. We believe in building long-lasting relationships based on trust, integrity, and results.",
-          imageUrl: 'assets/standard-hero1/background-image1.jpg',
-          backgroundColor: '#ffffff',
-          textColor: '#333333',
-        },
-        contact: {
-          title: 'Contact Us',
-          subtitle: 'Get in touch with us',
-          address: '123 Business Street\nAnytown, ST 12345',
-          phone: '(123) 456-7890',
-          email: 'info@yourbusiness.com',
-          formTitle: 'Send a Message',
-          formSubject: 'New message from your website',
-          formButtonText: 'Send Message',
-        },
-      },
-    },
-    footer: {
-      backgroundColor: '#1a1a1a',
-      textColor: '#ffffff',
-      copyrightText: '© 2025 Your Company',
-      logoUrl: '',
-      tagline: '',
-      address: '',
-      phone: '',
-      email: '',
-      showSocialLinks: true,
-      menuItems: [],
-      socialUrls: {},
-      socialLinks: [],
-    },
-  });
+  customizations = signal<Customizations | null>(null);
 
   /** Previously saved state for comparison */
   private lastSavedState = signal<Customizations | null>(null);
@@ -317,149 +250,38 @@ export class PreviewComponent implements OnInit, OnDestroy {
    */
   selectedCustomization = computed(() => {
     const selected = this.selectedComponent();
-    if (!selected) return null;
+    const customizations = this.customizations();
 
-    console.log('Computing selectedCustomization for:', selected);
-
-    // If there's a path, use it to get the nested data
-    if (selected.path) {
-      const pathParts = selected.path.split('.');
-      let data = this.customizations() as any;
-      let missingParts = false;
-
-      // Navigate through the path to get the data
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        const part = pathParts[i];
-        // Create objects along the path if they don't exist
-        if (!data || data[part] === undefined) {
-          console.warn(
-            `Cannot find data at path part: "${part}" in path: "${selected.path}". Current data:`,
-            data
-          );
-          missingParts = true;
-          break;
-        }
-        data = data[part];
-      }
-
-      // If we couldn't find the data, ensure the structure exists and add default values
-      if (missingParts) {
-        console.log(
-          'Creating default structure for missing path:',
-          selected.path
-        );
-        this.ensureCompleteCustomizationStructure();
-
-        // Try to get the data again
-        data = this.customizations() as any;
-        for (let i = 0; i < pathParts.length - 1; i++) {
-          const part = pathParts[i];
-          if (data && data[part] !== undefined) {
-            data = data[part];
-          } else {
-            console.error(
-              `Still missing data after initialization at: "${part}" in "${selected.path}"`
-            );
-            // Initialize with empty object as fallback
-            data = {};
-            break;
-          }
-        }
-      }
-
-      // Get the final part of the path
-      const lastPart = pathParts[pathParts.length - 1];
-
-      // Make sure we have an object to return
-      if (!data[lastPart]) {
-        console.log('Creating empty object for last path part:', lastPart);
-        data[lastPart] = {};
-      }
-
-      // Special handling for hero section
-      if (lastPart === 'hero1') {
-        console.log(
-          'Hero section selected. Data before potentially fixing:',
-          data[lastPart]
-        );
-
-        // Check if we have a backgroundImage in custom or default state
-        const heroData = this.customizations()?.pages?.home?.hero1;
-        if (heroData && heroData.backgroundImage) {
-          console.log(
-            'Found backgroundImage in nested customizations, ensuring it is passed to editor'
-          );
-          if (!data[lastPart].backgroundImage) {
-            data[lastPart].backgroundImage = heroData.backgroundImage;
-          }
-        }
-
-        // Ensure background type is set
-        if (!data[lastPart].backgroundType) {
-          data[lastPart].backgroundType = 'image';
-        }
-      }
-
-      // Special handling for about section
-      if (lastPart === 'about') {
-        console.log(
-          'About section selected. Data before potentially fixing:',
-          data[lastPart]
-        );
-
-        // Check if we have an imageUrl in custom or default state
-        const aboutData = this.customizations()?.pages?.home?.about;
-        if (aboutData && aboutData.imageUrl) {
-          console.log(
-            'Found imageUrl in nested customizations, ensuring it is passed to editor'
-          );
-          if (!data[lastPart].imageUrl || data[lastPart].imageUrl === '') {
-            data[lastPart].imageUrl = aboutData.imageUrl;
-          }
-        }
-
-        // Ensure all required fields are set
-        if (!data[lastPart].storyTitle) {
-          data[lastPart].storyTitle = aboutData?.storyTitle || 'Our Story';
-        }
-        if (!data[lastPart].storyText) {
-          data[lastPart].storyText =
-            aboutData?.storyText || 'Our story text here.';
-        }
-        if (!data[lastPart].missionTitle) {
-          data[lastPart].missionTitle =
-            aboutData?.missionTitle || 'Our Mission';
-        }
-        if (!data[lastPart].missionText) {
-          data[lastPart].missionText =
-            aboutData?.missionText || 'Our mission text here.';
-        }
-      }
-
-      console.log(
-        'Selected component data for path:',
-        selected.path,
-        data[lastPart]
-      );
-
-      return {
-        key: selected.key,
-        name: selected.name,
-        path: selected.path,
-        data: data[lastPart],
-      };
+    if (!selected || !customizations) {
+      console.log('No selection or customizations available');
+      return null;
     }
 
-    // Otherwise use the key directly with type assertion
-    const customData = (this.customizations() as any)[selected.key];
+    try {
+      // Handle path-based selection
+      if (selected.path) {
+        const pathParts = selected.path.split('.');
+        let current: any = customizations;
 
-    console.log('Selected component data for key:', selected.key, customData);
+        for (const part of pathParts) {
+          if (!current[part]) {
+            console.warn(`Missing path segment: ${part} in ${selected.path}`);
+            return null;
+          }
+          current = current[part];
+        }
+        return { ...selected, data: current };
+      }
 
-    return {
-      key: selected.key,
-      name: selected.name,
-      data: customData,
-    };
+      // Handle direct key access
+      return {
+        ...selected,
+        data: customizations[selected.key as keyof Customizations],
+      };
+    } catch (error) {
+      console.error('Error accessing customization data:', error);
+      return null;
+    }
   });
 
   // ======== LIFECYCLE HOOKS ========
@@ -542,100 +364,104 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.showLoadingOverlay.set(true);
     this.loadingOverlayClass.set('active');
 
-    this.route.queryParams.subscribe((params) => {
-      console.log('Processing route parameters:', params);
-
-      // Set plan from params or default to standard
-      const plan = params['plan'] || 'standard';
-      this.currentPlan.set(plan as 'standard' | 'premium');
-
-      // Update consolidated state
-      this.templateState.update((state) => ({
-        ...state,
-        plan: plan as 'standard' | 'premium',
-      }));
-
-      // Set step from URL if provided, otherwise it will be calculated based on context
-      const urlStep = params['step'] ? parseInt(params['step'], 10) : null;
-
-      // Handle business type from params
-      const urlBusinessType = params['businessType'];
-      if (urlBusinessType) {
-        console.log(`Business type found in URL: ${urlBusinessType}`);
-        this.businessType.set(urlBusinessType);
-
-        // Set business type display name
-        this.setBusinessTypeDisplayName(urlBusinessType);
-
-        // Update consolidated state
-        this.templateState.update((state) => ({
-          ...state,
-          businessType: urlBusinessType,
-          businessTypeName: this.businessTypeDisplayName(),
-        }));
-
-        // Always hide the selector when business type is in URL
-        this.showBusinessTypeSelector.set(false);
-      }
-
-      // Determine the operation mode
-      const templateId = params['templateId'];
-      const newTemplate = params['newTemplate'] === 'true';
-      const mode = params['mode'] || 'edit';
-
-      // Check if authentication is required for this operation
-      const requiresAuth = templateId || newTemplate || mode === 'edit';
-
-      if (requiresAuth && !this.authService.isAuthenticated()) {
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params) => {
         console.log(
-          'Authentication required for this operation - showing preview without editing'
+          '[parseRouteParameters] Processing route parameters:',
+          params
         );
-        // Don't redirect yet, allow preview and redirect only when they try to edit
-        this.showLoadingOverlay.set(false);
-        return;
-      }
 
-      // Set steps based on operation mode
-      if (templateId) {
-        // Edit or view existing template mode - should be on step 3 or 4
-        console.log(`Loading template ${templateId} in ${mode} mode`);
-        // If step isn't explicitly provided, set to editing step (3) or completed step (4)
-        if (!urlStep) {
-          this.currentStep.set(params['mode'] === 'view' ? 3 : 4);
+        // --- Parameter Extraction ---
+        const templateId = params['templateId'] || null;
+        const isCreatingNew = params['newTemplate'] === 'true';
+        const urlBusinessType = params['businessType'] || null;
+        const urlPlan = (params['plan'] || 'standard') as
+          | 'standard'
+          | 'premium';
+        const urlMode = params['mode'] || 'edit'; // Default to edit unless specified
+        const urlStep = params['step'] ? parseInt(params['step'], 10) : null;
+
+        // --- State Initialization based on Params ---
+        console.log(
+          `[parseRouteParameters] Mode determination: templateId=${templateId}, isCreatingNew=${isCreatingNew}, urlBusinessType=${urlBusinessType}, urlPlan=${urlPlan}`
+        );
+
+        // Always set plan first
+        this.currentPlan.set(urlPlan);
+        this.templateState.update((state) => ({ ...state, plan: urlPlan }));
+
+        // **Priority 1: Editing/Viewing Existing Template**
+        if (templateId) {
+          console.log(
+            `[parseRouteParameters] Mode: Load Existing Template (ID: ${templateId}, Mode: ${urlMode})`
+          );
+          if (!this.authService.isAuthenticated()) {
+            this.handleAuthRedirect('edit an existing website');
+            return; // Stop further processing until authenticated
+          }
+          // Load existing template - this function will handle setting the step and hiding loading overlay
+          this.loadExistingTemplate(templateId, urlMode);
+
+          // **Priority 2: Creating New Template (Requires Business Type)**
+        } else if (isCreatingNew && urlBusinessType) {
+          console.log(
+            `[parseRouteParameters] Mode: Initialize New Template (Type: ${urlBusinessType}, Plan: ${urlPlan})`
+          );
+          if (!this.authService.isAuthenticated()) {
+            this.handleAuthRedirect('create a new website');
+            return; // Stop further processing until authenticated
+          }
+          // Initialize new template - this function handles step and loading overlay
+          this.initializeNewTemplate(urlBusinessType); // Pass only business type
+
+          // **Priority 3: Theme Selection / Initial Customization Start (Business Type known, but no template yet)**
+        } else if (urlBusinessType) {
+          console.log(
+            `[parseRouteParameters] Mode: Business Type Selected (Type: ${urlBusinessType}, Plan: ${urlPlan}) - Ready for theme/customization`
+          );
+          this.businessType.set(urlBusinessType);
+          this.setBusinessTypeDisplayName(urlBusinessType);
+          this.templateState.update((state) => ({
+            ...state,
+            businessType: urlBusinessType,
+            businessTypeName: this.businessTypeDisplayName(),
+          }));
+          this.loadThemesForBusinessType(urlBusinessType); // Preload themes
+          this.hasStartedBuilding.set(true); // User has selected type/plan
+          this.currentStep.set(urlStep || 3); // Default to customization step
+          this.showBusinessTypeSelector.set(false); // Hide selector
+          this.initializeDefaultCustomizations(); // Ensure defaults are ready
+          this.showLoadingOverlay.set(false); // Ready to show theme selection/preview
+
+          // **Fallback: Business Type Selection**
         } else {
-          this.currentStep.set(urlStep);
+          console.log(
+            '[parseRouteParameters] Mode: Business Type Selection (No template/type specified)'
+          );
+          this.currentStep.set(urlStep || 2); // Default to business type selection step
+          this.showBusinessTypeSelector.set(true); // Show selector
+          this.initializeDefaultCustomizations(); // Ensure defaults are ready even if not shown yet
+          this.showLoadingOverlay.set(false); // Hide loading, show selector
         }
-        this.loadExistingTemplate(templateId, mode);
-      } else if (newTemplate) {
-        // New template creation mode - should be on step 3
-        console.log(
-          'Creating new template with business type:',
-          urlBusinessType
-        );
-        this.currentStep.set(urlStep || 3); // Default to step 3 if not specified
-        this.initializeNewTemplate(urlBusinessType);
-      } else if (urlBusinessType) {
-        // Just a business type selection but no template action yet
-        // Still proceed with initialization to ensure proper UI state
-        console.log('Business type selected but no template action specified');
-        this.loadThemesForBusinessType(urlBusinessType);
-        this.hasStartedBuilding.set(true);
-        this.currentStep.set(urlStep || 3); // Business type selection + plan are done
-        this.showLoadingOverlay.set(false);
-      } else {
-        // No template ID, creation flag, or business type - show business type selector
-        console.log(
-          'No template parameters found, showing business type selector'
-        );
-        this.currentStep.set(urlStep || 2); // Business type selection step
-        this.showBusinessTypeSelector.set(true);
-        this.showLoadingOverlay.set(false);
-      }
 
-      // Update URL with current step if not already there
-      if (this.currentStep() && !urlStep) {
-        this.updateUrlParams({ step: this.currentStep().toString() });
-      }
+        // Update URL with the determined step if it wasn't already set correctly
+        // Let loading functions handle step updates for load/new flows
+        if (!templateId && !isCreatingNew && urlStep !== this.currentStep()) {
+          this.updateUrlParams({ step: this.currentStep().toString() });
+        }
+      });
+  }
+
+  // Helper for handling authentication redirect
+  private handleAuthRedirect(action: string): void {
+    console.warn(
+      `[handleAuthRedirect] Authentication required to ${action}. Redirecting to login.`
+    );
+    this.showLoadingOverlay.set(false); // Hide loading before redirect
+    this.router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: this.router.url },
+      queryParamsHandling: 'merge',
     });
   }
 
@@ -666,13 +492,13 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
           // Store the template ID and name regardless of whether config parsing succeeds
           this.currentUserTemplateId.set(template.id);
-          this.currentTemplateName.set(template.name);
+          this.currentTemplateName.set(template.template.name);
 
           // Update consolidated state
           this.templateState.update((state) => ({
             ...state,
             id: template.id,
-            name: template.name,
+            name: template.template.name,
           }));
 
           // Set business type based on template data
@@ -713,6 +539,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
               // Apply the loaded customizations
               this.customizations.set(customizationsData);
+              console.log('Customizations set:', this.customizations());
 
               // Update font if available
               if (customizationsData.fontConfig) {
@@ -725,8 +552,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
               }
 
               // Update tracking state
-              this.lastSavedState.set(structuredClone(customizationsData));
-              this.currentEditingState.set(structuredClone(customizationsData));
+              this.updateLastSavedState();
 
               console.log(
                 'Successfully loaded and applied template configuration'
@@ -734,46 +560,20 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
               // Set appropriate flags for editing flow
               this.hasStartedBuilding.set(true);
-              this.hasSavedChangesFlag.set(true);
-              this.currentStep.set(3); // Move to editing step
-
-              // Switch to appropriate mode after a short delay
-              setTimeout(() => {
-                if (mode === 'edit') {
-                  this.editBuilding();
-                } else if (mode === 'view') {
-                  this.openViewOnly();
-                }
-
-                // Hide loading state inside the timeout to ensure smooth transition
-                this.showLoadingOverlay.set(false);
-              }, 300);
+              this.hasSavedChangesFlag.set(true); // Indicate existing saved state
+              this.currentStep.set(mode === 'view' ? 3 : 4); // SET STEP HERE (Customize or Done)
             } catch (e) {
               console.error('Error processing template config:', e);
 
               // Even if config parsing fails, initialize with defaults and proceed
               this.initializeDefaultCustomizations();
-
               this.confirmationService.showConfirmation(
                 'Error processing template configuration. Using default settings.',
                 'warning',
                 5000
               );
-
-              // Hide loading and set the appropriate mode
-              this.showLoadingOverlay.set(false);
-
-              // Still allow editing even with default settings
-              this.hasStartedBuilding.set(true);
-
-              // Switch to appropriate mode with default settings
-              setTimeout(() => {
-                if (mode === 'edit') {
-                  this.editBuilding();
-                } else if (mode === 'view') {
-                  this.openViewOnly();
-                }
-              }, 300);
+              this.hasStartedBuilding.set(true); // Still allow editing with defaults
+              this.currentStep.set(3); // SET STEP HERE (Default to Customize on error)
             }
           } else {
             console.warn('Template has no config:', template);
@@ -783,25 +583,25 @@ export class PreviewComponent implements OnInit, OnDestroy {
               'warning',
               3000
             );
-
-            // Hide loading and set the appropriate mode
-            this.showLoadingOverlay.set(false);
-
-            // Still allow editing even with default settings
-            this.hasStartedBuilding.set(true);
-
-            // Switch to appropriate mode with default settings
-            setTimeout(() => {
-              if (mode === 'edit') {
-                this.editBuilding();
-              } else if (mode === 'view') {
-                this.openViewOnly();
-              }
-            }, 300);
+            this.hasStartedBuilding.set(true); // Allow editing with defaults
+            this.currentStep.set(3); // SET STEP HERE (Default to Customize)
           }
+
+          // UI transitions AFTER setting state and step
+          this.showBusinessTypeSelector.set(false); // Ensure selector is hidden
+          setTimeout(() => {
+            if (mode === 'edit') {
+              this.editBuilding(); // This handles fullscreen toggle
+            } else if (mode === 'view') {
+              this.openViewOnly(); // This handles fullscreen toggle
+            }
+            // Hide loading overlay *after* potential fullscreen transition starts
+            this.showLoadingOverlay.set(false);
+          }, 300); // Short delay for potential UI transition
         },
         error: (error) => {
-          this.handleTemplateLoadError(error);
+          this.handleTemplateLoadError(error); // This handles loading overlay
+          this.currentStep.set(3); // Default step on error
         },
       });
   }
@@ -826,62 +626,46 @@ export class PreviewComponent implements OnInit, OnDestroy {
   /**
    * Initialize state for creating a new template
    */
-  private initializeNewTemplate(businessType?: string): void {
-    // Show loading while we initialize
-    this.showLoadingOverlay.set(true);
+  private initializeNewTemplate(businessType: string): void {
+    console.log(
+      `[initializeNewTemplate] Initializing for type: ${businessType}`
+    );
+    // Set business type and display name
+    this.businessType.set(businessType);
+    this.setBusinessTypeDisplayName(businessType);
+    this.templateState.update((state) => ({
+      ...state,
+      businessType: businessType,
+      businessTypeName: this.businessTypeDisplayName(),
+      name: `${this.businessTypeDisplayName()} Website`,
+    }));
+    this.showBusinessTypeSelector.set(false); // Hide selector
 
-    // If business type is provided, initialize with it
-    if (businessType) {
-      // Set in both individual signals and consolidated state
-      this.businessType.set(businessType);
+    // Load themes for this business type (will trigger loadBaseTemplate for the first theme)
+    this.loadThemesForBusinessType(businessType);
 
-      // Get business type display name
-      const businessTypeObj = this.businessTypes.find(
-        (t) => t.id === businessType
-      );
-
-      const displayName = businessTypeObj
-        ? businessTypeObj.name
-        : businessType.charAt(0).toUpperCase() + businessType.slice(1);
-
-      this.businessTypeDisplayName.set(displayName);
-
-      // Update consolidated state
-      this.templateState.update((state) => ({
-        ...state,
-        businessType: businessType,
-        businessTypeName: displayName,
-        name: `${displayName} Website`, // Use business type in the default name
-      }));
-
-      this.showBusinessTypeSelector.set(false);
-
-      // Load themes for this business type
-      this.loadThemesForBusinessType(businessType);
-
-      // Set to customization step
-      this.currentStep.set(3);
-
-      // Update URL with step
-      this.updateUrlParams({ step: '3' });
-    } else {
-      // Show business type selector since no type is provided
-      this.showBusinessTypeSelector.set(true);
-      this.currentStep.set(2);
-
-      // Update URL with step
-      this.updateUrlParams({ step: '2' });
-    }
-
-    // Initialize customizations with defaults - will use business type if set
+    // Initialize customizations with defaults for this type
+    // Note: loadBaseTemplate might overwrite this shortly if a theme has config
     this.initializeDefaultCustomizations();
 
-    // Set flags for new template flow
+    // Set flags and step for new template flow
     this.hasStartedBuilding.set(true);
+    this.hasSavedChangesFlag.set(false); // No saved changes yet
+    this.currentStep.set(3); // SET STEP HERE (Start at Customize)
+
+    // Update URL params immediately
+    this.updateUrlParams({
+      businessType: businessType,
+      plan: this.currentPlan(),
+      newTemplate: 'true', // Keep this flag
+      step: '3',
+      templateId: null, // Ensure no conflicting templateId
+      mode: null, // Ensure no conflicting mode
+    });
 
     // Enter fullscreen edit mode after a brief delay
     setTimeout(() => {
-      this.showLoadingOverlay.set(false);
+      this.showLoadingOverlay.set(false); // Hide loading before fullscreen
       if (!this.isFullscreen()) {
         this.toggleFullscreen();
       }
@@ -892,45 +676,72 @@ export class PreviewComponent implements OnInit, OnDestroy {
    * Load base template from API
    */
   loadBaseTemplate(templateId: string): void {
-    console.log(`Loading base template with ID ${templateId}`);
+    console.log(
+      `[loadBaseTemplate] Attempting to load base template ID: ${templateId}`
+    );
 
-    // Check if we have a current user template ID (editing existing template)
+    // --- Conditions to Prevent Loading ---
+    // 1. If we are editing an existing user template, don't load a base template over it.
     if (this.currentUserTemplateId()) {
       console.log(
-        'Skipping base template load since we are editing an existing template'
+        '[loadBaseTemplate] Skipping: Already editing an existing user template.'
+      );
+      return;
+    }
+    // 2. If override prevention is active (e.g., during initial load of existing template)
+    if (this.preventThemeOverride()) {
+      console.log(
+        '[loadBaseTemplate] Skipping: Theme override prevention is active.'
       );
       return;
     }
 
-    // Check if we should prevent template from overriding saved customizations
-    if (this.preventThemeOverride()) {
-      console.log('🛡️ Template override prevention active - skipping');
-      return;
-    }
-
+    // --- Fetch Base Template Config ---
     this.templateService.getTemplateById(templateId).subscribe({
       next: (template: Template) => {
-        console.log('Base template loaded successfully:', template);
+        console.log(
+          '[loadBaseTemplate] Base template data received:',
+          template
+        );
 
-        // Store the template ID
-        this.selectedBaseTemplateId.set(template.id);
+        this.selectedBaseTemplateId.set(template.id); // Track which base is selected
 
-        // Get business type from template if not already set
+        // Set business type ONLY if not already set (don't override user/URL choice)
         if (!this.businessType() && template.templateType?.key) {
+          console.log(
+            `[loadBaseTemplate] Setting business type from template: ${template.templateType.key}`
+          );
           this.businessType.set(template.templateType.key);
           this.setBusinessTypeDisplayName(template.templateType.key);
+          this.templateState.update((state) => ({
+            ...state,
+            businessType: template.templateType.key,
+            businessTypeName: this.businessTypeDisplayName(),
+          }));
         }
 
-        // Parse config if available
+        // --- Apply Configuration ---
         if (template.config) {
           try {
             const templateCustomizations = JSON.parse(template.config);
+            console.log(
+              '[loadBaseTemplate] Parsed template customizations:',
+              templateCustomizations
+            );
 
-            if (!this.customizations()) {
-              // No existing customizations, use template as base
+            // **Decision Point: Replace or Ignore?**
+            // We replace the customizations ONLY if we are in the initial new template flow
+            // (no currentUserTemplateId) and haven't saved anything yet.
+            // If the user switches themes after making edits but before saving,
+            // the new theme config REPLACES the old one entirely.
+            if (!this.currentUserTemplateId()) {
+              // Only apply if creating new
+              console.log(
+                '[loadBaseTemplate] Applying base template config (replacing existing).'
+              );
               this.customizations.set(templateCustomizations);
 
-              // Update font if available
+              // Update font if available in the template config
               if (templateCustomizations.fontConfig) {
                 const fontConfig = templateCustomizations.fontConfig;
                 this.selectedFont.set({
@@ -938,59 +749,44 @@ export class PreviewComponent implements OnInit, OnDestroy {
                   family: fontConfig.family,
                   fallback: fontConfig.fallback,
                 });
+              } else {
+                // Reset font if the new template doesn't specify one
+                this.selectedFont.set(null);
               }
 
-              // Update tracking state
-              this.lastSavedState.set(structuredClone(templateCustomizations));
-              this.currentEditingState.set(
-                structuredClone(templateCustomizations)
-              );
+              // Update tracking state to reflect the newly loaded base state
+              this.updateLastSavedState();
             } else {
-              // Existing customizations - only apply theme and structural elements
-              // but preserve user content changes
-              this.customizations.update((current) => {
-                if (!current) return templateCustomizations;
-
-                // Create a merged customization object preserving user content
-                // This is a simplified merge - a more complex merge might be needed
-                const merged = structuredClone(templateCustomizations);
-
-                // Preserve user content from existing customizations
-                if (current.pages?.home?.hero1) {
-                  merged.pages.home.hero1.title =
-                    current.pages.home.hero1.title;
-                  merged.pages.home.hero1.subtitle =
-                    current.pages.home.hero1.subtitle;
-                }
-
-                if (current.pages?.home?.about) {
-                  merged.pages.home.about.title =
-                    current.pages.home.about.title;
-                  merged.pages.home.about.subtitle =
-                    current.pages.home.about.subtitle;
-                  merged.pages.home.about.storyText =
-                    current.pages.home.about.storyText;
-                  merged.pages.home.about.missionText =
-                    current.pages.home.about.missionText;
-                }
-
-                return merged;
-              });
+              console.log(
+                '[loadBaseTemplate] Ignoring base template config (already editing/saved).'
+              );
             }
           } catch (e) {
-            console.error('Error parsing template config:', e);
-            // If we can't parse the config, initialize with defaults
-            this.initializeDefaultCustomizations();
+            console.error(
+              '[loadBaseTemplate] Error parsing template config:',
+              e
+            );
+            // Fallback to defaults ONLY if customizations are currently null
+            if (!this.customizations()) {
+              this.initializeDefaultCustomizations();
+            }
           }
         } else {
-          // No config, initialize with defaults
-          this.initializeDefaultCustomizations();
+          console.warn(
+            '[loadBaseTemplate] Base template has no config. Initializing defaults if needed.'
+          );
+          // Initialize with defaults ONLY if customizations are currently null
+          if (!this.customizations()) {
+            this.initializeDefaultCustomizations();
+          }
         }
       },
       error: (err: Error) => {
-        console.error('Error loading base template:', err);
-        // Initialize with defaults if template loading fails
-        this.initializeDefaultCustomizations();
+        console.error('[loadBaseTemplate] Error loading base template:', err);
+        // Initialize with defaults ONLY if customizations are currently null
+        if (!this.customizations()) {
+          this.initializeDefaultCustomizations();
+        }
       },
     });
   }
@@ -1028,6 +824,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
           plan
         );
 
+      // Update the state with the default customizations
       this.customizations.set(defaultCustomizations);
 
       // Set initial font from the default customizations
@@ -1040,8 +837,31 @@ export class PreviewComponent implements OnInit, OnDestroy {
       }
 
       // Save these as the initial state
-      this.lastSavedState.set(structuredClone(defaultCustomizations));
-      this.currentEditingState.set(structuredClone(defaultCustomizations));
+      this.updateLastSavedState();
+    } else {
+      // If no business type, set an empty customization object
+      const emptyCustomizations: Customizations = {
+        fontConfig: {
+          fontId: 1,
+          family: 'Arial',
+          fallback: 'sans-serif',
+        },
+        header: {
+          backgroundColor: '#161b33',
+          textColor: '#f5f5f5',
+          menuItems: [],
+        },
+        pages: { home: {} },
+        footer: {
+          backgroundColor: '#1a1a1a',
+          textColor: '#ffffff',
+          copyrightText: '© 2025 Your Company',
+          showSocialLinks: false,
+          menuItems: [],
+          socialLinks: [],
+        },
+      };
+      this.customizations.set(emptyCustomizations);
     }
   }
 
@@ -1215,30 +1035,12 @@ export class PreviewComponent implements OnInit, OnDestroy {
    */
   private updateUrlParams(params: { [key: string]: string | null }): void {
     const urlTree = this.router.createUrlTree([], {
-      relativeTo:           this.route,
-      queryParams:          params,
+      relativeTo: this.route,
+      queryParams: params,
       queryParamsHandling: 'merge',
     });
     // replaceState updates the address bar without adding a new history entry
     this.location.replaceState(urlTree.toString());
-  }
-
-  /**
-   * Clean up session storage usage
-   * In the new fully-authenticated flow, we don't need to store customizations in sessionStorage
-   */
-  private cleanupSessionStorage(): void {
-    // Remove all stored customization-related data from session storage
-    sessionStorage.removeItem('currentCustomizations');
-    sessionStorage.removeItem('savedCustomizations');
-    sessionStorage.removeItem('hasCompletedCheckout');
-    sessionStorage.removeItem('hasStartedBuilding');
-
-    // Keep only essential session data like selectedTemplateId if it exists
-    const templateId = sessionStorage.getItem('selectedTemplateId');
-    if (templateId) {
-      console.log('Preserving selected template ID:', templateId);
-    }
   }
 
   /**
@@ -1298,8 +1100,10 @@ export class PreviewComponent implements OnInit, OnDestroy {
       }
 
       // Store current state for potential restore
-      this.lastSavedState.set(structuredClone(this.customizations()));
-      this.currentEditingState.set(structuredClone(this.customizations()));
+      const currentCustomizations = this.customizations();
+      if (currentCustomizations) {
+        this.updateLastSavedState();
+      }
 
       this.loadingOverlayClass.set('fade-out');
       this.showLoadingOverlay.set(false);
@@ -1393,22 +1197,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.showLoadingOverlay.set(false);
     }, 500);
-  }
-
-  // ======== DISPLAY & UI MANAGEMENT ========
-  /**
-   * Apply global CSS styles from a template
-   */
-  applyGlobalStyles(cssContent: string): void {
-    let styleTag = document.getElementById(
-      'dynamic-theme-style'
-    ) as HTMLStyleElement;
-    if (!styleTag) {
-      styleTag = this.renderer.createElement('style');
-      this.renderer.setAttribute(styleTag, 'id', 'dynamic-theme-style');
-      this.renderer.appendChild(document.head, styleTag);
-    }
-    styleTag.innerHTML = cssContent;
   }
 
   /**
@@ -1532,7 +1320,8 @@ export class PreviewComponent implements OnInit, OnDestroy {
    * Save all customizations to the API
    */
   saveAllChanges(): void {
-    if (!this.customizations()) {
+    const currentCustomizations = this.customizations();
+    if (!currentCustomizations) {
       this.confirmationService.showConfirmation(
         'No customizations to save',
         'error',
@@ -1558,7 +1347,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.loadingOverlayClass.set('active');
 
     // Create a deep copy of customizations to modify before saving
-    const customizationsToSave = structuredClone(this.customizations());
+    const customizationsToSave = structuredClone(currentCustomizations);
 
     // Remove any problematic data (like large data URLs)
     this.sanitizeCustomizationsForStorage(customizationsToSave);
@@ -1673,8 +1462,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
           this.hasSavedChangesFlag.set(true);
 
           // Update last saved state for change tracking
-          this.lastSavedState.set(structuredClone(this.customizations()));
-          this.currentEditingState.set(structuredClone(this.customizations()));
+          this.updateLastSavedState();
 
           // Update progress step
           this.currentStep.set(4);
@@ -1728,73 +1516,78 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
   /**
    * Reset customizations to last-saved or defaults, clear out templateId/mode/viewOnly,
-   * keep businessType & plan, and flip into “newTemplate” flow.
+   * keep businessType & plan, and flip into "newTemplate" flow.
    */
   resetCustomizations(): void {
     if (
       !confirm(
-        'Are you sure you want to reset all changes? This will start a new template with the same business type and plan.'
+        'Are you sure you want to reset? This will discard unsaved changes and start a new template using the current Business Type and Plan.'
       )
     ) {
       return;
     }
 
-    // show loading
-    this.showLoadingOverlay.set(true);
-    this.loadingOverlayClass.set('active');
+    console.log('[resetCustomizations] Resetting template...');
+    this.showLoadingOverlay.set(true); // Show loading during reset
 
-    // stash current type & plan
+    // Preserve essential settings
     const currentBusinessType = this.businessType();
-    const currentPlan         = this.currentPlan();
+    const currentPlan = this.currentPlan();
 
-    // clear saved-template state
+    // --- Clear Template Specific State ---
     this.currentUserTemplateId.set(null);
     this.currentTemplateName.set(null);
+    this.selectedBaseTemplateId.set(null); // Clear selected base theme
+    this.customizations.set(null); // Clear current customizations immediately
+    this.lastSavedState.set(null);
+    this.currentEditingState.set(null);
+    this.selectedComponent.set(null); // Close customizer if open
+    this.selectedFont.set(null); // Reset font
 
-    // update URL: remove templateId/mode/viewOnly, keep type+plan, add newTemplate
+    // --- Reset Flags ---
+    this.hasStartedBuilding.set(true); // Still considered "started" as type/plan are chosen
+    this.hasSavedChangesFlag.set(false); // No saved changes for the new template
+    this.preventThemeOverride.set(false); // Allow base theme loading
+
+    // --- Initialize Defaults for New Template ---
+    // This will generate defaults based on currentBusinessType and currentPlan
+    // It will also trigger loadThemesForBusinessType -> loadBaseTemplate for the first theme
+    this.initializeDefaultCustomizations();
+    if (currentBusinessType) {
+      this.loadThemesForBusinessType(currentBusinessType); // Ensure themes/base template load
+    }
+
+    // --- Update URL Parameters ---
+    // Transition to the 'newTemplate=true' state
     this.updateUrlParams({
-      templateId:   null,
-      mode:         null,
-      viewOnly:     null,
-      businessType: currentBusinessType,
-      plan:         currentPlan,
-      newTemplate:  'true',
+      templateId: null, // Remove
+      mode: null, // Remove
+      viewOnly: null, // Remove
+      newTemplate: 'true', // Add
+      businessType: currentBusinessType, // Keep
+      plan: currentPlan, // Keep
+      step: '3', // Set to customization step
     });
 
-    // reset signals/UI
-    this.hasStartedBuilding.set(false);
-    this.hasSavedChangesFlag.set(false);
-    this.initializeDefaultCustomizations();
-    this.selectedComponent.set(null);
-    this.isViewOnlyStateService.setIsOnlyViewMode(false);
+    // --- UI State ---
+    this.currentStep.set(3); // Explicitly set step
+    this.showBusinessTypeSelector.set(false); // Ensure selector is hidden
+    this.isViewOnlyStateService.setIsOnlyViewMode(false); // Ensure not in view only mode
 
-    // hide loading & exit fullscreen if needed
-    this.showLoadingOverlay.set(false);
+    // --- Exit Fullscreen & Hide Loading ---
     if (this.isFullscreen()) {
       this.toggleFullscreen();
     }
 
-    // final toast
-    this.confirmationService.showConfirmation(
-      'Template has been reset. You can now start creating a new template.',
-      'info',
-      3000
-    );
-  }
-
-  /**
-   * Handle errors during reset operation
-   */
-  private handleResetError(message: string): void {
-    console.error(message);
-    this.showLoadingOverlay.set(false);
-
-    // Show error message
-    this.confirmationService.showConfirmation(message, 'error', 3000);
-
-    // Fallback to default customizations
-    this.initializeDefaultCustomizations();
-    this.selectedComponent.set(null);
+    // Hide loading after a short delay to allow state updates
+    setTimeout(() => {
+      this.showLoadingOverlay.set(false);
+      this.confirmationService.showConfirmation(
+        'Template reset. Starting new customization.',
+        'info',
+        3000
+      );
+    }, 300);
   }
 
   /**
@@ -1959,90 +1752,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ======== CUSTOMIZATION STRUCTURE MANAGEMENT ========
-  /**
-   * Ensures all required customization structure objects exist
-   * Creates any missing paths in the customization object
-   */
-  private ensureCompleteCustomizationStructure(): void {
-    this.customizations.update((current) => {
-      const updated = structuredClone(current || {});
-
-      // Ensure pages structure exists
-      if (!updated.pages) {
-        updated.pages = {};
-      }
-
-      // Ensure home page structure exists
-      if (!updated.pages.home) {
-        updated.pages.home = {};
-      }
-
-      // Ensure key sections exist
-      if (!updated.pages.home.hero1) {
-        updated.pages.home.hero1 = {
-          backgroundImage: 'assets/standard-hero1/background-image1.jpg',
-          title: 'Grow Your Business With Us',
-          subtitle: 'Professional solutions tailored to your business needs',
-          layout: 'center',
-          showLogo: true,
-          titleColor: '#ffffff',
-          subtitleColor: '#f0f0f0',
-          textShadow: 'medium',
-        };
-      }
-
-      if (!updated.pages.home.about) {
-        updated.pages.home.about = {
-          title: 'About Us',
-          subtitle: 'Our Story',
-          storyTitle: 'Our Story',
-          storyText:
-            'We are dedicated to providing exceptional service and quality.',
-          missionTitle: 'Our Mission',
-          missionText:
-            'Our mission is to provide high-quality services that exceed expectations.',
-          imageUrl: 'assets/standard-hero1/background-image1.jpg',
-          backgroundColor: '#ffffff',
-          textColor: '#333333',
-        };
-      }
-
-      // Ensure other required structures
-      if (!updated.header) {
-        updated.header = {
-          backgroundColor: '#161b33',
-          textColor: '#f5f5f5',
-          logoUrl: '',
-          menuItems: [
-            { id: 1, label: 'Home', link: '/' },
-            { id: 2, label: 'About', link: '/about' },
-            { id: 3, label: 'Contact', link: '/contact' },
-          ],
-        };
-      }
-
-      if (!updated.footer) {
-        updated.footer = {
-          backgroundColor: '#1a1a1a',
-          textColor: '#ffffff',
-          copyrightText: '© 2025 Your Company',
-          logoUrl: '',
-          tagline: '',
-          address: '',
-          phone: '',
-          email: '',
-          showSocialLinks: true,
-          menuItems: [],
-          socialUrls: {},
-          socialLinks: [],
-        };
-      }
-
-      return updated;
-    });
-  }
-
   // ======== COMPONENT INTERACTIONS ========
   /**
    * Handle component selection from the structure components
@@ -2053,7 +1762,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
     path?: string;
   }): void {
     console.log('Component selected for editing:', component);
-
     // Check if editing is allowed (mobile view restrictions)
     if (!this.isEditingAllowed()) {
       this.confirmationService.showConfirmation(
@@ -2070,45 +1778,55 @@ export class PreviewComponent implements OnInit, OnDestroy {
   /**
    * Handle component updates from the customizer
    */
-  handleComponentUpdate(update: {
-    key: string;
-    data: any;
-    path?: string;
-  }): void {
-    console.log('Updating component with new data:', update);
+  handleComponentUpdate(update: any): void {
+    const selected = this.selectedComponent();
+    if (!selected) return;
+    console.log('Updating component:', selected, 'with data:', update);
 
-    this.customizations.update((current) => {
-      if (!current) return current;
-
-      const updated = structuredClone(current);
-
-      // If there's a path, update the nested structure
-      if (update.path) {
-        const pathParts = update.path.split('.');
-        let target = updated as any;
-
-        // Navigate to the parent object
-        for (let i = 0; i < pathParts.length - 1; i++) {
-          if (!target[pathParts[i]]) {
-            target[pathParts[i]] = {};
-          }
-          target = target[pathParts[i]];
+    if (selected.path) {
+      const pathParts = selected.path.split('.');
+      this.customizations.update((current) => {
+        if (!current) {
+          console.error('Cannot update - customizations is null');
+          return current;
         }
-
-        // Update the final property
+        const updated = structuredClone(current);
+        let target: any = updated;
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          const part = pathParts[i];
+          if (!target[part]) target[part] = {};
+          target = target[part];
+        }
         const lastPart = pathParts[pathParts.length - 1];
-        target[lastPart] = update.data;
-      } else {
-        // Otherwise update the top-level property using a type assertion
-        // Since we're using string keys, we need to assert the type
-        (updated as any)[update.key] = update.data;
-      }
+        if (!target[lastPart]) target[lastPart] = {};
+        target[lastPart] = { ...target[lastPart], ...update };
+        console.log('Updated customizations at path:', selected.path);
+        return updated;
+      });
+    } else {
+      this.customizations.update((current) => {
+        if (!current) {
+          console.error('Cannot update - customizations is null');
+          return current;
+        }
+        const key = selected.key as keyof Customizations;
+        const updated = {
+          ...current,
+          [key]: {
+            ...(current[key] || {}),
+            ...update,
+          },
+        };
+        console.log('Updated top-level customizations for key:', key);
+        return updated;
+      });
+    }
 
-      // Update the current editing state
-      this.currentEditingState.set(structuredClone(updated));
-
-      return updated;
-    });
+    // Update editing state for change tracking
+    const currentCustomizations = this.customizations();
+    if (currentCustomizations) {
+      this.updateLastSavedState();
+    }
   }
 
   /**
@@ -2151,6 +1869,17 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
       return updated;
     });
+  }
+
+  /**
+   * Update last saved state for change tracking
+   */
+  private updateLastSavedState(): void {
+    const currentCustomizations = this.customizations();
+    if (currentCustomizations) {
+      this.lastSavedState.set(structuredClone(currentCustomizations));
+      this.currentEditingState.set(structuredClone(currentCustomizations));
+    }
   }
 }
 

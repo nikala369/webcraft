@@ -11,69 +11,105 @@ import { AuthService } from '../../../core/services/auth/auth.service';
     <div
       class="plan-badge"
       [ngClass]="getPlanClass()"
+      [class.clickable]="canUpgrade()"
       [routerLink]="canUpgrade() ? ['/pricing'] : null"
-      [title]="canUpgrade() ? 'Click to upgrade' : 'Current plan'"
+      [title]="canUpgrade() ? 'Click to upgrade your plan' : 'Your current plan'"
     >
       <span class="plan-name">{{ displayPlan }}</span>
-      <span class="upgrade-indicator" *ngIf="canUpgrade()">↗</span>
+      <!-- Optional: Add back upgrade arrow if desired -->
+      <!-- <span class="upgrade-indicator" *ngIf="canUpgrade()">↗</span> -->
     </div>
   `,
   styles: [
     `
       .plan-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 12px;
-        border-radius: 16px;
-        font-size: 12px;
+        display: inline-block; /* Changed from inline-flex */
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
         font-weight: 600;
+        letter-spacing: 1px;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+        text-align: center;
+        cursor: default; /* Default cursor */
+      }
+
+      /* Add pointer cursor only when clickable */
+      .plan-badge.clickable {
         cursor: pointer;
-        transition: all 0.2s ease;
       }
 
       .standard {
-        background-color: #e3f2fd;
-        color: #0984e3;
-        border: 1px solid #bbdefb;
-      }
-
-      .standard:hover {
-        background-color: #bbdefb;
+        background: rgba(40, 118, 255, 0.2); /* Style from v2 */
+        border: 1px solid rgba(40, 118, 255, 0.4); /* Style from v2 */
+        color: #2876ff; /* Style from v2 */
+        box-shadow: 0 0 15px rgba(40, 118, 255, 0.3); /* Style from v2 */
       }
 
       .premium {
-        background-color: #f3e5f5;
-        color: #9e6aff;
-        border: 1px solid #e1bee7;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        background: rgba(140, 82, 255, 0.2); /* Style from v2 */
+        border: 1px solid rgba(140, 82, 255, 0.4); /* Style from v2 */
+        color: #8c52ff; /* Style from v2 */
+        box-shadow: 0 0 15px rgba(140, 82, 255, 0.3); /* Style from v2 */
       }
 
-      .premium:hover {
-        background-color: #e1bee7;
+      /* Hover effect only when clickable */
+      .plan-badge.standard.clickable:hover {
+        /* Slightly adjust background/shadow on hover for feedback */
+        background: rgba(40, 118, 255, 0.3);
+        box-shadow: 0 0 20px rgba(40, 118, 255, 0.4);
       }
 
+      .plan-badge.premium.clickable:hover {
+        /* Slightly adjust background/shadow on hover for feedback */
+        background: rgba(140, 82, 255, 0.3);
+        box-shadow: 0 0 20px rgba(140, 82, 255, 0.4);
+      }
+
+      /* Optional: Styles for upgrade indicator if you re-add it */
+      /*
       .upgrade-indicator {
         margin-left: 4px;
         font-weight: bold;
+        display: inline-block; // Ensure it aligns correctly
+      }
+      */
+
+      /* Responsive styles from v2 */
+      @media (max-width: 768px) {
+        .plan-badge {
+          font-size: 0.7rem;
+          padding: 4px 12px;
+        }
       }
     `,
   ],
 })
 export class PlanBadgeComponent {
   @Input() plan: string = 'standard';
-  private router = inject(Router);
   private authService = inject(AuthService);
 
+  // Use more user-friendly display names
   get displayPlan(): string {
-    return this.plan === 'premium' ? 'Premium' : 'Free Plan';
+    switch (this.plan?.toLowerCase()) {
+      case 'premium':
+        return 'Premium Plan';
+      case 'standard':
+        return 'Free Plan';
+      default:
+        return 'Unknown Plan';
+    }
   }
 
+  // CSS class based on plan
   getPlanClass(): string {
-    return this.plan === 'premium' ? 'premium' : 'standard';
+    return this.plan?.toLowerCase() === 'premium' ? 'premium' : 'standard';
   }
 
+  // Determine if the badge should link to upgrade
   canUpgrade(): boolean {
-    // Only show upgrade option if authenticated and on standard plan
-    return this.authService.isAuthenticated() && this.plan !== 'premium';
+    // Only allow upgrade if authenticated AND on the standard/free plan
+    return this.authService.isAuthenticated() && this.plan?.toLowerCase() !== 'premium';
   }
 }

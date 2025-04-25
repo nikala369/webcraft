@@ -115,8 +115,8 @@ export class MenuSectionComponent implements OnChanges, OnInit {
       'MenuSectionComponent initialized with businessType:',
       this.businessType
     );
-    console.log('Initial customizations:', this.customizations);
-    console.log('Initial wholeData:', this.wholeData);
+    console.log('Initial customizations menu:', this.customizations);
+    console.log('Initial wholeData menu:', this.wholeData);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -197,34 +197,13 @@ export class MenuSectionComponent implements OnChanges, OnInit {
    */
   private getSectionData(): any {
     let data = null;
-    console.log(
-      'Searching for menu data in:',
-      this.wholeData,
-      this.customizations
-    );
 
     // Check for data in different possible locations
-    if (this.wholeData?.pages?.home?.menu) {
-      console.log('Found menu data in wholeData.pages.home.menu');
-      data = this.wholeData.pages.home.menu;
-    } else if (this.customizations?.pages?.home?.menu) {
-      console.log('Found menu data in customizations.pages.home.menu');
-      data = this.customizations.pages.home.menu;
-    } else {
-      console.log('Using top-level customizations data');
-      data = this.customizations;
+    if (this.customizations?.menu) {
+      data = this.customizations?.menu
     }
 
-    // Log found data
-    if (data?.categories) {
-      console.log(
-        `Found ${data.categories.length} menu categories:`,
-        data.categories
-      );
-    } else {
-      console.log('No menu data found, using defaults');
-    }
-
+    // returning menu data, categories, items
     return data;
   }
 
@@ -235,14 +214,9 @@ export class MenuSectionComponent implements OnChanges, OnInit {
     const data = this.getSectionData();
     const categories = data?.categories;
 
-    // Make sure we log what we're working with
     if (categories && categories.length > 0) {
-      console.log(
-        `Menu section returning ${categories.length} custom categories (updated: ${this.lastUpdated})`
-      );
       return categories;
     } else {
-      console.log('Menu section using default categories');
       return this.defaultMenuCategories;
     }
   }

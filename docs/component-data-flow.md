@@ -264,3 +264,78 @@ Specific breakpoints:
    - Use the `planType` input to control features
    - Implement `isPremium()` and `maxItems` methods in components
    - Show upgrade CTAs for standard plan users
+
+## Editing Nested Sections (e.g., Hero, About within Home)
+
+This section details the specific data flow when a user edits a nested component (like the Hero section which is part of the Home page) via the `ComponentCustomizerComponent`. This flow relies on correctly passing both the specific component **key** and its full **path** within the `customizations` object.
+
+**1. User Interaction & Initial Event:**
+
+- The user hovers over a section (e.g., Hero section) in the preview.
+- The `SectionHoverWrapperComponent` displays an "Edit" button.
+- When the user clicks "Edit":
+  - `SectionHoverWrapperComponent` emits `(sectionSelected)` (or legacy `onEdit`). Crucially, it needs to know the correct `sectionKey` (e.g., `'hero1'`) and `sectionPath` (e.g., `'pages.home.hero1'`) to emit. _Note: This emission might originate from the specific section component itself (e.g., `HeroSectionComponent`) which then bubbles up._
+
+**2. Event Propagation through Structure Components:**
+
+- **`HomeStandardComponent`:**
+  - Catches the `sectionSelected` event from the specific section (or its wrapper).
+  - Its primary role here is often to _re-emit_ the event upwards, ensuring the _full path_ (e.g., `pages.home.hero1`) is included in the payload. It emits `(sectionSelected)` with the full path.
+- **`StandardStructureComponent`:**
+  - Catches the `(sectionSelected)` event from `HomeStandardComponent`.
+  - Calls its `handlePageSectionEdit(fullPath)` method.
+  - **Critical Step:** This method parses the `fullPath`:
+    - Extracts the final segment as the `componentKey` (e.g., `'hero1'`).
+    - Derives a user-friendly `sectionName` (e.g., `'Hero1'`).
+    - Keeps the original `fullPath` (e.g., `'pages.home.hero1'`).
+  - Emits `(componentSelected)` with the structured payload: `{ key: 'hero1', name: 'Hero1', path: 'pages.home.hero1' }`.
+
+**3. Handling Selection in `PreviewComponent`:**
+
+- `PreviewComponent` catches the `(componentSelected)` event.
+- Calls its `handleComponentSelection(payload)` method.
+- Sets the `selectedComponent` signal with the received payload `{ key: 'hero1', name: 'Hero1', path: 'pages.home.hero1' }`. This triggers the display of the customizer.
+
+**4. Data Display and Update via `ComponentCustomizerComponent`:**
+
+- `ComponentCustomizerComponent` is rendered (often within `PreviewComponent.html`).
+- It receives inputs derived from the `selectedComponent` signal:
+  - `[componentKey]="selectedComponent()!.key"` (receives `'hero1'`)
+  - `[componentPath]="selectedComponent()?.path"` (receives `'pages.home.hero1'`)
+  - `[initialData]="selectedCustomization()?.data"` (receives the actual data object for `pages.home.hero1` fetched via the `selectedCustomization` computed signal in `PreviewComponent`).
+- The user modifies data within the customizer.
+- When changes are applied, `ComponentCustomizerComponent` emits the `(update)` event containing _only the modified data_ (e.g., `{ title: 'New Hero Title' }`).
+
+**5. Applying Updates in `PreviewComponent`:**
+
+- `PreviewComponent` catches the `(update)` event from the customizer.
+- Calls its `handleComponentUpdate(updateData)` method.
+- **Critical Step:** Inside `handleComponentUpdate`:
+  - It retrieves the _currently selected component's_ info from the `selectedComponent` signal (which still holds `{ key: 'hero1', path: 'pages.home.hero1', ... }`).
+  - It checks if `selected.path` exists. If yes (indicating a nested update):
+    - It performs a `structuredClone` of the current `customizations()` signal state.
+    - It uses the `path` (`'pages.home.hero1'`) to traverse the cloned object structure, creating intermediate objects `{}` if they don't exist.
+    - It reaches the target object (the data for `hero1`).
+    - It _merges_ the `updateData` into the target object using the spread operator: `target[lastPart] = { ...target[lastPart], ...updateData };`. **Crucially, it does NOT simply overwrite the target object.**
+    - It updates the `customizations` signal with the modified clone.
+  - If `selected.path` does _not_ exist (e.g., updating 'header' or 'footer'):
+    - It uses `selected.key` to target the top-level property.
+    - It merges the `updateData` similarly: `[key]: { ...(current[key] || {}), ...updateData }`.
+
+**6. Reactivity and View Update:**
+
+- The update to the `customizations` signal in `PreviewComponent` automatically triggers recalculation downstream.
+- `StandardStructureComponent`'s `@Input customizations` receives the new signal value.
+- Its computed signals (`wholeDataSignal`, `homeCustomizationsSignal`, etc.) recalculate based on the updated signal.
+- These computed signals are passed as inputs to `HomeStandardComponent`.
+- `HomeStandardComponent` passes the relevant data slice to the specific child section component (e.g., `HeroSectionComponent` receives the updated `hero1` data).
+- The child section component's template re-renders based on its updated input data, displaying the changes visually.
+
+**Key Requirements for Correct Flow:**
+
+- **Signal Input:** Child components (`StandardStructureComponent`, etc.) should accept the `customizations` data as a `Signal<Customizations | null>` via `@Input`.
+- **Computed Signals:** Use `computed()` within intermediate components (`StandardStructureComponent`) to derive specific data slices for children, ensuring reactivity.
+- **Distinct Key/Path:** `StandardStructureComponent` _must_ correctly extract the final `key` and the `fullPath` and emit them separately.
+- **Path-Based Traversal:** `PreviewComponent.handleComponentUpdate` _must_ use the `path` to correctly locate the nested object to update.
+- **Merge, Don't Overwrite:** Updates must be _merged_ into the existing data object using the spread operator (`...`) in `PreviewComponent.handleComponentUpdate` to avoid losing other properties within that section's data.
+- **Deep Cloning:** Use `structuredClone()` within `handleComponentUpdate` _before_ making modifications to ensure immutability when updating the signal.

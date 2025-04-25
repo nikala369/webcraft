@@ -11,7 +11,7 @@
   >
     <app-structure-header
       [isMobileLayout]="isMobileLayout"
-      [customizations]="customizations().header"
+      [customizations]="customizations()?.header"
       [currentPage]="currentPage"
       [plan]="currentPlan"
       [businessType]="businessType"
@@ -25,7 +25,7 @@
     <!-- For standard plan, we only need the home page with all sections -->
     <app-home-standard
       *ngIf="currentPlan === 'standard'"
-      [customizations]="homeCustomizationsSignal()"
+      [pagesHomeData]="homeCustomizationsSignal()"
       [wholeData]="wholeDataSignal()"
       [isMobileLayout]="isMobileLayout"
       [isMobileView]="isMobileView"
@@ -38,7 +38,7 @@
     <ng-container *ngIf="currentPlan === 'premium'" [ngSwitch]="currentPage">
       <app-home-standard
         *ngSwitchCase="'home'"
-        [customizations]="homeCustomizationsSignal()"
+        [pagesHomeData]="homeCustomizationsSignal()"
         [wholeData]="wholeDataSignal()"
         [isMobileLayout]="isMobileLayout"
         [isMobileView]="isMobileView"
@@ -80,7 +80,7 @@
     (onEdit)="handleComponentSelection('footer')"
   >
     <app-structure-footer
-      [customizations]="customizations().footer"
+      [customizations]="customizations()?.footer"
       [planType]="currentPlan"
       [businessType]="businessType"
     >
