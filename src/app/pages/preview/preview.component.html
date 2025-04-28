@@ -81,15 +81,33 @@
       <!-- Template Info (Display when editing existing template) -->
       <div
         *ngIf="
-          currentUserTemplateId() && !isViewOnlyStateService.isOnlyViewMode()
-        "
+    currentUserTemplateId() && !isViewOnlyStateService.isOnlyViewMode()
+  "
         class="preview-header__left template-info"
+        [ngClass]="{
+    'plan-standard': currentPlan() === 'standard',
+    'plan-premium':  currentPlan() === 'premium'
+  }"
       >
-        <div class="template-name">
-          <strong>Template:</strong> {{ currentTemplateName() }}
+        <div class="info-item">
+          <app-icon name="template" style="color: white;" width="22" height="22"></app-icon>
+          <div class="info-text">
+            <span class="info-label">Template name</span>
+            <span class="info-value">{{ currentTemplateName() }}</span>
+          </div>
         </div>
-        <div class="business-type">
-          <strong>Business:</strong> {{ businessTypeDisplayName() }}
+
+        <div class="info-item">
+          <img
+            class="info-icon"
+            [src]="'assets/business-types/' + businessType() + '.svg'"
+            [alt]="businessTypeDisplayName() + ' icon'"
+            loading="lazy"
+          />
+          <div class="info-text">
+            <span class="info-label">Template Type</span>
+            <span class="info-value">{{ businessTypeDisplayName() }}</span>
+          </div>
         </div>
       </div>
 
@@ -114,7 +132,7 @@
           (click)="toggleView('view-desktop')"
           title="Desktop View"
         >
-          <app-icon name="desktop" width="28" height="28"></app-icon>
+          <app-icon name="desktop" width="25" height="25"></app-icon>
         </div>
 
         <!-- Mobile View Icon -->
@@ -124,7 +142,7 @@
           (click)="toggleView('view-mobile')"
           title="Mobile View"
         >
-          <app-icon name="mobile" width="28" height="28"></app-icon>
+          <app-icon name="mobile" width="25" height="25"></app-icon>
         </div>
 
         <!-- Fullscreen/Exit Fullscreen Icon -->

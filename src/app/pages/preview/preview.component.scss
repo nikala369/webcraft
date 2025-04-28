@@ -267,26 +267,6 @@ $z-layers: (
       .fullscreen-icon-container {
         margin-left: 0px;
       }
-
-      .view-icon {
-        width: 28px; // Increased base size
-        height: 28px;
-        transition: transform 0.2s ease;
-
-        @include m.breakpoint(lg) {
-          width: 30px; // Larger on bigger screens
-          height: 30px;
-        }
-
-        &.fullscreen-icon {
-          transition: all 0.2s ease;
-
-          @include m.breakpoint(lg) {
-            width: 28px; // Slightly smaller than the other icons
-            height: 28px;
-          }
-        }
-      }
     }
 
     &__right {
@@ -308,28 +288,50 @@ $z-layers: (
 
     .template-info {
       display: flex;
-      flex-direction: column;
+      flex-wrap: nowrap;
+      gap: 34px;
+      align-items: center;
       padding: 0 15px;
 
-      .template-name,
-      .business-type {
-        font-size: 14px;
-        margin: 0 0 4px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 200px;
+      .info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
 
-        strong {
-          margin-right: 5px;
-          color: #9e6aff; // Premium-like color for emphasis
+      .info-icon {
+        width: 23px;
+        height: 23px;
+        color: var(--template-info-accent);
+      }
+
+      .info-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+
+        .info-label {
+          font-size: 10px;
+          text-transform: uppercase;
+          color: #888;            // subtle grey
+          letter-spacing: .5px;
+        }
+
+        .info-value {
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--template-info-accent);
+          max-width: 180px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
       }
-
-      .template-name {
-        font-weight: 500;
-      }
     }
+
+    // accent colors per plan
+    .plan-standard { --template-info-accent: #0984e3 }
+    .plan-premium  { --template-info-accent: #9e6aff }
   }
 
   // Main Preview Area
