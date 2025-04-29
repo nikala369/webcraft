@@ -10,9 +10,9 @@
     <div class="section-container">
       <!-- Section Header -->
       <div class="section-header">
-        <h2 class="section-title">{{ getAboutContent().title }}</h2>
+        <h2 class="section-title">{{ data().title }}</h2>
         <div class="title-underline"></div>
-        <p class="section-subtitle">{{ getAboutContent().subtitle }}</p>
+        <p class="section-subtitle">{{ data().subtitle }}</p>
       </div>
 
       <!-- Main Content -->
@@ -22,27 +22,25 @@
       >
         <!-- About Image -->
         <div class="about-image">
-          <img [src]="getAboutImage()" alt="About Us" />
+          <img [src]="data().imageUrl" alt="About Us" />
         </div>
 
         <!-- About Text -->
         <div class="about-text">
           <!-- Story Section -->
-          <h3>{{ getAboutContent().storyTitle }}</h3>
-          <p>{{ getAboutContent().storyText }}</p>
+          <h3>{{ data().storyTitle }}</h3>
+          <p>{{ data().storyText }}</p>
 
           <!-- Mission Section -->
-          <h3>{{ getAboutContent().missionTitle }}</h3>
-          <p>{{ getAboutContent().missionText }}</p>
+          <h3>{{ data().missionTitle }}</h3>
+          <p>{{ data().missionText }}</p>
 
           <!-- Additional content for premium users -->
-          <ng-container
-            *ngIf="planType === 'premium' && getAboutContent().values?.length"
-          >
+          <ng-container *ngIf="planType === 'premium' && data().values?.length">
             <div class="about-values">
-              <h3>{{ getAboutContent().valuesTitle || "Our Values" }}</h3>
+              <h3>{{ data().valuesTitle || "Our Values" }}</h3>
               <ul>
-                <li *ngFor="let value of getAboutContent().values">
+                <li *ngFor="let value of data().values">
                   {{ value }}
                 </li>
               </ul>

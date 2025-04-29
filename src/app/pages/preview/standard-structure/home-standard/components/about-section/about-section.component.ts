@@ -6,6 +6,7 @@ import {
   inject,
   OnInit,
   HostBinding,
+  Signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
@@ -35,7 +36,7 @@ interface AboutSectionData {
   styleUrls: ['./about-section.component.scss'],
 })
 export class AboutSectionComponent implements OnInit {
-  @Input() customizations: any;
+  @Input({ required: true }) data!: Signal<any>;
   @Input() isMobileLayout: boolean = false;
   @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = 'restaurant';
@@ -81,7 +82,7 @@ export class AboutSectionComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log('About section data:', this.customizations?.pages?.home?.about);
+    console.log('About section data:', this.data());
   }
 
   /**
@@ -89,7 +90,7 @@ export class AboutSectionComponent implements OnInit {
    */
   private getBusinessTypeImage(): string {
     // If we already have a custom image in the data, don't override it
-    const customImage = this.customizations?.pages?.home?.about?.imageUrl;
+    const customImage = this.data()?.imageUrl;
     if (customImage && customImage.trim() !== '') {
       return customImage;
     }
@@ -141,8 +142,7 @@ export class AboutSectionComponent implements OnInit {
    */
   getAboutContent(): AboutSectionData {
     // Get customized content if available
-    const customContent: AboutSectionData =
-      this.customizations?.pages?.home?.about || {};
+    const customContent: AboutSectionData = this.data() || {};
 
     // Get default content from BusinessConfigService if available
     // This is the preferred way to get defaults
@@ -325,6 +325,6 @@ export class AboutSectionComponent implements OnInit {
    * Safely check for a specific property in the customization data
    */
   hasProp(prop: string): boolean {
-    return this.customizations?.pages?.home?.about?.[prop] !== undefined;
+    return this.data()?.pages?.home?.about?.[prop] !== undefined;
   }
 }

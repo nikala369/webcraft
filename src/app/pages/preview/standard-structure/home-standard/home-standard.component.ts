@@ -62,6 +62,20 @@ export class HomeStandardComponent implements OnInit, OnChanges {
   // Track data updates for debugging
   lastCustomizationsUpdate = signal<number>(Date.now());
 
+  // Add computed signals for each section
+  aboutDataSignal = computed(() => this.wholeData()?.pages?.home?.about || {});
+  menuDataSignal = computed(() => this.pagesHomeData()?.menu || {});
+  servicesDataSignal = computed(
+    () => this.wholeData()?.pages?.home?.services || {}
+  );
+  projectsDataSignal = computed(
+    () => this.wholeData()?.pages?.home?.projects || {}
+  );
+  contactDataSignal = computed(
+    () => this.wholeData()?.pages?.home?.contact || {}
+  );
+  heroDataSignal = computed(() => this.wholeData()?.pages?.home?.hero1 || {});
+
   ngOnInit(): void {
     console.log(
       'HomeStandardComponent initialized with businessType:',
@@ -152,28 +166,6 @@ export class HomeStandardComponent implements OnInit, OnChanges {
     );
 
     this.sectionSelected.emit(fullPath);
-  }
-
-  /**
-   * Get hero section data from customizations with fallbacks
-   */
-  getHeroData(): Partial<HeroData> {
-    const pagesData = this.pagesHomeData();
-    const fullData = this.wholeData();
-
-    // First check for direct hero1 property (for backward compatibility)
-    if (pagesData?.hero1) {
-      return pagesData.hero1;
-    }
-
-    // Then check for the proper nested path
-    if (fullData?.pages?.home?.hero1) {
-      return fullData.pages.home.hero1;
-    }
-
-    // Finally, if no data exists, return empty object (component has defaults)
-    console.log('No hero data found, returning empty object');
-    return {};
   }
 
   /**

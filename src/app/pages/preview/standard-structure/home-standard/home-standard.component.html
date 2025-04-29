@@ -3,8 +3,8 @@
   <ng-container *ngIf="pagesHomeData">
     <!-- 1. Hero Section (Always shown) -->
     <app-hero-section
+      [data]="heroDataSignal"
       [customizations]="wholeData"
-      [heroData]="getHeroData()"
       [isMobileLayout]="isMobileLayout"
       [isMobileView]="isMobileView"
       [planType]="planType"
@@ -15,7 +15,7 @@
 
     <!-- 2. About Section (Always shown) -->
     <app-about-section
-      [customizations]="wholeData"
+      [data]="aboutDataSignal"
       [isMobileLayout]="isMobileLayout"
       [planType]="planType"
       [businessType]="businessType"
@@ -28,8 +28,7 @@
     <!-- Menu Section (Restaurant only) -->
     <app-menu-section
       *ngIf="businessType === 'restaurant'"
-      [customizations]="pagesHomeData"
-      [wholeData]="wholeData"
+      [data]="menuDataSignal"
       [isMobileLayout]="isMobileLayout"
       [planType]="planType"
       [businessType]="businessType"
@@ -40,7 +39,7 @@
     <!-- Services Section (Salon only) -->
     <app-services-section
       *ngIf="businessType === 'salon'"
-      [customizations]="wholeData"
+      [data]="servicesDataSignal"
       [isMobileLayout]="isMobileLayout"
       [planType]="planType"
       [businessType]="businessType"
@@ -51,7 +50,7 @@
     <!-- Projects Section (Architecture/Portfolio only) -->
     <app-projects-section
       *ngIf="businessType === 'architecture' || businessType === 'portfolio'"
-      [customizations]="wholeData"
+      [data]="projectsDataSignal"
       [isMobileLayout]="isMobileLayout"
       [planType]="planType"
       [businessType]="businessType"
@@ -61,7 +60,7 @@
 
     <!-- 4. Contact Section (Always shown) -->
     <app-contact-section
-      [customizations]="wholeData"
+      [data]="contactDataSignal"
       [isMobileLayout]="isMobileLayout"
       [planType]="planType"
       [businessType]="businessType"

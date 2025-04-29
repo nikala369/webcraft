@@ -9,10 +9,10 @@
   <section id="contact" class="contact-section">
     <div class="section-container">
       <div class="section-header">
-        <h2 class="section-title">{{ getSectionTitle() }}</h2>
+        <h2 class="section-title">{{ data().title || "Contact Us" }}</h2>
         <div class="title-underline"></div>
-        <p *ngIf="getSectionSubtitle()" class="section-subtitle">
-          {{ getSectionSubtitle() }}
+        <p *ngIf="data().subtitle" class="section-subtitle">
+          {{ data().subtitle }}
         </p>
       </div>
 
@@ -79,7 +79,7 @@
 
         <!-- Contact Form - Simplified and Professional -->
         <div class="contact-form-container">
-          <h3>{{ getFormTitle() }}</h3>
+          <h3>{{ data().formTitle }}</h3>
 
           <!-- Simple Form with Email Server Integration -->
           <form
@@ -126,7 +126,7 @@
 
             <!-- Submit Button -->
             <button type="submit" class="submit-button">
-              {{ getFormButtonText() }}
+              {{ data().formButtonText || "Send" }}
             </button>
 
             <!-- Form Status Message -->

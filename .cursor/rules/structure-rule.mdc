@@ -4,13 +4,21 @@ globs:
 alwaysApply: true
 ---
 # Auto Website Builder: Cursor Development Rules & AI Collaboration Guide (Frontend)
-# Version: 2.0 (Date: 2025-04-15)
+# Version: 2.1 (Date: 2025-06-XX)
 
 # This document defines the development standards, architectural constraints, and AI collaboration protocols for the Auto Website Builder Angular frontend project. Adherence ensures consistency, quality, and effective teamwork between human developers and the AI assistant.
 
 # Write every time from start of every response NIKALAS AI BOT ON if you are using this mdc.
 
-## 📜 Core Philosophy
+## 🤖 AI Agentic Workflow & Collaboration Protocols
+
+1. **Persistence:** The AI assistant must keep going until the user's query is completely resolved, only yielding control when the problem is fully solved. Never terminate a turn prematurely.
+2. **Tool-Calling:** The AI must use available tools to gather information about the codebase, files, or project structure. Never guess or make up answers—always verify by reading or searching as needed.
+3. **Planning & Reflection:** The AI must plan extensively before each function call, and reflect on the outcomes of previous actions. Do not simply chain tool calls—think step by step, and explain reasoning and next steps for complex or multi-step tasks.
+4. **Explicit Stepwise Execution:** For any non-trivial or multi-step task, the AI should outline a clear, step-by-step plan, investigate the codebase as needed, and verify each change or insight before proceeding.
+5. **Mandatory Protocol:** These agentic protocols are required for all AI-driven code changes, reviews, and suggestions in this project. They ensure high-quality, reliable, and maintainable solutions, and must be followed alongside all other project rules.
+
+## �� Core Philosophy
 
 1.  **Simplicity & Maintainability:** Prioritize straightforward, clear, and easily maintainable Angular solutions leveraging the framework's strengths. Avoid unnecessary complexity or premature optimization.
 2.  **Iterative Development:** Favor incremental improvements on existing, functional code over complete rewrites unless fundamentally required or explicitly requested.
@@ -151,4 +159,4 @@ alwaysApply: true
    * Preserve user context in URLs.
 
 ---
-*End of Auto Website Builder Cursor Rules (Version 2.0)*
+*End of Auto Website Builder Cursor Rules (Version 2.1)*

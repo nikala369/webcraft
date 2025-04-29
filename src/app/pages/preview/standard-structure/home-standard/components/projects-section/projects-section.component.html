@@ -9,10 +9,10 @@
   <section id="projects" class="projects-section">
     <div class="section-container">
       <div class="section-header">
-        <h2 class="section-title">{{ getSectionTitle() }}</h2>
+        <h2 class="section-title">{{ data().title || "Our Projects" }}</h2>
         <div class="title-underline"></div>
-        <p *ngIf="getSectionSubtitle()" class="section-subtitle">
-          {{ getSectionSubtitle() }}
+        <p *ngIf="data().subtitle" class="section-subtitle">
+          {{ data().subtitle }}
         </p>
       </div>
 
@@ -36,7 +36,7 @@
         [ngClass]="{ 'projects-grid--mobile': isMobileLayout }"
       >
         <div
-          *ngFor="let project of getProjects(); let i = index"
+          *ngFor="let project of data().items; let i = index"
           class="project-card"
           [ngClass]="{ 'project-card--featured': isProjectFeatured(project) }"
           [ngStyle]="getAnimationDelay(i)"

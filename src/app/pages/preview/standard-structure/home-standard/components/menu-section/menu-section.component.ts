@@ -8,6 +8,7 @@ import {
   SimpleChanges,
   OnInit,
   ElementRef,
+  Signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
@@ -39,8 +40,7 @@ interface MenuCategory {
   styleUrls: ['./menu-section.component.scss'],
 })
 export class MenuSectionComponent implements OnChanges, OnInit {
-  @Input() customizations: any;
-  @Input() wholeData: any;
+  @Input({ required: true }) data!: Signal<any>;
   @Input() isMobileLayout: boolean = false;
   @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = 'restaurant';
@@ -115,28 +115,18 @@ export class MenuSectionComponent implements OnChanges, OnInit {
       'MenuSectionComponent initialized with businessType:',
       this.businessType
     );
-    console.log('Initial customizations menu:', this.customizations);
-    console.log('Initial wholeData menu:', this.wholeData);
+    console.log('Initial menu data:', this.data());
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     // Track changes for debugging
-    if (changes['customizations'] || changes['wholeData']) {
+    if (changes['data']) {
       this.lastUpdated = Date.now();
       console.log('Menu section received update at:', new Date().toISOString());
-
-      if (changes['customizations']) {
-        console.log(
-          'New customizations for menu section:',
-          this.customizations
-        );
-      }
-      if (changes['wholeData']) {
-        console.log('New wholeData for menu section:', this.wholeData);
-      }
+      console.log('New menu data:', this.data());
     }
 
-    // Re-apply colors when customizations change
+    // Re-apply colors when data change
     this.applyCustomColors();
   }
 
@@ -145,7 +135,7 @@ export class MenuSectionComponent implements OnChanges, OnInit {
    */
   private applyCustomColors(): void {
     const host = this.elementRef.nativeElement;
-    const data = this.getSectionData();
+    const data = this.data();
 
     // Apply primary accent color
     const primaryColor = this.themeColorsService.getPrimaryColor(this.planType);
@@ -177,7 +167,7 @@ export class MenuSectionComponent implements OnChanges, OnInit {
    * Get menu section title or fallback
    */
   getMenuTitle(): string {
-    const data = this.getSectionData();
+    const data = this.data();
     return data?.title || 'Our Menu';
   }
 
@@ -185,7 +175,7 @@ export class MenuSectionComponent implements OnChanges, OnInit {
    * Get menu section subtitle or fallback
    */
   getMenuSubtitle(): string {
-    const data = this.getSectionData();
+    const data = this.data();
     return (
       data?.subtitle ||
       'Enjoy our carefully crafted dishes made with the finest ingredients'
@@ -196,22 +186,14 @@ export class MenuSectionComponent implements OnChanges, OnInit {
    * Get the menu section data using the same pattern as other sections
    */
   private getSectionData(): any {
-    let data = null;
-
-    // Check for data in different possible locations
-    if (this.customizations?.menu) {
-      data = this.customizations?.menu
-    }
-
-    // returning menu data, categories, items
-    return data;
+    return this.data();
   }
 
   /**
    * Get menu categories or use defaults
    */
   getMenuCategories(): MenuCategory[] {
-    const data = this.getSectionData();
+    const data = this.data();
     const categories = data?.categories;
 
     if (categories && categories.length > 0) {

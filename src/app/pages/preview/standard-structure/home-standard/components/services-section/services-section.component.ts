@@ -8,6 +8,7 @@ import {
   ElementRef,
   OnChanges,
   SimpleChanges,
+  Signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
@@ -31,7 +32,7 @@ interface ServiceItem {
   styleUrls: ['./services-section.component.scss'],
 })
 export class ServicesSectionComponent implements OnInit, OnChanges {
-  @Input() customizations: any;
+  @Input({ required: true }) data!: Signal<any>;
   @Input() wholeData: any;
   @Input() isMobileLayout: boolean = false;
   @Input() planType: 'standard' | 'premium' = 'standard';
@@ -94,7 +95,7 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
   ngOnInit() {
     console.log('ServicesSectionComponent initialized for:', this.businessType);
     console.log('Initial whole data:', this.wholeData);
-    console.log('Initial customizations:', this.customizations);
+    console.log('Initial services data:', this.data());
 
     // Check if this business type supports services
     if (!this.supportsBusinessType()) {
@@ -115,16 +116,11 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
     }
 
     // Track changes for debugging
-    if (changes['customizations'] || changes['wholeData']) {
+    if (changes['data']) {
       this.lastUpdateTime = new Date().toISOString();
       console.log('Services section received update at:', this.lastUpdateTime);
 
-      if (changes['customizations']) {
-        console.log('New customizations:', this.customizations);
-      }
-      if (changes['wholeData']) {
-        console.log('New wholeData:', this.wholeData);
-      }
+      console.log('New services data:', this.data());
     }
 
     // Reapply styles when inputs change
@@ -136,7 +132,7 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
    */
   private applyCustomColors(): void {
     const host = this.elementRef.nativeElement;
-    const data = this.getSectionData();
+    const data = this.data();
 
     console.log('Applying colors to services section:', data);
 
@@ -179,7 +175,7 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
    */
   getSectionTitle(): string {
     // Check if there's customization data
-    const data = this.getSectionData();
+    const data = this.data();
     if (data?.title) {
       return data.title;
     }
@@ -198,7 +194,7 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
    */
   getSectionSubtitle(): string {
     // Check if there's customization data
-    const data = this.getSectionData();
+    const data = this.data();
     if (data?.subtitle) {
       return data.subtitle;
     }
@@ -220,7 +216,7 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
    */
   getServices(): ServiceItem[] {
     // Get data from customizations
-    const data = this.getSectionData();
+    const data = this.data();
 
     // Check for services data using specific paths in priority order
     if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
@@ -250,11 +246,7 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
   private getSectionData(): any {
     // Look for data in different possible locations with detailed logging
     let data: any = null;
-    console.log(
-      'Searching for services data in:',
-      this.wholeData,
-      this.customizations
-    );
+    console.log('Searching for services data in:', this.wholeData, this.data());
 
     // First check in wholeData path (highest priority)
     if (this.wholeData?.pages?.home?.services) {
@@ -262,14 +254,14 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
       data = this.wholeData.pages.home.services;
     }
     // Then check in customizations
-    else if (this.customizations?.pages?.home?.services) {
+    else if (this.data()?.pages?.home?.services) {
       console.log('Found services data in customizations.pages.home.services');
-      data = this.customizations.pages.home.services;
+      data = this.data().pages.home.services;
     }
     // Fallback to top-level customizations
-    else if (this.customizations) {
+    else if (this.data()) {
       console.log('Using top-level customizations data');
-      data = this.customizations;
+      data = this.data();
     }
 
     // Log what we found to help diagnose issues

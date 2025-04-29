@@ -8,6 +8,7 @@ import {
   PipeTransform,
   OnInit,
   HostBinding,
+  Signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
@@ -39,7 +40,7 @@ interface FormStatus {
   styleUrls: ['./contact-section.component.scss'],
 })
 export class ContactSectionComponent implements OnInit {
-  @Input() customizations: any;
+  @Input({ required: true }) data!: Signal<any>;
   @Input() isMobileLayout: boolean = false;
   @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = 'restaurant';
@@ -85,7 +86,7 @@ export class ContactSectionComponent implements OnInit {
 
   ngOnInit(): void {
     // Log customizations for debugging
-    console.log('Contact section customizations:', this.customizations);
+    console.log('Contact section customizations:', this.data());
   }
 
   /**
@@ -121,13 +122,13 @@ export class ContactSectionComponent implements OnInit {
    */
   getCustomization(key: string): any {
     // First check direct path
-    if (this.customizations?.[key] !== undefined) {
-      return this.customizations[key];
+    if (this.data()?.[key] !== undefined) {
+      return this.data()[key];
     }
 
     // Then check nested path
-    if (this.customizations?.pages?.home?.contact?.[key] !== undefined) {
-      return this.customizations.pages.home.contact[key];
+    if (this.data()?.pages?.home?.contact?.[key] !== undefined) {
+      return this.data().pages.home.contact[key];
     }
 
     return null;

@@ -15,6 +15,7 @@ import {
   Customizations,
   HeroData,
 } from '../../../../../../core/models/website-customizations';
+import { Signal } from '@angular/core';
 
 @Component({
   selector: 'app-hero-section',
@@ -25,7 +26,7 @@ import {
 })
 export class HeroSectionComponent implements OnInit, OnDestroy {
   @Input() customizations!: any; // ! operator indicates definite assignment
-  @Input() heroData: Partial<HeroData> = {}; // Partial allows for empty or partial implementations
+  @Input({ required: true }) data!: Signal<any>;
   @Input() isMobileLayout: boolean = false;
   @Input() isMobileView: any;
   @Input() planType: 'standard' | 'premium' = 'standard';
@@ -64,11 +65,11 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   handleSectionSelection(event: { key: string; name: string; path?: string }) {
     console.log(
       'Hero section - handling section selection with heroData:',
-      this.heroData
+      this.data()
     );
     console.log(
       'Current heroData:',
-      JSON.stringify(this.heroData || {}, null, 2)
+      JSON.stringify(this.data() || {}, null, 2)
     );
 
     // Ensure we have the correct path
@@ -149,23 +150,23 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   getBackgroundType(): 'image' | 'video' {
     // If explicitly set to video AND we have a video, use video
     if (
-      this.heroData?.backgroundType === 'video' &&
-      this.heroData?.backgroundVideo
+      this.data()?.backgroundType === 'video' &&
+      this.data()?.backgroundVideo
     ) {
       return 'video';
     }
 
     // If explicitly set to image OR we have an image (or no explicit setting), use image
     if (
-      this.heroData?.backgroundType === 'image' ||
-      this.heroData?.backgroundImage ||
-      !this.heroData?.backgroundType
+      this.data()?.backgroundType === 'image' ||
+      this.data()?.backgroundImage ||
+      !this.data()?.backgroundType
     ) {
       return 'image';
     }
 
     // Fallback - if video is specified but we don't have one, still use video
-    return this.heroData?.backgroundType || 'image';
+    return this.data()?.backgroundType || 'image';
   }
 
   /**
@@ -173,11 +174,11 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
    */
   getHeroBackground(): string {
     // If it's explicitly set to video background, don't use image
-    if (this.heroData?.backgroundType === 'video') {
+    if (this.data()?.backgroundType === 'video') {
       return '';
     }
 
-    return this.heroData?.backgroundImage || this.defaultHeroImage;
+    return this.data()?.backgroundImage || this.defaultHeroImage;
   }
 
   /**
@@ -186,20 +187,20 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   getHeroBackgroundVideo(): string {
     // If it's explicitly set to image background, don't use video
     if (
-      this.heroData?.backgroundType === 'image' ||
-      !this.heroData?.backgroundType
+      this.data()?.backgroundType === 'image' ||
+      !this.data()?.backgroundType
     ) {
       return '';
     }
 
-    return this.heroData?.backgroundVideo || this.defaultHeroVideo;
+    return this.data()?.backgroundVideo || this.defaultHeroVideo;
   }
 
   /**
    * Get overlay opacity class
    */
   getOverlayOpacity(): string {
-    return this.heroData?.overlayOpacity || 'medium';
+    return this.data()?.overlayOpacity || 'medium';
   }
 
   /**
@@ -207,14 +208,14 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
    */
   getOverlayColor(): string {
     // Return the overlay color or default to black
-    return this.heroData?.overlayColor || '#000000';
+    return this.data()?.overlayColor || '#000000';
   }
 
   /**
    * Check if content text should be displayed
    */
   shouldShowContentText(): boolean {
-    return this.heroData?.showContentText !== false;
+    return this.data()?.showContentText !== false;
   }
 
   /**
@@ -231,49 +232,49 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
    * Check if logo should be displayed
    */
   shouldShowLogo(): boolean {
-    return this.heroData?.showLogo !== false;
+    return this.data()?.showLogo !== false;
   }
 
   /**
    * Get hero title or fallback
    */
   getHeroTitle(): string {
-    return this.heroData?.title || this.getDefaultHeroTitle();
+    return this.data()?.title || this.getDefaultHeroTitle();
   }
 
   /**
    * Get hero subtitle or fallback
    */
   getHeroSubtitle(): string {
-    return this.heroData?.subtitle || this.getDefaultHeroSubtitle();
+    return this.data()?.subtitle || this.getDefaultHeroSubtitle();
   }
 
   /**
    * Get layout for hero content positioning
    */
   getLayout(): string {
-    return this.heroData?.layout || 'center';
+    return this.data()?.layout || 'center';
   }
 
   /**
    * Get text shadow class for hero text
    */
   getTextShadow(): string {
-    return 'text-shadow-' + (this.heroData?.textShadow || 'medium');
+    return 'text-shadow-' + (this.data()?.textShadow || 'medium');
   }
 
   /**
    * Get title color or fallback
    */
   getTitleColor(): string {
-    return this.heroData?.titleColor || '#ffffff';
+    return this.data()?.titleColor || '#ffffff';
   }
 
   /**
    * Get subtitle color or fallback
    */
   getSubtitleColor(): string {
-    return this.heroData?.subtitleColor || '#f0f0f0';
+    return this.data()?.subtitleColor || '#f0f0f0';
   }
 
   /**

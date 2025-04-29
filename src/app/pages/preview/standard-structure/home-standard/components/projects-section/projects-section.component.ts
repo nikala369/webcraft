@@ -1,4 +1,11 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  inject,
+  Signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
 import { ThemeColorsService } from '../../../../../../core/services/theme/theme-colors.service';
@@ -22,7 +29,7 @@ interface ProjectItem {
   styleUrls: ['./projects-section.component.scss'],
 })
 export class ProjectsSectionComponent {
-  @Input() customizations: any;
+  @Input({ required: true }) data!: Signal<any>;
   @Input() isMobileLayout: boolean = false;
   @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = 'architecture';
@@ -100,8 +107,9 @@ export class ProjectsSectionComponent {
    * Get section title based on business type
    */
   getSectionTitle(): string {
-    if (this.customizations?.pages?.home?.projects?.title) {
-      return this.customizations.pages.home.projects.title;
+    const data = this.data();
+    if (data?.pages?.home?.projects?.title) {
+      return data.pages.home.projects.title;
     }
 
     return this.businessType === 'architecture'
@@ -113,8 +121,9 @@ export class ProjectsSectionComponent {
    * Get section subtitle based on business type
    */
   getSectionSubtitle(): string {
-    if (this.customizations?.pages?.home?.projects?.subtitle) {
-      return this.customizations.pages.home.projects.subtitle;
+    const data = this.data();
+    if (data?.pages?.home?.projects?.subtitle) {
+      return data.pages.home.projects.subtitle;
     }
 
     if (this.businessType === 'architecture') {
@@ -128,8 +137,9 @@ export class ProjectsSectionComponent {
    * Get projects based on business type or customizations
    */
   getProjects(): ProjectItem[] {
-    if (this.customizations?.pages?.home?.projects?.items) {
-      return this.customizations.pages.home.projects.items;
+    const data = this.data();
+    if (data?.pages?.home?.projects?.items) {
+      return data.pages.home.projects.items;
     }
 
     return this.businessType === 'architecture'
@@ -152,6 +162,7 @@ export class ProjectsSectionComponent {
    * Check if a project is featured
    */
   isProjectFeatured(project: ProjectItem): boolean {
+    const data = this.data();
     return project.featured === true;
   }
 
@@ -159,6 +170,7 @@ export class ProjectsSectionComponent {
    * Check if projects should display categories
    */
   showCategories(): boolean {
+    const data = this.data();
     return this.planType === 'premium';
   }
 
@@ -166,6 +178,7 @@ export class ProjectsSectionComponent {
    * Check if a project has client information
    */
   hasClient(project: ProjectItem): boolean {
+    const data = this.data();
     return !!project.client && this.planType === 'premium';
   }
 
@@ -173,6 +186,7 @@ export class ProjectsSectionComponent {
    * Check if a project has date information
    */
   hasDate(project: ProjectItem): boolean {
+    const data = this.data();
     return !!project.date && this.planType === 'premium';
   }
 
@@ -180,6 +194,7 @@ export class ProjectsSectionComponent {
    * Check if a project has a category assigned
    */
   hasCategory(project: ProjectItem): boolean {
+    const data = this.data();
     return !!project.category;
   }
 
@@ -187,6 +202,7 @@ export class ProjectsSectionComponent {
    * Get a list of all project categories
    */
   getProjectCategories(): string[] {
+    const data = this.data();
     const categories = new Set<string>();
 
     this.getProjects().forEach((project) => {
@@ -202,6 +218,7 @@ export class ProjectsSectionComponent {
    * Calculate animation delay based on index
    */
   getAnimationDelay(index: number): object {
+    const data = this.data();
     const delay = 0.1 + index * 0.1;
     return {
       'animation-delay': `${delay}s`,

@@ -13,10 +13,10 @@
   >
     <div class="section-container">
       <div class="section-header">
-        <h2 class="section-title">{{ getSectionTitle() }}</h2>
+        <h2 class="section-title">{{ data().title || "Our Services" }}</h2>
         <div class="title-underline"></div>
-        <p *ngIf="getSectionSubtitle()" class="section-subtitle">
-          {{ getSectionSubtitle() }}
+        <p *ngIf="data().subtitle" class="section-subtitle">
+          {{ data().subtitle }}
         </p>
       </div>
 
@@ -28,9 +28,9 @@
           'premium-grid': isPremium()
         }"
       >
-        <ng-container *ngIf="getServices().length > 0; else noServices">
+        <ng-container *ngIf="data().items?.length > 0; else noServices">
           <div
-            *ngFor="let service of getServices(); let i = index"
+            *ngFor="let service of data().items; let i = index"
             class="service-card"
             [ngClass]="{
               'service-card--premium': isPremium(),
@@ -92,7 +92,7 @@
         <!-- Empty state template -->
         <ng-template #noServices>
           <div class="empty-services-message">
-            <p>Add services, click edit button</p>
+            <p>Add services to this section, click edit button</p>
           </div>
         </ng-template>
       </div>
