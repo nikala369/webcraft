@@ -7,6 +7,8 @@ import {
   OnInit,
   OnDestroy,
   effect,
+  ChangeDetectorRef,
+  ApplicationRef,
 } from '@angular/core';
 import { Location } from '@angular/common';
 import {
@@ -16,8 +18,10 @@ import {
   RouterModule,
 } from '@angular/router';
 import { CommonModule, UpperCasePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject, switchMap } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
 // Services
 import { ThemeService } from '../../core/services/theme/theme.service';
@@ -97,6 +101,7 @@ import type { Template } from '../../core/services/template/template.service';
     BusinessTypeSelectorComponent,
     WebcraftLoadingComponent,
     RouterModule,
+    FormsModule,
   ],
   templateUrl: './preview.component.html',
   styleUrls: ['./preview.component.scss'],
@@ -120,6 +125,8 @@ export class PreviewComponent implements OnInit, OnDestroy {
   private subscriptionService = inject(SubscriptionService);
   private authService = inject(AuthService);
   private selectionStateService = inject(SelectionStateService);
+  private cdr = inject(ChangeDetectorRef);
+  private appRef = inject(ApplicationRef);
 
   // ======== CORE STATE SIGNALS ========
 
@@ -210,10 +217,10 @@ export class PreviewComponent implements OnInit, OnDestroy {
   private currentEditingState = signal<Customizations | null>(null);
 
   // ---- Loading State ----
-  /** Controls the visibility of the loading overlay */
+  /**
+   * Loading overlay signal for theme loading visual feedback
+   */
   showLoadingOverlay = signal<boolean>(false);
-
-  /** CSS class for the loading overlay */
   loadingOverlayClass = signal<string>('');
 
   // ---- Themes and Settings ----
@@ -490,15 +497,27 @@ export class PreviewComponent implements OnInit, OnDestroy {
             return;
           }
 
-          // Store the template ID and name regardless of whether config parsing succeeds
+          // Store the template ID
           this.currentUserTemplateId.set(template.id);
-          this.currentTemplateName.set(template.template.name);
 
-          // Update consolidated state
+          // --- Correctly set the template name ---
+          // Use the user's custom name (template.name) from the top level.
+          // Fall back to the base template name (template.template.name) only if the custom name is missing.
+          const userTemplateName = template.name;
+          const baseTemplateName = template.template?.name;
+          const displayName =
+            userTemplateName || baseTemplateName || 'Untitled Template';
+
+          console.log(
+            `[loadExistingTemplate] Setting currentTemplateName to: "${displayName}" (User: "${userTemplateName}", Base: "${baseTemplateName}")`
+          );
+          this.currentTemplateName.set(displayName);
+
+          // Update consolidated state (using the determined displayName)
           this.templateState.update((state) => ({
             ...state,
             id: template.id,
-            name: template.template.name,
+            name: displayName,
           }));
 
           // Set business type based on template data
@@ -519,72 +538,62 @@ export class PreviewComponent implements OnInit, OnDestroy {
             this.loadThemesForBusinessType(templateType);
           }
 
-          // Process the config if available
           if (template.config) {
             try {
-              // Safely parse the config string
+              // don’t gate it with startsWith/endsWith — just trim and parse
               const configStr = template.config.trim();
-              console.log(
-                'Template config string:',
-                configStr.substring(0, 100) + '...'
-              );
+              console.log('Raw template.config:', configStr);
 
-              let customizationsData;
-              // Make sure it's a valid JSON string before parsing
-              if (configStr.startsWith('{') && configStr.endsWith('}')) {
-                customizationsData = JSON.parse(configStr);
-              } else {
-                throw new Error('Invalid config format');
-              }
+              // parse once, let JSON.parse throw if it’s bad
+              const customizationsData = JSON.parse(configStr);
 
-              // Apply the loaded customizations
+              // apply the loaded customizations
               this.customizations.set(customizationsData);
               console.log('Customizations set:', this.customizations());
 
-              // Update font if available
+              // update font if available
               if (customizationsData.fontConfig) {
-                const fontConfig = customizationsData.fontConfig;
-                this.selectedFont.set({
-                  id: fontConfig.fontId,
-                  family: fontConfig.family,
-                  fallback: fontConfig.fallback,
-                });
+                const { fontId, family, fallback } =
+                  customizationsData.fontConfig;
+                this.selectedFont.set({ id: fontId, family, fallback });
               }
 
-              // Update tracking state
+              // mark that we have an existing saved template
               this.updateLastSavedState();
+              this.hasStartedBuilding.set(true);
+              this.hasSavedChangesFlag.set(true);
+              this.currentStep.set(mode === 'view' ? 3 : 4);
 
               console.log(
                 'Successfully loaded and applied template configuration'
               );
-
-              // Set appropriate flags for editing flow
-              this.hasStartedBuilding.set(true);
-              this.hasSavedChangesFlag.set(true); // Indicate existing saved state
-              this.currentStep.set(mode === 'view' ? 3 : 4); // SET STEP HERE (Customize or Done)
             } catch (e) {
-              console.error('Error processing template config:', e);
+              console.error(
+                'Error parsing template.config, falling back to defaults:',
+                e
+              );
 
-              // Even if config parsing fails, initialize with defaults and proceed
+              // fallback to defaults
               this.initializeDefaultCustomizations();
               this.confirmationService.showConfirmation(
-                'Error processing template configuration. Using default settings.',
+                'Could not parse your template configuration – using defaults.',
                 'warning',
                 5000
               );
-              this.hasStartedBuilding.set(true); // Still allow editing with defaults
-              this.currentStep.set(3); // SET STEP HERE (Default to Customize on error)
+
+              this.hasStartedBuilding.set(true);
+              this.currentStep.set(3);
             }
           } else {
-            console.warn('Template has no config:', template);
+            console.warn('Template has no config – using defaults');
             this.initializeDefaultCustomizations();
             this.confirmationService.showConfirmation(
               'Template has no configuration data. Using default settings.',
               'warning',
               3000
             );
-            this.hasStartedBuilding.set(true); // Allow editing with defaults
-            this.currentStep.set(3); // SET STEP HERE (Default to Customize)
+            this.hasStartedBuilding.set(true);
+            this.currentStep.set(3);
           }
 
           // UI transitions AFTER setting state and step
@@ -673,120 +682,140 @@ export class PreviewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load base template from API
+   * Load base template configuration from API and apply ONLY if creating a new template.
    */
   loadBaseTemplate(templateId: string): void {
-    console.log(
-      `[loadBaseTemplate] Attempting to load base template ID: ${templateId}`
-    );
+    console.log(`[loadBaseTemplate] Loading base template ID: ${templateId}`);
 
-    // --- Conditions to Prevent Loading ---
-    // 1. If we are editing an existing user template, don't load a base template over it.
+    // Prevent loading if editing an existing user template or if override is flagged
     if (this.currentUserTemplateId()) {
       console.log(
-        '[loadBaseTemplate] Skipping: Already editing an existing user template.'
+        '[loadBaseTemplate] Skipping: Already editing user template.'
       );
       return;
     }
-    // 2. If override prevention is active (e.g., during initial load of existing template)
     if (this.preventThemeOverride()) {
       console.log(
-        '[loadBaseTemplate] Skipping: Theme override prevention is active.'
+        '[loadBaseTemplate] Skipping: Theme override prevention active.'
       );
       return;
     }
 
-    // --- Fetch Base Template Config ---
+    // Show loading indicator for better UX
+    this.showLoadingOverlay.set(true);
+    this.loadingOverlayClass.set('fadeIn');
+
     this.templateService.getTemplateById(templateId).subscribe({
       next: (template: Template) => {
         console.log(
-          '[loadBaseTemplate] Base template data received:',
+          '[loadBaseTemplate] Received base template data:',
           template
         );
+        this.selectedBaseTemplateId.set(template.id);
 
-        this.selectedBaseTemplateId.set(template.id); // Track which base is selected
+        // Apply configuration ONLY if we are in the new template flow
+        if (!this.currentUserTemplateId()) {
+          let configApplied = false;
+          if (template.config) {
+            try {
+              // Sanitize the config string before parsing
+              let configStr = template.config.trim();
 
-        // Set business type ONLY if not already set (don't override user/URL choice)
-        if (!this.businessType() && template.templateType?.key) {
-          console.log(
-            `[loadBaseTemplate] Setting business type from template: ${template.templateType.key}`
-          );
-          this.businessType.set(template.templateType.key);
-          this.setBusinessTypeDisplayName(template.templateType.key);
-          this.templateState.update((state) => ({
-            ...state,
-            businessType: template.templateType.key,
-            businessTypeName: this.businessTypeDisplayName(),
-          }));
-        }
+              // Fix potential JSON issues by using more direct approach
+              if (configStr) {
+                // Directly access and clean the string first
+                const parsedConfig = JSON.parse(configStr);
+                console.log(
+                  '[loadBaseTemplate] Successfully parsed config:',
+                  parsedConfig
+                );
 
-        // --- Apply Configuration ---
-        if (template.config) {
-          try {
-            const templateCustomizations = JSON.parse(template.config);
-            console.log(
-              '[loadBaseTemplate] Parsed template customizations:',
-              templateCustomizations
-            );
+                // Force synchronous update before async operations
+                this.customizations.set(null); // First set to null to force refresh
+                setTimeout(() => {
+                  // Then set the actual value
+                  this.customizations.set(parsedConfig);
+                  console.log(
+                    '[loadBaseTemplate] Customizations updated:',
+                    this.customizations()
+                  );
 
-            // **Decision Point: Replace or Ignore?**
-            // We replace the customizations ONLY if we are in the initial new template flow
-            // (no currentUserTemplateId) and haven't saved anything yet.
-            // If the user switches themes after making edits but before saving,
-            // the new theme config REPLACES the old one entirely.
-            if (!this.currentUserTemplateId()) {
-              // Only apply if creating new
-              console.log(
-                '[loadBaseTemplate] Applying base template config (replacing existing).'
-              );
-              this.customizations.set(templateCustomizations);
+                  // Update font from theme config
+                  if (parsedConfig.fontConfig) {
+                    const fontConfig = parsedConfig.fontConfig;
+                    this.selectedFont.set({
+                      id: fontConfig.fontId,
+                      family: fontConfig.family,
+                      fallback: fontConfig.fallback,
+                    });
+                  } else {
+                    this.selectedFont.set(null);
+                  }
 
-              // Update font if available in the template config
-              if (templateCustomizations.fontConfig) {
-                const fontConfig = templateCustomizations.fontConfig;
-                this.selectedFont.set({
-                  id: fontConfig.fontId,
-                  family: fontConfig.family,
-                  fallback: fontConfig.fallback,
-                });
-              } else {
-                // Reset font if the new template doesn't specify one
-                this.selectedFont.set(null);
+                  this.updateLastSavedState();
+                  configApplied = true;
+
+                  // Force updates after setting data
+                  setTimeout(() => {
+                    console.log('[loadBaseTemplate] Forcing component updates');
+                    this.appRef.tick();
+                    this.cdr.detectChanges();
+
+                    // Hide loading with delay
+                    setTimeout(() => {
+                      this.loadingOverlayClass.set('fadeOut');
+                    }, 300);
+                  }, 50);
+                }, 0);
               }
-
-              // Update tracking state to reflect the newly loaded base state
-              this.updateLastSavedState();
-            } else {
-              console.log(
-                '[loadBaseTemplate] Ignoring base template config (already editing/saved).'
+            } catch (e) {
+              console.error(
+                '[loadBaseTemplate] Error parsing template config:',
+                e
               );
-            }
-          } catch (e) {
-            console.error(
-              '[loadBaseTemplate] Error parsing template config:',
-              e
-            );
-            // Fallback to defaults ONLY if customizations are currently null
-            if (!this.customizations()) {
+              console.log(
+                '[loadBaseTemplate] Problematic JSON:',
+                template.config.substring(3350, 3450)
+              );
+
+              // Initialize with defaults and force updates
               this.initializeDefaultCustomizations();
+              setTimeout(() => {
+                this.appRef.tick();
+                this.cdr.detectChanges();
+              }, 0);
+
+              this.loadingOverlayClass.set('fadeOut');
             }
+          } else {
+            console.warn('[loadBaseTemplate] No config found. Using defaults.');
+            // Initialize defaults if no config was provided
+            this.initializeDefaultCustomizations();
+            setTimeout(() => {
+              this.appRef.tick();
+              this.cdr.detectChanges();
+              this.loadingOverlayClass.set('fadeOut');
+            }, 0);
           }
         } else {
-          console.warn(
-            '[loadBaseTemplate] Base template has no config. Initializing defaults if needed.'
-          );
-          // Initialize with defaults ONLY if customizations are currently null
-          if (!this.customizations()) {
-            this.initializeDefaultCustomizations();
-          }
+          // Not in new template flow
+          this.loadingOverlayClass.set('fadeOut');
         }
       },
-      error: (err: Error) => {
-        console.error('[loadBaseTemplate] Error loading base template:', err);
-        // Initialize with defaults ONLY if customizations are currently null
-        if (!this.customizations()) {
+      error: (err: any) => {
+        console.error(
+          '[loadBaseTemplate] API Error loading base template:',
+          err
+        );
+        // Fallback to defaults if API fails during new template flow
+        if (!this.currentUserTemplateId()) {
           this.initializeDefaultCustomizations();
+          setTimeout(() => {
+            this.appRef.tick();
+            this.cdr.detectChanges();
+          }, 0);
         }
+        this.loadingOverlayClass.set('fadeOut');
       },
     });
   }
@@ -847,7 +876,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
           fallback: 'sans-serif',
         },
         header: {
-          backgroundColor: '#161b33',
+          backgroundColor: '#0dff00',
           textColor: '#f5f5f5',
           menuItems: [],
         },
@@ -869,7 +898,9 @@ export class PreviewComponent implements OnInit, OnDestroy {
    * Load themes filtered by business type
    */
   loadThemesForBusinessType(businessTypeKey: string): void {
-    console.log(`Loading themes for business type key: ${businessTypeKey}`);
+    console.log(
+      `[loadThemes] Loading themes for business type: ${businessTypeKey}`
+    );
 
     // Always set loading state first
     this.availableThemes.set([]);
@@ -895,10 +926,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
           return;
         }
 
-        console.log(
-          `Found template type ID: ${templateType.id} for business type key: ${businessTypeKey}`
-        );
-
         // Get plan ID based on current plan
         const planType = this.templateService.convertPlanType(
           this.currentPlan()
@@ -911,31 +938,8 @@ export class PreviewComponent implements OnInit, OnDestroy {
               .searchTemplates(templateType.id, planId, 0, 5)
               .subscribe({
                 next: (response) => {
-                  console.log(
-                    `Received ${
-                      response.content.length
-                    } templates for type ID ${
-                      templateType.id
-                    } with plan ${this.currentPlan()}`
-                  );
-
                   // Save templates to signal
                   this.availableThemes.set(response.content);
-
-                  // If we have templates and no base template ID is selected yet, select the first one
-                  // Only auto-select if we don't have an existing template ID (new creation flow)
-                  if (
-                    response.content.length > 0 &&
-                    !this.selectedBaseTemplateId() &&
-                    !this.currentUserTemplateId()
-                  ) {
-                    const firstTemplateId = response.content[0].id;
-                    console.log(
-                      `Auto-selecting template ID ${firstTemplateId}`
-                    );
-                    this.selectedBaseTemplateId.set(firstTemplateId);
-                    this.loadBaseTemplate(firstTemplateId);
-                  }
                 },
                 error: (err) => {
                   console.error(
@@ -1311,8 +1315,9 @@ export class PreviewComponent implements OnInit, OnDestroy {
    * Called when loading overlay animation completes
    */
   onLoadingOverlayFinished(): void {
-    // Remove the overlay by setting the controlling signal to false
-    this.showLoadingOverlay.set(false);
+    if (this.loadingOverlayClass() === 'fadeOut') {
+      this.showLoadingOverlay.set(false);
+    }
   }
 
   // ======== TEMPLATE SAVING & EDITING ========
@@ -1558,6 +1563,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     }
 
     // --- Update URL Parameters ---
+    console.log('[resetCustomizations] Updating URL for new template flow'); // INFO
     // Transition to the 'newTemplate=true' state
     this.updateUrlParams({
       templateId: null, // Remove
@@ -1830,15 +1836,43 @@ export class PreviewComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Apply a theme/font update
+   * Apply a theme/font update from the theme switcher
    */
   loadTheme(theme: any): void {
-    console.log('Loading theme:', theme);
+    // Ensure theme is treated as a string ID
+    const themeId = typeof theme === 'object' ? theme.id : theme;
+    // console.log('[loadTheme] Received theme selection with ID:', themeId); // Keep log minimal
 
-    // Store the base template ID
-    if (theme.id) {
-      this.selectedBaseTemplateId.set(theme.id);
-      this.loadBaseTemplate(theme.id);
+    if (!themeId) {
+      console.warn('[loadTheme] No valid theme ID provided');
+      return;
+    }
+
+    this.selectedBaseTemplateId.set(themeId);
+
+    // Determine if we are in the new template creation flow
+    const isNewTemplateFlow =
+      this.route.snapshot.queryParams['newTemplate'] === 'true' &&
+      !this.currentUserTemplateId();
+
+    if (isNewTemplateFlow) {
+      console.log(
+        `[loadTheme] New template flow: Loading theme ID: ${themeId}`
+      );
+      // In the new template flow, always load the selected theme's config.
+      // Resetting prevent flag just in case.
+      this.preventThemeOverride.set(false);
+      this.loadBaseTemplate(themeId);
+    } else if (this.currentUserTemplateId()) {
+      // If editing an existing template, do NOT load the base template over it.
+      console.log(
+        `[loadTheme] Existing template flow: Storing theme ID: ${themeId}`
+      );
+    } else {
+      // Fallback/Edge case: Not explicitly new, but no current ID - load the theme.
+      console.warn(`[loadTheme] Edge case: Loading theme ID: ${themeId}`);
+      this.preventThemeOverride.set(false);
+      this.loadBaseTemplate(themeId);
     }
   }
 
@@ -1879,6 +1913,22 @@ export class PreviewComponent implements OnInit, OnDestroy {
     if (currentCustomizations) {
       this.lastSavedState.set(structuredClone(currentCustomizations));
       this.currentEditingState.set(structuredClone(currentCustomizations));
+    }
+  }
+
+  /**
+   * Update template name from the editable input
+   */
+  updateTemplateName(newName: string): void {
+    if (newName?.trim()) {
+      console.log(`[updateTemplateName] Updating template name to: ${newName}`);
+      this.currentTemplateName.set(newName.trim());
+
+      // Update consolidated state
+      this.templateState.update((state) => ({
+        ...state,
+        name: newName.trim(),
+      }));
     }
   }
 }

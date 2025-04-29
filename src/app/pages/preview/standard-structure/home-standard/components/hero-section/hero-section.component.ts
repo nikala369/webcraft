@@ -24,7 +24,7 @@ import {
   styleUrls: ['./hero-section.component.scss'],
 })
 export class HeroSectionComponent implements OnInit, OnDestroy {
-  @Input() customizations!: Customizations; // ! operator indicates definite assignment
+  @Input() customizations!: any; // ! operator indicates definite assignment
   @Input() heroData: Partial<HeroData> = {}; // Partial allows for empty or partial implementations
   @Input() isMobileLayout: boolean = false;
   @Input() isMobileView: any;

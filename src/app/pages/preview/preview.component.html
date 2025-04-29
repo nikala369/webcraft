@@ -81,19 +81,32 @@
       <!-- Template Info (Display when editing existing template) -->
       <div
         *ngIf="
-    currentUserTemplateId() && !isViewOnlyStateService.isOnlyViewMode()
-  "
+          currentUserTemplateId() && !isViewOnlyStateService.isOnlyViewMode()
+        "
         class="preview-header__left template-info"
         [ngClass]="{
-    'plan-standard': currentPlan() === 'standard',
-    'plan-premium':  currentPlan() === 'premium'
-  }"
+          'plan-standard': currentPlan() === 'standard',
+          'plan-premium': currentPlan() === 'premium'
+        }"
       >
         <div class="info-item">
-          <app-icon name="template" style="color: white;" width="22" height="22"></app-icon>
+          <app-icon
+            name="template"
+            style="color: white"
+            width="22"
+            height="22"
+          ></app-icon>
           <div class="info-text">
             <span class="info-label">Template name</span>
-            <span class="info-value">{{ currentTemplateName() }}</span>
+            <input
+              #templateNameInput
+              type="text"
+              class="info-value editable-template-name"
+              [value]="currentTemplateName()"
+              (blur)="updateTemplateName(templateNameInput.value)"
+              placeholder="Enter template name"
+              aria-label="Template Name"
+            />
           </div>
         </div>
 
@@ -316,3 +329,16 @@
   [delay]="2000"
   (finished)="onLoadingOverlayFinished()"
 ></app-webcraft-loading>
+
+<!-- Update the loading overlay to include animation end handler -->
+<div
+  *ngIf="showLoadingOverlay()"
+  class="loading-overlay"
+  [class]="loadingOverlayClass()"
+  (animationend)="onLoadingOverlayFinished()"
+>
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading theme...</p>
+  </div>
+</div>

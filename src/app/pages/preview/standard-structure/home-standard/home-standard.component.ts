@@ -9,6 +9,7 @@ import {
   inject,
   OnChanges,
   SimpleChanges,
+  Signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -46,8 +47,8 @@ import { ComponentCustomizerComponent } from '../../components/component-customi
   styleUrl: './home-standard.component.scss',
 })
 export class HomeStandardComponent implements OnInit, OnChanges {
-  @Input() pagesHomeData: any;
-  @Input() wholeData: any;
+  @Input({ required: true }) pagesHomeData!: Signal<any>;
+  @Input({ required: true }) wholeData!: Signal<Customizations | null>;
   @Input() isMobileLayout: boolean = false;
   @Input() isMobileView: any;
   @Input() planType: 'standard' | 'premium' = 'standard';
@@ -66,8 +67,8 @@ export class HomeStandardComponent implements OnInit, OnChanges {
       'HomeStandardComponent initialized with businessType:',
       this.businessType
     );
-    console.log('Initial customizations:', this.pagesHomeData);
-    console.log('Initial wholeData:', this.wholeData);
+    console.log('Initial customizations:', this.pagesHomeData());
+    console.log('Initial wholeData:', this.wholeData());
 
     // Set the appropriate color based on plan
     this.primaryColor.set(
@@ -91,22 +92,17 @@ export class HomeStandardComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Track when customizations or wholeData change to help debug updates
     if (changes['pagesHomeData'] || changes['wholeData']) {
       console.log(
-        '[HomeStandard] Received changes:',
-        changes['pagesHomeData'] ? 'pagesHomeData changed' : '',
-        changes['wholeData'] ? 'wholeData changed' : ''
+        '[HomeStandard] ngOnChanges detected changes (may be less reliable with signal inputs):',
+        changes
       );
-
       this.lastCustomizationsUpdate.set(Date.now());
-
-      if (changes['pagesHomeData']) {
-        console.log('[HomeStandard] New pagesHomeData:', this.pagesHomeData);
-      }
-      if (changes['wholeData']) {
-        console.log('[HomeStandard] New wholeData:', this.wholeData);
-      }
+      console.log(
+        '[HomeStandard] New pagesHomeData value:',
+        this.pagesHomeData()
+      );
+      console.log('[HomeStandard] New wholeData value:', this.wholeData());
     }
 
     // Update business type if changed
@@ -162,14 +158,17 @@ export class HomeStandardComponent implements OnInit, OnChanges {
    * Get hero section data from customizations with fallbacks
    */
   getHeroData(): Partial<HeroData> {
+    const pagesData = this.pagesHomeData();
+    const fullData = this.wholeData();
+
     // First check for direct hero1 property (for backward compatibility)
-    if (this.pagesHomeData?.hero1) {
-      return this.pagesHomeData.hero1;
+    if (pagesData?.hero1) {
+      return pagesData.hero1;
     }
 
     // Then check for the proper nested path
-    if (this.wholeData?.pages?.home?.hero1) {
-      return this.wholeData.pages.home.hero1;
+    if (fullData?.pages?.home?.hero1) {
+      return fullData.pages.home.hero1;
     }
 
     // Finally, if no data exists, return empty object (component has defaults)

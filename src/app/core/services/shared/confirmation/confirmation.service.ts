@@ -1,4 +1,4 @@
-import {Injectable, signal} from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 /**
  * A simple interface for a confirmation/toast message.
@@ -11,7 +11,7 @@ export interface Confirmation {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ConfirmationService {
   // Signal holding an array of active confirmations

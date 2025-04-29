@@ -72,7 +72,7 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
     const cust = this.customizations(); // Read the input signal
     const homeData = cust?.pages?.home || {};
     console.log(
-      'Standard structure computed homeCustomizationsSignal:',
+      `[StandardStructure] Computed homeCustomizationsSignal updated at ${Date.now()}:`,
       homeData
     );
     return homeData;
@@ -80,18 +80,23 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
 
   aboutCustomizationsSignal = computed(() => {
     const cust = this.customizations();
+    // Add log here if needed for debugging about page issues
     return cust?.pages?.home?.about || {};
   });
 
   contactCustomizationsSignal = computed(() => {
     const cust = this.customizations();
+    // Add log here if needed for debugging contact page issues
     return cust?.pages?.home?.contact || {};
   });
 
   // Computed signal for the whole data structure, handling null
   wholeDataSignal = computed(() => {
     const fullData = this.customizations(); // Read the input signal
-    console.log('Standard structure computed wholeDataSignal:', fullData);
+    console.log(
+      `[StandardStructure] Computed wholeDataSignal updated at ${Date.now()}:`,
+      fullData
+    );
     return fullData; // Return the full data (or null)
   });
 
