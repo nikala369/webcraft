@@ -49,5 +49,19 @@ export const AUTH_ROUTES: Routes = [
       ).then((m) => m.PasswordResetConfirmComponent),
     canActivate: [publicGuard],
   },
+  {
+    path: 'change-email-request',
+    loadComponent: () =>
+      import('./components/change-email/change-email-request.component').then(
+        (m) => m.ChangeEmailRequestComponent
+      ),
+  },
+  {
+    path: 'change-email-confirm',
+    loadComponent: () =>
+      import('./components/change-email/change-email-confirm.component').then(
+        (m) => m.ChangeEmailConfirmComponent
+      ),
+  },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 ];

@@ -32,6 +32,12 @@ export class SettingsComponent implements OnInit {
   // User info
   userInfo = signal(this.authService.currentUser());
 
+  // Add signals for change email UI state
+  changeEmailLoading = signal(false);
+  changeEmailSuccess = signal(false);
+  changeEmailError = signal<string | null>(null);
+  showChangeEmailForm = signal(false);
+
   ngOnInit(): void {
     this.initForms();
   }
@@ -141,5 +147,24 @@ export class SettingsComponent implements OnInit {
     if (!user || !user.username) return '?';
 
     return user.username.substring(0, 2).toUpperCase();
+  }
+
+  // Add method to trigger change email request
+  requestChangeEmail() {
+    this.changeEmailLoading.set(true);
+    this.changeEmailError.set(null);
+    this.authService.requestChangeEmail().subscribe({
+      next: () => {
+        this.changeEmailLoading.set(false);
+        this.changeEmailSuccess.set(true);
+        this.showChangeEmailForm.set(false);
+      },
+      error: (err) => {
+        this.changeEmailLoading.set(false);
+        this.changeEmailError.set(
+          err.error?.message || 'Failed to request email change.'
+        );
+      },
+    });
   }
 }

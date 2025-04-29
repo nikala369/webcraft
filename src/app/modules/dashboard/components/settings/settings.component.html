@@ -1,79 +1,115 @@
 <div class="dashboard-container">
   <header class="dashboard-header">
     <h1 class="dashboard-title">Account Settings</h1>
+    <p class="dashboard-subtitle">
+      Manage your profile information and security settings
+    </p>
   </header>
 
   <div class="settings-layout">
-    <!-- Profile Section -->
-    <section class="settings-card">
-      <h2 class="settings-section-title">Profile Information</h2>
-
-      <div class="profile-avatar-section">
-        <div class="profile-avatar">
+    <!-- Profile Header Card -->
+    <section class="settings-card profile-header-card">
+      <div class="profile-header">
+        <div class="profile-avatar large">
           {{ userInfo()?.username?.substring(0, 2)?.toUpperCase() || "U" }}
         </div>
-        <div class="profile-avatar-actions">
-          <span class="profile-username">{{
-            userInfo()?.username || "User"
-          }}</span>
-          <span class="profile-email">{{
-            userInfo()?.email || "No email available"
-          }}</span>
+        <div class="profile-info">
+          <h2 class="profile-name">{{ userInfo()?.username || "User" }}</h2>
+          <p class="profile-email">
+            {{ userInfo()?.email || "No email available" }}
+          </p>
         </div>
       </div>
+    </section>
 
-      <form [formGroup]="profileForm" class="settings-form">
-        <!-- Username field -->
-        <div class="form-group">
-          <label for="username" class="form-label">Username</label>
+    <!-- Profile Information Card -->
+    <section class="settings-card">
+      <h2 class="settings-section-title">Profile Settings</h2>
+
+      <!-- Nickname/Username Field -->
+      <div class="settings-field">
+        <div class="field-label-row">
+          <label class="field-label">Username</label>
+          <span class="field-info">How you appear across the platform</span>
+        </div>
+        <div class="field-input-group">
           <input
             type="text"
-            id="username"
-            formControlName="username"
-            class="form-control"
-            [ngClass]="getFormControlClass(profileForm, 'username')"
+            class="field-input"
+            [value]="userInfo()?.username || ''"
+            placeholder="Enter username"
+            disabled
           />
-          <div
-            class="invalid-feedback"
-            *ngIf="
-              profileForm.get('username')?.invalid &&
-              profileForm.get('username')?.touched
-            "
+          <button
+            class="field-action-btn disabled"
+            disabled
+            title="Coming soon"
           >
-            {{ getErrorMessage(profileForm, "username") }}
-          </div>
+            Update Username
+          </button>
         </div>
+        <p class="field-helper">Username updates will be available soon</p>
+      </div>
 
-        <!-- Email field -->
-        <div class="form-group">
-          <label for="email" class="form-label">Email Address</label>
-          <input
-            type="email"
-            id="email"
-            formControlName="email"
-            class="form-control"
-            [ngClass]="getFormControlClass(profileForm, 'email')"
-          />
-          <div
-            class="invalid-feedback"
-            *ngIf="
-              profileForm.get('email')?.invalid &&
-              profileForm.get('email')?.touched
-            "
+      <!-- Email Field (View-only) -->
+      <div class="settings-field">
+        <div class="field-label-row">
+          <label class="field-label">Email Address</label>
+          <span class="field-info"
+            >Used for notifications and account recovery</span
           >
-            {{ getErrorMessage(profileForm, "email") }}
+        </div>
+        <div class="field-input-group">
+          <div class="field-static-value">
+            {{ userInfo()?.email || "No email available" }}
           </div>
+          <button
+            class="field-action-btn primary"
+            (click)="requestChangeEmail()"
+            [disabled]="changeEmailLoading()"
+            *ngIf="!changeEmailSuccess()"
+          >
+            <span *ngIf="!changeEmailLoading()">Change Email</span>
+            <span *ngIf="changeEmailLoading()" class="loading-spinner"></span>
+          </button>
         </div>
-
-        <div class="form-note">
-          <p>Profile updates will be available soon.</p>
+        <div class="field-message success" *ngIf="changeEmailSuccess()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M20 6L9 17l-5-5"></path>
+          </svg>
+          A confirmation link has been sent to your current email address.
+          Please check your inbox to continue the email change process.
         </div>
-      </form>
+        <div class="field-message error" *ngIf="changeEmailError()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          {{ changeEmailError() }}
+        </div>
+      </div>
     </section>
 
     <!-- Password Section -->
     <section class="settings-card">
-      <h2 class="settings-section-title">Change Password</h2>
+      <h2 class="settings-section-title">Security Settings</h2>
 
       <form
         [formGroup]="passwordForm"
@@ -81,72 +117,113 @@
         class="settings-form"
       >
         <!-- Current Password -->
-        <div class="form-group">
-          <label for="oldPassword" class="form-label">Current Password</label>
-          <input
-            type="password"
-            id="oldPassword"
-            formControlName="oldPassword"
-            class="form-control"
-            [ngClass]="getFormControlClass(passwordForm, 'oldPassword')"
-          />
-          <div
-            class="invalid-feedback"
+        <div class="settings-field">
+          <div class="field-label-row">
+            <label for="oldPassword" class="field-label"
+              >Current Password</label
+            >
+          </div>
+          <div class="field-input-group full-width">
+            <input
+              type="password"
+              id="oldPassword"
+              formControlName="oldPassword"
+              class="field-input"
+              [ngClass]="getFormControlClass(passwordForm, 'oldPassword')"
+              placeholder="Enter your current password"
+            />
+          </div>
+          <p
+            class="field-error"
             *ngIf="
               passwordForm.get('oldPassword')?.invalid &&
               passwordForm.get('oldPassword')?.touched
             "
           >
             {{ getErrorMessage(passwordForm, "oldPassword") }}
-          </div>
+          </p>
         </div>
 
         <!-- New Password -->
-        <div class="form-group">
-          <label for="newPassword" class="form-label">New Password</label>
-          <input
-            type="password"
-            id="newPassword"
-            formControlName="newPassword"
-            class="form-control"
-            [ngClass]="getFormControlClass(passwordForm, 'newPassword')"
-          />
-          <div
-            class="invalid-feedback"
+        <div class="settings-field">
+          <div class="field-label-row">
+            <label for="newPassword" class="field-label">New Password</label>
+          </div>
+          <div class="field-input-group full-width">
+            <input
+              type="password"
+              id="newPassword"
+              formControlName="newPassword"
+              class="field-input"
+              [ngClass]="getFormControlClass(passwordForm, 'newPassword')"
+              placeholder="Enter your new password"
+            />
+          </div>
+          <p
+            class="field-error"
             *ngIf="
               passwordForm.get('newPassword')?.invalid &&
               passwordForm.get('newPassword')?.touched
             "
           >
             {{ getErrorMessage(passwordForm, "newPassword") }}
-          </div>
+          </p>
         </div>
 
         <!-- Confirm New Password -->
-        <div class="form-group">
-          <label for="confirmPassword" class="form-label"
-            >Confirm New Password</label
-          >
-          <input
-            type="password"
-            id="confirmPassword"
-            formControlName="confirmPassword"
-            class="form-control"
-            [ngClass]="getFormControlClass(passwordForm, 'confirmPassword')"
-          />
-          <div
-            class="invalid-feedback"
+        <div class="settings-field">
+          <div class="field-label-row">
+            <label for="confirmPassword" class="field-label"
+              >Confirm New Password</label
+            >
+          </div>
+          <div class="field-input-group full-width">
+            <input
+              type="password"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              class="field-input"
+              [ngClass]="getFormControlClass(passwordForm, 'confirmPassword')"
+              placeholder="Confirm your new password"
+            />
+          </div>
+          <p
+            class="field-error"
             *ngIf="passwordForm.get('confirmPassword')?.touched"
           >
             {{ getErrorMessage(passwordForm, "confirmPassword") }}
-          </div>
+          </p>
         </div>
 
         <!-- Success/Error messages -->
-        <div class="form-message success" *ngIf="passwordSuccess()">
+        <div class="field-message success" *ngIf="passwordSuccess()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M20 6L9 17l-5-5"></path>
+          </svg>
           {{ passwordSuccess() }}
         </div>
-        <div class="form-message error" *ngIf="passwordError()">
+        <div class="field-message error" *ngIf="passwordError()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
           {{ passwordError() }}
         </div>
 

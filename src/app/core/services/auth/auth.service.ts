@@ -360,4 +360,97 @@ export class AuthService {
       })
     );
   }
+
+  /**
+   * Request email change - sends a token to current email
+   * @returns Observable with server response
+   */
+  requestChangeEmail(): Observable<any> {
+    this.authLoading.set(true);
+    this.authError.set(null);
+
+    const API_REQUEST_EMAIL_CHANGE = `${this.apiUrl}${this.apiPrefix}/security/user/request-change-email`;
+
+    return this.http.post(API_REQUEST_EMAIL_CHANGE, {}).pipe(
+      tap(() => {
+        this.authLoading.set(false);
+      }),
+      catchError((error: HttpErrorResponse) => {
+        this.authLoading.set(false);
+        const formattedError = this.errorHandlingService.processError(error);
+        this.authError.set(formattedError);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Set pending new email using token from old email
+   * @param email - The new email address
+   * @param changeEmailToken - Token received from old email
+   * @returns Observable with server response
+   */
+  setPendingNewEmail(email: string, changeEmailToken: string): Observable<any> {
+    this.authLoading.set(true);
+    this.authError.set(null);
+
+    const API_SET_PENDING_EMAIL = `${this.apiUrl}${this.apiPrefix}/security/user/set-pending-new-email`;
+
+    return this.http
+      .post(API_SET_PENDING_EMAIL, { email, changeEmailToken })
+      .pipe(
+        tap(() => {
+          this.authLoading.set(false);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          this.authLoading.set(false);
+          const formattedError = this.errorHandlingService.processError(error);
+          this.authError.set(formattedError);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Confirm email change using token from new email
+   * @param oldEmail - The current email address
+   * @param confirmChangeEmailToken - Token received on new email
+   * @returns Observable with server response
+   */
+  confirmEmailChange(
+    oldEmail: string,
+    confirmChangeEmailToken: string
+  ): Observable<any> {
+    this.authLoading.set(true);
+    this.authError.set(null);
+
+    const API_CONFIRM_EMAIL_CHANGE = `${this.apiUrl}${this.apiPrefix}/security/user/confirm-email-change`;
+
+    return this.http
+      .post(API_CONFIRM_EMAIL_CHANGE, { oldEmail, confirmChangeEmailToken })
+      .pipe(
+        tap((response) => {
+          this.authLoading.set(false);
+
+          // Update user info after successful email change
+          this.fetchCurrentUser().subscribe({
+            next: (user) => {
+              this.currentUser.set(user);
+            },
+            error: (error) => {
+              console.error(
+                'Error fetching user details after email change:',
+                error
+              );
+            },
+          });
+        }),
+        catchError((error: HttpErrorResponse) => {
+          this.authLoading.set(false);
+          const formattedError = this.errorHandlingService.processError(error);
+          this.authError.set(formattedError);
+          return throwError(() => error);
+        })
+      );
+  }
 }
