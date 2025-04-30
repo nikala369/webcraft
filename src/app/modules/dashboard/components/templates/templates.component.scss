@@ -732,7 +732,7 @@
   padding: 0.45rem 0.9rem;
   font-weight: 600;
   border-radius: 6px;
-  background: linear-gradient(135deg, #3a8dff 0%, #0066ff 100%);
+  background: linear-gradient(135deg, #3a8dff 0%, #3582ef 100%);
   color: white;
   border: none;
   transition: all 0.2s ease;
@@ -743,7 +743,7 @@
   line-height: 1;
 
   &:hover {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #2f86ff 0%, #0d59be 100%);
     box-shadow: 0 3px 6px rgba(0, 102, 255, 0.2);
     cursor: pointer;
   }
