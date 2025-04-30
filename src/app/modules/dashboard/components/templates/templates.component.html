@@ -1,13 +1,23 @@
-<section class="templates-container">
-  <div class="content-panel">
-    <div class="templates-header">
-      <h2>My Templates</h2>
-      <button class="create-button" (click)="createTemplate()">
-        <app-icon name="add" width="16" height="16"></app-icon>
-        <span>Create New Template</span>
-      </button>
+<section class="dashboard-templates-container">
+  <!-- Header Row -->
+  <div class="templates-header-row">
+    <div class="templates-header-text">
+      <h1 class="dashboard-title">My Templates</h1>
+      <p class="dashboard-subtitle">
+        Manage your website templates and designs
+      </p>
     </div>
+    <button
+      class="primary-button create-template-btn"
+      (click)="createTemplate()"
+      aria-label="Create New Template"
+    >
+      <app-icon name="add" width="16" height="16"></app-icon>
+      <span>Create New Template</span>
+    </button>
+  </div>
 
+  <div class="templates-layout">
     <!-- Search and Filter Controls -->
     <div class="templates-controls">
       <div class="search-container">
@@ -22,11 +32,15 @@
           placeholder="Search templates..."
           class="search-input"
           (input)="onSearchChange($event)"
+          aria-label="Search templates"
         />
       </div>
-
       <div class="filter-container">
-        <select class="filter-select" (change)="onFilterChange($event)">
+        <select
+          class="filter-select"
+          (change)="onFilterChange($event)"
+          aria-label="Filter templates"
+        >
           <option value="all">All Templates</option>
           <option value="restaurant">Restaurant</option>
           <option value="salon">Salon</option>
@@ -37,19 +51,28 @@
     </div>
 
     <!-- Loading State -->
-    <div class="templates-loading" *ngIf="loading">
-      <div class="spinner"></div>
+    <div class="templates-loading card-style" *ngIf="loading">
+      <div class="loading-spinner"></div>
       <p>Loading your templates...</p>
     </div>
 
     <!-- Error State -->
-    <div class="templates-error" *ngIf="error">
-      <app-icon
-        name="alert"
-        width="48"
-        height="48"
-        class="error-icon"
-      ></app-icon>
+    <div class="templates-error card-style" *ngIf="error">
+      <div class="error-icon">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          width="48"
+          height="48"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
       <p>{{ error }}</p>
       <button class="retry-button" (click)="loadTemplates()">
         <app-icon name="refresh" width="16" height="16"></app-icon>
@@ -59,7 +82,7 @@
 
     <!-- Empty State -->
     <div
-      class="templates-empty"
+      class="templates-empty card-style"
       *ngIf="!loading && !error && templates.length === 0"
     >
       <div class="empty-state-content">
@@ -71,47 +94,95 @@
         ></app-icon>
         <h3>No templates yet</h3>
         <p>Create your first website template to get started</p>
-        <button class="create-button" (click)="createTemplate()">
+        <button class="primary-button" (click)="createTemplate()">
           <app-icon name="add" width="16" height="16"></app-icon>
           <span>Create First Template</span>
         </button>
       </div>
     </div>
 
-    <!-- Templates List (Horizontal Layout) -->
+    <!-- Templates List -->
     <div
       class="templates-list"
       *ngIf="!loading && !error && filteredTemplates.length > 0"
     >
-      <div class="template-card" *ngFor="let template of filteredTemplates">
-        <!-- Left: Template Preview -->
-        <div class="template-preview">
-          <img
-            [src]="
-              template.thumbnailUrl || 'assets/images/template-placeholder.jpg'
-            "
-            [alt]="template.name"
-            class="template-img"
-          />
-          <span class="template-type-badge">{{ template.type }}</span>
-          <span class="status-badge" [class.published]="template.published">
-            {{ template.published ? "Published" : "Draft" }}
-          </span>
+      <div
+        class="template-card card-style"
+        *ngFor="let template of filteredTemplates"
+        [ngClass]="{
+          'card--premium': isPremium(template),
+          'card--published': template.published,
+          'card--draft': !template.published,
+          'card--standard': !isPremium(template)
+        }"
+      >
+        <!-- Template Preview Area -->
+        <div class="template-preview-container">
+          <div class="template-preview-image-wrapper">
+            <img
+              [src]="
+                template.thumbnailUrl ||
+                'assets/images/template-placeholder.jpg'
+              "
+              [alt]="template.name"
+              class="template-img"
+            />
+            <span
+              class="template-type-badge-center"
+              [ngClass]="{ 'badge-premium': isPremium(template) }"
+            >
+              {{ template.type }}
+              <ng-container *ngIf="isPremium(template)">
+                <app-icon
+                  name="star"
+                  width="12"
+                  height="12"
+                  style="margin-left: 3px"
+                ></app-icon>
+              </ng-container>
+            </span>
+            <div *ngIf="isPremium(template)" class="premium-overlay"></div>
+          </div>
         </div>
 
-        <!-- Right: Template Info and Actions -->
+        <!-- Template Content -->
         <div class="template-content">
+          <!-- Header Badges: Plan badge, then status badge -->
+          <div class="template-header-badges">
+            <app-plan-badge
+              [plan]="template.plan || 'standard'"
+            ></app-plan-badge>
+            <span class="status-badge" [class.published]="template.published">
+              <app-icon
+                *ngIf="template.published"
+                name="check"
+                width="12"
+                height="12"
+              ></app-icon>
+              <app-icon
+                *ngIf="!template.published"
+                name="draft"
+                width="12"
+                height="12"
+              ></app-icon>
+              {{ template.published ? "Published" : "Draft" }}
+            </span>
+          </div>
+
           <!-- Template Info -->
           <div class="template-info">
-            <h3 class="template-name">{{ template.name }}</h3>
-
+            <h3 class="template-name">
+              {{ template.name }}
+              <span *ngIf="isPremium(template)" class="premium-badge"
+                >Premium</span
+              >
+            </h3>
             <div class="template-meta">
               <span class="meta-item">
                 <app-icon name="calendar" width="14" height="14"></app-icon>
                 <span>{{ template.createdAt | date : "MMM d, yyyy" }}</span>
               </span>
             </div>
-
             <p class="template-description">
               {{ template.description || "A customizable website template" }}
             </p>
@@ -128,7 +199,6 @@
                 <app-icon name="eye" width="16" height="16"></app-icon>
                 <span>Preview</span>
               </button>
-
               <button
                 class="action-btn edit-btn"
                 (click)="editTemplate(template)"
@@ -137,7 +207,6 @@
                 <app-icon name="edit" width="16" height="16"></app-icon>
                 <span>Edit</span>
               </button>
-
               <button
                 class="action-btn delete-btn"
                 (click)="deleteTemplate(template)"
@@ -147,7 +216,7 @@
                 <span>Delete</span>
               </button>
             </div>
-
+            <div class="action-divider"></div>
             <button
               class="publish-btn"
               [class.unpublish-btn]="template.published"

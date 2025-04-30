@@ -260,25 +260,147 @@
   gap: 1rem;
 }
 
+// === Modern Card Color Coding & Premium Styles ===
+.card--premium {
+  background: linear-gradient(135deg, #fffbe6 0%, #ffe9c7 100%);
+  border: 1.5px solid #ffd700;
+  box-shadow: 0 4px 24px 0 rgba(255, 215, 0, 0.1),
+    0 1.5px 8px 0 rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+.card--premium:hover {
+  box-shadow: 0 8px 32px 0 rgba(255, 215, 0, 0.18),
+    0 2px 12px 0 rgba(0, 0, 0, 0.08);
+  border-color: #ffc700;
+}
+.card--published {
+  border-left: 5px solid #10b981;
+}
+.card--draft {
+  border-left: 5px solid #60a5fa;
+}
+.card--standard {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%);
+  border: 1.5px solid #3b82f6;
+  box-shadow: 0 4px 24px 0 rgba(59, 130, 246, 0.08),
+    0 1.5px 8px 0 rgba(0, 0, 0, 0.04);
+}
+.card--standard:hover {
+  box-shadow: 0 8px 32px 0 rgba(59, 130, 246, 0.14),
+    0 2px 12px 0 rgba(0, 0, 0, 0.08);
+  border-color: #2563eb;
+}
+
+// Premium badge on card title
+.premium-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.2em 0.7em;
+  background: linear-gradient(90deg, #ffd700 0%, #ffb300 100%);
+  color: #7c5700;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(255, 215, 0, 0.12);
+  vertical-align: middle;
+  letter-spacing: 0.03em;
+}
+
+// Premium badge on type
+.badge-premium {
+  background: linear-gradient(90deg, #ffd700 0%, #ffb300 100%) !important;
+  color: #7c5700 !important;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(255, 215, 0, 0.1);
+}
+
+// Premium overlay for preview
+.premium-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 215, 0, 0.12) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+  border-radius: 0 0 12px 12px;
+}
+
+// Status badge improvements
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.08);
+  background: #f3f4f6;
+  color: #64748b;
+  &.published {
+    background: linear-gradient(90deg, #d1fae5 0%, #bbf7d0 100%);
+    color: #047857;
+    box-shadow: 0 1px 6px rgba(16, 185, 129, 0.13);
+  }
+}
+
+// Template type badge improvements
+.template-type-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  background: #f3f4f6;
+  color: #6366f1;
+  box-shadow: 0 1px 4px rgba(99, 102, 241, 0.08);
+}
+
+// Action divider for visual grouping
+.action-divider {
+  width: 1px;
+  height: 32px;
+  background: linear-gradient(to bottom, #e5e7eb 0%, #f3f4f6 100%);
+  margin: 0 1.25rem;
+  align-self: center;
+  opacity: 0.7;
+  border-radius: 2px;
+}
+
 // Template Card - Horizontal Layout
 .template-card {
+  margin-bottom: 0;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px 0 rgba(30, 41, 59, 0.06),
+    0 1px 6px 0 rgba(0, 0, 0, 0.03);
+  border: none;
+  transition: background-color 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
-  background-color: #ffffff;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
+  align-items: stretch;
+  min-height: 200px;
+  position: relative;
+  overflow: visible;
+}
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-color: #d1d5db;
-  }
+.template-card:hover {
+  background-color: #f7f9fc;
+  box-shadow: 0 6px 18px rgba(30, 41, 59, 0.08), 0 1px 4px rgba(0, 0, 0, 0.03);
+}
 
-  @media (max-width: 768px) {
-    flex-direction: column;
-  }
+// Override specific card types
+.card--standard:hover {
+  background-color: #f6f9ff !important;
+}
+
+.card--premium:hover {
+  background-color: #fef9e7 !important;
 }
 
 // Left: Template Preview Section
@@ -405,6 +527,7 @@
   gap: 0.75rem;
   background-color: #f9fafb;
   border-top: 1px solid #f3f4f6;
+  border-radius: 0 0 15px 0px;
 
   @media (max-width: 992px) {
     flex-direction: column;
@@ -478,38 +601,51 @@
 }
 
 .publish-btn {
+  background-color: #10b981;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.5rem 1.1rem;
+  min-width: 110px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5625rem 1rem;
-  min-width: 120px;
-  background-color: #10b981;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  font-size: 0.875rem;
 
   app-icon {
-    margin-right: 0.5rem;
+    margin-right: 0.4rem;
+    font-size: 0.875rem;
   }
 
   &:hover {
     background-color: #059669;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.18);
+  }
+
+  &:active {
+    background-color: #047857;
+    box-shadow: 0 1px 2px rgba(16, 185, 129, 0.15);
   }
 
   &.unpublish-btn {
     background-color: #f59e0b;
+    box-shadow: 0 1px 3px rgba(245, 158, 11, 0.15);
+    color: #fff;
 
     &:hover {
       background-color: #d97706;
+      box-shadow: 0 2px 6px rgba(245, 158, 11, 0.18);
     }
-  }
 
-  @media (max-width: 992px) {
-    width: 100%;
+    &:active {
+      background-color: #ca8a04;
+      box-shadow: 0 1px 2px rgba(245, 158, 11, 0.15);
+    }
   }
 }
 
@@ -551,5 +687,181 @@
       width: 100%;
       justify-content: center;
     }
+  }
+}
+
+// === New Templates Page Layout & Header ===
+.dashboard-templates-container {
+  background: #f6f8fb;
+  min-height: 100vh;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+}
+
+.templates-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  gap: 2rem;
+}
+
+.templates-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+// Improve text contrast for titles
+.dashboard-title {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #121928;
+  margin: 0;
+}
+
+.dashboard-subtitle {
+  font-size: 1.05rem;
+  color: #4b5563;
+  margin: 0;
+}
+
+// Style create button similar to dashboard-layout
+.create-template-btn {
+  margin-left: auto;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.9rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #3a8dff 0%, #0066ff 100%);
+  color: white;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 102, 255, 0.15);
+  display: flex;
+  align-items: center;
+  height: 36px;
+  line-height: 1;
+
+  &:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 3px 6px rgba(0, 102, 255, 0.2);
+    cursor: pointer;
+  }
+
+  app-icon {
+    margin-right: 0.4rem;
+    font-size: 0.85rem;
+  }
+}
+
+// === Card Spacing & Layout ===
+.templates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+}
+
+// === Image Preview Area ===
+.template-preview-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 240px;
+  max-width: 290px;
+  background: #f8fafc;
+  border-radius: 14px 0 0 14px;
+  position: relative;
+  overflow: visible;
+}
+
+.template-preview-image-wrapper {
+  position: relative;
+  width: 240px;
+  height: 180px;
+  background: #f8fafc;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.07);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.template-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+// Make template type badge smaller and more subtle
+.template-type-badge-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(30, 41, 59, 0.65);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(30, 41, 59, 0.13);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  letter-spacing: 0.01em;
+}
+
+// Reposition badges to top-right of content area
+.template-header-badges {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 3;
+}
+
+// === Responsive Adjustments ===
+@media (max-width: 1100px) {
+  .dashboard-templates-container {
+    padding: 1.5rem 0.5rem;
+  }
+  .template-preview-container {
+    min-width: 180px;
+    max-width: 220px;
+  }
+  .template-preview-image-wrapper {
+    width: 160px;
+    height: 120px;
+  }
+}
+@media (max-width: 768px) {
+  .dashboard-templates-container {
+    padding: 1rem 0.25rem;
+  }
+  .templates-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+  .template-card {
+    flex-direction: column;
+    border-radius: 14px;
+  }
+  .template-preview-container {
+    border-radius: 14px 14px 0 0;
+    min-width: 100%;
+    max-width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  .template-preview-image-wrapper {
+    width: 100%;
+    height: 160px;
+    border-radius: 14px 14px 0 0;
   }
 }

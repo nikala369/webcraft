@@ -6,6 +6,7 @@ import { UserTemplateService } from '../../../../core/services/template/user-tem
 import { SelectionStateService } from '../../../../core/services/selection/selection-state.service';
 import { TemplateService } from '../../../../core/services/template/template.service';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { PlanBadgeComponent } from '../../../../shared/components/plan-badge/plan-badge.component';
 import { finalize } from 'rxjs/operators';
 
 // Define the UserTemplate interface for our component
@@ -18,12 +19,13 @@ export interface UserTemplate {
   updatedAt?: Date;
   published?: boolean;
   thumbnailUrl?: string;
+  plan?: 'standard' | 'premium';
 }
 
 @Component({
   selector: 'app-templates',
   standalone: true,
-  imports: [CommonModule, IconComponent, DatePipe],
+  imports: [CommonModule, IconComponent, DatePipe, PlanBadgeComponent],
   templateUrl: './templates.component.html',
   styleUrls: ['./templates.component.scss'],
 })
@@ -74,6 +76,7 @@ export class TemplatesComponent implements OnInit {
               : new Date(),
             published: !!template.published,
             thumbnailUrl: template.thumbnailUrl,
+            plan: template.plan || template.template?.plan || 'standard',
           }));
           this.applyFilters();
         },
@@ -225,5 +228,22 @@ export class TemplatesComponent implements OnInit {
     }
 
     this.filteredTemplates = result;
+  }
+
+  /**
+   * Determine if a template is premium (by type or property)
+   */
+  isPremium(template: UserTemplate): boolean {
+    // If backend adds a 'plan' or 'isPremium' property, use that instead
+    // For now, treat as premium if type includes 'premium' (case-insensitive)
+    return !!(
+      (
+        template.type &&
+        typeof template.type === 'string' &&
+        template.type.toLowerCase().includes('premium')
+      )
+      // || template.plan === 'premium' // Uncomment if plan property exists
+      // || template.isPremium // Uncomment if property exists
+    );
   }
 }
