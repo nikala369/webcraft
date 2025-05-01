@@ -178,5 +178,19 @@ export const appRoutes: Routes = [
     path: 'auth',
     children: AUTH_ROUTES,
   },
+  {
+    path: 'subscription-selection',
+    loadComponent: () =>
+      import(
+        './pages/subscription/subscription-selection/subscription-selection.component'
+      ).then((m) => m.SubscriptionSelectionComponent),
+  },
+  {
+    path: 'subscription/success',
+    loadComponent: () =>
+      import(
+        './pages/subscription/subscription-success/subscription-success.component'
+      ).then((m) => m.SubscriptionSuccessComponent),
+  },
   { path: '**', redirectTo: '', pathMatch: 'full' },
 ];

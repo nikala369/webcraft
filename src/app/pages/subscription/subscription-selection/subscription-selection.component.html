@@ -1,0 +1,254 @@
+<div class="subscription-page">
+  <div class="container">
+    <div
+      style="
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      "
+    >
+      <div class="back-link" (click)="goBack()">
+        <svg
+          class="back-icon"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M19 12H5"></path>
+          <path d="M12 19l-7-7 7-7"></path>
+        </svg>
+        <span>Back to templates</span>
+      </div>
+      <div class="template-meta">
+        <app-plan-badge [plan]="templatePlan"></app-plan-badge>
+      </div>
+    </div>
+
+    <div
+      style="display: flex; justify-content: space-between; align-items: center"
+    >
+      <!-- Page header -->
+      <div class="page-header">
+        <h1>Choose a Subscription Plan</h1>
+        <p class="subtitle">
+          Select a subscription plan to publish your website
+        </p>
+      </div>
+
+      <!-- Template display on the right -->
+      <div
+        class="template-box"
+        style="
+          background: #f9fafb;
+          padding: 15px;
+          border-radius: 10px;
+          border: 1px solid #e5e7eb;
+        "
+      >
+        <h3 style="margin: 0; font-size: 0.95rem; color: #374151">
+          Template: {{ templateName }}
+        </h3>
+      </div>
+    </div>
+
+    <!-- Error message -->
+    <div *ngIf="errorMessage" class="error-message">
+      <svg
+        class="warning-icon"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path
+          d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+        ></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <!-- Loading state -->
+    <div
+      *ngIf="subscriptionPlans.length === 0 && !errorMessage"
+      class="loading-state"
+    >
+      <div class="spinner"></div>
+      <p>Loading subscription plans...</p>
+    </div>
+
+    <!-- Subscription plans section -->
+    <div
+      *ngIf="subscriptionPlans.length > 0"
+      class="subscription-plans-section"
+    >
+      <h2>Available Subscription Plans</h2>
+
+      <div class="plan-cards">
+        <div
+          *ngFor="let plan of subscriptionPlans"
+          class="plan-card"
+          [class.selected]="selectedPlanId === plan.id"
+          (click)="selectPlan(plan.id)"
+        >
+          <div class="plan-header">
+            <div class="plan-name-tag">
+              <h3>{{ getPlanTypeLabel(plan.type) }}</h3>
+              <div
+                class="plan-tag"
+                [class.advanced]="plan.type === 'ADVANCED'"
+                [class.basic]="plan.type === 'BASIC'"
+              >
+                {{ plan.type }}
+              </div>
+            </div>
+            <p class="plan-description">
+              {{
+                plan.description ||
+                  (plan.type === "BASIC"
+                    ? "Basic subscription"
+                    : "Premium subscription")
+              }}
+            </p>
+            <div class="plan-price">
+              <span class="price">{{ plan.priceCents / 100 | currency }}</span>
+              <span class="period">/month</span>
+            </div>
+          </div>
+
+          <div class="plan-features">
+            <h4>FEATURES</h4>
+            <ul>
+              <li *ngFor="let feature of getPlanFeatures(plan.type)">
+                <svg
+                  class="check-icon"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  stroke="none"
+                >
+                  <path
+                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                  ></path>
+                </svg>
+                <span>{{ feature }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="plan-select">
+            <div
+              class="select-button"
+              [class.selected]="selectedPlanId === plan.id"
+            >
+              <span *ngIf="selectedPlanId !== plan.id">Select Plan</span>
+              <span *ngIf="selectedPlanId === plan.id">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  stroke="none"
+                >
+                  <path
+                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                  ></path>
+                </svg>
+                Selected
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Price summary section -->
+    <div *ngIf="selectedPlanId" class="price-summary-section">
+      <div class="price-summary-card">
+        <h3>Subscription Summary</h3>
+
+        <div class="price-breakdown">
+          <div class="breakdown-row">
+            <span>Monthly Subscription</span>
+            <span>{{ getSubscriptionPriceOnly() | currency }}/month</span>
+          </div>
+
+          <div *ngIf="templatePlan === 'premium'" class="breakdown-row">
+            <span>Premium Template (one-time)</span>
+            <span>{{ getPremiumTemplatePrice() | currency }}</span>
+          </div>
+
+          <div
+            *ngIf="templatePlan === 'premium'"
+            class="breakdown-divider"
+          ></div>
+
+          <div *ngIf="templatePlan === 'premium'" class="breakdown-row total">
+            <span>First Payment Total</span>
+            <span>{{ calculateTotalPrice() | currency }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="templatePlan === 'premium'" class="price-note">
+          <svg
+            class="info-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span
+            >Subsequent payments will only include the monthly subscription
+            fee.</span
+          >
+        </div>
+
+        <div class="cancel-anytime">
+          <strong>No long-term commitment</strong> – You can cancel your
+          subscription anytime
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating continue to payment button -->
+  <button
+    *ngIf="selectedPlanId"
+    class="continue-button"
+    [disabled]="!selectedPlanId || isProcessing"
+    (click)="continueToPayment()"
+  >
+    <span *ngIf="!isProcessing">Continue to Payment</span>
+    <div *ngIf="isProcessing" class="button-spinner"></div>
+  </button>
+
+  <!-- Test button (only visible in development) -->
+  <button
+    *ngIf="selectedPlanId && !environment.production"
+    class="test-checkout-button"
+    (click)="testStripeCheckout()"
+    [disabled]="isProcessing"
+  >
+    Test Checkout Flow
+  </button>
+</div>

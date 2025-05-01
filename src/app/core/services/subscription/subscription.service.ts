@@ -1,16 +1,18 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, throwError, map } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, map, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 
 /**
  * Interface for subscription entity
  */
-export interface Subscription {
+export interface SubscriptionPlan {
   id: string;
   type: 'BASIC' | 'ADVANCED';
   description: string;
   priceCents: number;
+  stripePriceId: string | null;
 }
 
 /**
@@ -29,64 +31,39 @@ export interface CreateSubscriptionDto {
   providedIn: 'root',
 })
 export class SubscriptionService {
-  private http = inject(HttpClient);
-
-  private readonly apiUrl = environment.apiUrl;
-  private readonly apiPrefix = environment.apiPrefix;
-
-  // Subscription endpoints
-  private readonly SUBSCRIPTION_BASE = `${this.apiUrl}${this.apiPrefix}/subscription`;
-  private readonly SUBSCRIPTION_ALL = `${this.apiUrl}${this.apiPrefix}/subscription/all`;
+  constructor(private http: HttpClient) {}
 
   /**
-   * Create a new subscription
-   * @param subscription Subscription data to create
+   * Fetch all available subscription plans from the backend.
+   * Always fetches fresh data (no caching) to ensure up-to-date pricing.
+   * GET /api/subscription/all
+   */
+  getAllPlans(): Observable<SubscriptionPlan[]> {
+    const url = `${environment.apiUrl}${environment.apiPrefix}/subscription/all`;
+    return this.http.get<SubscriptionPlan[]>(url).pipe(
+      catchError((error) => {
+        console.error('Error fetching subscription plans:', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Create a new subscription (admin/management use)
    */
   createSubscription(
-    subscription: CreateSubscriptionDto
-  ): Observable<Subscription> {
-    return this.http
-      .post<Subscription>(this.SUBSCRIPTION_BASE, subscription)
-      .pipe(
-        catchError((error) => {
-          console.error('Error creating subscription:', error);
-          return throwError(() => error);
-        })
-      );
+    data: CreateSubscriptionDto
+  ): Observable<SubscriptionPlan> {
+    return this.http.post<SubscriptionPlan>('/api/subscription', data);
   }
 
   /**
-   * Get all available subscriptions
+   * Get all subscriptions for the current user
+   * GET /api/subscription/user
    */
-  getAllSubscriptions(): Observable<Subscription[]> {
-    return this.http.get<Subscription[]>(this.SUBSCRIPTION_ALL).pipe(
-      catchError((error) => {
-        console.error('Error fetching subscriptions:', error);
-        return throwError(() => error);
-      })
-    );
+  getUserSubscriptions(): Observable<any[]> {
+    return this.http.get<any[]>('/api/subscription/user');
   }
 
-  /**
-   * Get a default subscription based on plan type
-   * @param planType The type of plan (BASIC or ADVANCED)
-   */
-  getDefaultSubscription(
-    planType: 'BASIC' | 'ADVANCED'
-  ): Observable<Subscription> {
-    return this.getAllSubscriptions().pipe(
-      catchError((error) => {
-        console.error('Error getting default subscription:', error);
-        return throwError(() => error);
-      }),
-      // Get the first subscription that matches the plan type
-      map((subscriptions) => {
-        const subscription = subscriptions.find((sub) => sub.type === planType);
-        if (subscription) {
-          return subscription;
-        }
-        throw new Error(`No subscription found for plan type: ${planType}`);
-      })
-    );
-  }
+  // (Future) Add methods for upgrade, cancel, etc. as needed
 }

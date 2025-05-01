@@ -649,6 +649,30 @@
   }
 }
 
+// Loading Spinner for Publish/Unpublish button
+.loading-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spinner 0.8s linear infinite;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Disabled state for publish button
+.publish-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 // Media queries for responsive layout
 @media (max-width: 768px) {
   .templates-controls {

@@ -1,100 +1,57 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import {
-  Observable,
-  catchError,
-  interval,
-  map,
-  switchMap,
-  takeWhile,
-  throwError,
-} from 'rxjs';
+// src/app/core/services/build/user-build.service.ts
+
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, throwError, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { TemplateType, TemplatePlan } from '../template/template.service';
 
-/**
- * Build status enum
- */
-export enum BuildStatus {
-  UNPUBLISHED = 'UNPUBLISHED',
-  PUBLISHED = 'PUBLISHED',
-  STOPPED = 'STOPPED',
-  PENDING = 'PENDING',
-  BUILDING = 'BUILDING',
-  DEPLOYING = 'DEPLOYING',
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-}
-
-/**
- * Interface for user build response
- */
 export interface UserBuild {
   id: string;
-  userTemplate: {
-    id: string;
-  };
-  template: {
-    id: string;
-    name: string;
-    description: string;
-    templateType: TemplateType;
-    templatePlan: TemplatePlan;
-  };
-  subscription: {
-    id: string;
-    type: string;
-    description: string;
-    priceCents: number;
-  };
-  address?: {
-    address: string;
-    loadBalancerAddress: string;
-  };
-  status: BuildStatus;
-  name: string;
+  status: 'PENDING' | 'ACTIVE' | 'FAILED';
+  createdAt?: string;
+  userTemplateId: string;
+  subscriptionId: string;
+  siteUrl?: string;
+  template?: any;
+  subscription?: any;
 }
 
-/**
- * Interface for create user build request
- */
-export interface CreateUserBuildDto {
+export interface UserBuildRequest {
   userTemplateId: string;
   subscriptionId: string;
 }
 
-/**
- * Service for managing user builds (publishing websites)
- */
+export interface PublishResponse {
+  status: 'PENDING' | 'ACTIVE' | 'FAILED';
+  message?: string;
+  siteUrl?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class UserBuildService {
-  private http = inject(HttpClient);
+  private baseUrl = `${environment.apiUrl}${environment.apiPrefix}/user-build`;
 
-  private readonly apiUrl = environment.apiUrl;
-  private readonly apiPrefix = environment.apiPrefix;
-
-  // User build endpoints
-  private readonly USER_BUILD_BASE = `${this.apiUrl}${this.apiPrefix}/user-build`;
-  private readonly USER_BUILD_PUBLISH = `${this.apiUrl}${this.apiPrefix}/user-build`;
-  private readonly USER_BUILD_SEARCH = `${this.apiUrl}${this.apiPrefix}/user-build/search`;
+  constructor(private http: HttpClient) {}
 
   /**
-   * Create a new user build
-   * @param userTemplateId User template ID
-   * @param subscriptionId Subscription ID
+   * Create a new user build record.
+   * Backend returns a raw UUID string (201 Created).
+   * We ask for text and then wrap it as a UserBuild.
    */
-  createUserBuild(
-    userTemplateId: string,
-    subscriptionId: string
-  ): Observable<UserBuild> {
-    const createDto: CreateUserBuildDto = {
-      userTemplateId,
-      subscriptionId,
-    };
-
-    return this.http.post<UserBuild>(this.USER_BUILD_BASE, createDto).pipe(
+  createUserBuild(data: UserBuildRequest): Observable<UserBuild> {
+    return this.http.post(this.baseUrl, data, { responseType: 'text' }).pipe(
+      map(
+        (rawId: string) =>
+          ({
+            id: rawId.trim(),
+            status: 'PENDING',
+            userTemplateId: data.userTemplateId,
+            subscriptionId: data.subscriptionId,
+          } as UserBuild)
+      ),
       catchError((error) => {
         console.error('Error creating user build:', error);
         return throwError(() => error);
@@ -103,130 +60,92 @@ export class UserBuildService {
   }
 
   /**
-   * Publish a user build
-   * @param buildId Build ID to publish
+   * Initiate Stripe checkout for a user build.
+   * Returns the Stripe Checkout URL as text.
    */
-  publishUserBuild(buildId: string): Observable<UserBuild> {
-    return this.http
-      .post<UserBuild>(`${this.USER_BUILD_PUBLISH}/${buildId}/publish`, {})
-      .pipe(
-        catchError((error) => {
-          console.error(
-            `Error publishing user build with ID ${buildId}:`,
-            error
-          );
-          return throwError(() => error);
-        })
-      );
-  }
-
-  /**
-   * Search for user builds
-   * @param page Page number (0-based)
-   * @param size Page size
-   */
-  searchUserBuilds(page: number = 0, size: number = 10): Observable<any> {
-    const params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
-
-    return this.http.get<any>(this.USER_BUILD_SEARCH, { params }).pipe(
+  initiateCheckout(userBuildId: string): Observable<string> {
+    const url = `${this.baseUrl}/${userBuildId}/subscription/checkout`;
+    return this.http.post(url, null, { responseType: 'text' }).pipe(
+      map((checkoutUrl) => checkoutUrl.trim()),
       catchError((error) => {
-        console.error('Error searching user builds:', error);
+        console.error('Error initiating checkout:', error);
         return throwError(() => error);
       })
     );
   }
 
   /**
-   * Get the latest build for a user template
-   * @param userTemplateId User template ID
+   * Attempt to publish a build.
+   * Poll this until payment is confirmed.
    */
-  getLatestBuildForTemplate(
-    userTemplateId: string
-  ): Observable<UserBuild | null> {
-    return this.searchUserBuilds(0, 10).pipe(
-      map((response) => {
-        if (response.content && response.content.length > 0) {
-          // Filter builds for this template
-          const templateBuilds = response.content.filter(
-            (build: UserBuild) => build.userTemplate?.id === userTemplateId
-          );
-
-          if (templateBuilds.length > 0) {
-            // Sort by most recent first (assuming id contains timestamp or is sequential)
-            return templateBuilds.sort((a: UserBuild, b: UserBuild) =>
-              b.id.localeCompare(a.id)
-            )[0];
-          }
-        }
-        return null;
-      }),
+  publishBuild(userBuildId: string): Observable<PublishResponse> {
+    const url = `${this.baseUrl}/${userBuildId}/publish`;
+    return this.http.post<PublishResponse>(url, {}).pipe(
       catchError((error) => {
-        console.error('Error getting latest build:', error);
+        console.error('Error publishing build:', error);
+        // Return a failed status instead of throwing
+        return of({
+          status: 'FAILED',
+          message: error.message || 'Failed to publish build',
+        } as PublishResponse);
+      })
+    );
+  }
+
+  /**
+   * List all builds for the current user.
+   */
+  getUserBuilds(query: any = {}): Observable<UserBuild[]> {
+    const url = `${this.baseUrl}/search`;
+    return this.http.get<UserBuild[]>(url, { params: query }).pipe(
+      catchError((error) => {
+        console.error('Error fetching user builds:', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Fetch a single build by ID.
+   */
+  getUserBuildById(buildId: string): Observable<UserBuild> {
+    const url = `${this.baseUrl}/${buildId}`;
+    return this.http.get<UserBuild>(url).pipe(
+      catchError((error) => {
+        console.error(`Error fetching build ${buildId}:`, error);
         return throwError(() => error);
       })
     );
   }
 
   /**
-   * Complete flow to build and publish a user template
-   * @param userTemplateId User template ID
-   * @param subscriptionId Subscription ID
-   * @param pollingIntervalMs Interval for polling status in milliseconds
-   * @param timeoutMs Timeout for the overall build process in milliseconds
+   * Delete a build by ID.
+   */
+  deleteBuild(buildId: string): Observable<any> {
+    const url = `${this.baseUrl}/${buildId}`;
+    return this.http.delete(url).pipe(
+      catchError((error) => {
+        console.error(`Error deleting build ${buildId}:`, error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Build & publish a template in one call (for users with active subscription).
    */
   buildAndPublishTemplate(
-    userTemplateId: string,
-    subscriptionId: string,
-    pollingIntervalMs = 5000,
-    timeoutMs = 300000 // 5 minutes
+    templateId: string,
+    subscriptionId: string
   ): Observable<UserBuild> {
-    // First create the build
-    return this.createUserBuild(userTemplateId, subscriptionId).pipe(
-      // Then publish it
-      switchMap((build) => this.publishUserBuild(build.id)),
-      // Then poll for status updates
-      switchMap((build) => {
-        const startTime = Date.now();
-
-        return interval(pollingIntervalMs).pipe(
-          // Check the build status
-          switchMap(() =>
-            this.searchUserBuilds(0, 10).pipe(
-              map((response) => {
-                if (response.content && response.content.length > 0) {
-                  // Find our build in the results
-                  const currentBuild = response.content.find(
-                    (b: UserBuild) => b.id === build.id
-                  );
-
-                  if (currentBuild) {
-                    return currentBuild;
-                  }
-                }
-                throw new Error('Build not found in search results');
-              })
-            )
-          ),
-          // Continue polling until we reach a terminal state or timeout
-          takeWhile((currentBuild) => {
-            const isInProgress = [
-              BuildStatus.PENDING,
-              BuildStatus.BUILDING,
-              BuildStatus.DEPLOYING,
-            ].includes(currentBuild.status as BuildStatus);
-
-            const isTimedOut = Date.now() - startTime > timeoutMs;
-
-            // Continue if still in progress and not timed out
-            return isInProgress && !isTimedOut;
-          }, true) // true to include the last value
-        );
-      }),
-      catchError((error) => {
-        console.error('Error in build and publish process:', error);
-        return throwError(() => error);
+    return this.createUserBuild({
+      userTemplateId: templateId,
+      subscriptionId,
+    }).pipe(
+      map((build) => {
+        // fire-and-forget publish
+        this.publishBuild(build.id).subscribe();
+        return build;
       })
     );
   }

@@ -298,7 +298,7 @@
   <app-floating-checkout-button
     *ngIf="hasSavedChanges() && !isFullscreen()"
     [showTooltip]="false"
-    (checkoutClicked)="proceedToCheckout()"
+    (checkoutClicked)="publishTemplate()"
   ></app-floating-checkout-button>
 
   <!-- Switch to Edit Mode CTA (Floating Button in Fullscreen View-Only Mode) -->

@@ -1,0 +1,86 @@
+<div class="subscription-success-container">
+  <div class="success-card">
+    <!-- Header with logo -->
+    <div class="card-header">
+      <img
+        src="assets/header/webcraft-logo.svg"
+        alt="WebCraft Logo"
+        class="logo"
+      />
+      <h1>Website Publishing</h1>
+    </div>
+
+    <!-- Status section -->
+    <div class="status-section">
+      <!-- Loading state -->
+      <div *ngIf="isPolling" class="status-indicator loading">
+        <div class="spinner"></div>
+        <h2>{{ statusMessage }}</h2>
+        <p class="instruction">
+          Please don't close this page while we're publishing your website.
+        </p>
+      </div>
+
+      <!-- Success state -->
+      <div *ngIf="isComplete" class="status-indicator success">
+        <div class="success-icon">
+          <app-icon name="check-circle" width="64" height="64"></app-icon>
+        </div>
+        <h2>{{ statusMessage }}</h2>
+
+        <div class="site-url-container">
+          <span class="label">Your website URL:</span>
+          <div class="url-display">
+            <a [href]="siteUrl" target="_blank" class="site-url">{{
+              siteUrl
+            }}</a>
+            <button
+              class="copy-button"
+              title="Copy URL"
+              (click)="copyToClipboard()"
+            >
+              <app-icon
+                [name]="showCopySuccess ? 'check' : 'copy'"
+                width="18"
+                height="18"
+              ></app-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn-primary" (click)="visitSite()">
+            <app-icon name="external-link" width="16" height="16"></app-icon>
+            Visit Your Website
+          </button>
+          <button class="btn-secondary" (click)="goToBuilds()">
+            <app-icon name="build" width="16" height="16"></app-icon>
+            Go to My Builds
+          </button>
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div *ngIf="hasError" class="status-indicator error">
+        <div class="error-icon">
+          <app-icon name="alert-triangle" width="64" height="64"></app-icon>
+        </div>
+        <h2>{{ statusMessage }}</h2>
+        <p class="instruction">
+          Don't worry, you can check the status later in your dashboard.
+        </p>
+
+        <div class="action-buttons">
+          <button class="btn-primary" (click)="goToBuilds()">
+            <app-icon name="build" width="16" height="16"></app-icon>
+            Check Builds Status
+          </button>
+          <button class="btn-secondary" (click)="goToDashboard()">
+            <app-icon name="home" width="16" height="16"></app-icon>
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

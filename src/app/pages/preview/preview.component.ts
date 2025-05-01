@@ -363,7 +363,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ======== ROUTE PARAMETER HANDLING ========
+// ======== ROUTE PARAMETER HANDLING ========
   /**
    * Parse route parameters to determine operation mode and initialize component state
    */
@@ -374,86 +374,87 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
       .subscribe((params) => {
-        console.log(
-          '[parseRouteParameters] Processing route parameters:',
-          params
-        );
-
         // --- Parameter Extraction ---
-        const templateId = params['templateId'] || null;
-        const isCreatingNew = params['newTemplate'] === 'true';
-        const urlBusinessType = params['businessType'] || null;
-        const urlPlan = (params['plan'] || 'standard') as
-          | 'standard'
-          | 'premium';
-        const urlMode = params['mode'] || 'edit'; // Default to edit unless specified
-        const urlStep = params['step'] ? parseInt(params['step'], 10) : null;
+        const templateId      = params['templateId']      || null;
+        const isCreatingNew   = params['newTemplate'] === 'true';
+        const urlBusinessType = params['businessType']   || null;
+        const urlPlan         = (params['plan'] || 'standard') as 'standard' | 'premium';
+        const urlMode         = params['mode']           || 'edit';
+        const urlStep         = params['step'] ? parseInt(params['step'], 10) : null;
 
-        // --- State Initialization based on Params ---
         console.log(
-          `[parseRouteParameters] Mode determination: templateId=${templateId}, isCreatingNew=${isCreatingNew}, urlBusinessType=${urlBusinessType}, urlPlan=${urlPlan}`
+          `[parseRouteParameters] Determined: ` +
+          `templateId=${templateId}, ` +
+          `newTemplate=${isCreatingNew}, ` +
+          `businessType=${urlBusinessType}, ` +
+          `plan=${urlPlan}`
         );
 
         // Always set plan first
         this.currentPlan.set(urlPlan);
-        this.templateState.update((state) => ({ ...state, plan: urlPlan }));
+        this.templateState.update((s) => ({ ...s, plan: urlPlan }));
 
-        // **Priority 1: Editing/Viewing Existing Template**
+        // --- Priority 1: load/edit existing template ---
         if (templateId) {
-          console.log(
-            `[parseRouteParameters] Mode: Load Existing Template (ID: ${templateId}, Mode: ${urlMode})`
-          );
           if (!this.authService.isAuthenticated()) {
             this.handleAuthRedirect('edit an existing website');
-            return; // Stop further processing until authenticated
+            return;
           }
-          // Load existing template - this function will handle setting the step and hiding loading overlay
           this.loadExistingTemplate(templateId, urlMode);
 
-          // **Priority 2: Creating New Template (Requires Business Type)**
+          // --- Priority 2: creating a brand‐new template ---
         } else if (isCreatingNew && urlBusinessType) {
-          console.log(
-            `[parseRouteParameters] Mode: Initialize New Template (Type: ${urlBusinessType}, Plan: ${urlPlan})`
-          );
           if (!this.authService.isAuthenticated()) {
             this.handleAuthRedirect('create a new website');
-            return; // Stop further processing until authenticated
+            return;
           }
-          // Initialize new template - this function handles step and loading overlay
-          this.initializeNewTemplate(urlBusinessType); // Pass only business type
+          this.initializeNewTemplate(urlBusinessType);
 
-          // **Priority 3: Theme Selection / Initial Customization Start (Business Type known, but no template yet)**
+          // --- Priority 3: businessType specified, but no template ---
         } else if (urlBusinessType) {
+          // **new**: don’t fetch remote themes if not logged in
+          if (!this.authService.isAuthenticated()) {
+            console.log(
+              `[parseRouteParameters] Unauthenticated preview for businessType=${urlBusinessType}`
+            );
+            this.businessType.set(urlBusinessType);
+            this.setBusinessTypeDisplayName(urlBusinessType);
+            this.initializeDefaultCustomizations();
+            this.currentStep.set(urlStep ?? 3);
+            this.showLoadingOverlay.set(false);
+            return;
+          }
+
           console.log(
-            `[parseRouteParameters] Mode: Business Type Selected (Type: ${urlBusinessType}, Plan: ${urlPlan}) - Ready for theme/customization`
+            `[parseRouteParameters] BusinessType selected=${urlBusinessType}, loading themes…`
           );
           this.businessType.set(urlBusinessType);
           this.setBusinessTypeDisplayName(urlBusinessType);
-          this.templateState.update((state) => ({
-            ...state,
+          this.templateState.update((s) => ({
+            ...s,
             businessType: urlBusinessType,
             businessTypeName: this.businessTypeDisplayName(),
           }));
-          this.loadThemesForBusinessType(urlBusinessType); // Preload themes
-          this.hasStartedBuilding.set(true); // User has selected type/plan
-          this.currentStep.set(urlStep || 3); // Default to customization step
-          this.showBusinessTypeSelector.set(false); // Hide selector
-          this.initializeDefaultCustomizations(); // Ensure defaults are ready
-          this.showLoadingOverlay.set(false); // Ready to show theme selection/preview
 
-          // **Fallback: Business Type Selection**
+          this.hasStartedBuilding.set(true);
+          this.currentStep.set(urlStep ?? 3);
+          this.showBusinessTypeSelector.set(false);
+
+          // *Now* safe to call API
+          this.loadThemesForBusinessType(urlBusinessType);
+          this.initializeDefaultCustomizations();
+          this.showLoadingOverlay.set(false);
+
+          // --- Fallback: no info at all, show the selector ---
         } else {
-          console.log(
-            '[parseRouteParameters] Mode: Business Type Selection (No template/type specified)'
-          );
-          this.currentStep.set(urlStep || 2); // Default to business type selection step
-          this.showBusinessTypeSelector.set(true); // Show selector
-          this.initializeDefaultCustomizations(); // Ensure defaults are ready even if not shown yet
-          this.showLoadingOverlay.set(false); // Hide loading, show selector
+          console.log(`[parseRouteParameters] No template/type → showing selector`);
+          this.currentStep.set(urlStep ?? 2);
+          this.showBusinessTypeSelector.set(true);
+          this.initializeDefaultCustomizations();
+          this.showLoadingOverlay.set(false);
         }
 
-        // Update URL with the determined step if it wasn't already set correctly
-        // Let loading functions handle step updates for load/new flows
+        // Keep URL “step” in sync
         if (!templateId && !isCreatingNew && urlStep !== this.currentStep()) {
           this.updateUrlParams({ step: this.currentStep().toString() });
         }
@@ -540,11 +541,11 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
           if (template.config) {
             try {
-              // don’t gate it with startsWith/endsWith — just trim and parse
+              // don't gate it with startsWith/endsWith — just trim and parse
               const configStr = template.config.trim();
               console.log('Raw template.config:', configStr);
 
-              // parse once, let JSON.parse throw if it’s bad
+              // parse once, let JSON.parse throw if it's bad
               const customizationsData = JSON.parse(configStr);
 
               // apply the loaded customizations
@@ -1677,87 +1678,6 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.selectPlan('premium');
   }
 
-  /**
-   * Proceed to checkout after saving website changes
-   * This creates a build and publishes the website
-   */
-  proceedToCheckout(): void {
-    // Ensure we have a currentUserTemplateId
-    if (!this.currentUserTemplateId()) {
-      // Try to save first
-      this.confirmationService.showConfirmation(
-        'Please save your changes before publishing.',
-        'info',
-        3000
-      );
-      return;
-    }
-
-    // Show loading state
-    this.confirmationService.showConfirmation(
-      'Preparing to publish your website...',
-      'info',
-      3000
-    );
-
-    // First get a default subscription based on plan type
-    const planMapping: Record<string, 'BASIC' | 'ADVANCED'> = {
-      standard: 'BASIC',
-      premium: 'ADVANCED',
-    };
-
-    // Map to backend subscription type
-    const subscriptionType = planMapping[this.currentPlan()];
-
-    this.subscriptionService
-      .getDefaultSubscription(subscriptionType)
-      .pipe(
-        switchMap((subscription) => {
-          // Now create and publish the build
-          return this.userBuildService.buildAndPublishTemplate(
-            this.currentUserTemplateId()!,
-            subscription.id
-          );
-        })
-      )
-      .subscribe({
-        next: (build) => {
-          console.log('Build completed successfully:', build);
-
-          // Update step to 4 (final step)
-          this.currentStep.set(4);
-
-          // Show success message with the URL if available
-          if (build.address?.address) {
-            this.confirmationService.showConfirmation(
-              `Your website has been successfully published! You can view it at ${build.address.address}`,
-              'success',
-              6000
-            );
-
-            // Open the published URL in a new tab
-            window.open(build.address.address, '_blank');
-          } else {
-            // Show success message without URL
-            this.confirmationService.showConfirmation(
-              'Your website has been successfully published!',
-              'success',
-              4000
-            );
-          }
-        },
-        error: (error) => {
-          console.error('Error publishing website:', error);
-          this.confirmationService.showConfirmation(
-            'Failed to publish your website: ' +
-              (error.message || 'Unknown error'),
-            'error',
-            5000
-          );
-        },
-      });
-  }
-
   // ======== COMPONENT INTERACTIONS ========
   /**
    * Handle component selection from the structure components
@@ -1930,6 +1850,36 @@ export class PreviewComponent implements OnInit, OnDestroy {
         name: newName.trim(),
       }));
     }
+  }
+
+  /**
+   * Publish the current template: redirect to subscription selection page
+   */
+  publishTemplate(): void {
+    if (!this.isAuthenticated()) {
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+    const templateId = this.currentUserTemplateId();
+    const templateName = this.currentTemplateName() || 'Website Template';
+    const templatePlan = this.currentPlan() || 'standard';
+    if (!templateId) {
+      this.confirmationService.showConfirmation(
+        'Please save your template before publishing.',
+        'info',
+        3000
+      );
+      return;
+    }
+    this.router.navigate(['/subscription-selection'], {
+      queryParams: {
+        templateId,
+        templateName,
+        templatePlan,
+      },
+    });
   }
 }
 

@@ -8,6 +8,11 @@ import { TemplateService } from '../../../../core/services/template/template.ser
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { PlanBadgeComponent } from '../../../../shared/components/plan-badge/plan-badge.component';
 import { finalize } from 'rxjs/operators';
+import { AuthService } from '../../../../core/services/auth/auth.service';
+import { SubscriptionService } from '../../../../core/services/subscription/subscription.service';
+import { UserBuildService } from '../../../../core/services/build/user-build.service';
+import { switchMap, map, tap, EMPTY, of } from 'rxjs';
+import { ConfirmationService } from '../../../../core/services/shared/confirmation/confirmation.service';
 
 // Define the UserTemplate interface for our component
 export interface UserTemplate {
@@ -20,6 +25,16 @@ export interface UserTemplate {
   published?: boolean;
   thumbnailUrl?: string;
   plan?: 'standard' | 'premium';
+  isPublishing?: boolean;
+}
+
+// Define a type for the result of subscription flow
+interface SubscriptionFlowResult {
+  type: 'subscription-flow' | 'upgrade-flow' | 'direct-publish' | 'error';
+  action?: string;
+  selectedPlan?: any;
+  build?: any;
+  message?: string;
 }
 
 @Component({
@@ -41,6 +56,10 @@ export class TemplatesComponent implements OnInit {
   private userTemplateService = inject(UserTemplateService);
   private selectionStateService = inject(SelectionStateService);
   private router = inject(Router);
+  private authService = inject(AuthService);
+  private subscriptionService = inject(SubscriptionService);
+  private userBuildService = inject(UserBuildService);
+  private confirmationService = inject(ConfirmationService);
 
   ngOnInit(): void {
     this.loadTemplates();
@@ -156,24 +175,52 @@ export class TemplatesComponent implements OnInit {
    * Publish or unpublish a template
    */
   publishTemplate(template: UserTemplate): void {
-    this.loading = true;
+    // Show loading state on the button
+    template.isPublishing = true;
 
-    // Toggle published state
-    const action = template.published
-      ? this.userTemplateService.unpublishTemplate(template.id)
-      : this.userTemplateService.publishTemplate(template.id);
+    // 1. Check authentication first
+    if (!this.authService.isAuthenticated()) {
+      template.isPublishing = false;
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
 
-    action.subscribe({
-      next: () => {
-        this.loadTemplates();
-      },
-      error: (error: HttpErrorResponse) => {
-        const action = template.published ? 'unpublish' : 'publish';
-        console.error(`Error ${action}ing template:`, error);
-        this.error = `Failed to ${action} template. Please try again.`;
-        this.loading = false;
+    // 2. If the template is already published, unpublish it
+    if (template.published) {
+      this.userTemplateService.unpublishTemplate(template.id).subscribe({
+        next: () => {
+          template.published = false;
+          template.isPublishing = false;
+          this.confirmationService.showConfirmation(
+            'Template unpublished successfully.',
+            'success',
+            3000
+          );
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error(`Error unpublishing template:`, error);
+          template.isPublishing = false;
+          this.confirmationService.showConfirmation(
+            'Failed to unpublish template. Please try again.',
+            'error',
+            4000
+          );
+        },
+      });
+      return;
+    }
+
+    // 3. For new publications, redirect to subscription selection page
+    this.router.navigate(['/subscription-selection'], {
+      queryParams: {
+        templateId: template.id,
+        templateName: template.name,
+        templatePlan: template.plan || 'standard',
       },
     });
+    template.isPublishing = false;
   }
 
   /**

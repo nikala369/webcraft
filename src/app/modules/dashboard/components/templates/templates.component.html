@@ -220,14 +220,26 @@
             <button
               class="publish-btn"
               [class.unpublish-btn]="template.published"
+              [disabled]="template.isPublishing"
               (click)="publishTemplate(template)"
             >
-              <app-icon
-                [name]="template.published ? 'unpublish' : 'publish'"
-                width="16"
-                height="16"
-              ></app-icon>
-              <span>{{ template.published ? "Unpublish" : "Publish" }}</span>
+              <!-- Show spinner when publishing is in progress -->
+              <ng-container *ngIf="template.isPublishing">
+                <span class="loading-spinner"></span>
+                <span>{{
+                  template.published ? "Unpublishing..." : "Publishing..."
+                }}</span>
+              </ng-container>
+
+              <!-- Normal state -->
+              <ng-container *ngIf="!template.isPublishing">
+                <app-icon
+                  [name]="template.published ? 'unpublish' : 'publish'"
+                  width="16"
+                  height="16"
+                ></app-icon>
+                <span>{{ template.published ? "Unpublish" : "Publish" }}</span>
+              </ng-container>
             </button>
           </div>
         </div>
