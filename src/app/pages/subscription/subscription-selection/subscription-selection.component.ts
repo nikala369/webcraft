@@ -185,8 +185,6 @@ export class SubscriptionSelectionComponent implements OnInit {
       .createUserBuild(buildRequest)
       .pipe(
         tap((build) => {
-          console.log('Build created successfully:', build);
-          debugger;
           // Store the build ID for success page
           if (build && build.id) {
             localStorage.setItem('pendingBuildId', build.id);
@@ -262,40 +260,6 @@ export class SubscriptionSelectionComponent implements OnInit {
           this.isProcessing = false;
         },
       });
-  }
-
-  /**
-   * Test Stripe checkout flow (for development only)
-   * This simulates the checkout experience without requiring a real API call
-   */
-  testStripeCheckout(): void {
-    if (
-      !confirm(
-        'This will test the Stripe checkout flow with a mock URL. Continue?'
-      )
-    ) {
-      return;
-    }
-
-    this.isProcessing = true;
-
-    // Simulate API delay
-    setTimeout(() => {
-      // Create a mock build ID for testing
-      const mockBuildId = 'test-' + Date.now();
-      localStorage.setItem('pendingBuildId', mockBuildId);
-
-      // Redirect to a simulated "success" URL
-      const successUrl = `${window.location.origin}/subscription-success?userBuildId=${mockBuildId}`;
-
-      // Log info for debugging
-      console.log('Testing Stripe checkout flow:');
-      console.log('- Mock Build ID:', mockBuildId);
-      console.log('- Success URL:', successUrl);
-
-      // Redirect to the success page
-      window.location.href = successUrl;
-    }, 1500);
   }
 
   /**

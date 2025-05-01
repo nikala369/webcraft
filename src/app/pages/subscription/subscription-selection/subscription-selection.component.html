@@ -241,14 +241,4 @@
     <span *ngIf="!isProcessing">Continue to Payment</span>
     <div *ngIf="isProcessing" class="button-spinner"></div>
   </button>
-
-  <!-- Test button (only visible in development) -->
-  <button
-    *ngIf="selectedPlanId && !environment.production"
-    class="test-checkout-button"
-    (click)="testStripeCheckout()"
-    [disabled]="isProcessing"
-  >
-    Test Checkout Flow
-  </button>
 </div>

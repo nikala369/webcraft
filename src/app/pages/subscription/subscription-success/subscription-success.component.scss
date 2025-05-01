@@ -8,6 +8,7 @@ $text-color: #1f2937;
 $text-muted: #6b7280;
 $background-color: #f3f6fa;
 $card-background: #ffffff;
+$premium-color: #8b5cf6;
 
 .subscription-success-container {
   display: flex;
@@ -89,10 +90,15 @@ $card-background: #ffffff;
     .success-icon {
       color: $success-color;
       margin-bottom: 1rem;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     h2 {
       color: $success-color;
+      margin-left: 1rem;
     }
   }
 
@@ -100,10 +106,184 @@ $card-background: #ffffff;
     .error-icon {
       color: $error-color;
       margin-bottom: 1rem;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     h2 {
       color: $error-color;
+      margin-left: 1rem;
+    }
+  }
+}
+
+// Progress bar
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background-color: rgba($primary-color, 0.1);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  position: relative;
+  overflow: hidden;
+
+  .progress-bar {
+    height: 100%;
+    background-color: $primary-color;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .progress-percentage {
+    position: absolute;
+    top: -18px;
+    right: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $primary-color;
+  }
+}
+
+// Build Steps
+.build-steps {
+  width: 100%;
+  margin: 1.5rem 0;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.build-step {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid $border-color;
+  background-color: rgba($background-color, 0.3);
+  transition: all 0.3s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.completed {
+    background-color: rgba($success-color, 0.05);
+  }
+
+  &.current {
+    background-color: rgba($primary-color, 0.08);
+    border-left: 3px solid $primary-color;
+  }
+
+  .step-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background-color: rgba($primary-color, 0.1);
+    color: $primary-color;
+    margin-right: 1rem;
+  }
+
+  .step-content {
+    flex: 1;
+
+    .step-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: $text-color;
+      margin-bottom: 0.25rem;
+    }
+
+    .step-description {
+      font-size: 0.8rem;
+      color: $text-muted;
+    }
+  }
+
+  .step-status {
+    width: 24px;
+    margin-left: 0.5rem;
+
+    .step-complete {
+      color: $success-color;
+    }
+
+    .step-active-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: $primary-color;
+      animation: pulse 1.5s infinite;
+      margin: 0 auto;
+    }
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+}
+
+// Template info
+.template-info {
+  width: 100%;
+  margin: 1rem 0 1.5rem;
+  border-radius: 8px;
+  border: 1px solid $border-color;
+  overflow: hidden;
+
+  .info-item {
+    display: flex;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid $border-color;
+    background-color: #fafbfc;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      width: 120px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: $text-muted;
+    }
+
+    .info-value {
+      flex: 1;
+      font-size: 0.9rem;
+      color: $text-color;
+      font-weight: 500;
+
+      &.plan-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        background-color: #e5e7eb;
+        color: $text-color;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        font-weight: 600;
+
+        &.premium {
+          background-color: rgba($premium-color, 0.15);
+          color: $premium-color;
+        }
+      }
     }
   }
 }
@@ -218,5 +398,14 @@ $card-background: #ffffff;
 
   .action-buttons {
     flex-direction: column;
+  }
+
+  .template-info .info-item {
+    flex-direction: column;
+
+    .info-label {
+      width: 100%;
+      margin-bottom: 0.25rem;
+    }
   }
 }

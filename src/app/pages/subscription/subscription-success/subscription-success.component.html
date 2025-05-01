@@ -14,8 +14,41 @@
     <div class="status-section">
       <!-- Loading state -->
       <div *ngIf="isPolling" class="status-indicator loading">
-        <div class="spinner"></div>
+        <!-- Progress bar -->
+        <div class="progress-container">
+          <div class="progress-bar" [style.width.%]="buildProgress"></div>
+          <div class="progress-percentage">{{ buildProgress }}%</div>
+        </div>
+
         <h2>{{ statusMessage }}</h2>
+
+        <!-- Build steps -->
+        <div class="build-steps">
+          <div
+            *ngFor="let step of buildSteps; let i = index"
+            class="build-step"
+            [class.completed]="step.isComplete"
+            [class.current]="i === currentStepIndex"
+          >
+            <div class="step-icon">
+              <app-icon [name]="step.icon" width="22" height="22"></app-icon>
+            </div>
+            <div class="step-content">
+              <div class="step-name">{{ step.name }}</div>
+              <div class="step-description">{{ step.description }}</div>
+            </div>
+            <div class="step-status">
+              <div *ngIf="step.isComplete" class="step-complete">
+                <app-icon name="check" width="16" height="16"></app-icon>
+              </div>
+              <div
+                *ngIf="i === currentStepIndex && !step.isComplete"
+                class="step-active-dot"
+              ></div>
+            </div>
+          </div>
+        </div>
+
         <p class="instruction">
           Please don't close this page while we're publishing your website.
         </p>
@@ -25,8 +58,36 @@
       <div *ngIf="isComplete" class="status-indicator success">
         <div class="success-icon">
           <app-icon name="check-circle" width="64" height="64"></app-icon>
+
+          <h2>{{ statusMessage }}</h2>
         </div>
-        <h2>{{ statusMessage }}</h2>
+
+        <!-- Template info summary -->
+        <div class="template-info">
+          <div class="info-item">
+            <span class="info-label">Business Type:</span>
+            <span class="info-value">{{ businessType || "Website" }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Template:</span>
+            <span class="info-value">{{
+              templateName || "Custom Website"
+            }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Plan:</span>
+            <span
+              class="info-value plan-badge"
+              [class.premium]="templatePlanType === 'PREMIUM'"
+            >
+              {{ templatePlanType || "BASIC" }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Activated:</span>
+            <span class="info-value">{{ formatDate(subscriptionDate) }}</span>
+          </div>
+        </div>
 
         <div class="site-url-container">
           <span class="label">Your website URL:</span>
@@ -64,8 +125,9 @@
       <div *ngIf="hasError" class="status-indicator error">
         <div class="error-icon">
           <app-icon name="alert-triangle" width="64" height="64"></app-icon>
+
+          <h2>{{ statusMessage }}</h2>
         </div>
-        <h2>{{ statusMessage }}</h2>
         <p class="instruction">
           Don't worry, you can check the status later in your dashboard.
         </p>

@@ -1,11 +1,54 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { interval, Subscription, EMPTY, of } from 'rxjs';
-import { startWith, switchMap, takeWhile, delay } from 'rxjs/operators';
+import { interval, Subscription, EMPTY, of, Observable } from 'rxjs';
+import { startWith, switchMap, takeWhile } from 'rxjs/operators';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
-import { UserBuildService } from '../../../core/services/build/user-build.service';
+import {
+  UserBuildService,
+  UserBuild,
+} from '../../../core/services/build/user-build.service';
 import { ConfirmationService } from '../../../core/services/shared/confirmation/confirmation.service';
+
+interface BuildStep {
+  name: string;
+  description: string;
+  isComplete: boolean;
+  icon: string;
+  percentage: number;
+}
+
+// Extended interface to match actual API response format
+interface ExtendedUserBuild extends UserBuild {
+  address?: {
+    address: string;
+    loadBalancerAddress?: string;
+  };
+  userTemplate?: {
+    id: string;
+    name: string;
+    template?: {
+      id: string;
+      name: string;
+      description?: string;
+      templatePlan?: {
+        id: string;
+        type: string;
+        description?: string;
+        priceCents?: number;
+      };
+      templateType?: {
+        id: string;
+        name: string;
+        key: string;
+      };
+    };
+  };
+  userBuildSubscription?: {
+    status: string;
+    createdAt: string;
+  };
+}
 
 @Component({
   selector: 'app-subscription-success',
@@ -22,12 +65,66 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
   pollingAttempts = 0;
   statusMessage = 'Verifying payment...';
   siteUrl: string | null = null;
-  isTestMode = false;
+  templateName: string | null = null;
+  businessType: string | null = null;
+  templatePlanType: string | null = null;
+  buildId: string | null = null;
+  subscriptionDate: string | null = null;
+
+  // Build progress tracking
+  buildProgress = 0;
+  forcedDelay = true; // Always show animation even if build is already complete
+  buildSteps: BuildStep[] = [
+    {
+      name: 'Initializing',
+      description: 'Setting up your website environments',
+      isComplete: false,
+      icon: 'server',
+      percentage: 10,
+    },
+    {
+      name: 'Content Processing',
+      description: 'Processing your customized content',
+      isComplete: false,
+      icon: 'file-text',
+      percentage: 30,
+    },
+    {
+      name: 'Assets Optimization',
+      description: 'Optimizing images and media',
+      isComplete: false,
+      icon: 'image',
+      percentage: 50,
+    },
+    {
+      name: 'Deployment',
+      description: 'Deploying to high-performance servers',
+      isComplete: false,
+      icon: 'upload-cloud',
+      percentage: 75,
+    },
+    {
+      name: 'DNS Configuration',
+      description: 'Configuring your website address',
+      isComplete: false,
+      icon: 'globe',
+      percentage: 90,
+    },
+    {
+      name: 'Final Checks',
+      description: 'Running quality assurance tests',
+      isComplete: false,
+      icon: 'check-square',
+      percentage: 100,
+    },
+  ];
+  currentStepIndex = 0;
 
   // UI states
   showCopySuccess = false;
 
   private pollingSubscription: Subscription | null = null;
+  private buildAnimationSubscription: Subscription | null = null;
 
   constructor(
     private router: Router,
@@ -45,105 +142,131 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
     const localStorageBuildId = localStorage.getItem('pendingBuildId');
 
     // Use URL param first, fall back to localStorage
-    const buildId = queryParamBuildId || localStorageBuildId;
+    this.buildId = queryParamBuildId || localStorageBuildId;
 
-    if (!buildId) {
+    if (!this.buildId) {
       this.handleError('No pending build found. Please try again.');
       return;
     }
 
-    // Check if we're in test mode (test- prefix)
-    this.isTestMode = buildId.startsWith('test-');
+    // Start the build animation
+    this.startBuildAnimation();
 
-    if (this.isTestMode) {
-      console.log('Running in TEST MODE with mock build ID:', buildId);
-      this.startTestModePolling();
-    } else {
-      this.startPolling(buildId);
-    }
+    // After a small initial delay, start polling
+    setTimeout(() => {
+      this.startPollingBuildStatus(this.buildId!);
+    }, 2000);
   }
 
   ngOnDestroy(): void {
     if (this.pollingSubscription) {
       this.pollingSubscription.unsubscribe();
     }
+    if (this.buildAnimationSubscription) {
+      this.buildAnimationSubscription.unsubscribe();
+    }
   }
 
   /**
-   * Start simulated polling for test mode
+   * Helper to determine if a build is published
    */
-  private startTestModePolling(): void {
-    this.isPolling = true;
-    let simulatedAttempts = 0;
+  private isBuildPublished(status: string): boolean {
+    // Support both 'ACTIVE' and 'PUBLISHED' as published statuses
+    return status === 'ACTIVE' || status === 'PUBLISHED';
+  }
 
-    this.pollingSubscription = interval(1000) // Faster for testing
+  /**
+   * Start a visual animation of the build process
+   * This runs independently of actual build status to ensure a good UX
+   */
+  private startBuildAnimation(): void {
+    // Move through build steps on a predefined timeline
+    this.buildAnimationSubscription = interval(3500)
       .pipe(
         startWith(0),
-        switchMap(() => {
-          simulatedAttempts++;
-          this.pollingAttempts = simulatedAttempts;
-
-          // Simulate success after 3 attempts
-          if (simulatedAttempts >= 3) {
-            return of({
-              status: 'ACTIVE' as const,
-              siteUrl: 'https://example-site-' + Date.now() + '.webcraft.com',
-            });
-          }
-
-          // Otherwise return pending
-          return of({
-            status: 'PENDING' as const,
-          });
-        }),
-        takeWhile((response) => {
-          // Handle the response same as real polling
-          if (response.status === 'ACTIVE') {
-            this.handleSuccess(response.siteUrl || '');
-            return false; // Stop polling
-          }
-
-          return simulatedAttempts < 3; // Continue until we hit attempt 3
-        })
+        takeWhile(
+          () =>
+            this.currentStepIndex < this.buildSteps.length && !this.isComplete
+        )
       )
-      .subscribe({
-        next: () => {
-          // Intermediate polling updates
-          if (this.isPolling) {
-            this.statusMessage = `Payment verified, publishing your website... (${simulatedAttempts}/3)`;
+      .subscribe(() => {
+        if (this.currentStepIndex < this.buildSteps.length) {
+          // Mark current step as complete
+          this.buildSteps[this.currentStepIndex].isComplete = true;
+
+          // Update progress
+          this.buildProgress =
+            this.buildSteps[this.currentStepIndex].percentage;
+
+          // Move to next step if not at the end
+          if (this.currentStepIndex < this.buildSteps.length - 1) {
+            this.currentStepIndex++;
           }
-        },
-        complete: () => {
-          console.log('Test mode polling complete');
-        },
+        }
       });
   }
 
-  private startPolling(buildId: string): void {
+  /**
+   * Poll the build status using GET /api/user-build/{id} every 3s
+   * Stop when status is published, error, or timeout
+   */
+  private startPollingBuildStatus(buildId: string): void {
     this.isPolling = true;
+    this.pollingAttempts = 0;
 
     this.pollingSubscription = interval(3000)
       .pipe(
         startWith(0),
         switchMap(() => {
           this.pollingAttempts++;
-          return this.userBuildService.publishBuild(buildId);
+          return this.userBuildService.getUserBuildById(
+            buildId
+          ) as Observable<ExtendedUserBuild>;
         }),
-        takeWhile((response) => {
-          // Continue polling if status is PENDING and we haven't reached max attempts
+        takeWhile((build: ExtendedUserBuild) => {
+          // Capture additional data from the response
+          if (build.userTemplate?.name) {
+            this.templateName = build.userTemplate.name;
+          }
+
+          if (build.userTemplate?.template?.templateType?.name) {
+            this.businessType = build.userTemplate.template.templateType.name;
+          }
+
+          if (build.userTemplate?.template?.templatePlan?.type) {
+            this.templatePlanType =
+              build.userTemplate.template.templatePlan.type;
+          }
+
+          if (build.userBuildSubscription?.createdAt) {
+            this.subscriptionDate = build.userBuildSubscription.createdAt;
+          }
+
+          // Get site URL from address object or fallback to siteUrl property
+          if (build.address?.address) {
+            this.siteUrl = build.address.address;
+          } else if (build.siteUrl) {
+            this.siteUrl = build.siteUrl;
+          }
+
+          // Continue polling if not published and not timed out
           const continuePolling =
-            response.status === 'PENDING' &&
+            !this.isBuildPublished(build.status) &&
             this.pollingAttempts < this.maxPollingAttempts;
 
-          // Handle complete and error states
-          if (response.status === 'ACTIVE') {
-            this.handleSuccess(response.siteUrl || '');
-            return false; // Stop polling
-          } else if (response.status === 'FAILED') {
-            this.handleError(
-              response.message || 'Failed to publish your website.'
-            );
-            return false; // Stop polling
+          // Handle published state
+          if (this.isBuildPublished(build.status)) {
+            // If we want to show full animation, delay success slightly
+            if (
+              this.forcedDelay &&
+              this.currentStepIndex < this.buildSteps.length - 2
+            ) {
+              // Don't mark as complete yet, let animation finish
+              return true;
+            } else {
+              this.handleSuccess(build);
+              return false; // Stop polling
+            }
           } else if (this.pollingAttempts >= this.maxPollingAttempts) {
             this.handleTimeout();
             return false; // Stop polling due to timeout
@@ -153,14 +276,8 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: () => {
-          // Intermediate polling updates
-          if (this.isPolling) {
-            this.statusMessage = `Payment verified, publishing your website... (${this.pollingAttempts}/${this.maxPollingAttempts})`;
-          }
-        },
         error: (err) => {
-          console.error('Error during polling:', err);
+          console.error('Error during build status polling:', err);
           this.handleError(
             'An error occurred while checking your website status.'
           );
@@ -174,28 +291,32 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
       });
   }
 
-  private handleSuccess(siteUrl: string): void {
+  private handleSuccess(buildData: ExtendedUserBuild): void {
+    // Ensure all steps are complete
+    this.buildSteps.forEach((step) => (step.isComplete = true));
+    this.buildProgress = 100;
+
+    // Update component state
     this.isPolling = false;
     this.isComplete = true;
-    this.siteUrl = siteUrl;
     this.statusMessage = 'Your website has been published successfully!';
-    localStorage.removeItem('pendingBuildId'); // Clean up
-    if (!this.isTestMode) {
-      this.confirmationService.showConfirmation(
-        'Website published successfully!',
-        'success',
-        5000
-      );
-    }
+
+    // Clean up
+    localStorage.removeItem('pendingBuildId');
+
+    // Show success message
+    this.confirmationService.showConfirmation(
+      'Website published successfully!',
+      'success',
+      5000
+    );
   }
 
   private handleError(message: string): void {
     this.isPolling = false;
     this.hasError = true;
     this.statusMessage = message;
-    if (!this.isTestMode) {
-      this.confirmationService.showConfirmation(message, 'error', 5000);
-    }
+    this.confirmationService.showConfirmation(message, 'error', 5000);
   }
 
   private handleTimeout(): void {
@@ -204,12 +325,30 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
     this.statusMessage =
       'Your request is taking longer than expected. You can check the status in "My Builds" later.';
     localStorage.removeItem('pendingBuildId'); // Clean up
-    if (!this.isTestMode) {
-      this.confirmationService.showConfirmation(
-        'Timeout while waiting for your website to be published. Please check the status in "My Builds" later.',
-        'warning',
-        5000
-      );
+    this.confirmationService.showConfirmation(
+      'Timeout while waiting for your website to be published. Please check the status in "My Builds" later.',
+      'warning',
+      5000
+    );
+  }
+
+  /**
+   * Format a date string into a readable format
+   */
+  formatDate(dateString: string | null): string {
+    if (!dateString) return 'N/A';
+
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch (e) {
+      return dateString;
     }
   }
 
