@@ -90,7 +90,6 @@ $premium-color: #8b5cf6;
     .success-icon {
       color: $success-color;
       margin-bottom: 1rem;
-
       display: flex;
       align-items: center;
       justify-content: center;
@@ -98,7 +97,7 @@ $premium-color: #8b5cf6;
 
     h2 {
       color: $success-color;
-      margin-left: 1rem;
+      margin-left: 0;
     }
   }
 
@@ -106,7 +105,6 @@ $premium-color: #8b5cf6;
     .error-icon {
       color: $error-color;
       margin-bottom: 1rem;
-
       display: flex;
       align-items: center;
       justify-content: center;
@@ -114,7 +112,7 @@ $premium-color: #8b5cf6;
 
     h2 {
       color: $error-color;
-      margin-left: 1rem;
+      margin-left: 0;
     }
   }
 }

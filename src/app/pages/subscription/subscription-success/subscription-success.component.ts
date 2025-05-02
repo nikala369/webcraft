@@ -58,12 +58,12 @@ interface ExtendedUserBuild extends UserBuild {
   styleUrls: ['./subscription-success.component.scss'],
 })
 export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
-  isPolling = false;
+  isPolling = true; // Start with polling active
   isComplete = false;
   hasError = false;
   maxPollingAttempts = 20; // 20 attempts x 3s = 60s timeout
   pollingAttempts = 0;
-  statusMessage = 'Verifying payment...';
+  statusMessage = 'Preparing your website for publishing...';
   siteUrl: string | null = null;
   templateName: string | null = null;
   businessType: string | null = null;
@@ -72,49 +72,49 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
   subscriptionDate: string | null = null;
 
   // Build progress tracking
-  buildProgress = 0;
+  buildProgress = 5; // Start with 5% to show immediate progress
   forcedDelay = true; // Always show animation even if build is already complete
   buildSteps: BuildStep[] = [
     {
       name: 'Initializing',
       description: 'Setting up your website environments',
       isComplete: false,
-      icon: 'server',
+      icon: 'template',
       percentage: 10,
     },
     {
       name: 'Content Processing',
       description: 'Processing your customized content',
       isComplete: false,
-      icon: 'file-text',
+      icon: 'edit',
       percentage: 30,
     },
     {
       name: 'Assets Optimization',
       description: 'Optimizing images and media',
       isComplete: false,
-      icon: 'image',
+      icon: 'view',
       percentage: 50,
     },
     {
       name: 'Deployment',
       description: 'Deploying to high-performance servers',
       isComplete: false,
-      icon: 'upload-cloud',
+      icon: 'desktop',
       percentage: 75,
     },
     {
       name: 'DNS Configuration',
       description: 'Configuring your website address',
       isComplete: false,
-      icon: 'globe',
+      icon: 'domain',
       percentage: 90,
     },
     {
       name: 'Final Checks',
       description: 'Running quality assurance tests',
       isComplete: false,
-      icon: 'check-square',
+      icon: 'check',
       percentage: 100,
     },
   ];
@@ -131,7 +131,10 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private userBuildService: UserBuildService,
     private confirmationService: ConfirmationService
-  ) {}
+  ) {
+    // Start animation as early as possible, even during component construction
+    this.startBuildAnimation();
+  }
 
   ngOnInit(): void {
     // First check URL params for userBuildId
@@ -149,13 +152,10 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Start the build animation
-    this.startBuildAnimation();
-
-    // After a small initial delay, start polling
+    // Start polling after a very short delay
     setTimeout(() => {
       this.startPollingBuildStatus(this.buildId!);
-    }, 2000);
+    }, 1000);
   }
 
   ngOnDestroy(): void {
@@ -180,17 +180,25 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
    * This runs independently of actual build status to ensure a good UX
    */
   private startBuildAnimation(): void {
+    // Immediately make the first step active
+    this.buildSteps[0].isComplete = true;
+    this.buildProgress = this.buildSteps[0].percentage;
+
     // Move through build steps on a predefined timeline
-    this.buildAnimationSubscription = interval(3500)
+    this.buildAnimationSubscription = interval(3000)
       .pipe(
-        startWith(0),
+        startWith(500), // Start after just 500ms for immediate visual feedback
         takeWhile(
           () =>
-            this.currentStepIndex < this.buildSteps.length && !this.isComplete
+            this.currentStepIndex < this.buildSteps.length - 1 &&
+            !this.isComplete
         )
       )
       .subscribe(() => {
-        if (this.currentStepIndex < this.buildSteps.length) {
+        if (this.currentStepIndex < this.buildSteps.length - 1) {
+          // Move to next step
+          this.currentStepIndex++;
+
           // Mark current step as complete
           this.buildSteps[this.currentStepIndex].isComplete = true;
 
@@ -198,10 +206,10 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
           this.buildProgress =
             this.buildSteps[this.currentStepIndex].percentage;
 
-          // Move to next step if not at the end
-          if (this.currentStepIndex < this.buildSteps.length - 1) {
-            this.currentStepIndex++;
-          }
+          // Update status message based on current step
+          this.statusMessage = `${
+            this.buildSteps[this.currentStepIndex].name
+          }...`;
         }
       });
   }
@@ -211,9 +219,6 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
    * Stop when status is published, error, or timeout
    */
   private startPollingBuildStatus(buildId: string): void {
-    this.isPolling = true;
-    this.pollingAttempts = 0;
-
     this.pollingSubscription = interval(3000)
       .pipe(
         startWith(0),

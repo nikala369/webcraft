@@ -58,9 +58,9 @@
       <div *ngIf="isComplete" class="status-indicator success">
         <div class="success-icon">
           <app-icon name="check-circle" width="64" height="64"></app-icon>
-
-          <h2>{{ statusMessage }}</h2>
         </div>
+
+        <h2>{{ statusMessage }}</h2>
 
         <!-- Template info summary -->
         <div class="template-info">
@@ -111,7 +111,7 @@
 
         <div class="action-buttons">
           <button class="btn-primary" (click)="visitSite()">
-            <app-icon name="external-link" width="16" height="16"></app-icon>
+            <app-icon name="arrow_forward" width="16" height="16"></app-icon>
             Visit Your Website
           </button>
           <button class="btn-secondary" (click)="goToBuilds()">
@@ -124,10 +124,10 @@
       <!-- Error state -->
       <div *ngIf="hasError" class="status-indicator error">
         <div class="error-icon">
-          <app-icon name="alert-triangle" width="64" height="64"></app-icon>
-
-          <h2>{{ statusMessage }}</h2>
+          <app-icon name="alert" width="64" height="64"></app-icon>
         </div>
+
+        <h2>{{ statusMessage }}</h2>
         <p class="instruction">
           Don't worry, you can check the status later in your dashboard.
         </p>
