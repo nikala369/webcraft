@@ -366,8 +366,8 @@
       background: #f9fafb;
       color: #4b5563;
       font-weight: 500;
-      font-size: 0.875rem;
-      padding: 0.75rem;
+      font-size: 0.87rem;
+      padding: 0.4rem;
       border-radius: 8px;
       border: 1px solid #e5e7eb;
       transition: all 0.2s ease;
@@ -379,7 +379,8 @@
       &.selected {
         background: #3b82f6;
         color: #fff;
-        border-color: #3b82f6;
+        border: 1px solid #082c6c;
+        opacity: 0.9;
       }
     }
   }
@@ -490,8 +491,7 @@
 }
 
 // Buttons
-.continue-button,
-.test-checkout-button {
+.continue-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -501,10 +501,8 @@
   transition: all 0.3s ease;
   cursor: pointer;
   overflow: hidden;
-}
 
-// Continue to Payment button
-.continue-button {
+  // Size & positioning
   width: 100%;
   max-width: 320px;
   padding: 12px 0;
@@ -524,6 +522,7 @@
     right: 1.5rem;
   }
 
+  // Continuous “shimmer” overlay
   &::after {
     content: "";
     position: absolute;
@@ -532,39 +531,40 @@
     width: 100%;
     height: 100%;
     background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.2) 50%,
-      transparent 100%
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        transparent 100%
     );
-    transition: left 0.7s ease;
+    animation: shine 1.8s linear infinite;
   }
 
+  // Hover state (color & lift only; shimmer is always running)
   &:hover {
     background: #2563eb;
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
-
-    &::after {
-      left: 100%;
-    }
   }
 
+  // Active (press) state
   &:active {
     transform: translateY(0);
   }
 
+  // Disabled state
   &:disabled {
     background: #93c5fd;
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
 
+    // Hide shimmer
     &::after {
       display: none;
     }
   }
 
+  // Spinner inside
   .button-spinner {
     width: 20px;
     height: 20px;
@@ -576,39 +576,17 @@
   }
 }
 
-// Test Checkout Button
-.test-checkout-button {
-  width: 180px;
-  padding: 10px 0;
-  background: #f59e0b;
-  color: white;
-  font-size: 14px;
-  position: fixed;
-  bottom: 1.5rem;
-  right: calc(1.5rem + 330px);
-  z-index: 998;
-  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);
-
-  @media (max-width: 768px) {
-    width: auto;
-    left: 1.5rem;
-    right: auto;
-    bottom: 5rem;
+// Keyframes for the shimmer effect
+@keyframes shine {
+  from {
+    left: -100%;
   }
-
-  &:hover {
-    background: #d97706;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(245, 158, 11, 0.35);
-  }
-
-  &:disabled {
-    background: #fcd34d;
-    cursor: not-allowed;
-    transform: none;
+  to {
+    left: 100%;
   }
 }
 
+// Keyframes for the spinner
 @keyframes spin {
   to {
     transform: rotate(360deg);
