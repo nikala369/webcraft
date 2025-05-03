@@ -26,9 +26,6 @@ export class SubscriptionSelectionComponent implements OnInit {
   errorMessage: string | null = null;
   environment = environment;
 
-  // Premium template pricing constants
-  private PREMIUM_TEMPLATE_PRICE = 50.0; // $50 one-time fee
-
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -67,13 +64,6 @@ export class SubscriptionSelectionComponent implements OnInit {
         this.subscriptionPlans = plans.filter(
           (plan) => plan.type === 'BASIC' || plan.type === 'ADVANCED'
         );
-
-        // If premium template, filter to show only ADVANCED plans
-        if (this.templatePlan === 'premium') {
-          this.subscriptionPlans = this.subscriptionPlans.filter(
-            (plan) => plan.type === 'ADVANCED'
-          );
-        }
 
         if (this.subscriptionPlans.length === 0) {
           this.errorMessage = 'No subscription plans available.';
@@ -132,10 +122,7 @@ export class SubscriptionSelectionComponent implements OnInit {
    * Calculate the total price (subscription + template if premium)
    */
   calculateTotalPrice(): number {
-    return (
-      this.getSubscriptionPriceOnly() +
-      (this.templatePlan === 'premium' ? this.PREMIUM_TEMPLATE_PRICE : 0)
-    );
+    return this.getSubscriptionPriceOnly();
   }
 
   /**
@@ -148,13 +135,6 @@ export class SubscriptionSelectionComponent implements OnInit {
       (plan) => plan.id === this.selectedPlanId
     );
     return selectedPlan ? selectedPlan.priceCents / 100 : 0;
-  }
-
-  /**
-   * Get the premium template price (one-time fee)
-   */
-  getPremiumTemplatePrice(): number {
-    return this.PREMIUM_TEMPLATE_PRICE;
   }
 
   /**

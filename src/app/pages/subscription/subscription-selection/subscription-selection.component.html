@@ -154,7 +154,14 @@
               [class.selected]="selectedPlanId === plan.id"
             >
               <span *ngIf="selectedPlanId !== plan.id">Select Plan</span>
-              <span *ngIf="selectedPlanId === plan.id" style="display: flex; justify-content: center; align-items: center">
+              <span
+                *ngIf="selectedPlanId === plan.id"
+                style="
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                "
+              >
                 <svg
                   width="16"
                   height="16"
@@ -185,42 +192,10 @@
             <span>{{ getSubscriptionPriceOnly() | currency }}/month</span>
           </div>
 
-          <div *ngIf="templatePlan === 'premium'" class="breakdown-row">
-            <span>Premium Template (one-time)</span>
-            <span>{{ getPremiumTemplatePrice() | currency }}</span>
-          </div>
-
-          <div
-            *ngIf="templatePlan === 'premium'"
-            class="breakdown-divider"
-          ></div>
-
-          <div *ngIf="templatePlan === 'premium'" class="breakdown-row total">
-            <span>First Payment Total</span>
+          <div class="breakdown-row total">
+            <span>Total</span>
             <span>{{ calculateTotalPrice() | currency }}</span>
           </div>
-        </div>
-
-        <div *ngIf="templatePlan === 'premium'" class="price-note">
-          <svg
-            class="info-icon"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-          <span
-            >Subsequent payments will only include the monthly subscription
-            fee.</span
-          >
         </div>
 
         <div class="cancel-anytime">
