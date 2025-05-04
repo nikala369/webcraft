@@ -221,6 +221,7 @@
               class="publish-btn"
               [class.unpublish-btn]="template.published"
               [disabled]="template.isPublishing"
+              [class.disabled-btn]="template.published"
               (click)="publishTemplate(template)"
             >
               <!-- Show spinner when publishing is in progress -->

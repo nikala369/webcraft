@@ -4,10 +4,12 @@ import { CommonModule } from '@angular/common';
 import { interval, Subscription, EMPTY, of, Observable } from 'rxjs';
 import { startWith, switchMap, takeWhile } from 'rxjs/operators';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { UserBuildService } from '../../../core/services/build/user-build.service';
 import {
-  UserBuildService,
   UserBuild,
-} from '../../../core/services/build/user-build.service';
+  ExtendedUserBuild,
+  BuildStatus,
+} from '../../../core/models/user-build.model';
 import { ConfirmationService } from '../../../core/services/shared/confirmation/confirmation.service';
 
 interface BuildStep {
@@ -16,38 +18,6 @@ interface BuildStep {
   isComplete: boolean;
   icon: string;
   percentage: number;
-}
-
-// Extended interface to match actual API response format
-interface ExtendedUserBuild extends UserBuild {
-  address?: {
-    address: string;
-    loadBalancerAddress?: string;
-  };
-  userTemplate?: {
-    id: string;
-    name: string;
-    template?: {
-      id: string;
-      name: string;
-      description?: string;
-      templatePlan?: {
-        id: string;
-        type: string;
-        description?: string;
-        priceCents?: number;
-      };
-      templateType?: {
-        id: string;
-        name: string;
-        key: string;
-      };
-    };
-  };
-  userBuildSubscription?: {
-    status: string;
-    createdAt: string;
-  };
 }
 
 @Component({
@@ -170,7 +140,7 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
   /**
    * Helper to determine if a build is published
    */
-  private isBuildPublished(status: string): boolean {
+  private isBuildPublished(status: BuildStatus): boolean {
     // Support both 'ACTIVE' and 'PUBLISHED' as published statuses
     return status === 'ACTIVE' || status === 'PUBLISHED';
   }

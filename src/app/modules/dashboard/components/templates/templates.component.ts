@@ -189,26 +189,35 @@ export class TemplatesComponent implements OnInit {
 
     // 2. If the template is already published, unpublish it
     if (template.published) {
-      this.userTemplateService.unpublishTemplate(template.id).subscribe({
-        next: () => {
-          template.published = false;
-          template.isPublishing = false;
-          this.confirmationService.showConfirmation(
-            'Template unpublished successfully.',
-            'success',
-            3000
-          );
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error(`Error unpublishing template:`, error);
-          template.isPublishing = false;
-          this.confirmationService.showConfirmation(
-            'Failed to unpublish template. Please try again.',
-            'error',
-            4000
-          );
-        },
-      });
+      // Use simple confirm dialog instead of the confirmation service
+      if (
+        confirm(
+          'Are you sure you want to unpublish this template? The website will no longer be available online.'
+        )
+      ) {
+        this.userTemplateService.unpublishTemplate(template.id).subscribe({
+          next: () => {
+            template.published = false;
+            template.isPublishing = false;
+            this.confirmationService.showConfirmation(
+              'Template unpublished successfully.',
+              'success',
+              3000
+            );
+          },
+          error: (error: HttpErrorResponse) => {
+            console.error(`Error unpublishing template:`, error);
+            template.isPublishing = false;
+            this.confirmationService.showConfirmation(
+              'Failed to unpublish template. Please try again.',
+              'error',
+              4000
+            );
+          },
+        });
+      } else {
+        template.isPublishing = false;
+      }
       return;
     }
 

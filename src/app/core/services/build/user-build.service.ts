@@ -5,17 +5,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-
-export interface UserBuild {
-  id: string;
-  status: 'PENDING' | 'ACTIVE' | 'FAILED';
-  createdAt?: string;
-  userTemplateId: string;
-  subscriptionId: string;
-  siteUrl?: string;
-  template?: any;
-  subscription?: any;
-}
+import {
+  UserBuild,
+  ExtendedUserBuild,
+  ApiResponse,
+} from '../../../core/models/user-build.model';
 
 export interface UserBuildRequest {
   userTemplateId: string;
@@ -23,7 +17,13 @@ export interface UserBuildRequest {
 }
 
 export interface PublishResponse {
-  status: 'PENDING' | 'ACTIVE' | 'FAILED';
+  status:
+    | 'PENDING'
+    | 'ACTIVE'
+    | 'FAILED'
+    | 'PUBLISHED'
+    | 'UNPUBLISHED'
+    | 'STOPPED';
   message?: string;
   siteUrl?: string;
 }
@@ -60,59 +60,42 @@ export class UserBuildService {
   }
 
   /**
-   * Initiate Stripe checkout for a user build.
-   * Returns the Stripe Checkout URL as text.
-   */
-  initiateCheckout(userBuildId: string): Observable<string> {
-    const url = `${this.baseUrl}/${userBuildId}/subscription/checkout`;
-    return this.http.post(url, null, { responseType: 'text' }).pipe(
-      map((checkoutUrl) => checkoutUrl.trim()),
-      catchError((error) => {
-        console.error('Error initiating checkout:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /**
-   * Attempt to publish a build.
-   * Poll this until payment is confirmed.
-   */
-  publishBuild(userBuildId: string): Observable<PublishResponse> {
-    const url = `${this.baseUrl}/${userBuildId}/publish`;
-    return this.http.post<PublishResponse>(url, {}).pipe(
-      catchError((error) => {
-        console.error('Error publishing build:', error);
-        // Return a failed status instead of throwing
-        return of({
-          status: 'FAILED',
-          message: error.message || 'Failed to publish build',
-        } as PublishResponse);
-      })
-    );
-  }
-
-  /**
    * List all builds for the current user.
    */
-  getUserBuilds(query: any = {}): Observable<UserBuild[]> {
+  getUserBuilds(
+    query: any = {}
+  ): Observable<ApiResponse<ExtendedUserBuild> | ExtendedUserBuild[]> {
     const url = `${this.baseUrl}/search`;
-    return this.http.get<UserBuild[]>(url, { params: query }).pipe(
-      catchError((error) => {
-        console.error('Error fetching user builds:', error);
-        return of([]);
+    return this.http
+      .get<ApiResponse<ExtendedUserBuild> | ExtendedUserBuild[]>(url, {
+        params: query,
       })
-    );
+      .pipe(
+        catchError((error) => {
+          console.error('Error fetching user builds:', error);
+          return of([] as ExtendedUserBuild[]);
+        })
+      );
   }
 
   /**
    * Fetch a single build by ID.
    */
-  getUserBuildById(buildId: string): Observable<UserBuild> {
+  getUserBuildById(buildId: string): Observable<ExtendedUserBuild> {
+    if (!buildId) {
+      console.error('getUserBuildById called with null/undefined buildId');
+      return throwError(() => new Error('Invalid build ID'));
+    }
+
     const url = `${this.baseUrl}/${buildId}`;
-    return this.http.get<UserBuild>(url).pipe(
+
+    return this.http.get<ExtendedUserBuild>(url).pipe(
+      map((response) => response),
       catchError((error) => {
         console.error(`Error fetching build ${buildId}:`, error);
+        if (error.status === 404) {
+          return throwError(() => new Error(`Build ${buildId} not found`));
+        }
         return throwError(() => error);
       })
     );
@@ -146,6 +129,34 @@ export class UserBuildService {
         // fire-and-forget publish
         this.publishBuild(build.id).subscribe();
         return build;
+      })
+    );
+  }
+
+  /**
+   * Publish a build
+   */
+  publishBuild(buildId: string): Observable<PublishResponse> {
+    const url = `${this.baseUrl}/${buildId}/publish`;
+    return this.http.post<PublishResponse>(url, {}).pipe(
+      catchError((error) => {
+        console.error(`Error publishing build ${buildId}:`, error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Initiate Stripe checkout for a user build.
+   * Returns the Stripe Checkout URL as text.
+   */
+  initiateCheckout(userBuildId: string): Observable<string> {
+    const url = `${this.baseUrl}/${userBuildId}/subscription/checkout`;
+    return this.http.post(url, null, { responseType: 'text' }).pipe(
+      map((checkoutUrl) => checkoutUrl.trim()),
+      catchError((error) => {
+        console.error('Error initiating checkout:', error);
+        return throwError(() => error);
       })
     );
   }

@@ -1,0 +1,369 @@
+<style>
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(59, 130, 246, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--primary-color, #3b82f6);
+    animation: spin 1s linear infinite;
+    margin-bottom: 0.75rem;
+  }
+</style>
+
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="dashboard-header-content">
+      <div class="header-title-row">
+        <h1 class="dashboard-title">All Website Builds</h1>
+        <div class="pagination-controls" *ngIf="totalPages() > 1">
+          <span class="pagination-info"
+            >{{ currentPage() + 1 }}/{{ totalPages() }}</span
+          >
+          <div class="pagination-buttons">
+            <button
+              class="pagination-button"
+              [disabled]="isFirstPage()"
+              (click)="previousPage()"
+              aria-label="Previous page"
+            >
+              <app-icon name="arrow_back" [width]="16" [height]="16"></app-icon>
+            </button>
+            <button
+              class="pagination-button"
+              [disabled]="isLastPage()"
+              (click)="nextPage()"
+              aria-label="Next page"
+            >
+              <app-icon
+                name="arrow_forward"
+                [width]="16"
+                [height]="16"
+              ></app-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="dashboard-subtitle">
+        View and manage all your website builds including drafts, published, and
+        stopped websites
+      </p>
+    </div>
+    <button class="build-button" (click)="handleNewBuild()">
+      <span class="button-icon">
+        <app-icon name="plus"></app-icon>
+      </span>
+      <span class="button-text">Create New Website</span>
+    </button>
+  </header>
+
+  <!-- Loading state -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading your websites...</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error() && !loading()" class="build-error-state">
+    <app-icon name="alert-circle" size="large"></app-icon>
+    <p class="error-message">{{ error() }}</p>
+    <button class="refresh-button" (click)="loadBuilds()">
+      <app-icon name="refresh-cw"></app-icon>
+      Retry
+    </button>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading() && !error() && !hasBuilds()" class="builds-empty">
+    <div class="empty-illustration">
+      <app-icon name="website" size="x-large"></app-icon>
+    </div>
+    <h2 class="empty-title">No Website Builds Found</h2>
+    <p class="empty-description">
+      You haven't created any website builds yet. Create a template and publish
+      it to see your website builds here.
+    </p>
+    <div class="empty-actions">
+      <button class="empty-button" (click)="handleNewBuild()">
+        Create New Website
+      </button>
+      <button class="empty-button secondary" routerLink="/dashboard/templates">
+        View My Templates
+      </button>
+    </div>
+  </div>
+
+  <!-- Builds list and details -->
+  <div *ngIf="!loading() && !error() && hasBuilds()" class="builds-dashboard">
+    <div class="builds-list">
+      <h2 class="section-title">Your Websites</h2>
+
+      <!-- List of builds -->
+      <div class="build-items">
+        <div
+          *ngFor="let build of builds()"
+          class="build-item"
+          [class.selected]="build.id === selectedBuildId()"
+          (click)="selectBuild(build.id)"
+        >
+          <div class="build-item-header">
+            <h3 class="build-name" [title]="getTemplateName(build)">
+              {{ getTemplateName(build) }}
+            </h3>
+            <span class="build-status" [ngClass]="getStatusClass(build.status)">
+              {{ statusMap[build.status] || build.status }}
+            </span>
+          </div>
+
+          <div class="build-item-details">
+            <div class="build-detail">
+              <span class="detail-label">Type:</span>
+              <span class="detail-value">{{ getBuildType(build) }}</span>
+            </div>
+            <div class="build-detail">
+              <span class="detail-label">Created:</span>
+              <span class="detail-value">{{
+                formatCreatedDate(getBuildCreatedDate(build))
+              }}</span>
+            </div>
+            <div class="build-detail" *ngIf="getWebsiteUrl(build)">
+              <span class="detail-label">URL:</span>
+              <a
+                class="detail-value url-truncate"
+                [href]="getWebsiteUrl(build)"
+                target="_blank"
+                (click)="$event.stopPropagation()"
+                >{{ getWebsiteUrl(build) }}</a
+              >
+            </div>
+            <div class="build-item-actions">
+              <button
+                *ngIf="build.status === 'PUBLISHED' && getWebsiteUrl(build)"
+                class="view-button"
+                (click)="openLiveWebsite(build); $event.stopPropagation()"
+                title="Visit Website"
+              >
+                <app-icon name="external-link" size="small"></app-icon>
+                Visit
+              </button>
+
+              <button
+                *ngIf="build.status === 'PENDING'"
+                class="refresh-button"
+                (click)="refreshBuildStatus(build.id); $event.stopPropagation()"
+                title="Refresh Status"
+              >
+                <app-icon name="refresh-cw" size="small"></app-icon>
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Build details -->
+    <div
+      class="build-details"
+      *ngIf="hasBuilds() && selectedBuildId() && !error()"
+    >
+      <!-- Professional loading state when no build is selected or found -->
+      <div *ngIf="!selectedBuild()" class="build-details-loading">
+        <div class="spinner"></div>
+        <p>Loading website details...</p>
+      </div>
+
+      <!-- Build details content when a build is selected and found -->
+      <div *ngIf="selectedBuild() as build">
+        <div class="build-header">
+          <div class="build-info">
+            <h2 class="build-title">{{ getTemplateName(build) }}</h2>
+            <div class="build-meta">
+              <app-plan-badge
+                [plan]="
+                  getPlanType(build) === 'premium' ? 'premium' : 'standard'
+                "
+              ></app-plan-badge>
+              <span
+                class="build-status large"
+                [ngClass]="getStatusClass(build.status)"
+              >
+                {{ statusMap[build.status] || build.status }}
+              </span>
+            </div>
+          </div>
+
+          <div
+            *ngIf="build.status === 'PUBLISHED' && getWebsiteUrl(build)"
+            class="build-actions"
+          >
+            <button class="primary-button" (click)="openLiveWebsite(build)">
+              <app-icon name="external-link"></app-icon>
+              <span class="button-text">Open Website</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Build preview section -->
+        <div class="build-preview-section">
+          <h3 class="section-subtitle">Website Preview</h3>
+
+          <!-- Loading template for pending builds -->
+          <div *ngIf="build.status === 'PENDING'" class="preview-loading">
+            <app-build-steps
+              [currentStep]="4"
+              [plan]="getPlanType(build) === 'premium' ? 'premium' : 'standard'"
+            ></app-build-steps>
+            <p class="pending-message">
+              Your website is currently being built...
+            </p>
+            <button
+              class="refresh-button"
+              (click)="refreshBuildStatus(build.id)"
+            >
+              <app-icon name="refresh-cw"></app-icon>
+              Refresh Status
+            </button>
+          </div>
+
+          <!-- Failed build message -->
+          <div *ngIf="build.status === 'FAILED'" class="preview-error">
+            <app-icon name="alert-circle" size="large"></app-icon>
+            <p class="error-message">
+              We encountered an issue while building your website.
+            </p>
+            <p class="error-details">Please contact support for assistance.</p>
+          </div>
+
+          <!-- Stopped build message -->
+          <div *ngIf="build.status === 'STOPPED'" class="preview-error">
+            <app-icon name="alert-circle" size="large"></app-icon>
+            <p class="error-message">This website has been stopped.</p>
+            <p class="error-details">
+              Please contact support to reactivate it.
+            </p>
+          </div>
+
+          <!-- Draft/Unpublished build message -->
+          <div *ngIf="build.status === 'UNPUBLISHED'" class="preview-draft">
+            <app-icon name="template" size="large"></app-icon>
+            <p class="draft-message">
+              This website has not been published yet.
+            </p>
+            <p class="draft-details">
+              Go to Templates to publish this website.
+            </p>
+            <button class="empty-button" routerLink="/dashboard/templates">
+              Go to Templates
+            </button>
+          </div>
+
+          <!-- Iframe preview for published builds -->
+          <div
+            *ngIf="build.status === 'PUBLISHED'"
+            class="preview-iframe-container"
+          >
+            <ng-container *ngIf="getWebsiteUrl(build) as url">
+              <div *ngIf="iframeLoading()" class="iframe-loading-message">
+                Loading preview...
+              </div>
+              <iframe
+                [src]="url | safeResourceUrl"
+                class="website-preview-iframe"
+                title="Website Preview"
+                sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                loading="lazy"
+                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                (load)="iframeLoading.set(false)"
+              >
+              </iframe>
+              <div class="iframe-url">
+                <span class="url-label">Preview URL:</span>
+                <a [href]="url" target="_blank" class="iframe-url-link">{{
+                  url
+                }}</a>
+                <button
+                  class="iframe-reload-button"
+                  (click)="refreshIframe(url)"
+                  title="Reload Preview"
+                >
+                  <app-icon name="refresh-cw" size="small"></app-icon>
+                </button>
+              </div>
+            </ng-container>
+            <div *ngIf="!getWebsiteUrl(build)" class="preview-error">
+              <app-icon name="alert-circle" size="large"></app-icon>
+              <p class="error-message">
+                No preview URL available for this website.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Build details section -->
+        <div class="build-details-section">
+          <h3 class="section-subtitle">Details</h3>
+          <div class="details-grid">
+            <div class="detail-item">
+              <span class="detail-label">Template Name:</span>
+              <span class="detail-value">{{ getTemplateName(build) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Type:</span>
+              <span class="detail-value">{{ getBuildType(build) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Created:</span>
+              <span class="detail-value">{{
+                formatCreatedDate(getBuildCreatedDate(build))
+              }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Status:</span>
+              <span
+                class="detail-value status"
+                [ngClass]="getStatusClass(build.status)"
+              >
+                {{ statusMap[build.status] || build.status }}
+              </span>
+            </div>
+            <div
+              class="detail-item"
+              *ngIf="build.status === 'PUBLISHED' && getWebsiteUrl(build)"
+            >
+              <span class="detail-label">Website URL:</span>
+              <a
+                class="detail-value url"
+                [href]="getWebsiteUrl(build)"
+                target="_blank"
+              >
+                {{ getWebsiteUrl(build) }}
+                <app-icon name="external-link" size="small"></app-icon>
+              </a>
+            </div>
+            <div
+              class="detail-item"
+              *ngIf="build?.userTemplate?.template?.templatePlan"
+            >
+              <span class="detail-label">Plan:</span>
+              <span class="detail-value">
+                {{
+                  build?.userTemplate?.template?.templatePlan?.type ||
+                    "Standard"
+                }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

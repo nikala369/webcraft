@@ -29,14 +29,51 @@ import { CommonModule } from '@angular/common';
           height: 28px;
         }
       }
+
+      :host-context(.size-small) .icon-svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      :host-context(.size-large) .icon-svg {
+        width: 32px;
+        height: 32px;
+      }
+
+      :host-context(.size-x-large) .icon-svg {
+        width: 48px;
+        height: 48px;
+      }
     `,
   ],
 })
 export class IconComponent {
   @Input() name: string = '';
-  @Input() width: string | number = 28;
-  @Input() height: string | number = 28;
+  @Input() width: string | number = 24;
+  @Input() height: string | number = 24;
   @Input() viewBox: string | number = '0 0 24 24';
+  @Input() set size(value: 'small' | 'medium' | 'large' | 'x-large' | null) {
+    if (!value) return;
+
+    switch (value) {
+      case 'small':
+        this.width = 16;
+        this.height = 16;
+        break;
+      case 'large':
+        this.width = 32;
+        this.height = 32;
+        break;
+      case 'x-large':
+        this.width = 48;
+        this.height = 48;
+        break;
+      default: // medium
+        this.width = 24;
+        this.height = 24;
+        break;
+    }
+  }
 
   getStrokeValue(): string {
     // Only exitFullscreen needs stroke attribute
