@@ -57,12 +57,6 @@
         stopped websites
       </p>
     </div>
-    <button class="build-button" (click)="handleNewBuild()">
-      <span class="button-icon">
-        <app-icon name="plus"></app-icon>
-      </span>
-      <span class="button-text">Create New Website</span>
-    </button>
   </header>
 
   <!-- Loading state -->
@@ -93,9 +87,9 @@
     </p>
     <div class="empty-actions">
       <button class="empty-button" (click)="handleNewBuild()">
-        Create New Website
+        Create New Site
       </button>
-      <button class="empty-button secondary" routerLink="/dashboard/templates">
+      <button class="empty-button secondary" routerLink="/app/templates">
         View My Templates
       </button>
     </div>
@@ -104,12 +98,38 @@
   <!-- Builds list and details -->
   <div *ngIf="!loading() && !error() && hasBuilds()" class="builds-dashboard">
     <div class="builds-list">
-      <h2 class="section-title">Your Websites</h2>
+      <div class="builds-list-header">
+        <h2 class="section-title">Your Websites</h2>
+
+        <div class="filter-tabs">
+          <button
+            class="filter-tab"
+            [class.active]="filterStatus() === 'all'"
+            (click)="setFilter('all')"
+          >
+            All
+          </button>
+          <button
+            class="filter-tab"
+            [class.active]="filterStatus() === 'published'"
+            (click)="setFilter('published')"
+          >
+            Published
+          </button>
+          <button
+            class="filter-tab"
+            [class.active]="filterStatus() === 'unpublished'"
+            (click)="setFilter('unpublished')"
+          >
+            Drafts
+          </button>
+        </div>
+      </div>
 
       <!-- List of builds -->
       <div class="build-items">
         <div
-          *ngFor="let build of builds()"
+          *ngFor="let build of filteredBuilds()"
           class="build-item"
           [class.selected]="build.id === selectedBuildId()"
           (click)="selectBuild(build.id)"
@@ -186,29 +206,18 @@
         <div class="build-header">
           <div class="build-info">
             <h2 class="build-title">{{ getTemplateName(build) }}</h2>
-            <div class="build-meta">
-              <app-plan-badge
-                [plan]="
-                  getPlanType(build) === 'premium' ? 'premium' : 'standard'
-                "
-              ></app-plan-badge>
-              <span
-                class="build-status large"
-                [ngClass]="getStatusClass(build.status)"
-              >
-                {{ statusMap[build.status] || build.status }}
-              </span>
-            </div>
           </div>
 
-          <div
-            *ngIf="build.status === 'PUBLISHED' && getWebsiteUrl(build)"
-            class="build-actions"
-          >
-            <button class="primary-button" (click)="openLiveWebsite(build)">
-              <app-icon name="external-link"></app-icon>
-              <span class="button-text">Open Website</span>
-            </button>
+          <div class="build-meta">
+            <app-plan-badge
+              [plan]="getPlanType(build) === 'premium' ? 'premium' : 'standard'"
+            ></app-plan-badge>
+            <span
+              class="build-status large"
+              [ngClass]="getStatusClass(build.status)"
+            >
+              {{ statusMap[build.status] || build.status }}
+            </span>
           </div>
         </div>
 
@@ -259,10 +268,24 @@
               This website has not been published yet.
             </p>
             <p class="draft-details">
-              Go to Templates to publish this website.
+              Click the button below to publish your website.
             </p>
-            <button class="empty-button" routerLink="/dashboard/templates">
-              Go to Templates
+            <button
+              class="publish-btn"
+              [disabled]="build.isPublishing"
+              (click)="publishTemplate(build)"
+            >
+              <!-- Show spinner when publishing is in progress -->
+              <ng-container *ngIf="build.isPublishing">
+                <span class="loading-spinner"></span>
+                <span>Publishing...</span>
+              </ng-container>
+
+              <!-- Normal state -->
+              <ng-container *ngIf="!build.isPublishing">
+                <app-icon name="publish" [width]="16" [height]="16"></app-icon>
+                <span>Publish</span>
+              </ng-container>
             </button>
           </div>
 
@@ -275,16 +298,28 @@
               <div *ngIf="iframeLoading()" class="iframe-loading-message">
                 Loading preview...
               </div>
-              <iframe
-                [src]="url | safeResourceUrl"
-                class="website-preview-iframe"
-                title="Website Preview"
-                sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                loading="lazy"
-                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                (load)="iframeLoading.set(false)"
+              <div
+                class="iframe-wrapper"
+                (click)="openLiveWebsite(build)"
+                title="Click to open website"
               >
-              </iframe>
+                <iframe
+                  [src]="url | safeResourceUrl"
+                  class="website-preview-iframe"
+                  title="Website Preview"
+                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                  (load)="iframeLoading.set(false)"
+                >
+                </iframe>
+                <div class="preview-overlay">
+                  <span class="preview-click-hint">
+                    <app-icon name="external-link" size="small"></app-icon>
+                    Click to visit website
+                  </span>
+                </div>
+              </div>
               <div class="iframe-url">
                 <span class="url-label">Preview URL:</span>
                 <a [href]="url" target="_blank" class="iframe-url-link">{{
@@ -292,7 +327,7 @@
                 }}</a>
                 <button
                   class="iframe-reload-button"
-                  (click)="refreshIframe(url)"
+                  (click)="refreshIframe(url); $event.stopPropagation()"
                   title="Reload Preview"
                 >
                   <app-icon name="refresh-cw" size="small"></app-icon>

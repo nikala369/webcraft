@@ -5,6 +5,7 @@ import {
   signal,
   computed,
   effect,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
@@ -19,6 +20,13 @@ import { BuildStepsComponent } from '../../../../shared/components/build-steps/b
 import { PlanBadgeComponent } from '../../../../shared/components/plan-badge/plan-badge.component';
 import { SafeResourceUrlPipe } from '../../../../shared/pipes/safe-resource-url.pipe';
 import { NgLetDirective } from '../../../../shared/directives/ng-let.directive';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AuthService } from '../../../../core/services/auth/auth.service';
+
+// Extend the build type to include UI state
+interface BuildWithUIState extends ExtendedUserBuild {
+  isPublishing?: boolean;
+}
 
 @Component({
   selector: 'app-builds',
@@ -37,14 +45,31 @@ import { NgLetDirective } from '../../../../shared/directives/ng-let.directive';
   styleUrls: ['./builds.component.scss'],
 })
 export class BuildsComponent implements OnInit {
-  builds = signal<ExtendedUserBuild[]>([]);
+  builds = signal<BuildWithUIState[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   selectedBuildId = signal<string | null>(null);
 
+  // Filters
+  filterStatus = signal<string>('all');
+  filteredBuilds = computed(() => {
+    const status = this.filterStatus();
+    const builds = this.builds();
+
+    if (status === 'all') {
+      return builds;
+    } else if (status === 'published') {
+      return builds.filter((build) => build.status === 'PUBLISHED');
+    } else if (status === 'unpublished') {
+      return builds.filter((build) => build.status === 'UNPUBLISHED');
+    }
+
+    return builds;
+  });
+
   // Pagination state
   currentPage = signal(0);
-  pageSize = signal(5);
+  pageSize = signal(8);
   totalPages = signal(0);
   totalElements = signal(0);
   isFirstPage = signal(true);
@@ -53,7 +78,7 @@ export class BuildsComponent implements OnInit {
   // Iframe loading state
   iframeLoading = signal(false);
 
-  hasBuilds = computed(() => this.builds().length > 0);
+  hasBuilds = computed(() => this.filteredBuilds().length > 0);
 
   // Computed property for the selected build - should only read, not write to signals
   selectedBuild = computed(() => {
@@ -79,11 +104,11 @@ export class BuildsComponent implements OnInit {
   // Services
   private userBuildService = inject(UserBuildService);
   private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+  private authService = inject(AuthService);
 
-  ngOnInit(): void {
-    this.loadBuilds();
-
-    // Effect to handle when a selected build is not found
+  constructor() {
+    // Setup the effect in constructor for proper injection context
     effect(() => {
       // Only run this logic when data has loaded and we have a selectedBuildId
       if (!this.loading() && this.selectedBuildId()) {
@@ -121,6 +146,10 @@ export class BuildsComponent implements OnInit {
     });
   }
 
+  ngOnInit(): void {
+    this.loadBuilds();
+  }
+
   loadBuilds(): void {
     this.loading.set(true);
     this.error.set(null);
@@ -131,74 +160,77 @@ export class BuildsComponent implements OnInit {
       size: this.pageSize(),
     };
 
-    this.userBuildService.getUserBuilds(params).subscribe({
-      next: (
-        response: ApiResponse<ExtendedUserBuild> | ExtendedUserBuild[]
-      ) => {
-        // Ensure we're handling the paginated response correctly
-        let buildsArr: ExtendedUserBuild[] = [];
-        let isFirst = true;
-        let isLast = true;
-        let totalPages = 1;
-        let totalElements = 0;
+    this.userBuildService
+      .getUserBuilds(params)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (
+          response: ApiResponse<ExtendedUserBuild> | ExtendedUserBuild[]
+        ) => {
+          // Ensure we're handling the paginated response correctly
+          let buildsArr: ExtendedUserBuild[] = [];
+          let isFirst = true;
+          let isLast = true;
+          let totalPages = 1;
+          let totalElements = 0;
 
-        if (response && 'content' in response) {
-          // Paginated response
-          buildsArr = response.content;
-          isFirst = response.first !== false; // Default to true if undefined
-          isLast = response.last !== false; // Default to true if undefined
-          totalPages = response.totalPages || 1;
-          totalElements = response.totalElements || buildsArr.length;
-        } else if (Array.isArray(response)) {
-          // Array response
-          buildsArr = response;
-          isFirst = this.currentPage() === 0;
-          isLast = true;
-          totalPages = 1;
-          totalElements = buildsArr.length;
-        } else {
-          // Unexpected response format
-          console.error('Unexpected API response format:', response);
-          this.error.set(
-            'Received invalid data from the server. Please try again.'
-          );
-          this.loading.set(false);
-          return;
-        }
-
-        this.builds.set(buildsArr);
-        this.totalPages.set(totalPages);
-        this.totalElements.set(totalElements);
-        this.isFirstPage.set(isFirst);
-        this.isLastPage.set(isLast);
-
-        // Handle build selection
-        setTimeout(() => {
-          const currentId = this.selectedBuildId();
-
-          if (!currentId && buildsArr.length > 0) {
-            // If no build is selected and we have builds, select the first one
-            this.selectedBuildId.set(buildsArr[0].id);
-          } else if (currentId) {
-            // If a build is selected, check if it exists in the new data
-            const found = buildsArr.find((b) => b.id === currentId);
-
-            if (!found && buildsArr.length > 0) {
-              // If not found, select the first build
-              this.selectedBuildId.set(buildsArr[0].id);
-            }
+          if (response && 'content' in response) {
+            // Paginated response
+            buildsArr = response.content;
+            isFirst = response.first !== false; // Default to true if undefined
+            isLast = response.last !== false; // Default to true if undefined
+            totalPages = response.totalPages || 1;
+            totalElements = response.totalElements || buildsArr.length;
+          } else if (Array.isArray(response)) {
+            // Array response
+            buildsArr = response;
+            isFirst = this.currentPage() === 0;
+            isLast = true;
+            totalPages = 1;
+            totalElements = buildsArr.length;
+          } else {
+            // Unexpected response format
+            console.error('Unexpected API response format:', response);
+            this.error.set(
+              'Received invalid data from the server. Please try again.'
+            );
+            this.loading.set(false);
+            return;
           }
 
-          this.iframeLoading.set(true);
+          this.builds.set(buildsArr as BuildWithUIState[]);
+          this.totalPages.set(totalPages);
+          this.totalElements.set(totalElements);
+          this.isFirstPage.set(isFirst);
+          this.isLastPage.set(isLast);
+
+          // Handle build selection
+          setTimeout(() => {
+            const currentId = this.selectedBuildId();
+
+            if (!currentId && buildsArr.length > 0) {
+              // If no build is selected and we have builds, select the first one
+              this.selectedBuildId.set(buildsArr[0].id);
+            } else if (currentId) {
+              // If a build is selected, check if it exists in the new data
+              const found = buildsArr.find((b) => b.id === currentId);
+
+              if (!found && buildsArr.length > 0) {
+                // If not found, select the first build
+                this.selectedBuildId.set(buildsArr[0].id);
+              }
+            }
+
+            this.iframeLoading.set(true);
+            this.loading.set(false);
+          }, 0);
+        },
+        error: (err) => {
+          console.error('Error loading builds:', err);
+          this.error.set('Failed to load your builds. Please try again.');
           this.loading.set(false);
-        }, 0);
-      },
-      error: (err) => {
-        console.error('Error loading builds:', err);
-        this.error.set('Failed to load your builds. Please try again.');
-        this.loading.set(false);
-      },
-    });
+        },
+      });
   }
 
   nextPage(): void {
@@ -372,7 +404,7 @@ export class BuildsComponent implements OnInit {
   }
 
   handleNewBuild(): void {
-    this.router.navigate(['/dashboard/templates']);
+    this.router.navigate(['/preview']);
   }
 
   /**
@@ -431,66 +463,172 @@ export class BuildsComponent implements OnInit {
       return;
     }
 
-    this.userBuildService.getUserBuildById(buildId).subscribe({
-      next: (updatedBuild) => {
-        if (!updatedBuild) {
-          this.error.set('Could not refresh build status. Please try again.');
-          return;
-        }
-
-        const buildList = [...this.builds()];
-        const index = buildList.findIndex((b) => b.id === buildId);
-
-        if (index !== -1) {
-          // Replace the existing build with the updated one
-          buildList[index] = updatedBuild;
-          this.builds.set(buildList);
-
-          // If this is the currently selected build, ensure UI updates
-          if (this.selectedBuildId() === buildId) {
-            // Force a UI refresh by toggling the selection
-            const currentId = this.selectedBuildId();
-            this.selectedBuildId.set(null);
-            setTimeout(() => {
-              this.selectedBuildId.set(currentId);
-              // If the status has changed to PUBLISHED, reset iframe
-              if (updatedBuild.status === 'PUBLISHED') {
-                this.resetIframeLoading();
-              }
-            }, 10);
+    this.userBuildService
+      .getUserBuildById(buildId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updatedBuild) => {
+          if (!updatedBuild) {
+            this.error.set('Could not refresh build status. Please try again.');
+            return;
           }
-        } else {
-          // If the build wasn't in the list, add it
-          this.builds.update((builds) => [...builds, updatedBuild]);
 
-          // If no build is currently selected, select this one
-          if (!this.selectedBuildId()) {
-            this.selectedBuildId.set(buildId);
+          const buildList = [...this.builds()];
+          const index = buildList.findIndex((b) => b.id === buildId);
+
+          if (index !== -1) {
+            // Replace the existing build with the updated one
+            buildList[index] = updatedBuild as BuildWithUIState;
+            this.builds.set(buildList);
+
+            // If this is the currently selected build, ensure UI updates
+            if (this.selectedBuildId() === buildId) {
+              // Force a UI refresh by toggling the selection
+              const currentId = this.selectedBuildId();
+              this.selectedBuildId.set(null);
+              setTimeout(() => {
+                this.selectedBuildId.set(currentId);
+                // If the status has changed to PUBLISHED, reset iframe
+                if (updatedBuild.status === 'PUBLISHED') {
+                  this.resetIframeLoading();
+                }
+              }, 10);
+            }
+          } else {
+            // If the build wasn't in the list, add it
+            this.builds.update((builds) => [
+              ...builds,
+              updatedBuild as BuildWithUIState,
+            ]);
+
+            // If no build is currently selected, select this one
+            if (!this.selectedBuildId()) {
+              this.selectedBuildId.set(buildId);
+            }
           }
-        }
-      },
-      error: (err) => {
-        console.error('Error refreshing build status:', err);
+        },
+        error: (err) => {
+          console.error('Error refreshing build status:', err);
 
-        // Set appropriate error message based on the error
-        if (err.message && err.message.includes('not found')) {
-          this.error.set(
-            `The website build could not be found. It may have been deleted.`
-          );
+          // Set appropriate error message based on the error
+          if (err.message && err.message.includes('not found')) {
+            this.error.set(
+              `The website build could not be found. It may have been deleted.`
+            );
 
-          // Remove this build from the list if it's no longer on the server
-          this.builds.update((builds) =>
-            builds.filter((build) => build.id !== buildId)
-          );
+            // Remove this build from the list if it's no longer on the server
+            this.builds.update((builds) =>
+              builds.filter((build) => build.id !== buildId)
+            );
 
-          // If this was the selected build, auto-select another one
-          if (this.selectedBuildId() === buildId && this.builds().length > 0) {
-            this.selectedBuildId.set(this.builds()[0].id);
+            // If this was the selected build, auto-select another one
+            if (
+              this.selectedBuildId() === buildId &&
+              this.builds().length > 0
+            ) {
+              this.selectedBuildId.set(this.builds()[0].id);
+            }
+          } else {
+            this.error.set('Failed to refresh build status. Please try again.');
           }
-        } else {
-          this.error.set('Failed to refresh build status. Please try again.');
-        }
-      },
-    });
+        },
+      });
+  }
+
+  // Publish template
+  publishTemplate(build: BuildWithUIState): void {
+    if (!build || build.isPublishing) return;
+
+    // Set publishing state
+    build.isPublishing = true;
+    this.updateBuildInList(build);
+
+    // Check authentication first
+    if (!this.authService.isAuthenticated()) {
+      build.isPublishing = false;
+      this.updateBuildInList(build);
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+
+    // For unpublished builds, redirect to subscription selection page
+    if (build.status === 'UNPUBLISHED') {
+      const templateId = build.userTemplate?.id;
+      const templateName = this.getTemplateName(build);
+      const templatePlan = this.getPlanType(build);
+
+      if (templateId) {
+        this.router.navigate(['/subscription-selection'], {
+          queryParams: {
+            templateId: templateId,
+            templateName: templateName,
+            templatePlan: templatePlan,
+            buildId: build.id,
+          },
+        });
+        build.isPublishing = false;
+        this.updateBuildInList(build);
+        return;
+      }
+    }
+
+    // If we don't have template info or for other cases, call the publish API directly
+    this.userBuildService
+      .publishBuild(build.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          // Update local state
+          build.isPublishing = false;
+          build.status = 'PUBLISHED';
+          if (response.siteUrl) {
+            build.siteUrl = response.siteUrl;
+          }
+          this.updateBuildInList(build);
+
+          // If this is the current selected build, refresh the iframe
+          if (this.selectedBuildId() === build.id) {
+            this.resetIframeLoading();
+          }
+        },
+        error: (err) => {
+          build.isPublishing = false;
+          this.updateBuildInList(build);
+          this.error.set('Failed to publish website. Please try again.');
+          console.error('Error publishing build:', err);
+        },
+      });
+  }
+
+  // Helper to update a build in the list
+  private updateBuildInList(updatedBuild: BuildWithUIState): void {
+    const builds = this.builds();
+    const index = builds.findIndex((b) => b.id === updatedBuild.id);
+
+    if (index >= 0) {
+      builds[index] = updatedBuild;
+      this.builds.set([...builds]);
+    }
+  }
+
+  // Apply filter
+  setFilter(filter: string): void {
+    this.filterStatus.set(filter);
+
+    // If current selection is not in filtered results, select first filtered item
+    const currentId = this.selectedBuildId();
+    const filtered = this.filteredBuilds();
+
+    if (filtered.length > 0) {
+      const currentBuildInFiltered = filtered.some(
+        (build) => build.id === currentId
+      );
+
+      if (!currentBuildInFiltered) {
+        this.selectedBuildId.set(filtered[0].id);
+      }
+    }
   }
 }
