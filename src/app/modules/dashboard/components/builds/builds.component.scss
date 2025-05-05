@@ -363,7 +363,6 @@
 .section-title {
   font-size: 1.125rem;
   font-weight: 600;
-  margin: 0 0 1.25rem;
   color: var(--text-color, #1e293b);
 }
 
@@ -543,6 +542,14 @@
         opacity: 0.75;
         font-size: 0.875rem;
       }
+    }
+
+    &.url-draft {
+      color: #a3a3a3 !important;
+      text-decoration: none !important;
+      cursor: default;
+      pointer-events: none;
+      opacity: 0.85;
     }
   }
 }

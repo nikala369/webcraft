@@ -24,33 +24,6 @@
     <div class="dashboard-header-content">
       <div class="header-title-row">
         <h1 class="dashboard-title">All Website Builds</h1>
-        <div class="pagination-controls" *ngIf="totalPages() > 1">
-          <span class="pagination-info"
-            >{{ currentPage() + 1 }}/{{ totalPages() }}</span
-          >
-          <div class="pagination-buttons">
-            <button
-              class="pagination-button"
-              [disabled]="isFirstPage()"
-              (click)="previousPage()"
-              aria-label="Previous page"
-            >
-              <app-icon name="arrow_back" [width]="16" [height]="16"></app-icon>
-            </button>
-            <button
-              class="pagination-button"
-              [disabled]="isLastPage()"
-              (click)="nextPage()"
-              aria-label="Next page"
-            >
-              <app-icon
-                name="arrow_forward"
-                [width]="16"
-                [height]="16"
-              ></app-icon>
-            </button>
-          </div>
-        </div>
       </div>
       <p class="dashboard-subtitle">
         View and manage all your website builds including drafts, published, and
@@ -99,7 +72,49 @@
   <div *ngIf="!loading() && !error() && hasBuilds()" class="builds-dashboard">
     <div class="builds-list">
       <div class="builds-list-header">
-        <h2 class="section-title">Your Websites</h2>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 1rem;
+          "
+        >
+          <h2 class="section-title">Your Websites</h2>
+
+          <div class="pagination-controls" *ngIf="totalPages() > 1">
+            <span class="pagination-info"
+              >{{ currentPage() + 1 }}/{{ totalPages() }}</span
+            >
+            <div class="pagination-buttons">
+              <button
+                class="pagination-button"
+                [disabled]="isFirstPage()"
+                (click)="previousPage()"
+                aria-label="Previous page"
+              >
+                <app-icon
+                  name="arrow_back"
+                  [width]="16"
+                  [height]="16"
+                ></app-icon>
+              </button>
+              <button
+                class="pagination-button"
+                [disabled]="isLastPage()"
+                (click)="nextPage()"
+                aria-label="Next page"
+              >
+                <app-icon
+                  name="arrow_forward"
+                  [width]="16"
+                  [height]="16"
+                ></app-icon>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <div class="filter-tabs">
           <button
@@ -156,13 +171,22 @@
             </div>
             <div class="build-detail" *ngIf="getWebsiteUrl(build)">
               <span class="detail-label">URL:</span>
-              <a
-                class="detail-value url-truncate"
-                [href]="getWebsiteUrl(build)"
-                target="_blank"
-                (click)="$event.stopPropagation()"
-                >{{ getWebsiteUrl(build) }}</a
+              <ng-container
+                *ngIf="build.status !== 'UNPUBLISHED'; else draftUrlPlain"
               >
+                <a
+                  class="detail-value url-truncate"
+                  [href]="getWebsiteUrl(build)"
+                  target="_blank"
+                  (click)="$event.stopPropagation()"
+                  >{{ getWebsiteUrl(build) }}</a
+                >
+              </ng-container>
+              <ng-template #draftUrlPlain>
+                <span class="detail-value url-truncate url-draft">{{
+                  getWebsiteUrl(build)
+                }}</span>
+              </ng-template>
             </div>
             <div class="build-item-actions">
               <button
