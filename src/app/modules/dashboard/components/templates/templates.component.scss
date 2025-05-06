@@ -293,9 +293,10 @@
 
 // Premium badge on card title
 .premium-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   margin-left: 0.5rem;
-  padding: 0.2em 0.7em;
+  padding: 0.2em 0.6em;
   background: linear-gradient(90deg, #ffd700 0%, #ffb300 100%);
   color: #7c5700;
   font-size: 0.75rem;
@@ -304,14 +305,10 @@
   box-shadow: 0 1px 4px rgba(255, 215, 0, 0.12);
   vertical-align: middle;
   letter-spacing: 0.03em;
-}
 
-// Premium badge on type
-.badge-premium {
-  background: linear-gradient(90deg, #ffd700 0%, #ffb300 100%) !important;
-  color: #7c5700 !important;
-  font-weight: 700;
-  box-shadow: 0 1px 4px rgba(255, 215, 0, 0.1);
+  app-icon {
+    margin-right: 0.25rem;
+  }
 }
 
 // Premium overlay for preview
@@ -817,8 +814,8 @@
 
 .template-preview-image-wrapper {
   position: relative;
-  width: 240px;
-  height: 180px;
+  width: 280px;
+  height: 185px;
   background: #f8fafc;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(59, 130, 246, 0.07);
@@ -826,6 +823,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  margin-left: 10px;
 }
 
 .template-img {
@@ -836,24 +835,178 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
-// Make template type badge smaller and more subtle
-.template-type-badge-center {
+// Template iframe link and hover effect
+.template-iframe-link {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 8px;
+  transition: box-shadow 0.25s;
+
+  &:hover {
+    box-shadow: 0 0 0 3px #3b82f6, 0 2px 12px rgba(59, 130, 246, 0.13);
+    .iframe-hover-overlay {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    iframe {
+      filter: brightness(0.92) blur(0.5px);
+      transition: filter 0.25s;
+    }
+  }
+}
+
+.template-preview-iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  min-width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: #f8fafc;
+  object-fit: contain;
+  display: block;
+  transition: filter 0.25s;
+}
+
+.iframe-hover-overlay {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(30, 41, 59, 0.65);
-  color: #fff;
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 5px 12px;
-  border-radius: 6px;
-  box-shadow: 0 1px 4px rgba(30, 41, 59, 0.13);
-  z-index: 3;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
-  gap: 0.4em;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  z-index: 10;
+  border-radius: 8px;
+}
+
+.view-site-text {
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'%3E%3C/path%3E%3Cpolyline points='15 3 21 3 21 9'%3E%3C/polyline%3E%3Cline x1='10' y1='14' x2='21' y2='3'%3E%3C/line%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+  }
+}
+
+// Status badge on the preview image
+.status-badge-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+  background: rgba(243, 244, 246, 0.9);
+  color: #64748b;
+  backdrop-filter: blur(2px);
+
+  &.published {
+    background: rgba(209, 250, 229, 0.9);
+    color: #047857;
+    box-shadow: 0 1px 6px rgba(16, 185, 129, 0.15);
+  }
+
+  &.draft {
+    background: rgba(191, 219, 254, 0.9);
+    color: #1e40af;
+    box-shadow: 0 1px 6px rgba(59, 130, 246, 0.15);
+  }
+
+  &.stopped {
+    background: rgba(254, 202, 202, 0.9);
+    color: #b91c1c;
+    box-shadow: 0 1px 6px rgba(239, 68, 68, 0.15);
+  }
+}
+
+// Custom status icons for draft and stopped
+.status-icon {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  position: relative;
+
+  &.draft-icon {
+    background-color: #1e40af;
+
+    &::after {
+      content: "";
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background-color: #fff;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  &.stopped-icon {
+    background-color: #b91c1c;
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      width: 6px;
+      height: 2px;
+      background-color: #fff;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    &::after {
+      transform: translate(-50%, -50%) rotate(-45deg);
+    }
+  }
+}
+
+// Template type next to name
+.template-type {
+  font-size: 0.8rem;
+  color: #4b5563;
+  font-weight: normal;
+  background: #f3f4f6;
+  padding: 0.2em 0.6em;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
   letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
 }
 
 // Reposition badges to top-right of content area
@@ -869,40 +1022,44 @@
 
 // === Responsive Adjustments ===
 @media (max-width: 1100px) {
-  .dashboard-templates-container {
-    padding: 1.5rem 0.5rem;
-  }
   .template-preview-container {
     min-width: 180px;
     max-width: 220px;
   }
   .template-preview-image-wrapper {
-    width: 160px;
-    height: 120px;
+    width: 180px;
+    height: 140px;
   }
 }
 @media (max-width: 768px) {
-  .dashboard-templates-container {
-    padding: 1rem 0.25rem;
-  }
-  .templates-header-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.25rem;
-  }
-  .template-card {
-    flex-direction: column;
-    border-radius: 14px;
-  }
   .template-preview-container {
-    border-radius: 14px 14px 0 0;
     min-width: 100%;
     max-width: 100%;
+    border-radius: 14px 14px 0 0;
     margin-bottom: 0.5rem;
   }
   .template-preview-image-wrapper {
     width: 100%;
-    height: 160px;
+    height: 120px;
     border-radius: 14px 14px 0 0;
+  }
+  .template-preview-iframe,
+  .template-iframe-link iframe {
+    border-radius: 14px 14px 0 0;
+  }
+  .iframe-hover-overlay {
+    border-radius: 14px 14px 0 0;
+  }
+  // Make template name and type responsive
+  .template-name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+
+    .template-type,
+    .premium-badge {
+      margin-left: 0;
+    }
   }
 }

@@ -13,6 +13,7 @@ import { SubscriptionService } from '../../../../core/services/subscription/subs
 import { UserBuildService } from '../../../../core/services/build/user-build.service';
 import { switchMap, map, tap, EMPTY, of } from 'rxjs';
 import { ConfirmationService } from '../../../../core/services/shared/confirmation/confirmation.service';
+import { SafeResourceUrlPipe } from '../../../../shared/pipes/safe-resource-url.pipe';
 
 // Define the UserTemplate interface for our component
 export interface UserTemplate {
@@ -26,6 +27,15 @@ export interface UserTemplate {
   thumbnailUrl?: string;
   plan?: 'standard' | 'premium';
   isPublishing?: boolean;
+  // New fields for backend structure
+  userBuild?: {
+    id: string;
+    status: 'PUBLISHED' | 'STOPPED';
+    address?: string;
+    subscriptionId?: string;
+  } | null;
+  status: 'PUBLISHED' | 'STOPPED' | 'DRAFT';
+  url?: string;
 }
 
 // Define a type for the result of subscription flow
@@ -40,7 +50,13 @@ interface SubscriptionFlowResult {
 @Component({
   selector: 'app-templates',
   standalone: true,
-  imports: [CommonModule, IconComponent, DatePipe, PlanBadgeComponent],
+  imports: [
+    CommonModule,
+    IconComponent,
+    DatePipe,
+    PlanBadgeComponent,
+    SafeResourceUrlPipe,
+  ],
   templateUrl: './templates.component.html',
   styleUrls: ['./templates.component.scss'],
 })
@@ -82,21 +98,40 @@ export class TemplatesComponent implements OnInit {
       .subscribe({
         next: (response) => {
           // Map backend response to our component's UserTemplate interface
-          this.templates = response.content.map((template: any) => ({
-            id: template.id,
-            name: template.name || 'Untitled Template',
-            type: template.template?.templateType?.name || 'Unknown',
-            description: 'A customizable website template',
-            createdAt: template.createdAt
-              ? new Date(template.createdAt)
-              : new Date(),
-            updatedAt: template.updatedAt
-              ? new Date(template.updatedAt)
-              : new Date(),
-            published: !!template.published,
-            thumbnailUrl: template.thumbnailUrl,
-            plan: template.plan || template.template?.plan || 'standard',
-          }));
+          this.templates = response.content.map((template: any) => {
+            const userBuild = template.userBuild;
+            let status: 'PUBLISHED' | 'STOPPED' | 'DRAFT' = 'DRAFT';
+            let url: string | undefined = undefined;
+            if (userBuild) {
+              status = userBuild.status === 'STOPPED' ? 'STOPPED' : 'PUBLISHED';
+              url = userBuild.address || undefined;
+            }
+            return {
+              id: template.id,
+              name: template.name || 'Untitled Template',
+              type: template.template?.templateType?.name || 'Unknown',
+              description:
+                template.template?.description ||
+                'A customizable website template',
+              createdAt: template.createdAt
+                ? new Date(template.createdAt)
+                : new Date(),
+              updatedAt: template.updatedAt
+                ? new Date(template.updatedAt)
+                : new Date(),
+              published: status === 'PUBLISHED',
+              thumbnailUrl: template.thumbnailUrl,
+              plan:
+                template.template?.templatePlan?.type?.toLowerCase() ===
+                'premium'
+                  ? 'premium'
+                  : 'standard',
+              isPublishing: false,
+              userBuild,
+              status,
+              url,
+            };
+          });
           this.applyFilters();
         },
         error: (error: HttpErrorResponse) => {
@@ -262,17 +297,32 @@ export class TemplatesComponent implements OnInit {
    * Apply both search and filter to templates
    */
   private applyFilters(): void {
-    // First filter by type if not "all"
     let result = this.templates;
 
-    if (this.selectedFilter !== 'all') {
+    // Filter by type if not "all"
+    if (
+      this.selectedFilter !== 'all' &&
+      !['published', 'draft', 'stopped'].includes(this.selectedFilter)
+    ) {
       result = result.filter(
         (template) =>
           template.type?.toLowerCase() === this.selectedFilter.toLowerCase()
       );
     }
 
-    // Then filter by search term if not empty
+    // Filter by status if selectedFilter is a status
+    if (['published', 'draft', 'stopped'].includes(this.selectedFilter)) {
+      const statusMap: Record<string, string> = {
+        published: 'PUBLISHED',
+        draft: 'DRAFT',
+        stopped: 'STOPPED',
+      };
+      result = result.filter(
+        (template) => template.status === statusMap[this.selectedFilter]
+      );
+    }
+
+    // Filter by search term if not empty
     if (this.searchTerm.trim() !== '') {
       const searchLower = this.searchTerm.toLowerCase();
       result = result.filter(
@@ -301,5 +351,14 @@ export class TemplatesComponent implements OnInit {
       // || template.plan === 'premium' // Uncomment if plan property exists
       // || template.isPremium // Uncomment if property exists
     );
+  }
+
+  /**
+   * Open template URL in a new tab (for iframe click)
+   */
+  openTemplateUrl(url: string): void {
+    if (url) {
+      window.open(url, '_blank');
+    }
   }
 }

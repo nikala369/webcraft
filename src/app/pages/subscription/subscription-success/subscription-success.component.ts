@@ -354,7 +354,10 @@ export class SubscriptionSuccessComponent implements OnInit, OnDestroy {
   }
 
   goToBuilds(): void {
-    this.router.navigate(['/app/builds']);
+    // Navigate to builds page with the build ID as a query parameter
+    this.router.navigate(['/app/builds'], {
+      queryParams: { buildId: this.buildId },
+    });
   }
 
   goToDashboard(): void {

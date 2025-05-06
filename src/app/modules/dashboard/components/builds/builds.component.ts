@@ -6,9 +6,18 @@ import {
   computed,
   effect,
   DestroyRef,
+  ViewChildren,
+  QueryList,
+  ElementRef,
+  AfterViewInit,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import {
+  Router,
+  RouterModule,
+  ActivatedRoute,
+  NavigationExtras,
+} from '@angular/router';
 import { UserBuildService } from '../../../../core/services/build/user-build.service';
 import {
   ExtendedUserBuild,
@@ -22,6 +31,7 @@ import { SafeResourceUrlPipe } from '../../../../shared/pipes/safe-resource-url.
 import { NgLetDirective } from '../../../../shared/directives/ng-let.directive';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../../../core/services/auth/auth.service';
+import { finalize, switchMap, of, catchError } from 'rxjs';
 
 // Extend the build type to include UI state
 interface BuildWithUIState extends ExtendedUserBuild {
@@ -44,9 +54,10 @@ interface BuildWithUIState extends ExtendedUserBuild {
   templateUrl: './builds.component.html',
   styleUrls: ['./builds.component.scss'],
 })
-export class BuildsComponent implements OnInit {
+export class BuildsComponent implements OnInit, AfterViewInit {
   builds = signal<BuildWithUIState[]>([]);
   loading = signal(true);
+  initialLoadingComplete = signal(false);
   error = signal<string | null>(null);
   selectedBuildId = signal<string | null>(null);
 
@@ -106,19 +117,51 @@ export class BuildsComponent implements OnInit {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
+
+  // Add a property to track pending buildId selection
+  pendingBuildIdToSelect: string | null = null;
+
+  @ViewChildren('buildItemRef') buildItemRefs!: QueryList<ElementRef>;
+  @ViewChildren('buildItemsContainer')
+  buildItemsContainer!: QueryList<ElementRef>;
+
+  iframeReloadToken = signal<number>(Date.now());
+  iframeLoadTimeout: any = null;
+
+  showEmptyState = computed(() => {
+    // Only show empty state when:
+    // 1. Initial loading is complete (no flickers during first load)
+    // 2. Regular loading is complete
+    // 3. No errors
+    // 4. No builds
+    // 5. No pending buildId selection
+    return (
+      this.initialLoadingComplete() &&
+      !this.loading() &&
+      !this.error() &&
+      !this.hasBuilds() &&
+      !this.pendingBuildIdToSelect
+    );
+  });
 
   constructor() {
     // Setup the effect in constructor for proper injection context
     effect(() => {
+      // Only reset iframe loading when selected build changes
+      const buildId = this.selectedBuildId();
+
       // Only run this logic when data has loaded and we have a selectedBuildId
-      if (!this.loading() && this.selectedBuildId()) {
-        const id = this.selectedBuildId();
-        const build = this.builds().find((build) => build.id === id);
+      if (!this.loading() && buildId) {
+        // Reset loading state for iframe only if we're not already loading
+        this.iframeLoading.set(true);
+
+        const build = this.builds().find((build) => build.id === buildId);
 
         // If build ID is set but build not found
-        if (!build && id) {
+        if (!build && buildId) {
           console.warn(
-            `Selected build ID ${id} not found in ${
+            `Selected build ID ${buildId} not found in ${
               this.builds().length
             } builds. Available IDs: ${this.builds()
               .map((b) => b.id)
@@ -147,10 +190,149 @@ export class BuildsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadBuilds();
+    // Ensure loading state is true immediately
+    this.loading.set(true);
+
+    // Wait a moment to ensure loading is displayed before starting API calls
+    // This solves the flickering issue by ensuring the loading state is visible first
+    setTimeout(() => {
+      // Check for buildId query parameter from subscription-success page
+      // and handle pagination to find it if necessary
+      this.route.queryParams
+        .pipe(
+          takeUntilDestroyed(this.destroyRef),
+          switchMap((params) => {
+            if (params['buildId']) {
+              const buildIdFromUrl = params['buildId'];
+              // Store it so we can clear it later
+              this.pendingBuildIdToSelect = buildIdFromUrl;
+
+              // Try current page first
+              return this.userBuildService
+                .getUserBuilds({
+                  page: this.currentPage(),
+                  size: this.pageSize(),
+                })
+                .pipe(
+                  switchMap(
+                    (
+                      response:
+                        | ApiResponse<ExtendedUserBuild>
+                        | ExtendedUserBuild[]
+                    ) => {
+                      if (
+                        this.buildExistsInResponse(response, buildIdFromUrl)
+                      ) {
+                        // Build is on the current page, load normally
+                        return of(null);
+                      } else {
+                        // Build isn't on the current page, we need to search for it
+                        // Try to get single build to ensure it exists and to see its details
+                        return this.userBuildService
+                          .getUserBuildById(buildIdFromUrl)
+                          .pipe(catchError(() => of(null)));
+                      }
+                    }
+                  )
+                );
+            }
+            return of(null);
+          })
+        )
+        .subscribe((maybeBuild) => {
+          if (maybeBuild && this.pendingBuildIdToSelect) {
+            // We found the build but it's not on the current page.
+            // Let's search through pages to find it.
+            this.searchForBuildInPages(this.pendingBuildIdToSelect);
+          } else {
+            // Either we don't have a buildId or the build is on the current page
+            // Just load normally
+            this.loadBuilds();
+          }
+        });
+    }, 10); // Small delay to ensure loading state is rendered first
   }
 
-  loadBuilds(): void {
+  // Helper to check if a build exists in the API response
+  private buildExistsInResponse(
+    response: ApiResponse<ExtendedUserBuild> | ExtendedUserBuild[] | null,
+    buildId: string
+  ): boolean {
+    if (!response) return false;
+
+    let builds: ExtendedUserBuild[] = [];
+    if (Array.isArray(response)) {
+      builds = response;
+    } else if (response && 'content' in response) {
+      builds = response.content;
+    }
+
+    return builds.some((b) => b.id === buildId);
+  }
+
+  // Search for a build by ID across pages
+  private searchForBuildInPages(buildId: string, startPage: number = 0): void {
+    this.loading.set(true);
+
+    const searchNextPage = (currentPage: number) => {
+      if (currentPage > 20) {
+        // Reasonable limit to prevent infinite loops
+        this.initialLoadingComplete.set(true); // Ensure initialLoadingComplete is set even if search fails
+        this.loading.set(false);
+        this.loadBuilds(); // Fall back to normal loading
+        return;
+      }
+
+      this.userBuildService
+        .getUserBuilds({
+          page: currentPage,
+          size: this.pageSize(),
+        })
+        .pipe(
+          finalize(() => {
+            if (this.loading()) {
+              // Ensure initialLoadingComplete is set if loading ends unexpectedly
+              this.initialLoadingComplete.set(true);
+              this.loading.set(false);
+            }
+          })
+        )
+        .subscribe({
+          next: (
+            response: ApiResponse<ExtendedUserBuild> | ExtendedUserBuild[]
+          ) => {
+            if (this.buildExistsInResponse(response, buildId)) {
+              // Found the build on this page
+              this.currentPage.set(currentPage);
+              this.loadBuilds(buildId);
+              // Clear pending build ID after finding it
+              this.pendingBuildIdToSelect = null;
+
+              // Update URL without refreshing the page
+              const extras: NavigationExtras = {
+                queryParams: { buildId },
+                queryParamsHandling: 'merge',
+                replaceUrl: true,
+              };
+              this.router.navigate([], extras);
+            } else {
+              // Not found, try next page
+              searchNextPage(currentPage + 1);
+            }
+          },
+          error: () => {
+            this.initialLoadingComplete.set(true); // Ensure initialLoadingComplete is set on error
+            this.loading.set(false);
+            this.loadBuilds(); // Fall back to normal loading on error
+          },
+        });
+    };
+
+    searchNextPage(startPage);
+  }
+
+  loadBuilds(buildIdToSelect: string | null = null): void {
+    // Already set loading to true at initialization, just ensure it's still true
     this.loading.set(true);
     this.error.set(null);
 
@@ -167,7 +349,7 @@ export class BuildsComponent implements OnInit {
         next: (
           response: ApiResponse<ExtendedUserBuild> | ExtendedUserBuild[]
         ) => {
-          // Ensure we're handling the paginated response correctly
+          // Process the response first before ending loading state
           let buildsArr: ExtendedUserBuild[] = [];
           let isFirst = true;
           let isLast = true;
@@ -198,36 +380,66 @@ export class BuildsComponent implements OnInit {
             return;
           }
 
-          this.builds.set(buildsArr as BuildWithUIState[]);
-          this.totalPages.set(totalPages);
-          this.totalElements.set(totalElements);
-          this.isFirstPage.set(isFirst);
-          this.isLastPage.set(isLast);
-
-          // Handle build selection
+          // Wait a small delay to ensure state updates are processed before ending loading
+          // This prevents flickering between loading and empty state
           setTimeout(() => {
-            const currentId = this.selectedBuildId();
+            // Update all state values with builds data
+            this.builds.set(buildsArr as BuildWithUIState[]);
+            this.totalPages.set(totalPages);
+            this.totalElements.set(totalElements);
+            this.isFirstPage.set(isFirst);
+            this.isLastPage.set(isLast);
 
-            if (!currentId && buildsArr.length > 0) {
-              // If no build is selected and we have builds, select the first one
-              this.selectedBuildId.set(buildsArr[0].id);
-            } else if (currentId) {
-              // If a build is selected, check if it exists in the new data
-              const found = buildsArr.find((b) => b.id === currentId);
+            // Process build selection first
+            if (this.pendingBuildIdToSelect) {
+              this.pendingBuildIdToSelect = null;
+            }
 
-              if (!found && buildsArr.length > 0) {
-                // If not found, select the first build
+            // Select build based on priority
+            if (
+              buildIdToSelect &&
+              buildsArr.some((b) => b.id === buildIdToSelect)
+            ) {
+              this.selectedBuildId.set(buildIdToSelect);
+              console.log('Selected build with ID:', buildIdToSelect);
+            } else {
+              // Fall back to normal selection logic
+              const currentId = this.selectedBuildId();
+
+              if (!currentId && buildsArr.length > 0) {
+                // If no build is selected and we have builds, select the first one
                 this.selectedBuildId.set(buildsArr[0].id);
+              } else if (currentId) {
+                // If a build is selected, check if it exists in the new data
+                const found = buildsArr.find((b) => b.id === currentId);
+
+                if (!found && buildsArr.length > 0) {
+                  // If not found, select the first build
+                  this.selectedBuildId.set(buildsArr[0].id);
+                }
               }
             }
 
+            // Set iframe loading and finalize by turning off the loading state
             this.iframeLoading.set(true);
+
+            // Mark initial loading as complete - this prevents empty state flashing after first load
+            this.initialLoadingComplete.set(true);
+
+            // Only turn off loading once everything is ready to be displayed
             this.loading.set(false);
-          }, 0);
+
+            // Schedule scrolling to the selected build after DOM updates
+            setTimeout(() => {
+              this.scrollToSelectedBuild();
+            }, 100);
+          }, 100); // Add small delay to ensure proper sequencing
         },
         error: (err) => {
           console.error('Error loading builds:', err);
           this.error.set('Failed to load your builds. Please try again.');
+          // Still mark initial loading as complete since we have an error to show
+          this.initialLoadingComplete.set(true);
           this.loading.set(false);
         },
       });
@@ -236,6 +448,7 @@ export class BuildsComponent implements OnInit {
   nextPage(): void {
     if (!this.isLastPage()) {
       this.currentPage.update((page) => page + 1);
+      this.iframeLoading.set(true);
       this.loadBuilds();
     }
   }
@@ -243,16 +456,9 @@ export class BuildsComponent implements OnInit {
   previousPage(): void {
     if (!this.isFirstPage()) {
       this.currentPage.update((page) => page - 1);
+      this.iframeLoading.set(true);
       this.loadBuilds();
     }
-  }
-
-  /**
-   * Reset iframe loading state when a new build is selected
-   * This ensures the loading state is properly shown when changing builds
-   */
-  resetIframeLoading(): void {
-    this.iframeLoading.set(true);
   }
 
   /**
@@ -261,7 +467,10 @@ export class BuildsComponent implements OnInit {
   selectBuild(buildId: string): void {
     if (this.selectedBuildId() !== buildId) {
       this.selectedBuildId.set(buildId);
-      this.resetIframeLoading();
+      this.iframeLoading.set(true);
+      this.iframeReloadToken.set(Date.now());
+      this.setIframeLoadFallback();
+      this.scrollToSelectedBuild();
     }
   }
 
@@ -304,29 +513,38 @@ export class BuildsComponent implements OnInit {
     }
   }
 
-  getTemplateName(build: ExtendedUserBuild): string {
+  getTemplateName(build: any): string {
     try {
       if (!build) return 'Unnamed Template';
 
-      // First check userTemplate.name, then template.name if available
+      // First check for direct name property
+      if (build.name) {
+        return build.name;
+      }
+
+      // Then check userTemplate path
       if (build?.userTemplate?.name) {
         return build.userTemplate.name;
-      } else if (build?.userTemplate?.template?.name) {
+      }
+
+      // Then check template nested path
+      if (build?.userTemplate?.template?.name) {
         return build.userTemplate.template.name;
       }
+
       return 'Unnamed Template';
     } catch (err) {
       return 'Unnamed Template';
     }
   }
 
-  getPlanType(build: ExtendedUserBuild): string {
+  getPlanType(build: any): string {
     try {
       if (!build) return 'standard';
 
-      if (build?.userTemplate?.template?.templatePlan?.type) {
+      if (build?.templatePlan?.type) {
         // Always convert to lowercase for consistent plan usage
-        return build.userTemplate.template.templatePlan.type.toLowerCase();
+        return build.templatePlan.type.toLowerCase();
       }
       return 'standard';
     } catch (err) {
@@ -490,7 +708,7 @@ export class BuildsComponent implements OnInit {
                 this.selectedBuildId.set(currentId);
                 // If the status has changed to PUBLISHED, reset iframe
                 if (updatedBuild.status === 'PUBLISHED') {
-                  this.resetIframeLoading();
+                  this.iframeLoading.set(true);
                 }
               }, 10);
             }
@@ -590,7 +808,7 @@ export class BuildsComponent implements OnInit {
 
           // If this is the current selected build, refresh the iframe
           if (this.selectedBuildId() === build.id) {
-            this.resetIframeLoading();
+            this.iframeLoading.set(true);
           }
         },
         error: (err) => {
@@ -616,6 +834,10 @@ export class BuildsComponent implements OnInit {
   // Apply filter
   setFilter(filter: string): void {
     this.filterStatus.set(filter);
+    this.iframeLoading.set(true);
+    this.iframeReloadToken.set(Date.now());
+    this.setIframeLoadFallback();
+    this.scrollToSelectedBuild();
 
     // If current selection is not in filtered results, select first filtered item
     const currentId = this.selectedBuildId();
@@ -630,5 +852,56 @@ export class BuildsComponent implements OnInit {
         this.selectedBuildId.set(filtered[0].id);
       }
     }
+  }
+
+  onIframeLoad(): void {
+    if (this.iframeLoadTimeout) {
+      clearTimeout(this.iframeLoadTimeout);
+      this.iframeLoadTimeout = null;
+    }
+    setTimeout(() => {
+      this.iframeLoading.set(false);
+    }, 100);
+  }
+
+  setIframeLoadFallback(): void {
+    if (this.iframeLoadTimeout) {
+      clearTimeout(this.iframeLoadTimeout);
+    }
+    this.iframeLoadTimeout = setTimeout(() => {
+      this.iframeLoading.set(false);
+      this.iframeLoadTimeout = null;
+    }, 5000); // 5 seconds fallback
+  }
+
+  private scrollToSelectedBuild(): void {
+    setTimeout(() => {
+      const selectedId = this.selectedBuildId();
+      if (!selectedId || !this.buildItemRefs) return;
+      const selectedEl = this.buildItemRefs.find(
+        (ref) => ref.nativeElement?.dataset?.buildId === selectedId
+      )?.nativeElement;
+      const container = document.querySelector('.build-items');
+      if (selectedEl && container) {
+        const elRect = selectedEl.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        if (
+          elRect.top < containerRect.top ||
+          elRect.bottom > containerRect.bottom
+        ) {
+          selectedEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 100);
+  }
+
+  ngAfterViewInit(): void {
+    // Scroll to selected build after view init
+    this.scrollToSelectedBuild();
+    // Watch for changes in selection using effect
+    effect(() => {
+      this.selectedBuildId();
+      this.scrollToSelectedBuild();
+    });
   }
 }

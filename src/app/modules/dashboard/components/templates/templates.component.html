@@ -111,71 +111,114 @@
         *ngFor="let template of filteredTemplates"
         [ngClass]="{
           'card--premium': isPremium(template),
-          'card--published': template.published,
-          'card--draft': !template.published,
+          'card--published': template.status === 'PUBLISHED',
+          'card--draft': template.status === 'DRAFT',
           'card--standard': !isPremium(template)
         }"
       >
         <!-- Template Preview Area -->
         <div class="template-preview-container">
           <div class="template-preview-image-wrapper">
-            <img
-              [src]="
-                template.thumbnailUrl ||
-                'assets/images/template-placeholder.jpg'
+            <ng-container
+              *ngIf="
+                (template.status === 'PUBLISHED' ||
+                  template.status === 'STOPPED') &&
+                  template.url;
+                else draftImage
               "
-              [alt]="template.name"
-              class="template-img"
-            />
-            <span
-              class="template-type-badge-center"
-              [ngClass]="{ 'badge-premium': isPremium(template) }"
             >
-              {{ template.type }}
-              <ng-container *ngIf="isPremium(template)">
-                <app-icon
-                  name="star"
-                  width="12"
-                  height="12"
-                  style="margin-left: 3px"
-                ></app-icon>
-              </ng-container>
-            </span>
+              <div
+                class="template-iframe-link"
+                [class.clickable]="template.status === 'PUBLISHED'"
+                [attr.tabindex]="template.status === 'PUBLISHED' ? 0 : null"
+                (click)="
+                  template.status === 'PUBLISHED'
+                    ? openTemplateUrl(template.url)
+                    : null
+                "
+              >
+                <iframe
+                  [src]="template.url | safeResourceUrl"
+                  class="template-preview-iframe"
+                  title="Website Preview"
+                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                ></iframe>
+                <div class="iframe-hover-overlay">
+                  <span class="view-site-text">{{
+                    template.status === "PUBLISHED"
+                      ? "Visit Site"
+                      : "Preview Unavailable"
+                  }}</span>
+                </div>
+              </div>
+            </ng-container>
+            <ng-template #draftImage>
+              <img
+                [src]="
+                  template.thumbnailUrl ||
+                  'assets/images/template-placeholder.jpg'
+                "
+                [alt]="template.name"
+                class="template-img"
+              />
+            </ng-template>
+            <!-- Status badge -->
+            <div
+              class="status-badge-overlay"
+              [ngClass]="{
+                published: template.status === 'PUBLISHED',
+                draft: template.status === 'DRAFT',
+                stopped: template.status === 'STOPPED'
+              }"
+            >
+              <app-icon
+                *ngIf="template.status === 'PUBLISHED'"
+                name="check"
+                width="12"
+                height="12"
+              ></app-icon>
+              <!-- Using circle with dot for draft -->
+              <span
+                *ngIf="template.status === 'DRAFT'"
+                class="status-icon draft-icon"
+              ></span>
+              <!-- Using circle with x for stopped -->
+              <span
+                *ngIf="template.status === 'STOPPED'"
+                class="status-icon stopped-icon"
+              ></span>
+              {{
+                template.status === "PUBLISHED"
+                  ? "Published"
+                  : template.status === "STOPPED"
+                  ? "Stopped"
+                  : "Draft"
+              }}
+            </div>
             <div *ngIf="isPremium(template)" class="premium-overlay"></div>
           </div>
         </div>
 
         <!-- Template Content -->
         <div class="template-content">
-          <!-- Header Badges: Plan badge, then status badge -->
+          <!-- Header Badges: Only plan badge now -->
           <div class="template-header-badges">
             <app-plan-badge
               [plan]="template.plan || 'standard'"
             ></app-plan-badge>
-            <span class="status-badge" [class.published]="template.published">
-              <app-icon
-                *ngIf="template.published"
-                name="check"
-                width="12"
-                height="12"
-              ></app-icon>
-              <app-icon
-                *ngIf="!template.published"
-                name="draft"
-                width="12"
-                height="12"
-              ></app-icon>
-              {{ template.published ? "Published" : "Draft" }}
-            </span>
           </div>
 
           <!-- Template Info -->
           <div class="template-info">
             <h3 class="template-name">
               {{ template.name }}
-              <span *ngIf="isPremium(template)" class="premium-badge"
-                >Premium</span
-              >
+              <span class="template-type">{{ template.type }}</span>
+              <span *ngIf="isPremium(template)" class="premium-badge">
+                <app-icon name="star" width="10" height="10"></app-icon>
+                Premium
+              </span>
             </h3>
             <div class="template-meta">
               <span class="meta-item">
@@ -219,27 +262,23 @@
             <div class="action-divider"></div>
             <button
               class="publish-btn"
-              [class.unpublish-btn]="template.published"
-              [disabled]="template.isPublishing"
-              [class.disabled-btn]="template.published"
+              [disabled]="
+                template.isPublishing ||
+                template.status === 'PUBLISHED' ||
+                template.status === 'STOPPED'
+              "
+              [class.disabled-btn]="
+                template.status === 'PUBLISHED' || template.status === 'STOPPED'
+              "
               (click)="publishTemplate(template)"
             >
-              <!-- Show spinner when publishing is in progress -->
               <ng-container *ngIf="template.isPublishing">
                 <span class="loading-spinner"></span>
-                <span>{{
-                  template.published ? "Unpublishing..." : "Publishing..."
-                }}</span>
+                <span>Publishing...</span>
               </ng-container>
-
-              <!-- Normal state -->
               <ng-container *ngIf="!template.isPublishing">
-                <app-icon
-                  [name]="template.published ? 'unpublish' : 'publish'"
-                  width="16"
-                  height="16"
-                ></app-icon>
-                <span>{{ template.published ? "Unpublish" : "Publish" }}</span>
+                <app-icon name="publish" width="16" height="16"></app-icon>
+                <span>Publish</span>
               </ng-container>
             </button>
           </div>
