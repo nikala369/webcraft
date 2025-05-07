@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, throwError, map } from 'rxjs';
+import { Observable, catchError, throwError, map, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Customizations } from '../../models/website-customizations';
 import {
@@ -164,9 +164,30 @@ export class UserTemplateService {
     return this.http
       .get<PageResponse<UserTemplate>>(this.USER_TEMPLATE_SEARCH, { params })
       .pipe(
+        map((response) => {
+          console.log('Raw search user templates response:', response);
+          // Ensure content is always an array
+          if (!response.content) {
+            console.warn(
+              'Response missing content array, initializing empty array'
+            );
+            response.content = [];
+          }
+          return response;
+        }),
         catchError((error) => {
           console.error('Error searching user templates:', error);
-          return throwError(() => error);
+          // Return empty page result instead of throwing error
+          return of({
+            content: [],
+            totalElements: 0,
+            totalPages: 0,
+            size,
+            number: page,
+            first: true,
+            last: true,
+            empty: true,
+          } as PageResponse<UserTemplate>);
         })
       );
   }

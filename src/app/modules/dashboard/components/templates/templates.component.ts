@@ -1,4 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  ChangeDetectionStrategy,
+  signal,
+  computed,
+} from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -7,15 +14,35 @@ import { SelectionStateService } from '../../../../core/services/selection/selec
 import { TemplateService } from '../../../../core/services/template/template.service';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { PlanBadgeComponent } from '../../../../shared/components/plan-badge/plan-badge.component';
-import { finalize } from 'rxjs/operators';
+import {
+  finalize,
+  catchError,
+  map,
+  Observable,
+  BehaviorSubject,
+  of,
+  tap,
+  switchMap,
+  filter,
+} from 'rxjs';
 import { AuthService } from '../../../../core/services/auth/auth.service';
 import { SubscriptionService } from '../../../../core/services/subscription/subscription.service';
 import { UserBuildService } from '../../../../core/services/build/user-build.service';
-import { switchMap, map, tap, EMPTY, of } from 'rxjs';
+import { EMPTY } from 'rxjs';
 import { ConfirmationService } from '../../../../core/services/shared/confirmation/confirmation.service';
 import { SafeResourceUrlPipe } from '../../../../shared/pipes/safe-resource-url.pipe';
+import { TemplateControlsComponent } from './components/template-controls/template-controls.component';
+import { TemplateListComponent } from './components/template-list/template-list.component';
+import { TemplateCardComponent } from './components/template-card/template-card.component';
 
-// Define the UserTemplate interface for our component
+// Define TemplateStatus enum
+export enum TemplateStatus {
+  Draft = 'DRAFT',
+  Published = 'PUBLISHED',
+  Stopped = 'STOPPED',
+}
+
+// Define the UserTemplate interface with enum status
 export interface UserTemplate {
   id: string;
   name: string;
@@ -23,18 +50,16 @@ export interface UserTemplate {
   description?: string;
   createdAt?: Date;
   updatedAt?: Date;
-  published?: boolean;
   thumbnailUrl?: string;
   plan?: 'standard' | 'premium';
   isPublishing?: boolean;
-  // New fields for backend structure
   userBuild?: {
     id: string;
     status: 'PUBLISHED' | 'STOPPED';
     address?: string;
     subscriptionId?: string;
   } | null;
-  status: 'PUBLISHED' | 'STOPPED' | 'DRAFT';
+  status: TemplateStatus;
   url?: string;
 }
 
@@ -56,17 +81,38 @@ interface SubscriptionFlowResult {
     DatePipe,
     PlanBadgeComponent,
     SafeResourceUrlPipe,
+    TemplateControlsComponent,
+    TemplateListComponent,
+    TemplateCardComponent,
   ],
   templateUrl: './templates.component.html',
   styleUrls: ['./templates.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TemplatesComponent implements OnInit {
-  templates: UserTemplate[] = [];
-  filteredTemplates: UserTemplate[] = [];
-  loading = true;
-  error: string | null = null;
-  searchTerm = '';
-  selectedFilter = 'all';
+  // State observables
+  private loadingSubject = new BehaviorSubject<boolean>(true);
+  private errorSubject = new BehaviorSubject<string | null>(null);
+  private searchTermSubject = new BehaviorSubject<string>('');
+  private filterSubject = new BehaviorSubject<string>('all');
+
+  // Expose as observables
+  loading$ = this.loadingSubject.asObservable();
+  error$ = this.errorSubject.asObservable();
+
+  // Main data stream
+  templates$: Observable<UserTemplate[]>;
+
+  // Filtered templates based on search and filter
+  filteredTemplates$: Observable<UserTemplate[]>;
+
+  // Pagination state
+  currentPage = signal(0);
+  pageSize = signal(10);
+  totalPages = signal(1);
+  totalElements = signal(0);
+  isFirstPage = signal(true);
+  isLastPage = signal(true);
 
   // Inject services
   private userTemplateService = inject(UserTemplateService);
@@ -77,68 +123,165 @@ export class TemplatesComponent implements OnInit {
   private userBuildService = inject(UserBuildService);
   private confirmationService = inject(ConfirmationService);
 
+  constructor() {
+    this.templates$ = this.loadingSubject.pipe(
+      filter((loading) => loading === true),
+      switchMap(() => {
+        return this.userTemplateService
+          .searchUserTemplates(this.currentPage(), this.pageSize())
+          .pipe(
+            map((response) => {
+              console.log('[TEMPLATES] Raw API response:', response);
+              if (!response?.content || !Array.isArray(response.content)) {
+                return [];
+              }
+
+              // Update pagination state
+              this.totalPages.set(response.totalPages || 1);
+              this.totalElements.set(response.totalElements || 0);
+              this.isFirstPage.set(response.first !== false);
+              this.isLastPage.set(response.last !== false);
+
+              const mapped = response.content
+                .filter((template: any) => !!template)
+                .map((template: any): UserTemplate => {
+                  const userBuild = template.userBuild;
+                  let status: TemplateStatus = TemplateStatus.Draft;
+                  let url: string | undefined = undefined;
+                  if (userBuild) {
+                    status =
+                      userBuild.status === 'STOPPED'
+                        ? TemplateStatus.Stopped
+                        : TemplateStatus.Published;
+                    url = userBuild.address || undefined;
+                  }
+                  let plan: 'standard' | 'premium' = 'standard';
+                  if (
+                    template.template?.templatePlan?.type?.toLowerCase() ===
+                    'premium'
+                  ) {
+                    plan = 'premium';
+                  }
+                  return {
+                    id: template.id || 'unknown-id',
+                    name: template.name || 'Untitled Template',
+                    type: template.template?.templateType?.name || 'Unknown',
+                    description:
+                      template.template?.description ||
+                      'A customizable website template',
+                    createdAt: template.createdAt
+                      ? new Date(template.createdAt)
+                      : new Date(),
+                    updatedAt: template.updatedAt
+                      ? new Date(template.updatedAt)
+                      : new Date(),
+                    thumbnailUrl: template.thumbnailUrl,
+                    plan,
+                    isPublishing: false,
+                    userBuild,
+                    status,
+                    url,
+                  };
+                });
+              console.log('[TEMPLATES] Mapped templates:', mapped);
+              return mapped;
+            }),
+            catchError((error: HttpErrorResponse) => {
+              this.errorSubject.next(
+                'Failed to load templates. Please try again.'
+              );
+              return of([] as UserTemplate[]);
+            }),
+            finalize(() => {
+              this.loadingSubject.next(false);
+            })
+          );
+      })
+    );
+
+    // Setup filtered templates
+    this.filteredTemplates$ = this.templates$.pipe(
+      switchMap((templates) => {
+        return this.searchTermSubject.pipe(
+          switchMap((searchTerm) => {
+            return this.filterSubject.pipe(
+              map((filter) => {
+                console.log(
+                  '[TEMPLATES] Filtering. All templates count:',
+                  templates.length,
+                  'Search:',
+                  searchTerm,
+                  'Filter:',
+                  filter
+                );
+                const filtered = this.applyFilters(
+                  templates,
+                  searchTerm,
+                  filter
+                );
+                console.log(
+                  '[TEMPLATES] Filtered templates count:',
+                  filtered.length
+                );
+                return filtered;
+              })
+            );
+          })
+        );
+      })
+    );
+  }
+
   ngOnInit(): void {
     this.loadTemplates();
   }
 
   /**
-   * Load user templates from the backend
+   * Load templates from the backend with pagination
    */
   loadTemplates(): void {
-    this.loading = true;
-    this.error = null;
+    this.loadingSubject.next(true);
+  }
 
-    this.userTemplateService
-      .searchUserTemplates()
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-        })
-      )
-      .subscribe({
-        next: (response) => {
-          // Map backend response to our component's UserTemplate interface
-          this.templates = response.content.map((template: any) => {
-            const userBuild = template.userBuild;
-            let status: 'PUBLISHED' | 'STOPPED' | 'DRAFT' = 'DRAFT';
-            let url: string | undefined = undefined;
-            if (userBuild) {
-              status = userBuild.status === 'STOPPED' ? 'STOPPED' : 'PUBLISHED';
-              url = userBuild.address || undefined;
-            }
-            return {
-              id: template.id,
-              name: template.name || 'Untitled Template',
-              type: template.template?.templateType?.name || 'Unknown',
-              description:
-                template.template?.description ||
-                'A customizable website template',
-              createdAt: template.createdAt
-                ? new Date(template.createdAt)
-                : new Date(),
-              updatedAt: template.updatedAt
-                ? new Date(template.updatedAt)
-                : new Date(),
-              published: status === 'PUBLISHED',
-              thumbnailUrl: template.thumbnailUrl,
-              plan:
-                template.template?.templatePlan?.type?.toLowerCase() ===
-                'premium'
-                  ? 'premium'
-                  : 'standard',
-              isPublishing: false,
-              userBuild,
-              status,
-              url,
-            };
-          });
-          this.applyFilters();
-        },
-        error: (error: HttpErrorResponse) => {
-          this.error = 'Failed to load templates. Please try again.';
-          console.error('Error loading templates:', error);
-        },
-      });
+  /**
+   * Navigate to the next page
+   */
+  nextPage(): void {
+    if (!this.isLastPage()) {
+      this.currentPage.update((page) => page + 1);
+      this.loadTemplates();
+    }
+  }
+
+  /**
+   * Navigate to the previous page
+   */
+  previousPage(): void {
+    if (!this.isFirstPage()) {
+      this.currentPage.update((page) => page - 1);
+      this.loadTemplates();
+    }
+  }
+
+  /**
+   * Helper to determine if a template is in active state
+   */
+  isLive(status: TemplateStatus): boolean {
+    return status === TemplateStatus.Published;
+  }
+
+  /**
+   * Helper to determine if a template is editable
+   */
+  isEditable(status: TemplateStatus): boolean {
+    return status !== TemplateStatus.Stopped;
+  }
+
+  /**
+   * Track templates by ID for efficient rendering
+   */
+  trackById(_index: number, template: UserTemplate): string {
+    return template.id;
   }
 
   /**
@@ -151,11 +294,25 @@ export class TemplatesComponent implements OnInit {
   }
 
   /**
+   * Handle search input changes from template-controls
+   */
+  onSearchChange(searchTerm: string): void {
+    this.searchTermSubject.next(searchTerm);
+  }
+
+  /**
+   * Handle filter select changes from template-controls
+   */
+  onFilterChange(filter: string): void {
+    this.filterSubject.next(filter);
+  }
+
+  /**
    * Navigate to the template editing page
    */
   editTemplate(template: UserTemplate): void {
     // Show loading before navigation
-    this.loading = true;
+    this.loadingSubject.next(true);
 
     // Navigate to the template editing page
     this.router.navigate(['/preview'], {
@@ -165,8 +322,6 @@ export class TemplatesComponent implements OnInit {
         step: '4', // Explicitly set the step to 4 for editing
       },
     });
-
-    // Note: We don't set loading = false here because we're navigating away
   }
 
   /**
@@ -174,7 +329,7 @@ export class TemplatesComponent implements OnInit {
    */
   viewTemplate(template: UserTemplate): void {
     // Show loading before navigation
-    this.loading = true;
+    this.loadingSubject.next(true);
 
     this.router.navigate(['/preview'], {
       queryParams: {
@@ -183,8 +338,6 @@ export class TemplatesComponent implements OnInit {
         step: '3', // View mode is step 3
       },
     });
-
-    // Note: We don't set loading = false here because we're navigating away
   }
 
   /**
@@ -192,71 +345,43 @@ export class TemplatesComponent implements OnInit {
    */
   deleteTemplate(template: UserTemplate): void {
     if (confirm(`Are you sure you want to delete "${template.name}"?`)) {
-      this.loading = true;
+      this.loadingSubject.next(true);
       this.userTemplateService.deleteTemplate(template.id).subscribe({
         next: () => {
           this.loadTemplates();
         },
         error: (error: HttpErrorResponse) => {
           console.error('Error deleting template:', error);
-          this.error = 'Failed to delete template. Please try again.';
-          this.loading = false;
+          this.errorSubject.next(
+            'Failed to delete template. Please try again.'
+          );
+          this.loadingSubject.next(false);
         },
       });
     }
   }
 
   /**
-   * Publish or unpublish a template
+   * Publish a template
    */
   publishTemplate(template: UserTemplate): void {
     // Show loading state on the button
-    template.isPublishing = true;
+    const updatedTemplates = this.getUpdatedTemplateWithProperty(
+      template,
+      'isPublishing',
+      true
+    );
 
     // 1. Check authentication first
     if (!this.authService.isAuthenticated()) {
-      template.isPublishing = false;
+      this.getUpdatedTemplateWithProperty(template, 'isPublishing', false);
       this.router.navigate(['/auth/login'], {
         queryParams: { returnUrl: this.router.url },
       });
       return;
     }
 
-    // 2. If the template is already published, unpublish it
-    if (template.published) {
-      // Use simple confirm dialog instead of the confirmation service
-      if (
-        confirm(
-          'Are you sure you want to unpublish this template? The website will no longer be available online.'
-        )
-      ) {
-        this.userTemplateService.unpublishTemplate(template.id).subscribe({
-          next: () => {
-            template.published = false;
-            template.isPublishing = false;
-            this.confirmationService.showConfirmation(
-              'Template unpublished successfully.',
-              'success',
-              3000
-            );
-          },
-          error: (error: HttpErrorResponse) => {
-            console.error(`Error unpublishing template:`, error);
-            template.isPublishing = false;
-            this.confirmationService.showConfirmation(
-              'Failed to unpublish template. Please try again.',
-              'error',
-              4000
-            );
-          },
-        });
-      } else {
-        template.isPublishing = false;
-      }
-      return;
-    }
-
-    // 3. For new publications, redirect to subscription selection page
+    // 2. For new publications, redirect to subscription selection page
     this.router.navigate(['/subscription-selection'], {
       queryParams: {
         templateId: template.id,
@@ -264,67 +389,66 @@ export class TemplatesComponent implements OnInit {
         templatePlan: template.plan || 'standard',
       },
     });
-    template.isPublishing = false;
+
+    // Reset the loading state
+    this.getUpdatedTemplateWithProperty(template, 'isPublishing', false);
   }
 
   /**
-   * Show options menu for a template
+   * Helper method to update a template property and trigger a refresh
+   * without modifying the original array
    */
-  showOptions(template: UserTemplate): void {
-    // This will be implemented when we add a dropdown menu component
-    console.log('Show options for template:', template.id);
-  }
+  private getUpdatedTemplateWithProperty<K extends keyof UserTemplate>(
+    template: UserTemplate,
+    property: K,
+    value: UserTemplate[K]
+  ): UserTemplate {
+    // Create a shallow copy of the template
+    const updatedTemplate = { ...template, [property]: value };
 
-  /**
-   * Handle search input changes
-   */
-  onSearchChange(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.searchTerm = target.value;
-    this.applyFilters();
-  }
+    // Trigger a refresh without directly modifying the array
+    // Note: In a real implementation with state management, this would
+    // be handled by the state management library
+    this.loadTemplates();
 
-  /**
-   * Handle filter select changes
-   */
-  onFilterChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    this.selectedFilter = target.value;
-    this.applyFilters();
+    return updatedTemplate;
   }
 
   /**
    * Apply both search and filter to templates
    */
-  private applyFilters(): void {
-    let result = this.templates;
+  private applyFilters(
+    templates: UserTemplate[],
+    searchTerm: string,
+    filter: string
+  ): UserTemplate[] {
+    let result = templates;
 
     // Filter by type if not "all"
     if (
-      this.selectedFilter !== 'all' &&
-      !['published', 'draft', 'stopped'].includes(this.selectedFilter)
+      filter !== 'all' &&
+      !['published', 'draft', 'stopped'].includes(filter)
     ) {
       result = result.filter(
-        (template) =>
-          template.type?.toLowerCase() === this.selectedFilter.toLowerCase()
+        (template) => template.type?.toLowerCase() === filter.toLowerCase()
       );
     }
 
-    // Filter by status if selectedFilter is a status
-    if (['published', 'draft', 'stopped'].includes(this.selectedFilter)) {
-      const statusMap: Record<string, string> = {
-        published: 'PUBLISHED',
-        draft: 'DRAFT',
-        stopped: 'STOPPED',
+    // Filter by status if filter is a status
+    if (['published', 'draft', 'stopped'].includes(filter)) {
+      const statusMap: Record<string, TemplateStatus> = {
+        published: TemplateStatus.Published,
+        draft: TemplateStatus.Draft,
+        stopped: TemplateStatus.Stopped,
       };
       result = result.filter(
-        (template) => template.status === statusMap[this.selectedFilter]
+        (template) => template.status === statusMap[filter]
       );
     }
 
     // Filter by search term if not empty
-    if (this.searchTerm.trim() !== '') {
-      const searchLower = this.searchTerm.toLowerCase();
+    if (searchTerm.trim() !== '') {
+      const searchLower = searchTerm.toLowerCase();
       result = result.filter(
         (template) =>
           template.name?.toLowerCase().includes(searchLower) ||
@@ -332,8 +456,7 @@ export class TemplatesComponent implements OnInit {
           template.type?.toLowerCase().includes(searchLower)
       );
     }
-
-    this.filteredTemplates = result;
+    return result;
   }
 
   /**
@@ -343,13 +466,10 @@ export class TemplatesComponent implements OnInit {
     // If backend adds a 'plan' or 'isPremium' property, use that instead
     // For now, treat as premium if type includes 'premium' (case-insensitive)
     return !!(
-      (
-        template.type &&
+      (template.type &&
         typeof template.type === 'string' &&
-        template.type.toLowerCase().includes('premium')
-      )
-      // || template.plan === 'premium' // Uncomment if plan property exists
-      // || template.isPremium // Uncomment if property exists
+        template.type.toLowerCase().includes('premium')) ||
+      template.plan === 'premium'
     );
   }
 

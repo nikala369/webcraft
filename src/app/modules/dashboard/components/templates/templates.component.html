@@ -19,45 +19,25 @@
 
   <div class="templates-layout">
     <!-- Search and Filter Controls -->
-    <div class="templates-controls">
-      <div class="search-container">
-        <app-icon
-          name="search"
-          width="16"
-          height="16"
-          class="search-icon"
-        ></app-icon>
-        <input
-          type="search"
-          placeholder="Search templates..."
-          class="search-input"
-          (input)="onSearchChange($event)"
-          aria-label="Search templates"
-        />
-      </div>
-      <div class="filter-container">
-        <select
-          class="filter-select"
-          (change)="onFilterChange($event)"
-          aria-label="Filter templates"
-        >
-          <option value="all">All Templates</option>
-          <option value="restaurant">Restaurant</option>
-          <option value="salon">Salon</option>
-          <option value="portfolio">Portfolio</option>
-          <option value="architecture">Architecture</option>
-        </select>
-      </div>
-    </div>
+    <app-template-controls
+      (searchChange)="onSearchChange($event)"
+      (filterChange)="onFilterChange($event)"
+      (prevPage)="previousPage()"
+      (nextPage)="nextPage()"
+      [currentPage]="currentPage()"
+      [totalPages]="totalPages()"
+      [isFirstPage]="isFirstPage()"
+      [isLastPage]="isLastPage()"
+    ></app-template-controls>
 
     <!-- Loading State -->
-    <div class="templates-loading card-style" *ngIf="loading">
+    <div class="templates-loading card-style" *ngIf="loading$ | async">
       <div class="loading-spinner"></div>
       <p>Loading your templates...</p>
     </div>
 
     <!-- Error State -->
-    <div class="templates-error card-style" *ngIf="error">
+    <div class="templates-error card-style" *ngIf="error$ | async as errorMsg">
       <div class="error-icon">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -73,7 +53,7 @@
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
       </div>
-      <p>{{ error }}</p>
+      <p>{{ errorMsg }}</p>
       <button class="retry-button" (click)="loadTemplates()">
         <app-icon name="refresh" width="16" height="16"></app-icon>
         <span>Retry</span>
@@ -81,209 +61,42 @@
     </div>
 
     <!-- Empty State -->
-    <div
-      class="templates-empty card-style"
-      *ngIf="!loading && !error && templates.length === 0"
-    >
-      <div class="empty-state-content">
-        <app-icon
-          name="template"
-          width="48"
-          height="48"
-          class="empty-icon"
-        ></app-icon>
-        <h3>No templates yet</h3>
-        <p>Create your first website template to get started</p>
-        <button class="primary-button" (click)="createTemplate()">
-          <app-icon name="add" width="16" height="16"></app-icon>
-          <span>Create First Template</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Templates List -->
-    <div
-      class="templates-list"
-      *ngIf="!loading && !error && filteredTemplates.length > 0"
-    >
+    <ng-container *ngIf="filteredTemplates$ | async as templates">
       <div
-        class="template-card card-style"
-        *ngFor="let template of filteredTemplates"
-        [ngClass]="{
-          'card--premium': isPremium(template),
-          'card--published': template.status === 'PUBLISHED',
-          'card--draft': template.status === 'DRAFT',
-          'card--standard': !isPremium(template)
-        }"
+        class="templates-empty card-style"
+        *ngIf="
+          !(loading$ | async) &&
+          !(error$ | async) &&
+          templates &&
+          templates.length === 0
+        "
       >
-        <!-- Template Preview Area -->
-        <div class="template-preview-container">
-          <div class="template-preview-image-wrapper">
-            <ng-container
-              *ngIf="
-                (template.status === 'PUBLISHED' ||
-                  template.status === 'STOPPED') &&
-                  template.url;
-                else draftImage
-              "
-            >
-              <div
-                class="template-iframe-link"
-                [class.clickable]="template.status === 'PUBLISHED'"
-                [attr.tabindex]="template.status === 'PUBLISHED' ? 0 : null"
-                (click)="
-                  template.status === 'PUBLISHED'
-                    ? openTemplateUrl(template.url)
-                    : null
-                "
-              >
-                <iframe
-                  [src]="template.url | safeResourceUrl"
-                  class="template-preview-iframe"
-                  title="Website Preview"
-                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                  loading="lazy"
-                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                ></iframe>
-                <div class="iframe-hover-overlay">
-                  <span class="view-site-text">{{
-                    template.status === "PUBLISHED"
-                      ? "Visit Site"
-                      : "Preview Unavailable"
-                  }}</span>
-                </div>
-              </div>
-            </ng-container>
-            <ng-template #draftImage>
-              <img
-                [src]="
-                  template.thumbnailUrl ||
-                  'assets/images/template-placeholder.jpg'
-                "
-                [alt]="template.name"
-                class="template-img"
-              />
-            </ng-template>
-            <!-- Status badge -->
-            <div
-              class="status-badge-overlay"
-              [ngClass]="{
-                published: template.status === 'PUBLISHED',
-                draft: template.status === 'DRAFT',
-                stopped: template.status === 'STOPPED'
-              }"
-            >
-              <app-icon
-                *ngIf="template.status === 'PUBLISHED'"
-                name="check"
-                width="12"
-                height="12"
-              ></app-icon>
-              <!-- Using circle with dot for draft -->
-              <span
-                *ngIf="template.status === 'DRAFT'"
-                class="status-icon draft-icon"
-              ></span>
-              <!-- Using circle with x for stopped -->
-              <span
-                *ngIf="template.status === 'STOPPED'"
-                class="status-icon stopped-icon"
-              ></span>
-              {{
-                template.status === "PUBLISHED"
-                  ? "Published"
-                  : template.status === "STOPPED"
-                  ? "Stopped"
-                  : "Draft"
-              }}
-            </div>
-            <div *ngIf="isPremium(template)" class="premium-overlay"></div>
-          </div>
-        </div>
-
-        <!-- Template Content -->
-        <div class="template-content">
-          <!-- Header Badges: Only plan badge now -->
-          <div class="template-header-badges">
-            <app-plan-badge
-              [plan]="template.plan || 'standard'"
-            ></app-plan-badge>
-          </div>
-
-          <!-- Template Info -->
-          <div class="template-info">
-            <h3 class="template-name">
-              {{ template.name }}
-              <span class="template-type">{{ template.type }}</span>
-              <span *ngIf="isPremium(template)" class="premium-badge">
-                <app-icon name="star" width="10" height="10"></app-icon>
-                Premium
-              </span>
-            </h3>
-            <div class="template-meta">
-              <span class="meta-item">
-                <app-icon name="calendar" width="14" height="14"></app-icon>
-                <span>{{ template.createdAt | date : "MMM d, yyyy" }}</span>
-              </span>
-            </div>
-            <p class="template-description">
-              {{ template.description || "A customizable website template" }}
-            </p>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="template-actions">
-            <div class="action-buttons">
-              <button
-                class="action-btn preview-btn"
-                (click)="viewTemplate(template)"
-                title="Preview template"
-              >
-                <app-icon name="eye" width="16" height="16"></app-icon>
-                <span>Preview</span>
-              </button>
-              <button
-                class="action-btn edit-btn"
-                (click)="editTemplate(template)"
-                title="Edit template"
-              >
-                <app-icon name="edit" width="16" height="16"></app-icon>
-                <span>Edit</span>
-              </button>
-              <button
-                class="action-btn delete-btn"
-                (click)="deleteTemplate(template)"
-                title="Delete template"
-              >
-                <app-icon name="trash" width="16" height="16"></app-icon>
-                <span>Delete</span>
-              </button>
-            </div>
-            <div class="action-divider"></div>
-            <button
-              class="publish-btn"
-              [disabled]="
-                template.isPublishing ||
-                template.status === 'PUBLISHED' ||
-                template.status === 'STOPPED'
-              "
-              [class.disabled-btn]="
-                template.status === 'PUBLISHED' || template.status === 'STOPPED'
-              "
-              (click)="publishTemplate(template)"
-            >
-              <ng-container *ngIf="template.isPublishing">
-                <span class="loading-spinner"></span>
-                <span>Publishing...</span>
-              </ng-container>
-              <ng-container *ngIf="!template.isPublishing">
-                <app-icon name="publish" width="16" height="16"></app-icon>
-                <span>Publish</span>
-              </ng-container>
-            </button>
-          </div>
+        <div class="empty-state-content">
+          <app-icon
+            name="template"
+            width="48"
+            height="48"
+            class="empty-icon"
+          ></app-icon>
+          <h3>No templates yet</h3>
+          <p>Create your first website template to get started</p>
         </div>
       </div>
-    </div>
+
+      <!-- Templates List -->
+      <app-template-list
+        *ngIf="
+          !(loading$ | async) &&
+          !(error$ | async) &&
+          templates &&
+          templates.length > 0
+        "
+        [templates]="templates"
+        (edit)="editTemplate($event)"
+        (view)="viewTemplate($event)"
+        (delete)="deleteTemplate($event)"
+        (publish)="publishTemplate($event)"
+      ></app-template-list>
+    </ng-container>
   </div>
 </section>
