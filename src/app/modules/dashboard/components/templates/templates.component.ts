@@ -39,7 +39,6 @@ import { TemplateControlsComponent } from './components/template-controls/templa
 import { TemplateListComponent } from './components/template-list/template-list.component';
 import { TemplateCardComponent } from './components/template-card/template-card.component';
 import { AuthService } from '../../../../core/services/auth/auth.service';
-import { SubscriptionService } from '../../../../core/services/subscription/subscription.service';
 import { UserBuildService } from '../../../../core/services/build/user-build.service';
 import { ConfirmationService } from '../../../../core/services/shared/confirmation/confirmation.service';
 
@@ -89,15 +88,6 @@ export interface UserTemplate {
 
 // Type alias for service response mapping
 type ServiceUserTemplate = any; // Use any temporarily to avoid conflicts
-
-// Define a type for the result of subscription flow
-interface SubscriptionFlowResult {
-  type: 'subscription-flow' | 'upgrade-flow' | 'direct-publish' | 'error';
-  action?: string;
-  selectedPlan?: any;
-  build?: any;
-  message?: string;
-}
 
 @Component({
   selector: 'app-templates',
@@ -167,7 +157,6 @@ export class TemplatesComponent implements OnInit, OnDestroy {
   private selectionStateService = inject(SelectionStateService);
   private router = inject(Router);
   private authService = inject(AuthService);
-  private subscriptionService = inject(SubscriptionService);
   private userBuildService = inject(UserBuildService);
   private confirmationService = inject(ConfirmationService);
 
@@ -581,6 +570,20 @@ export class TemplatesComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // FIXED: Redirect to subscription-selection page with required parameters
+    // instead of checking for active subscription
+    // This matches the behavior in PreviewComponent.publishTemplate
+    this.router.navigate(['/subscription-selection'], {
+      queryParams: {
+        templateId: template.id,
+        templateName: template.name || 'Website Template',
+        templatePlan: template.plan || 'standard',
+      },
+    });
+
+    // Previous code was incorrectly checking for subscriptions and redirecting to /subscription
+    // which doesn't exist, causing 401 errors when trying to call the non-existent API endpoint
+    /*
     // Check if user has an active subscription
     this.subscriptionService.getUserSubscriptions().subscribe({
       next: (subscriptions: any[]) => {
@@ -644,10 +647,12 @@ export class TemplatesComponent implements OnInit, OnDestroy {
         );
       },
     });
+    */
   }
 
   /**
    * Update the publishing state of a template in the local state
+   * This is a utility method for visual feedback only
    */
   private updateTemplatePublishingState(
     templateId: string,

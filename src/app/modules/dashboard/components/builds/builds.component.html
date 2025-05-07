@@ -11,8 +11,11 @@
     </div>
   </header>
 
-  <!-- Loading state -->
-  <div *ngIf="loading() || !initialLoadingComplete()" class="loading-state">
+  <!-- Loading state - improved to prevent flickering -->
+  <div
+    *ngIf="loading() || (pendingBuildIdToSelect && !initialLoadingComplete())"
+    class="loading-state"
+  >
     <div class="spinner"></div>
     <p>Loading your websites...</p>
   </div>
@@ -129,6 +132,7 @@
           *ngFor="let build of filteredBuilds()"
           class="build-item"
           [class.selected]="build.id === selectedBuildId()"
+          [class.highlighted]="build.isHighlighted"
           (click)="selectBuild(build.id)"
           #buildItemRef
           [attr.data-build-id]="build.id"

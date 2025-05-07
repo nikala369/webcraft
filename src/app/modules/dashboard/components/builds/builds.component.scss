@@ -1136,3 +1136,30 @@
     transform: rotate(360deg);
   }
 }
+
+// Highlighted build style
+.build-item.highlighted {
+  box-shadow: 0 0 0 2px #3b82f6, 0 4px 12px rgba(59, 130, 246, 0.15);
+  position: relative;
+  z-index: 2;
+}
+
+// Highlight pulse animation for newly published builds
+.build-item.highlight-pulse {
+  animation: pulse-border 2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7),
+      0 4px 12px rgba(59, 130, 246, 0.15);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0),
+      0 4px 12px rgba(59, 130, 246, 0.15);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0),
+      0 4px 12px rgba(59, 130, 246, 0.15);
+  }
+}
