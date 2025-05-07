@@ -825,7 +825,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
   margin-left: 10px;
 }
 
@@ -835,6 +834,7 @@
   object-fit: cover;
   border-radius: 12px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: transform 0.3s ease;
 }
 
 // Template iframe link and hover effect
@@ -873,7 +873,7 @@
   border: 0;
   border-radius: 8px;
   background: #f8fafc;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
   transition: filter 0.25s;
 }
@@ -884,7 +884,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -896,25 +896,13 @@
 }
 
 .view-site-text {
-  color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
-  padding: 0.5rem 1rem;
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  &::before {
-    content: "";
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'%3E%3C/path%3E%3Cpolyline points='15 3 21 3 21 9'%3E%3C/polyline%3E%3Cline x1='10' y1='14' x2='21' y2='3'%3E%3C/line%3E%3C/svg%3E");
-    background-size: contain;
-    background-repeat: no-repeat;
-  }
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 // Status badge on the preview image
@@ -1114,4 +1102,109 @@
   app-icon {
     color: currentColor;
   }
+}
+
+.template-preview-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.preview-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 12px 12px 0 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(62, 128, 255, 0.15);
+  border-top-color: #3e80ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  will-change: transform;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.preview-error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 11;
+  border-radius: 12px 12px 0 0;
+  flex-direction: column;
+  color: #ef4444;
+  font-size: 1.1rem;
+  user-select: none;
+}
+
+.preview-error-overlay app-icon {
+  color: #ef4444;
+}
+
+.preview-error-overlay .retry-button {
+  margin-top: 12px;
+  background: #fff0f0;
+  border: 1px solid #fecaca;
+  color: #ef4444;
+  font-size: 0.825rem;
+  padding: 6px 12px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+
+  &:hover {
+    background: #fee2e2;
+    border-color: #ef4444;
+    box-shadow: 0 1px 2px rgba(239, 68, 68, 0.1);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// Fix for iframe display issues
+.template-preview-iframe {
+  border: none;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  display: block;
+  border-radius: 12px 12px 0 0;
+  aspect-ratio: 16/9;
+  min-height: 180px;
 }
