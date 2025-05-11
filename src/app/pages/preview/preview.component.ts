@@ -363,7 +363,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-// ======== ROUTE PARAMETER HANDLING ========
+  // ======== ROUTE PARAMETER HANDLING ========
   /**
    * Parse route parameters to determine operation mode and initialize component state
    */
@@ -375,19 +375,21 @@ export class PreviewComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((params) => {
         // --- Parameter Extraction ---
-        const templateId      = params['templateId']      || null;
-        const isCreatingNew   = params['newTemplate'] === 'true';
-        const urlBusinessType = params['businessType']   || null;
-        const urlPlan         = (params['plan'] || 'standard') as 'standard' | 'premium';
-        const urlMode         = params['mode']           || 'edit';
-        const urlStep         = params['step'] ? parseInt(params['step'], 10) : null;
+        const templateId = params['templateId'] || null;
+        const isCreatingNew = params['newTemplate'] === 'true';
+        const urlBusinessType = params['businessType'] || null;
+        const urlPlan = (params['plan'] || 'standard') as
+          | 'standard'
+          | 'premium';
+        const urlMode = params['mode'] || 'edit';
+        const urlStep = params['step'] ? parseInt(params['step'], 10) : null;
 
         console.log(
           `[parseRouteParameters] Determined: ` +
-          `templateId=${templateId}, ` +
-          `newTemplate=${isCreatingNew}, ` +
-          `businessType=${urlBusinessType}, ` +
-          `plan=${urlPlan}`
+            `templateId=${templateId}, ` +
+            `newTemplate=${isCreatingNew}, ` +
+            `businessType=${urlBusinessType}, ` +
+            `plan=${urlPlan}`
         );
 
         // Always set plan first
@@ -447,7 +449,9 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
           // --- Fallback: no info at all, show the selector ---
         } else {
-          console.log(`[parseRouteParameters] No template/type → showing selector`);
+          console.log(
+            `[parseRouteParameters] No template/type → showing selector`
+          );
           this.currentStep.set(urlStep ?? 2);
           this.showBusinessTypeSelector.set(true);
           this.initializeDefaultCustomizations();
@@ -1865,6 +1869,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
     const templateId = this.currentUserTemplateId();
     const templateName = this.currentTemplateName() || 'Website Template';
     const templatePlan = this.currentPlan() || 'standard';
+    const templateType = this.businessType() || 'business';
     if (!templateId) {
       this.confirmationService.showConfirmation(
         'Please save your template before publishing.',
@@ -1878,6 +1883,7 @@ export class PreviewComponent implements OnInit, OnDestroy {
         templateId,
         templateName,
         templatePlan,
+        templateType,
       },
     });
   }

@@ -160,4 +160,24 @@ export class UserBuildService {
       })
     );
   }
+
+  /**
+   * Initiate combined template purchase + subscription checkout.
+   * Returns the Stripe Checkout URL as text.
+   */
+  initiateCombinedCheckout(
+    userTemplateId: string,
+    subscriptionId: string
+  ): Observable<string> {
+    const url = `${environment.apiUrl}${environment.apiPrefix}/template/user-template/checkout`;
+    return this.http
+      .post(url, { userTemplateId, subscriptionId }, { responseType: 'text' })
+      .pipe(
+        map((checkoutUrl) => checkoutUrl.trim()),
+        catchError((error) => {
+          console.error('Error initiating combined checkout:', error);
+          return throwError(() => error);
+        })
+      );
+  }
 }

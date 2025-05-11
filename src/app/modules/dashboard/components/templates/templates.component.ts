@@ -578,6 +578,7 @@ export class TemplatesComponent implements OnInit, OnDestroy {
         templateId: template.id,
         templateName: template.name || 'Website Template',
         templatePlan: template.plan || 'standard',
+        templateType: template.type || 'business',
       },
     });
 

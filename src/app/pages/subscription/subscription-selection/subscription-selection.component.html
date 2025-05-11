@@ -1,13 +1,7 @@
 <div class="subscription-page">
   <div class="container">
-    <div
-      style="
-        margin-bottom: 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      "
-    >
+    <!-- Back link and plan badge -->
+    <div class="page-header-wrapper">
       <div class="back-link" (click)="goBack()">
         <svg
           class="back-icon"
@@ -25,35 +19,48 @@
         </svg>
         <span>Back to templates</span>
       </div>
+      <!-- Return plan badge to original position -->
       <div class="template-meta">
         <app-plan-badge [plan]="templatePlan"></app-plan-badge>
       </div>
     </div>
 
-    <div
-      style="display: flex; justify-content: space-between; align-items: center"
-    >
-      <!-- Page header -->
-      <div class="page-header">
-        <h1>Choose a Subscription Plan</h1>
-        <p class="subtitle">
-          Select a subscription plan to publish your website
-        </p>
+    <!-- Page title section -->
+    <div class="title-section">
+      <h1>Complete Your Purchase</h1>
+      <p class="subtitle">Choose a subscription plan to publish your website</p>
+    </div>
+
+    <!-- Template information card with enhanced details -->
+    <div class="template-details-card">
+      <div class="template-info">
+        <div class="template-header">
+          <h3 class="template-title">{{ templateName }}</h3>
+          <!-- Display template type using a getter method to handle null safety -->
+          <div class="template-type-tag" *ngIf="templateType">
+            {{ getTemplateTypeDisplay() }}
+          </div>
+        </div>
+
+        <div class="template-specs">
+          <div class="spec-item" *ngIf="templateType">
+            <span class="spec-label">Type:</span>
+            <span class="spec-value">{{ templateType }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">License:</span>
+            <span class="spec-value">Single Site</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Support:</span>
+            <span class="spec-value">60 Days</span>
+          </div>
+        </div>
       </div>
 
-      <!-- Template display on the right -->
-      <div
-        class="template-box"
-        style="
-          background: #f9fafb;
-          padding: 15px;
-          border-radius: 10px;
-          border: 1px solid #e5e7eb;
-        "
-      >
-        <h3 style="margin: 0; font-size: 0.95rem; color: #374151">
-          Template: {{ templateName }}
-        </h3>
+      <div class="template-price-tag">
+        <span class="price">{{ getTemplatePriceDisplay() }}</span>
+        <span class="price-label">one-time fee</span>
       </div>
     </div>
 
@@ -93,7 +100,7 @@
       *ngIf="subscriptionPlans.length > 0"
       class="subscription-plans-section"
     >
-      <h2>Available Subscription Plans</h2>
+      <h2>Choose Your Subscription Plan</h2>
 
       <div class="plan-cards">
         <div
@@ -117,8 +124,8 @@
               {{
                 plan.description ||
                   (plan.type === "BASIC"
-                    ? "Basic subscription"
-                    : "Premium subscription")
+                    ? "Basic hosting and support"
+                    : "Premium hosting with advanced features")
               }}
             </p>
             <div class="plan-price">
@@ -148,72 +155,272 @@
             </ul>
           </div>
 
-          <div class="plan-select">
+          <div class="plan-action">
             <div
               class="select-button"
               [class.selected]="selectedPlanId === plan.id"
             >
-              <span *ngIf="selectedPlanId !== plan.id">Select Plan</span>
-              <span
-                *ngIf="selectedPlanId === plan.id"
-                style="
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                "
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  stroke="none"
-                >
-                  <path
-                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-                  ></path>
-                </svg>
-                Selected
-              </span>
+              {{ selectedPlanId === plan.id ? "Selected" : "Select Plan" }}
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Price summary section -->
-    <div *ngIf="selectedPlanId" class="price-summary-section">
-      <div class="price-summary-card">
-        <h3>Subscription Summary</h3>
+    <!-- Order Summary Section - Enhanced -->
+    <div class="order-summary" *ngIf="selectedPlanId">
+      <h2>Order Summary</h2>
+      <div class="summary-item">
+        <span class="item-name">
+          {{ templateName }}
+          <span class="item-type">{{ templatePlan }} Template</span>
+        </span>
+        <span class="item-price">{{ getTemplatePriceDisplay() }}</span>
+      </div>
+      <ng-container *ngIf="getSelectedPlan() as selectedPlan">
+        <div class="summary-item">
+          <span class="item-name">
+            {{ getPlanTypeLabel(selectedPlan.type || "") }}
+            <span class="item-type">Hosting Plan</span>
+          </span>
+          <span class="item-price">
+            {{
+              selectedPlan.priceCents
+                ? (selectedPlan.priceCents / 100 | currency)
+                : "$0"
+            }}/month
+          </span>
+        </div>
+        <div class="summary-total">
+          <span class="total-label">Total Today</span>
+          <span class="total-price">{{ calculateTotalPrice() }}</span>
+        </div>
+        <p class="recurring-note">
+          <svg
+            class="info-icon"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          Starting next month, you will be charged &nbsp;
+          <strong>{{
+            selectedPlan.priceCents
+              ? (selectedPlan.priceCents / 100 | currency)
+              : " $0"
+          }}</strong>
+          &nbsp; monthly for your subscription.
+        </p>
+      </ng-container>
+    </div>
 
-        <div class="price-breakdown">
-          <div class="breakdown-row">
-            <span>Monthly Subscription</span>
-            <span>{{ getSubscriptionPriceOnly() | currency }}/month</span>
-          </div>
+    <!-- Enhanced Terms and Conditions Agreement with scroll tracking -->
+    <div class="terms-container" *ngIf="selectedPlanId">
+      <h3>Terms and Conditions</h3>
+      <div class="terms-scroll-guide">
+        <div class="scroll-progress">
+          <div
+            class="scroll-progress-bar"
+            [style.width.%]="scrolledPercentage"
+          ></div>
+        </div>
+        <div class="scroll-indicator" *ngIf="!hasScrolledToBottom">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+          <span style="cursor: default"
+            >Scroll to continue ({{ scrolledPercentage }}%)</span
+          >
+        </div>
+      </div>
 
-          <div class="breakdown-row total">
-            <span>Total</span>
-            <span>{{ calculateTotalPrice() | currency }}</span>
+      <div
+        class="terms-scroll-container"
+        #termsScrollContainer
+        tabindex="0"
+        [attr.aria-label]="
+          'Terms and conditions, ' + scrolledPercentage + '% scrolled'
+        "
+      >
+        <div class="terms-content">
+          <h4>Subscription Agreement</h4>
+          <p>
+            This Subscription Agreement ("Agreement") is entered into between
+            You ("Customer") and our Company, effective upon your acceptance of
+            these terms.
+          </p>
+
+          <h5>1. SUBSCRIPTION SERVICES</h5>
+          <p>
+            1.1 Subject to the terms and conditions of this Agreement and
+            payment of applicable fees, we grant you a non-exclusive,
+            non-transferable right to access and use our website building and
+            hosting services.
+          </p>
+          <p>
+            1.2 Your subscription includes website hosting, maintenance, and
+            access to our platform features as outlined in your selected plan.
+          </p>
+
+          <h5>2. PAYMENT TERMS</h5>
+          <p>
+            2.1 You agree to pay all fees associated with your subscription
+            plan. Fees for the initial term will be charged immediately upon
+            checkout.
+          </p>
+          <p>
+            2.2 Subscription fees are billed on a recurring monthly basis
+            starting from the date of initial subscription.
+          </p>
+          <p>
+            2.3 Template purchase fees are one-time charges applied at checkout.
+          </p>
+          <p>
+            2.4 All purchases are final and non-refundable except as required by
+            applicable law.
+          </p>
+
+          <h5>3. TERM AND TERMINATION</h5>
+          <p>
+            3.1 This Agreement commences on the date of your subscription
+            purchase and continues until terminated.
+          </p>
+          <p>
+            3.2 You may cancel your subscription at any time through your
+            account dashboard or by contacting customer support.
+          </p>
+          <p>
+            3.3 Upon termination, your website will no longer be accessible and
+            we may delete all associated data after 30 days.
+          </p>
+
+          <h5>4. INTELLECTUAL PROPERTY</h5>
+          <p>
+            4.1 You retain ownership of all content you upload to your website.
+          </p>
+          <p>
+            4.2 We retain ownership of our platform, templates, and all
+            associated intellectual property.
+          </p>
+          <p>
+            4.3 Template purchases grant you a license to use the template on a
+            single website only.
+          </p>
+
+          <h5>5. LIMITATION OF LIABILITY</h5>
+          <p>
+            5.1 Our services are provided "as is" without warranty of any kind,
+            either express or implied.
+          </p>
+          <p>
+            5.2 We shall not be liable for any indirect, incidental, special,
+            consequential or punitive damages.
+          </p>
+
+          <h5>6. GENERAL PROVISIONS</h5>
+          <p>
+            6.1 This Agreement constitutes the entire understanding between you
+            and us regarding your subscription.
+          </p>
+          <p>
+            6.2 We reserve the right to update these terms at any time, with
+            notice provided through our platform.
+          </p>
+
+          <div class="end-of-terms">
+            <p>End of Terms and Conditions</p>
           </div>
         </div>
+      </div>
 
-        <div class="cancel-anytime">
-          <strong>No long-term commitment</strong> – You can cancel your
-          subscription anytime
-        </div>
+      <!-- Checkbox that appears only after scrolling to bottom -->
+      <div class="terms-checkbox" [class.visible]="isCheckboxVisible">
+        <label>
+          <input
+            type="checkbox"
+            [(ngModel)]="termsAccepted"
+            id="termsCheckbox"
+            [attr.aria-label]="'Accept terms and conditions'"
+          />
+          I have read and agree to the Terms and Conditions
+        </label>
       </div>
     </div>
   </div>
 
-  <!-- Floating continue to payment button -->
-  <button
-    *ngIf="selectedPlanId"
-    class="continue-button"
-    [disabled]="!selectedPlanId || isProcessing"
-    (click)="continueToPayment()"
-  >
-    <span *ngIf="!isProcessing">Continue to Payment</span>
-    <div *ngIf="isProcessing" class="button-spinner"></div>
-  </button>
+  <!-- Premium Floating Checkout Button -->
+  <div class="floating-checkout" *ngIf="selectedPlanId">
+    <!-- Trust signals above button -->
+    <div class="checkout-trust-signals">
+      <div class="trust-item">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <span>Secure Checkout</span>
+      </div>
+      <div class="trust-item">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>Instant Setup</span>
+      </div>
+      <div class="trust-item">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="8.5" cy="7" r="4"></circle>
+          <polyline points="17 11 19 13 23 9"></polyline>
+        </svg>
+        <span>24/7 Support</span>
+      </div>
+    </div>
+
+    <button
+      [disabled]="!selectedPlanId || isProcessing || !termsAccepted"
+      class="premium-checkout-button"
+      (click)="continueToPayment()"
+    >
+      <span *ngIf="!isProcessing">Proceed to Checkout</span>
+      <div *ngIf="isProcessing" class="button-loading">
+        <div class="spinner-small"></div>
+        <span>Processing...</span>
+      </div>
+    </button>
+  </div>
 </div>
