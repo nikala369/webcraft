@@ -12,7 +12,7 @@ $gray-text: #a0a0a0;
   position: relative;
   overflow: hidden;
   padding: 80px 0 0;
-  border-top: 0.1px solid $white;
+  border-top: 1px solid rgba($white, 0.08);
 
   // Subtle background pattern
   &::before {
@@ -49,17 +49,31 @@ $gray-text: #a0a0a0;
   .footer-logo {
     height: 60px;
     margin-bottom: 25px;
-    transition: filter 0.3s ease;
+    transition: transform 0.3s ease, filter 0.3s ease;
 
     &:hover {
       filter: drop-shadow(0 0 5px rgba($gold, 0.5));
+      transform: translateY(-2px);
     }
   }
 
   .company-description {
     line-height: 1.8;
     font-size: 13.5px;
+    color: $gray-text;
   }
+}
+
+// Accent elements
+.accent-dash {
+  color: $white;
+  font-weight: 700;
+}
+
+.accent-divider {
+  color: $white;
+  font-weight: 700;
+  margin: 0 5px;
 }
 
 // Wrapper for the other footer sections
@@ -106,10 +120,12 @@ $gray-text: #a0a0a0;
 .footer-link {
   color: $gray-text;
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   font-size: 15px;
   padding-bottom: 2px;
+  display: inline-block;
 
   &::before {
     content: "";
@@ -119,11 +135,12 @@ $gray-text: #a0a0a0;
     width: 0;
     height: 1px;
     background-color: $gold;
-    transition: width 0.3s ease;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   &:hover {
     color: $white;
+    transform: translateX(3px);
 
     &::before {
       width: 100%;
@@ -132,6 +149,7 @@ $gray-text: #a0a0a0;
 }
 
 .contact-list {
+  margin-left: -5px !important;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -140,19 +158,46 @@ $gray-text: #a0a0a0;
 .contact-item {
   display: flex;
   align-items: center;
-  justify-content: left;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
 
-  i {
-    color: $gold;
+  .icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba($gold, 0.1);
     margin-right: 15px;
-    font-size: 20px;
-    margin-top: -1px;
+    transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    svg {
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
   }
 
-  span {
+  &:hover .icon-wrapper {
+    background: rgba($gold, 0.15);
+
+    svg {
+      transform: scale(1.1);
+    }
+  }
+
+  span,
+  .contact-link {
     font-size: 15px;
     line-height: 1.6;
+  }
+
+  .contact-link {
+    color: $gray-text;
+    text-decoration: none;
+    transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      color: $white;
+    }
   }
 }
 
@@ -189,10 +234,27 @@ $gray-text: #a0a0a0;
     color: $gray-text;
     text-decoration: none;
     font-size: 14px;
-    transition: color 0.3s ease;
+    transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    padding-bottom: 2px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background-color: rgba($gold, 0.7);
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
     &:hover {
       color: $white;
+
+      &::before {
+        width: 100%;
+      }
     }
   }
 }
@@ -262,10 +324,10 @@ $gray-text: #a0a0a0;
 
   .contact-item {
     justify-content: center;
+  }
 
-    i {
-      margin-right: 10px;
-    }
+  .footer-link:hover {
+    transform: translateX(0);
   }
 }
 

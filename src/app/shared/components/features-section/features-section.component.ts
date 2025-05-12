@@ -78,10 +78,10 @@ interface Feature {
         query(
           ':enter',
           [
-            style({ opacity: 0, transform: 'translateY(30px)' }),
-            stagger('150ms', [
+            style({ opacity: 0, transform: 'translateY(20px)' }),
+            stagger('100ms', [
               animate(
-                '600ms ease-out',
+                '450ms cubic-bezier(0.4,0,0.2,1)',
                 style({ opacity: 1, transform: 'translateY(0)' })
               ),
             ]),
@@ -175,28 +175,22 @@ interface Feature {
         overflow: hidden;
 
         &:before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 4px;
-          background: linear-gradient(90deg, #3e80ff, #a78bfa);
+          content: none;
         }
 
         &:hover {
-          transform: translateY(-10px);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+          transform: translateY(-6px);
+          box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
           background: rgba(28, 41, 71, 0.5);
 
           .feature-icon-container {
             transform: scale(1.05);
-            box-shadow: 0 0 0 8px rgba(62, 128, 255, 0.15);
+            box-shadow: 0 0 0 6px rgba(62, 128, 255, 0.12);
 
             .feature-icon {
-              transform: scale(1.15);
+              transform: scale(1.1);
               svg {
-                filter: drop-shadow(0 0 8px rgba(62, 128, 255, 0.5));
+                filter: drop-shadow(0 0 6px rgba(62, 128, 255, 0.4));
               }
             }
           }
@@ -212,7 +206,7 @@ interface Feature {
         border-radius: 50%;
         margin-bottom: 2rem;
         background: rgba(23, 34, 59, 0.5);
-        box-shadow: 0 0 0 6px rgba(62, 128, 255, 0.1);
+        box-shadow: 0 0 0 4px rgba(62, 128, 255, 0.08);
         transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
           transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       }
@@ -227,7 +221,7 @@ interface Feature {
         background: rgba(23, 34, 59, 0.8);
         transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
           transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 
         svg {
           width: 40px;
@@ -244,7 +238,7 @@ interface Feature {
       }
 
       h3 {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         font-weight: 600;
         margin-bottom: 1.25rem;
         color: #fff;
@@ -252,7 +246,7 @@ interface Feature {
 
       p {
         color: rgba(255, 255, 255, 0.85);
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         line-height: 1.6;
         margin-bottom: 0;
         flex: 1;
