@@ -61,16 +61,32 @@
     flex-wrap: wrap;
     max-width: 1000px;
     margin: 0 auto;
+
+    // Ensure proper vertical alignment on wrap
+    align-items: stretch;
   }
 
   /* Make cards take more width on large screens */
   ::ng-deep .pricing-card {
     width: 400px !important;
     max-width: calc(50% - 1.25rem) !important;
+    margin-bottom: 2rem !important; /* Ensure spacing when cards wrap */
+    height: auto !important; /* Let height be determined by content */
+    display: flex !important; /* Ensure flex layout is preserved */
+
+    @media (max-width: 1000px) {
+      width: 380px !important;
+    }
 
     @media (max-width: 900px) {
       width: 100% !important;
       max-width: 450px !important;
+    }
+
+    @media (max-width: 480px) {
+      // Ensure all card content fits on smaller screens
+      padding: 1.5rem !important;
+      padding-bottom: 2rem !important; /* Extra space for button */
     }
   }
 }

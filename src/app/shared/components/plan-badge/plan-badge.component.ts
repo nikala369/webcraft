@@ -94,9 +94,9 @@ export class PlanBadgeComponent {
   get displayPlan(): string {
     switch (this.plan?.toLowerCase()) {
       case 'premium':
-        return 'Premium Plan';
+        return 'Premium Pro';
       case 'standard':
-        return 'Free Plan';
+        return 'Premium Plan';
       default:
         return 'Unknown Plan';
     }

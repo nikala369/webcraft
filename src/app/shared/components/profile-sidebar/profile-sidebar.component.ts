@@ -7,6 +7,9 @@ import {
   signal,
   OnInit,
   OnDestroy,
+  ChangeDetectorRef,
+  effect,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
@@ -17,7 +20,13 @@ import {
 } from '@angular/router';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { trigger, style, animate, transition } from '@angular/animations';
-import { Subscription, filter } from 'rxjs';
+import { Subscription, filter, take } from 'rxjs';
+import {
+  UserTemplateService,
+  UserTemplate,
+} from '../../../core/services/template/user-template.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-profile-sidebar',
@@ -58,18 +67,18 @@ export class ProfileSidebarComponent implements OnInit, OnDestroy {
 
   isMobileDevice = signal(false);
   activeView = signal<'desktop' | 'mobile'>('desktop');
-
-  // Track which links to animate
-  animateLinks = signal(false);
-
-  // Track active route for sidebar highlighting
   activeRoute = signal('');
-  private routerSubscription?: Subscription;
+  private destroyRef = inject(DestroyRef);
 
   authService = inject(AuthService);
   private router = inject(Router);
+  private userTemplateService = inject(UserTemplateService);
+  private cdr = inject(ChangeDetectorRef);
 
-  // Links for the sidebar navigation
+  userTemplates: UserTemplate[] = [];
+  premiumCount = 0;
+  premiumProCount = 0;
+
   navLinks = [
     {
       path: '/app/templates',
@@ -92,7 +101,6 @@ export class ProfileSidebarComponent implements OnInit, OnDestroy {
     },
   ];
 
-  // main website nav links (e.g. for mobile).
   mainNavLinks = [
     { path: '/about', label: 'About', exact: true },
     { path: '/pricing', label: 'Plan', exact: true },
@@ -105,41 +113,36 @@ export class ProfileSidebarComponent implements OnInit, OnDestroy {
       this.checkViewport();
       window.addEventListener('resize', this.checkViewport.bind(this));
     }
+    effect(() => {
+      const isOpen = this.isOpen();
+      this.cdr.detectChanges();
+      if (isOpen) {
+        setTimeout(() => this.fetchUserTemplates(), 0);
+      } else {
+        this.clearTemplateData();
+      }
+    });
   }
 
   ngOnInit(): void {
-    // Set active route based on current URL
-    if (isPlatformBrowser(this.platformId)) {
-      this.updateActiveRoute(this.router.url);
-
-      // Subscribe to router events to update active state
-      this.routerSubscription = this.router.events
-        .pipe(filter((event) => event instanceof NavigationEnd))
-        .subscribe((event: any) => {
-          this.updateActiveRoute(event.urlAfterRedirects);
-        });
-
-      // Set with a slight delay to trigger animations after component renders
-      setTimeout(() => {
-        this.animateLinks.set(true);
-      }, 100);
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((event: any) => {
+        this.activeRoute.set(event.urlAfterRedirects);
+      });
+    this.activeRoute.set(this.router.url);
+    if (this.isOpen()) {
+      this.fetchUserTemplates();
     }
   }
 
   ngOnDestroy(): void {
-    if (this.routerSubscription) {
-      this.routerSubscription.unsubscribe();
-    }
     if (isPlatformBrowser(this.platformId)) {
       window.removeEventListener('resize', this.checkViewport.bind(this));
     }
-  }
-
-  /**
-   * Update the active route for sidebar highlighting
-   */
-  private updateActiveRoute(url: string): void {
-    this.activeRoute.set(url);
   }
 
   private checkViewport(): void {
@@ -152,30 +155,15 @@ export class ProfileSidebarComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Get the current user from auth service
-   */
-  currentUser() {
-    return this.authService.currentUser();
-  }
-
-  /**
-   * Toggle sidebar visibility
-   */
   toggle(): void {
-    this.isOpen.update((current) => !current);
-
-    // If opening the sidebar, ensure the body is non-scrollable
-    if (isPlatformBrowser(this.platformId) && this.isOpen()) {
-      document.body.style.overflow = 'hidden';
-    } else if (isPlatformBrowser(this.platformId)) {
-      document.body.style.overflow = '';
+    const currentState = this.isOpen();
+    const newState = !currentState;
+    this.isOpen.set(newState);
+    if (isPlatformBrowser(this.platformId)) {
+      document.body.style.overflow = newState ? 'hidden' : '';
     }
   }
 
-  /**
-   * Close the sidebar
-   */
   close(): void {
     this.isOpen.set(false);
     if (isPlatformBrowser(this.platformId)) {
@@ -183,16 +171,11 @@ export class ProfileSidebarComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Get user initials for avatar
-   */
   getInitials(): string {
     const user = this.authService.currentUser();
     if (!user) return '?';
-
     const displayName = user.username || user.email || '';
     if (!displayName) return '?';
-
     return displayName
       .split(' ')
       .map((n: string) => n[0])
@@ -201,74 +184,56 @@ export class ProfileSidebarComponent implements OnInit, OnDestroy {
       .substring(0, 2);
   }
 
-  /**
-   * Handle logout
-   */
   logout(): void {
     this.authService.logout();
     this.close();
     this.router.navigate(['/auth/login']);
   }
 
-  /**
-   * Get the current user plan name
-   */
-  getUserPlan(): string {
-    const user = this.authService.currentUser();
-    return user?.subscription?.plan || 'Free';
-  }
-
-  /**
-   * Get CSS class for the plan badge
-   */
-  getUserPlanClass(): string {
-    const plan = this.getUserPlan().toLowerCase();
-    return `plan-${plan}`;
-  }
-
-  /**
-   * Get the plan expiry date if available
-   */
-  getUserPlanExpiryDate(): Date | null {
-    const user = this.authService.currentUser();
-    return user?.subscription?.expiryDate
-      ? new Date(user.subscription.expiryDate)
-      : null;
-  }
-
-  /**
-   * Check if the user has a premium plan
-   */
-  isPremiumUser(): boolean {
-    const plan = this.getUserPlan().toLowerCase();
-    return plan === 'premium' || plan === 'pro';
-  }
-
-  /**
-   * Navigate to the plans/pricing page
-   */
-  navigateToPlans(): void {
-    this.close();
-    this.router.navigate(['/pricing']);
-  }
-
-  /**
-   * Navigate to dashboard items with smooth transition
-   */
-  navigateToDashboard(path: string): void {
-    // First close the sidebar
-    this.close();
-
-    // Add a small delay before navigation to allow sidebar closing animation
-    setTimeout(() => {
-      this.router.navigate([path]);
-    }, 300);
-  }
-
-  /**
-   * Check if a route is active (for highlighting)
-   */
   isRouteActive(path: string): boolean {
     return this.activeRoute().includes(path);
+  }
+
+  private fetchUserTemplates(): void {
+    this.userTemplateService
+      .searchUserTemplates(0, 20)
+      .pipe(take(1))
+      .subscribe({
+        next: (response) => {
+          this.userTemplates = response?.content || [];
+          this.countTemplatePlans();
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.clearTemplateData();
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  private clearTemplateData(): void {
+    this.userTemplates = [];
+    this.premiumCount = 0;
+    this.premiumProCount = 0;
+  }
+
+  private countTemplatePlans(): void {
+    if (!this.userTemplates || this.userTemplates.length === 0) {
+      this.premiumCount = 0;
+      this.premiumProCount = 0;
+      return;
+    }
+    let premium = 0;
+    let premiumPro = 0;
+    for (const t of this.userTemplates) {
+      if (!t || !t.template || !t.template.templatePlan) {
+        continue;
+      }
+      const planType = t.template.templatePlan.type;
+      if (planType === 'BASIC') premium++;
+      else if (planType === 'PREMIUM') premiumPro++;
+    }
+    this.premiumCount = premium;
+    this.premiumProCount = premiumPro;
   }
 }

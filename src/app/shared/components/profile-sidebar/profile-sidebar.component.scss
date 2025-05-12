@@ -608,3 +608,50 @@
     }
   }
 }
+
+// Template Plan Summary
+.template-plan-summary {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .template-badge {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 6px;
+  }
+
+  .template-details {
+    .template-count {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+      margin: 0;
+
+      .premium {
+        color: #3e80ff; // App's blue color for Premium
+        font-weight: 500;
+      }
+
+      .premium-pro {
+        color: #a78bfa; // Purple color for Premium Pro
+        font-weight: 500;
+      }
+
+      .empty {
+        color: rgba(255, 255, 255, 0.4); // Dimmer color for zero counts
+      }
+
+      .separator {
+        color: rgba(255, 255, 255, 0.3);
+        margin: 0 4px;
+      }
+    }
+  }
+}
