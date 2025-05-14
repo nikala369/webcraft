@@ -13,6 +13,20 @@ Webcraft is a powerful template-based website builder that allows users to creat
 - **Save & Edit**: Save your work and return to edit it later
 - **Publish & Deploy**: Publish your website with a single click
 
+## Subscription Plans
+
+Webcraft offers two paid subscription plans:
+
+- **Premium Plan**: Essential features for small businesses and individuals
+- **Premium Pro Plan**: Advanced features for growing businesses with enhanced customization needs
+
+Both plans include:
+
+- One-time template purchase fee
+- Monthly subscription for hosting and services
+
+See `docs/plan-comparison.md` for a detailed comparison.
+
 ## Technology Stack
 
 - **Frontend**: Angular (v19+), TypeScript, SCSS, Angular Signals
@@ -34,10 +48,13 @@ The Webcraft frontend is built on Angular and follows a component-based architec
 ### Key Components
 
 - **PreviewComponent**: The main website builder interface where users customize their templates
+- **PremiumStructureComponent**: Structure component for Premium plan templates
+- **PremiumProStructureComponent**: Structure component for Premium Pro plan templates (in development)
 - **Theme Switcher**: Allows users to select different themes for their website
 - **Business Type Selector**: Helps users choose their business category
 - **Component Customizer**: Modal interface for editing specific website sections
 - **Templates Component**: Displays saved templates in the dashboard
+- **Checkout Component**: Handles the template purchase and subscription process
 
 ### State Management
 
@@ -56,10 +73,12 @@ The frontend communicates with a Java Spring Boot backend API for:
 - Template storage and retrieval
 - Business type and template type management
 - Website publishing and deployment
+- Media attachment uploads
+- Checkout and subscription management
 
 ## Application Features
 
-### Authentication-Only Flow
+### Authentication Flow
 
 - Strict authentication checks in PreviewComponent
 - Redirection to login for unauthenticated users
@@ -76,6 +95,18 @@ The frontend communicates with a Java Spring Boot backend API for:
 - Signal-based reactive state
 - Computed properties for derived state
 - Effects for side-effect management
+
+### Media Management
+
+- Image upload for both plans
+- Video support for Premium Pro plans
+- Backend-based storage with secure retrieval
+
+### Checkout Process
+
+- Combined one-time purchase + subscription model
+- Secure payment processing
+- Plan upgrade options
 
 ### Security Considerations
 
@@ -123,15 +154,19 @@ The frontend communicates with a Java Spring Boot backend API for:
 2. **Template Selection**: Start by selecting a business type and template
 3. **Customization**: Use the component customizer to modify sections
 4. **Preview**: Test in both desktop and mobile views
-5. **Publish**: Test the publishing flow
+5. **Checkout**: Test the purchase and subscription flow
+6. **Publish**: Test the publishing flow
 
-## Contributing
+## Documentation
 
-Please review the development guides before contributing to the project:
+Please review these guides before contributing to the project:
 
-- Component Development: `docs/component-development-guide.md`
-- Backend Integration: `docs/backend-integration-guide.md`
-- Customization Schema: `docs/standard-customization-schema.json`
+- [Component Development Guide](./docs/component-development-guide.md): Guidelines for creating components
+- [Backend Integration Guide](./docs/backend-integration-guide.md): API integration details
+- [Component Data Flow](./docs/component-data-flow.md): How data flows between components
+- [Plan Comparison](./docs/plan-comparison.md): Differences between Premium and Premium Pro plans
+- [Phase Summary](./docs/phase-summary.md): Current project status and next steps
+- [Customization Schema](./docs/standard-customization-schema.json): JSON schema for template customization
 
 ## License
 

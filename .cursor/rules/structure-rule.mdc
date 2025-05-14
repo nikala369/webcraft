@@ -4,7 +4,7 @@ globs:
 alwaysApply: true
 ---
 # Auto Website Builder: Cursor Development Rules & AI Collaboration Guide (Frontend)
-# Version: 2.1 (Date: 2025-06-XX)
+# Version: 2.2 (Date: 2025-08-XX)
 
 # This document defines the development standards, architectural constraints, and AI collaboration protocols for the Auto Website Builder Angular frontend project. Adherence ensures consistency, quality, and effective teamwork between human developers and the AI assistant.
 
@@ -18,7 +18,7 @@ alwaysApply: true
 4. **Explicit Stepwise Execution:** For any non-trivial or multi-step task, the AI should outline a clear, step-by-step plan, investigate the codebase as needed, and verify each change or insight before proceeding.
 5. **Mandatory Protocol:** These agentic protocols are required for all AI-driven code changes, reviews, and suggestions in this project. They ensure high-quality, reliable, and maintainable solutions, and must be followed alongside all other project rules.
 
-## �� Core Philosophy
+## 🌟 Core Philosophy
 
 1.  **Simplicity & Maintainability:** Prioritize straightforward, clear, and easily maintainable Angular solutions leveraging the framework's strengths. Avoid unnecessary complexity or premature optimization.
 2.  **Iterative Development:** Favor incremental improvements on existing, functional code over complete rewrites unless fundamentally required or explicitly requested.
@@ -36,6 +36,8 @@ alwaysApply: true
         *   `docs/backend-integration-guide.md`: Details on **consuming** the Java Spring Boot API (endpoints, request/response formats, frontend authentication methods).
         *   `docs/standard-customization-schema.json`: Data contracts for section configurations.
         *   `docs/component-data-flow.md`: Understanding of data flow between components.
+        *   `docs/plan-comparison.md`: Detailed comparison of Premium vs Premium Pro plans.
+        *   `docs/phase-summary.md`: Current project status and development roadmap.
     *   **Clarification Required:** If documentation is missing, unclear, outdated, or conflicts with the request, **immediately ask for clarification** before proceeding.
 2.  **Architectural Adherence:**
     *   **Frontend Responsibility:** The Angular application handles presentation, user interaction, client-side state management (preferring **Angular Signals**), and communication with the backend API.
@@ -53,7 +55,7 @@ alwaysApply: true
 
 1.  **Task Definition Clarity:** Ensure a clear understanding of requirements, acceptance criteria, affected user flows, and API dependencies from documentation and project requirements.
 2.  **Systematic Change Protocol (Frontend):**
-    *   **Identify Impact:** Determine affected Angular components, services, signals, state, user flows, and API interactions. Assess potential side effects (especially Standard vs. Premium differences).
+    *   **Identify Impact:** Determine affected Angular components, services, signals, state, user flows, and API interactions. Assess potential side effects (especially Premium vs. Premium Pro differences).
     *   **Plan:** Outline implementation steps. Address state management needs (Signals) and API call requirements upfront. Tackle one logical change at a time.
     *   **Verify Validation Method:** Confirm how the change will be validated (primarily manual functional testing, API interaction verification via DevTools).
 3.  **Progress Tracking:**
@@ -117,9 +119,10 @@ alwaysApply: true
    * It coordinates between different parts of the application (selection, customization, viewing, saving).
    * Follows clear logical organization of methods and state.
 
-3. **Authentication Workflow:**
+3. **Authentication & Checkout Workflow:**
    * Always check user authentication before allowing editing operations.
    * Redirect to login when appropriate, preserving the return URL.
+   * Handle template purchase and subscription setup via the checkout flow.
    * Maintain clear authentication-dependent UI states.
 
 4. **Mobile Responsive Behavior:**
@@ -128,7 +131,8 @@ alwaysApply: true
    * Ensure all UI elements behave appropriately at different screen sizes.
 
 5. **Template Structure Organization:**
-   * StandardStructureComponent and PremiumStructureComponent handle different plan levels.
+   * PremiumStructureComponent handles Premium plan templates.
+   * PremiumProStructureComponent handles Premium Pro plan templates.
    * Each section within these components should be modular and independent.
    * Sections receive customization data and emit selection events.
 
@@ -158,5 +162,15 @@ alwaysApply: true
    * Follow the existing pattern for query parameter handling.
    * Preserve user context in URLs.
 
+6. **Attachment Handling:**
+   * Use AttachmentService for all media uploads and retrievals.
+   * Store file references in customization data, not raw data URLs.
+   * Clean up object URLs in ngOnDestroy to prevent memory leaks.
+
+7. **Plan Type Differentiation:**
+   * Clearly differentiate between Premium and Premium Pro features.
+   * Implement proper feature gating based on plan type.
+   * Provide clear upgrade paths from Premium to Premium Pro.
+
 ---
-*End of Auto Website Builder Cursor Rules (Version 2.1)*
+*End of Auto Website Builder Cursor Rules (Version 2.2)*

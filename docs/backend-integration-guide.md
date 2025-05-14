@@ -2,7 +2,27 @@
 
 ## Overview
 
-This guide documents how the Webcraft frontend application communicates with the Java Spring Boot backend API. All data persistence, authentication, and business logic operations are handled by the backend.
+This guide documents how the Webcraft frontend application communicates with the Java Spring Boot backend API. All data persistence, authentication, business logic operations, and website publishing are handled by the backend.
+
+## Business Model
+
+Webcraft offers two paid subscription plans:
+
+- **Premium Plan**: Standard templates with essential customization features
+- **Premium Pro Plan**: Advanced templates with enhanced customization options, additional sections, and more media options
+
+Both plans include:
+
+1. One-time template purchase fee
+2. Monthly subscription for hosting and related services
+
+The user journey follows this flow:
+
+1. Template selection (Premium or Premium Pro)
+2. Customization in the builder interface
+3. Template saving
+4. Combined checkout (one-time fee + subscription)
+5. Website publishing
 
 ## API Communication Pattern
 
@@ -100,6 +120,26 @@ Subscriptions manage the user's plan type and billing information:
 - **Get Default Subscription**: `GET /api/subscription/default/{type}`
 - **Create Subscription**: `POST /api/subscription`
 
+### Checkout Services
+
+Handles the purchase and subscription process:
+
+#### CheckoutService
+
+- **Initiate Checkout**: `POST /api/checkout/session`
+- **Verify Payment**: `GET /api/checkout/verify/{sessionId}`
+- **Get Payment History**: `GET /api/checkout/history`
+
+### Attachment Services
+
+Handles file uploads for media content:
+
+#### AttachmentService
+
+- **Upload Attachment**: `POST /api/template/user-template/attachment`
+- **Get Attachment**: `GET /api/template/user-template/attachment/{objectId}`
+- **Delete Attachment**: `DELETE /api/template/user-template/attachment/{objectId}`
+
 ## Data Models
 
 ### Template Data Models
@@ -112,10 +152,10 @@ export interface TemplateType {
   key: string; // e.g., 'restaurant', 'salon'
 }
 
-// Template Plan (standard/premium)
+// Template Plan (premium/premium-pro)
 export interface TemplatePlan {
   id: string;
-  type: "BASIC" | "PREMIUM";
+  type: "PREMIUM" | "PREMIUM_PRO";
   description: string;
   priceCents: number;
 }
@@ -147,7 +187,7 @@ export interface UserTemplate {
 
 ### Customizations Data Model
 
-The `config` field in templates is a JSON string that should be parsed to a `Customizations` object:
+The `config` field in templates is a JSON string that should be parsed to a `Customizations` object. The structure varies between Premium and Premium Pro plans, with Premium Pro offering more customization options.
 
 ```typescript
 // Simplified example of Customizations interface
@@ -183,6 +223,31 @@ export interface Customizations {
 }
 ```
 
+### Checkout Data Models
+
+```typescript
+// Checkout Session Request
+export interface CheckoutSessionRequest {
+  userTemplateId: string;
+  planType: "PREMIUM" | "PREMIUM_PRO";
+  returnUrl: string;
+}
+
+// Checkout Session Response
+export interface CheckoutSessionResponse {
+  sessionId: string;
+  checkoutUrl: string;
+  expiresAt: string;
+}
+
+// Payment Verification Response
+export interface PaymentVerificationResponse {
+  status: "COMPLETED" | "PENDING" | "FAILED";
+  subscriptionId?: string;
+  errorMessage?: string;
+}
+```
+
 ## Error Handling
 
 All API calls should include proper error handling:
@@ -194,6 +259,41 @@ this.http.get<UserTemplate>(`${this.USER_TEMPLATE_BASE}/${templateId}`).pipe(
     return throwError(() => error);
   })
 );
+```
+
+## Attachment Handling
+
+For file uploads (images, videos), use the attachment endpoints:
+
+```typescript
+uploadAttachment(
+  file: File,
+  type: 'USER_TEMPLATE_IMAGE' | 'USER_TEMPLATE_VIDEO'
+): Observable<{ fileId: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('type', type);
+
+  return this.http
+    .post<{ fileId: string }>(this.USER_TEMPLATE_ATTACHMENT, formData)
+    .pipe(
+      catchError((error) => {
+        console.error('Error uploading attachment:', error);
+        return throwError(() => error);
+      })
+    );
+}
+
+getAttachment(objectId: string): Observable<Blob> {
+  return this.http
+    .get(`${this.USER_TEMPLATE_ATTACHMENT}/${objectId}`, { responseType: 'blob' })
+    .pipe(
+      catchError((error) => {
+        console.error(`Error fetching attachment with ID ${objectId}:`, error);
+        return throwError(() => error);
+      })
+    );
+}
 ```
 
 ## API Request Examples
@@ -223,7 +323,7 @@ createUserTemplate(
 }
 ```
 
-### Loading Templates by Business Type
+### Loading Templates by Business Type and Plan
 
 ```typescript
 searchTemplates(
@@ -249,29 +349,47 @@ searchTemplates(
 }
 ```
 
-## Attachment Handling
-
-For file uploads (images, videos), use the attachment endpoints:
+### Initiating Checkout
 
 ```typescript
-uploadAttachment(
-  file: File,
-  type: 'USER_TEMPLATE_IMAGE' | 'USER_TEMPLATE_VIDEO'
-): Observable<{ fileId: string }> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('type', type);
+initiateCheckout(
+  userTemplateId: string,
+  planType: "PREMIUM" | "PREMIUM_PRO",
+  returnUrl: string
+): Observable<CheckoutSessionResponse> {
+  const request: CheckoutSessionRequest = {
+    userTemplateId,
+    planType,
+    returnUrl
+  };
 
   return this.http
-    .post<{ fileId: string }>(this.USER_TEMPLATE_ATTACHMENT, formData)
+    .post<CheckoutSessionResponse>(`${this.apiUrl}${this.apiPrefix}/checkout/session`, request)
     .pipe(
       catchError((error) => {
-        console.error('Error uploading attachment:', error);
+        console.error('Error initiating checkout:', error);
         return throwError(() => error);
       })
     );
 }
 ```
+
+## Plan-Specific Features
+
+### Premium Plan Features
+
+- Basic customization options
+- Limited section types
+- Standard header and footer options
+- Basic media upload capabilities
+
+### Premium Pro Plan Features
+
+- Advanced customization options
+- Additional section types
+- Enhanced header and footer options
+- Advanced media upload capabilities (more image/video options)
+- Additional page support
 
 ## Best Practices
 
@@ -283,3 +401,5 @@ uploadAttachment(
 6. **Retry Logic**: Implement retry logic for critical operations
 7. **Logging**: Log all important API interactions
 8. **Fallbacks**: Provide default values when API calls fail
+9. **Signal Integration**: Properly integrate Angular Signals with API responses
+10. **Security**: Follow security best practices (never store sensitive data client-side)
