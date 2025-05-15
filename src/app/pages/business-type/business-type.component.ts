@@ -81,8 +81,9 @@ export class BusinessTypeComponent implements OnInit {
     // Navigate directly to preview with the business type
     this.router.navigate(['/preview'], {
       queryParams: {
-        businessType: this.selectedType,
         plan: this.currentPlan,
+        businessType: this.selectedType,
+        newTemplate: 'true',
       },
     });
   }

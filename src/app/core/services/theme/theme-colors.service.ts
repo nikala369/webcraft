@@ -42,6 +42,7 @@ export class ThemeColorsService {
 
   // Set the current plan
   setPlan(plan: 'standard' | 'premium'): void {
+    console.log(`[ThemeColorsService] Setting plan to ${plan}`);
     this.currentPlanSignal.set(plan);
   }
 

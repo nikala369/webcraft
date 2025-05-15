@@ -443,8 +443,7 @@ export class TemplatesComponent implements OnInit, OnDestroy {
     // Navigate to the preview page with new template mode
     this.router.navigate(['/preview'], {
       queryParams: {
-        mode: 'new',
-        step: '2', // Business type selection step
+        newTemplate: 'true',
       },
     });
   }

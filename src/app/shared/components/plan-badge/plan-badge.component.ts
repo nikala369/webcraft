@@ -13,7 +13,9 @@ import { AuthService } from '../../../core/services/auth/auth.service';
       [ngClass]="getPlanClass()"
       [class.clickable]="canUpgrade()"
       [routerLink]="canUpgrade() ? ['/pricing'] : null"
-      [title]="canUpgrade() ? 'Click to upgrade your plan' : 'Your current plan'"
+      [title]="
+        canUpgrade() ? 'Click to upgrade your plan' : 'Your current plan'
+      "
     >
       <span class="plan-name">{{ displayPlan }}</span>
       <!-- Optional: Add back upgrade arrow if desired -->
@@ -94,9 +96,9 @@ export class PlanBadgeComponent {
   get displayPlan(): string {
     switch (this.plan?.toLowerCase()) {
       case 'premium':
-        return 'Premium Pro';
-      case 'standard':
         return 'Premium Plan';
+      case 'standard':
+        return 'Standard Plan';
       default:
         return 'Unknown Plan';
     }
@@ -110,6 +112,9 @@ export class PlanBadgeComponent {
   // Determine if the badge should link to upgrade
   canUpgrade(): boolean {
     // Only allow upgrade if authenticated AND on the standard/free plan
-    return this.authService.isAuthenticated() && this.plan?.toLowerCase() !== 'premium';
+    return (
+      this.authService.isAuthenticated() &&
+      this.plan?.toLowerCase() !== 'premium'
+    );
   }
 }

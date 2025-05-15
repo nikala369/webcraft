@@ -146,7 +146,7 @@ export class DashboardLayoutComponent implements OnInit {
   createNewSite(): void {
     this.router.navigate(['/preview'], {
       queryParams: {
-        businessType: 'restaurant', // Default to restaurant template
+        newTemplate: 'true',
       },
     });
   }

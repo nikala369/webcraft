@@ -34,7 +34,7 @@ export class PricingComponent implements OnInit {
   pricingPlans: PricingPlan[] = [
     {
       type: 'standard',
-      title: 'Premium',
+      title: 'Basic',
       description: '3 Templates • Single-Page Sites',
       price: '$99',
       oldPrice: '$250',
@@ -51,7 +51,7 @@ export class PricingComponent implements OnInit {
     },
     {
       type: 'premium',
-      title: 'Premium Pro +',
+      title: 'Premium',
       description: '5 Templates • Multi-Page & Integrations',
       price: '$399',
       features: [
@@ -101,6 +101,7 @@ export class PricingComponent implements OnInit {
       queryParams: {
         plan: planType,
         businessType: this.selectedBusinessType,
+        newTemplate: 'true',
       },
     });
   }

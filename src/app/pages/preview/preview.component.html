@@ -56,6 +56,7 @@
         !isFullscreen() && hasStartedBuilding() && !showBusinessTypeSelector()
       "
       style="height: 10px"
+      class="preview-container-spacer"
     ></div>
 
     <!-- Preview Header (fixed in fullscreen) -->
@@ -185,6 +186,7 @@
     <!-- Main Preview Area (fullscreen when in fullscreen mode) -->
     <div
       class="preview-wrapper"
+      #builderAnchor
       [ngClass]="[
         viewMode(),
         isViewOnlyStateService.isOnlyViewMode() ? 'view-only-mode' : ''
@@ -326,7 +328,7 @@
   *ngIf="showLoadingOverlay()"
   [overlayClass]="loadingOverlayClass()"
   [showLoadingOverlay]="showLoadingOverlay()"
-  [delay]="2000"
+  [delay]="1500"
   (finished)="onLoadingOverlayFinished()"
 ></app-webcraft-loading>
 
