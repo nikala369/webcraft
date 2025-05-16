@@ -621,8 +621,9 @@ export class TemplateInitializationService {
           .pipe(
             switchMap((planId) => {
               // Now search using the actual template type ID from the API
+              // todo .searchTemplates(templateType.id, planId, 0, 5)
               return this.templateService
-                .searchTemplates(templateType.id, planId, 0, 5)
+                .searchTemplates(null, null, 0, 30)
                 .pipe(
                   map((response) => response.content as unknown as Template[]),
                   catchError((err) => {

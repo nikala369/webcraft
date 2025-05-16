@@ -13,7 +13,7 @@
     <!-- Status section -->
     <div class="status-section">
       <!-- Loading state -->
-      <div *ngIf="isPolling" class="status-indicator loading">
+      <div *ngIf="isPolling && !hasError" class="status-indicator loading">
         <!-- Progress bar -->
         <div class="progress-container">
           <div class="progress-bar" [style.width.%]="buildProgress"></div>
@@ -55,7 +55,7 @@
       </div>
 
       <!-- Success state -->
-      <div *ngIf="isComplete" class="status-indicator success">
+      <div *ngIf="isComplete && !hasError" class="status-indicator success">
         <div class="success-icon">
           <app-icon name="check-circle" width="64" height="64"></app-icon>
         </div>

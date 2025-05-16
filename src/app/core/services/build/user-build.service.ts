@@ -180,4 +180,40 @@ export class UserBuildService {
         })
       );
   }
+
+  /**
+   * Fetch a build by userTemplateId (newer API for success page polling)
+   * Returns null if the build isn't found or isn't ready yet
+   */
+  getUserBuildByTemplateId(
+    userTemplateId: string
+  ): Observable<ExtendedUserBuild | null> {
+    if (!userTemplateId) {
+      console.error(
+        'getUserBuildByTemplateId called with null/undefined userTemplateId'
+      );
+      return throwError(() => new Error('Invalid userTemplateId'));
+    }
+    const url = `${this.baseUrl}/user-template/${userTemplateId}`;
+    return this.http.get<ExtendedUserBuild>(url).pipe(
+      map((response) => {
+        // Return null for empty responses or incomplete data
+        if (!response || !response.id) {
+          return null;
+        }
+        return response;
+      }),
+      catchError((error) => {
+        console.error(
+          `Error fetching build for userTemplateId ${userTemplateId}:`,
+          error
+        );
+        if (error.status === 404) {
+          // Return null for 404s rather than erroring - build might not be created yet
+          return of(null);
+        }
+        return throwError(() => error);
+      })
+    );
+  }
 }

@@ -121,11 +121,12 @@ export class TemplateService {
    * @param page Page number (0-based)
    * @param size Page size
    */
+  // todo size number = 5
   searchTemplates(
-    templateTypeId?: string,
-    templatePlanId?: string,
+    templateTypeId?: string | null,
+    templatePlanId?: string | null,
     page: number = 0,
-    size: number = 10
+    size: number = 20
   ): Observable<PageResponse<TemplateSearch>> {
     let params = new HttpParams()
       .set('page', page.toString())
