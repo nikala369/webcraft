@@ -3,10 +3,10 @@ description:
 globs: 
 alwaysApply: true
 ---
-# Auto Website Builder: Cursor Development Rules & AI Collaboration Guide (Frontend)
-# Version: 2.2 (Date: 2025-08-XX)
+# Webcraft Auto Website Builder: Cursor Development Rules & AI Collaboration Guide
+# Version: 3.1 (Date: 2025-01-XX)
 
-# This document defines the development standards, architectural constraints, and AI collaboration protocols for the Auto Website Builder Angular frontend project. Adherence ensures consistency, quality, and effective teamwork between human developers and the AI assistant.
+# This document defines the development standards, architectural constraints, and AI collaboration protocols for the Webcraft Angular frontend project. Adherence ensures consistency, quality, and effective teamwork between human developers and the AI assistant.
 
 # Write every time from start of every response NIKALAS AI BOT ON if you are using this mdc.
 
@@ -18,159 +18,420 @@ alwaysApply: true
 4. **Explicit Stepwise Execution:** For any non-trivial or multi-step task, the AI should outline a clear, step-by-step plan, investigate the codebase as needed, and verify each change or insight before proceeding.
 5. **Mandatory Protocol:** These agentic protocols are required for all AI-driven code changes, reviews, and suggestions in this project. They ensure high-quality, reliable, and maintainable solutions, and must be followed alongside all other project rules.
 
+## 🏗️ Project Architecture Overview
+
+### Business Model
+- **Free Trial**: Full builder access, cannot publish without subscription
+- **Standard Plan**: Single-page websites with essential features (paid)
+- **Premium Plan**: Multi-page websites with advanced features (paid)
+- **Pricing**: Monthly subscription after free trial
+- **No Free Tier**: Both plans require payment to publish
+
+### Technical Stack
+- **Frontend**: Angular 19+ with Standalone Components
+- **State Management**: Angular Signals (reactive state management)
+- **Styling**: SCSS with CSS Variables for dynamic theming
+- **Backend**: Java Spring Boot REST API (consumed, not implemented)
+- **Authentication**: JWT-based with secure token handling
+- **Payments**: Stripe integration for subscriptions
+- **Build System**: Angular CLI (no Bazel)
+
+### Core Component Hierarchy
+```
+PreviewComponent (Central Hub)
+├── StandardStructureComponent (Standard Plan - Single Page)
+│   ├── StructureHeaderComponent
+│   ├── HomeStandardComponent
+│   │   ├── HeroSectionComponent
+│   │   ├── AboutSectionComponent
+│   │   ├── MenuSectionComponent (Restaurant)
+│   │   ├── ServicesSectionComponent (Salon)
+│   │   ├── ProjectsSectionComponent (Architecture/Portfolio)
+│   │   └── ContactSectionComponent
+│   └── StructureFooterComponent
+├── PremiumStructureComponent (Premium Plan - Multi Page) [TO BE IMPLEMENTED]
+│   ├── PageNavigationComponent [TO BE IMPLEMENTED]
+│   ├── HomePage
+│   ├── AboutPage
+│   ├── ServicesPage
+│   ├── ContactPage
+│   └── CustomPages [TO BE IMPLEMENTED]
+├── ComponentCustomizerComponent (Sidebar editor)
+├── BusinessTypeSelectorComponent
+├── ThemeSwitcherComponent
+└── ViewManagementService (Fullscreen/view modes)
+```
+
 ## 🌟 Core Philosophy
 
-1.  **Simplicity & Maintainability:** Prioritize straightforward, clear, and easily maintainable Angular solutions leveraging the framework's strengths. Avoid unnecessary complexity or premature optimization.
-2.  **Iterative Development:** Favor incremental improvements on existing, functional code over complete rewrites unless fundamentally required or explicitly requested.
-3.  **Focused Execution:** Concentrate efforts strictly on the assigned task's scope and requirements. Avoid unrelated modifications or scope creep.
-4.  **Quality & User Experience:** Strive for a clean, well-organized, functionally correct, performant, and secure Angular codebase. Maintain a high standard for the user experience within the builder and for the generated websites.
-5.  **Template-Centric Model:** All development must align with the core concept: users *configure* content and settings within pre-defined templates, **not** via free-form drag-and-drop.
-6.  **Effective Collaboration:** This guide facilitates productive interaction between human developers and the AI assistant, leveraging the AI's strengths while ensuring human oversight and adherence to project standards.
+1. **Template-Centric Model:** All development must align with the core concept: users *configure* content and settings within pre-defined templates, **not** via free-form drag-and-drop.
+2. **Value-Driven Design:** Every feature must justify the paid subscription. Focus on professional, polished, and unique designs that provide clear value.
+3. **Plan Differentiation:** Clearly distinguish between Standard and Premium features. Standard should be compelling on its own while Premium offers clear upgrades.
+4. **Business Type Focus:** Each business type should have tailored sections with industry-specific features that solve real business needs.
+5. **Mobile-First Responsive:** All components must work seamlessly on mobile and desktop devices.
+6. **API-First Data Management:** All data persistence happens through the backend API. Image uploads pending backend completion.
 
 ## 📚 Project Context & Understanding
 
-1.  **Documentation is Prerequisite:**
-    *   **Mandatory Review:** Before starting *any* task, thoroughly review relevant project documentation:
-        *   `README.md`: Project overview, setup, tech stack (Angular/Signals frontend, Java backend consumer), NO Drag-and-Drop clarification, core user flow, high-level architecture, links to other docs.
-        *   `docs/component-development-guide.md`: Guidelines for creating/structuring Angular components.
-        *   `docs/backend-integration-guide.md`: Details on **consuming** the Java Spring Boot API (endpoints, request/response formats, frontend authentication methods).
-        *   `docs/standard-customization-schema.json`: Data contracts for section configurations.
-        *   `docs/component-data-flow.md`: Understanding of data flow between components.
-        *   `docs/plan-comparison.md`: Detailed comparison of Premium vs Premium Pro plans.
-        *   `docs/phase-summary.md`: Current project status and development roadmap.
-    *   **Clarification Required:** If documentation is missing, unclear, outdated, or conflicts with the request, **immediately ask for clarification** before proceeding.
-2.  **Architectural Adherence:**
-    *   **Frontend Responsibility:** The Angular application handles presentation, user interaction, client-side state management (preferring **Angular Signals**), and communication with the backend API.
-    *   **Backend Authority:** The Java Spring Boot backend owns business logic, data persistence, final validation, authentication/authorization, and the website build process.
-    *   **Separation of Concerns:** Strictly maintain this client-server boundary. Do not implement backend logic in the frontend.
-    *   **Module Boundaries:** Respect defined frontend module structures (`core`, `pages`, `shared`, feature modules).
-    *   **Template Model:** All UI and logic must support the template-configuration paradigm.
-3.  **Pattern & Tech Stack Awareness:**
-    *   **Utilize Existing Patterns:** Reference `README.md`, guides, and existing code to leverage established Angular patterns (standalone components, services, dependency injection, **Signals for state management**, RxJS for async operations where appropriate).
-    *   **Prefer Signals:** Prioritize Angular Signals for managing component and service state unless RxJS offers clear advantages for complex event streams.
-    *   **Core Technologies:** Angular (19+), TypeScript, SCSS, Signals.
-    *   **Reuse:** Exhaust options using existing core services, shared components, and utilities before proposing new libraries or complex patterns.
+### Mandatory Documentation Review
+Before starting *any* task, thoroughly review relevant project documentation:
+- `README.md`: Project overview and setup
+- `docs/project-status-overview.md`: Current implementation status and roadmap
+- `docs/component-development-guide.md`: Component creation guidelines
+- `docs/backend-integration-guide.md`: API integration patterns
+- `docs/component-data-flow.md`: State management and data flow
+- `docs/plan-comparison.md`: Standard vs Premium features
+- `docs/standard-plan-enhancement-guide.md`: Enhancement strategies
+- `docs/premium-development-plan.md`: Premium plan roadmap
+- `docs/development-roadmap.md`: Overall development timeline
+- `docs/architecture-summary.md`: Quick architecture reference
+- `docs/standard-customization-schema.json`: Data contracts
 
-## ⚙️ Task Execution & Workflow
+### Key Services to Understand
+1. **PreviewComponent**: Central hub for website building
+2. **TemplateInitializationService**: Handles template loading and initialization
+3. **ViewManagementService**: Manages fullscreen and view modes
+4. **UserTemplateService**: Handles template CRUD operations
+5. **ComponentCustomizerComponent**: Sidebar editor for sections
+6. **BusinessConfigService**: Provides business-type specific defaults
 
-1.  **Task Definition Clarity:** Ensure a clear understanding of requirements, acceptance criteria, affected user flows, and API dependencies from documentation and project requirements.
-2.  **Systematic Change Protocol (Frontend):**
-    *   **Identify Impact:** Determine affected Angular components, services, signals, state, user flows, and API interactions. Assess potential side effects (especially Premium vs. Premium Pro differences).
-    *   **Plan:** Outline implementation steps. Address state management needs (Signals) and API call requirements upfront. Tackle one logical change at a time.
-    *   **Verify Validation Method:** Confirm how the change will be validated (primarily manual functional testing, API interaction verification via DevTools).
-3.  **Progress Tracking:**
-    *   Document changes made, issues encountered, and solutions implemented.
-    *   Report completion status and any remaining tasks or considerations.
+## ⚙️ Development Guidelines
 
-## ✨ Code Quality & Style
+### Component Development
 
-1.  **TypeScript Excellence:** Use `strict` mode. Avoid `any`. Leverage strong typing and interfaces. Document complex logic, public APIs (`@Input`/`@Output`, public service methods) with JSDoc.
-2.  **Readability & Conventions:** Write clean, well-organized code following the official Angular Style Guide. Use descriptive names for variables, functions, Signals, and components.
-3.  **Component Granularity:** Keep files concise (aim for under **300 lines**). Break down large components into smaller, focused presentational (dumb) and container (smart) components. Utilize standalone components and imports effectively.
-4.  **DRY Principle:** Actively identify and eliminate duplication. Reuse logic via services, utility functions, and shared components.
-5.  **Build Tools:** Use only the Angular CLI (`ng build`, `ng serve`, etc.). **No Bazel.**
-6.  **Linting & Formatting:** Ensure all code conforms strictly to the project's ESLint/Prettier configuration. Run formatters/linters regularly.
-7.  **Pattern Consistency:** Adhere rigorously to established project patterns (Signals usage, service structure, API interaction patterns). Discuss significant new pattern introductions before implementation.
-8.  **File Naming:** Follow Angular conventions precisely (e.g., `feature.component.ts`, `data.service.ts`, `core.config.ts`, `user.model.ts`). Avoid vague or temporary names in committed code.
-9.  **No Utility Scripts in `src/`:** Commit utility or one-off scripts to a separate top-level `scripts/` directory with clear documentation, not within the main application source.
-10. **Signal-Based State Management:** Organize signals in logical groups within components. Utilize computed signals for derived state and effects for side effects.
+1. **Standalone Components**: All new components must be standalone
+   ```typescript
+   @Component({
+     selector: 'app-component-name',
+     standalone: true,
+     imports: [CommonModule, ...],
+     templateUrl: './component-name.component.html',
+     styleUrls: ['./component-name.component.scss']
+   })
+   ```
 
-## ♻️ Refactoring
+2. **Signal-Based State**: Use Angular Signals for state management
+   ```typescript
+   // Good
+   data = signal<SectionData>(defaultData);
+   computedValue = computed(() => this.data().title.toUpperCase());
+   
+   // Avoid
+   data: SectionData = defaultData;
+   get computedValue() { return this.data.title.toUpperCase(); }
+   ```
 
-1.  **Purposeful Improvement:** Refactor only to enhance clarity, reduce complexity, improve performance (e.g., optimize Signal computations, `ChangeDetectionStrategy.OnPush`), remove duplication, or align with architectural goals.
-2.  **Holistic Review:** When refactoring an area, look for related opportunities for consolidation or improvement in adjacent components or services.
-3.  **Modify In-Place:** Edit existing files directly. Do not duplicate files with version suffixes (e.g., `component-v2.ts`). Rely on version control for history.
-4.  **Comprehensive Verification:** After refactoring, meticulously verify all affected functionality through manual testing. **Crucially, confirm that interactions with backend APIs remain correct and data integrity is preserved.**
-5.  **Logical Organization for Large Components:** For large components (like PreviewComponent), organize methods in logical groups using clear comment-based sections. Group related functionality together.
+3. **Plan-Aware Components**: Components must respect plan limitations
+   ```typescript
+   isPremium(): boolean {
+     return this.planType === 'premium';
+   }
+   
+   getMaxItems(): number {
+     return this.isPremium() ? 20 : 10;
+   }
+   ```
 
-## 🐛 Debugging & Troubleshooting
+4. **Business Type Awareness**: Components should adapt to business types
+   ```typescript
+   supportsBusinessType(): boolean {
+     const supportedTypes = ['restaurant', 'cafe', 'bar'];
+     return supportedTypes.includes(this.businessType);
+   }
+   ```
 
-1.  **Address the Root Cause:** Prioritize identifying and fixing the fundamental issue in the Angular code or the frontend's interaction with the API, rather than implementing superficial workarounds or masking errors (e.g., avoid overuse of `?.` without understanding the null/undefined source, avoid hiding specific error messages without logging/reporting them).
-2.  **Leverage Developer Tools:** Systematically use the browser's developer console (check for errors, warnings, logs) and the Network tab (inspect API requests/responses/statuses). Utilize Angular DevTools for component state inspection (especially Signals) and hierarchy analysis.
-3.  **Targeted Logging:** Add specific `console.log` statements strategically within component lifecycle hooks, service methods, Signal computations (`effect`), event handlers, and RxJS pipes (`tap(console.log)`) to trace execution flow and variable states. *Remove temporary logs before committing.*
-4.  **Isolate the Problem:** Attempt to reproduce the bug in a minimal context. Determine if the issue lies within component logic, service interaction, Signal updates, API communication, data transformation, or CSS/template rendering.
-5.  **Check for Prior Fixes:** Before extensive debugging, quickly check internal documentation, commit history, or task notes for similar previously resolved issues.
-6.  **Document Complex Fixes:** For bugs requiring significant investigation (e.g., complex state interactions, subtle API issues), create a concise `.md` file (e.g., in `docs/fixes/`) outlining the problem, steps taken, and the final solution for future reference.
-7.  **Utilize Resources:** Consult official Angular documentation (especially for Signals), relevant project guides, and reputable community resources when encountering unfamiliar issues or seeking best practices.
+### Standard Plan Enhancement Guidelines
 
-## 🔒 Security (Frontend Perspective)
+1. **Visual Excellence**: Every section must look professional and modern
+   ```scss
+   // Use smooth transitions
+   .section-element {
+     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   }
+   
+   // Add subtle animations
+   @keyframes fadeInUp {
+     from {
+       opacity: 0;
+       transform: translateY(20px);
+     }
+     to {
+       opacity: 1;
+       transform: translateY(0);
+     }
+   }
+   ```
 
-1.  **Server is Security Authority:** **Explicitly trust the Java Spring Boot backend** as the definitive source for all critical security operations: authentication, authorization (permissions, plan validation), sensitive business logic, and final data validation. **Never** replicate or bypass these checks in the Angular frontend.
-2.  **Secure API Consumption:**
-    *   Interact with backend APIs strictly according to the defined secure protocols (e.g., sending JWT tokens in Authorization headers as specified in `docs/backend-integration-guide.md`).
-    *   Implement proper handling of API responses related to security (e.g., 401/403 errors, redirecting to login).
-    *   Handle sensitive data received from the API carefully on the client-side: avoid unnecessary storage (use memory/Signals where possible over localStorage for transient sensitive data), display appropriately, and clear it when no longer needed.
-3.  **Prevent Cross-Site Scripting (XSS):**
-    *   Rely primarily on Angular's built-in sanitization mechanisms for rendering dynamic content.
-    *   Avoid using `[innerHTML]` binding with potentially unsanitized content, especially user-generated content retrieved from the API, unless absolutely necessary and the content is guaranteed to be sanitized server-side or via Angular's `DomSanitizer`.
-4.  **Client-Side Validation for UX Only:** Implement Angular forms validation (template-driven or reactive) to provide immediate user feedback and improve UX. However, **recognize this is purely cosmetic** and can be bypassed; **authoritative validation must occur on the backend**.
-5.  **Dependency Management:** Be mindful of `npm` dependencies. Use reputable libraries. Periodically run `npm audit` and address reported vulnerabilities, especially high/critical ones affecting production dependencies.
-6.  **No Secrets in Frontend Code:** **Absolutely never** embed API keys, secret tokens, passwords, or any other sensitive credentials directly within the Angular source code, including environment files. These files are bundled and delivered to the client browser. Secure credentials must be handled server-side or obtained dynamically post-authentication via secure API calls if necessary for specific client-side integrations (and handled with extreme care).
+2. **Enhanced Interactivity**: Add hover effects and micro-interactions
+   ```typescript
+   // Add hover states for all interactive elements
+   onMouseEnter(): void {
+     this.isHovered.set(true);
+   }
+   
+   onMouseLeave(): void {
+     this.isHovered.set(false);
+   }
+   ```
 
-## 🖥️ Component Architecture and State Management
+3. **Business-Specific Features**: Each business type should have unique value
+   - **Restaurant**: Menu with categories, special offers, dietary labels
+   - **Salon**: Service packages, booking prep, staff showcase
+   - **Architecture**: Project galleries, 3D renders support, awards
+   - **Portfolio**: Case studies, client testimonials, process showcase
 
-1. **State Management Philosophy:**
-   * Use a combination of signals, computed values, and effects for managing component state.
-   * Prefer local state in components when possible, service-level state when shared across components.
-   * The PreviewComponent acts as the main container for website customization state.
+### Image Upload Integration (Pending)
 
-2. **PreviewComponent as Central Hub:**
-   * PreviewComponent manages the overall state of the website building process.
-   * It coordinates between different parts of the application (selection, customization, viewing, saving).
-   * Follows clear logical organization of methods and state.
+```typescript
+// Prepare components for image upload API
+interface ImageUploadConfig {
+  section: string;
+  maxSize: number; // in MB
+  acceptedTypes: string[];
+  maxCount: number;
+}
 
-3. **Authentication & Checkout Workflow:**
-   * Always check user authentication before allowing editing operations.
-   * Redirect to login when appropriate, preserving the return URL.
-   * Handle template purchase and subscription setup via the checkout flow.
-   * Maintain clear authentication-dependent UI states.
+// TODO: Implement when API is ready
+async uploadImage(file: File, config: ImageUploadConfig): Promise<string> {
+  // Will integrate with backend API
+  // For now, return placeholder
+  return '/assets/placeholder.jpg';
+}
+```
 
-4. **Mobile Responsive Behavior:**
-   * Disable editing in mobile view mode.
-   * Provide clear transitions between desktop and mobile views.
-   * Ensure all UI elements behave appropriately at different screen sizes.
+### CSS Architecture
 
-5. **Template Structure Organization:**
-   * PremiumStructureComponent handles Premium plan templates.
-   * PremiumProStructureComponent handles Premium Pro plan templates.
-   * Each section within these components should be modular and independent.
-   * Sections receive customization data and emit selection events.
+1. **CSS Variables**: Use for theming and dynamic styling
+   ```scss
+   .section {
+     background-color: var(--section-bg-color);
+     color: var(--section-text-color);
+     padding: var(--section-padding);
+   }
+   ```
 
-## 🧩 Project-Specific Patterns to Follow
+2. **Mobile-First**: Design for mobile, enhance for desktop
+   ```scss
+   .grid {
+     display: grid;
+     grid-template-columns: 1fr;
+     gap: 1rem;
+     
+     @media (min-width: 768px) {
+       grid-template-columns: repeat(2, 1fr);
+       gap: 2rem;
+     }
+     
+     @media (min-width: 1024px) {
+       grid-template-columns: repeat(3, 1fr);
+     }
+   }
+   ```
 
-1. **ScrollService for ViewOnly Mode:**
-   * Use ScrollService.isOnlyViewMode for controlling view-only states.
-   * Apply the same pattern when creating new view modes or UI flags.
+3. **Unique Design Elements**: Add distinctive touches
+   ```scss
+   // Custom shapes and masks
+   .hero-section {
+     clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+   }
+   
+   // Gradient overlays
+   .section-overlay {
+     background: linear-gradient(135deg, 
+       rgba(var(--primary-rgb), 0.9) 0%, 
+       rgba(var(--secondary-rgb), 0.7) 100%);
+   }
+   ```
 
-2. **Template Loading Flow:**
-   * Follow the established pattern for loading templates from the API.
-   * Honor the preventThemeOverride flag to avoid data loss.
-   * Maintain proper error handling and fallbacks.
+## 🚀 Premium Plan Development Guidelines
 
-3. **Business Type Selection:**
-   * Use BusinessTypeSelectorComponent consistently.
-   * Follow the established patterns for business type display names.
-   * Respect the isBusinessTypeReadonly constraints.
+### Multi-Page Architecture
 
-4. **Customization Pattern:**
-   * Use the handleComponentSelection and handleComponentUpdate methods.
-   * Follow the path-based pattern for accessing nested customization data.
-   * Implement special handling for specific sections (hero, about) as needed.
+1. **Page Structure**: Each page is a standalone component
+   ```typescript
+   PremiumStructureComponent
+   ├── pages/
+   │   ├── home-page/
+   │   ├── about-page/
+   │   ├── services-page/
+   │   └── contact-page/
+   ```
 
-5. **URL Parameter Management:**
-   * Use updateUrlParams to maintain URL state without navigation.
-   * Follow the existing pattern for query parameter handling.
-   * Preserve user context in URLs.
+2. **Page Navigation**: Implement smooth page transitions
+   ```typescript
+   interface Page {
+     id: string;
+     name: string;
+     path: string;
+     component: Type<any>;
+     isCustom: boolean;
+     order: number;
+   }
+   ```
 
-6. **Attachment Handling:**
-   * Use AttachmentService for all media uploads and retrievals.
-   * Store file references in customization data, not raw data URLs.
-   * Clean up object URLs in ngOnDestroy to prevent memory leaks.
+3. **Page Management**: Allow adding/removing/reordering pages
+   - Maximum pages: 10 for Premium
+   - Default pages: Home, About, Services, Contact
+   - Custom pages: User-defined
 
-7. **Plan Type Differentiation:**
-   * Clearly differentiate between Premium and Premium Pro features.
-   * Implement proper feature gating based on plan type.
-   * Provide clear upgrade paths from Premium to Premium Pro.
+### Enhanced Sections for Premium
+
+1. **TestimonialsSection**
+   - Customer reviews with ratings
+   - Multiple layout options (carousel, grid, masonry)
+   - Video testimonials support
+   - Review management interface
+
+2. **PricingSection**
+   - Dynamic pricing tables
+   - Comparison features
+   - Seasonal pricing options
+   - Currency selection
+
+3. **TeamSection**
+   - Team member profiles with roles
+   - Skills and expertise
+   - Social media integration
+   - Achievement badges
+
+4. **GalleryProSection**
+   - Advanced filtering
+   - Lightbox with zoom
+   - Video integration
+   - Download options
+
+### Feature Gating
+
+```typescript
+// Component level
+@Component({...})
+export class SectionComponent {
+  @Input() planType: 'standard' | 'premium' = 'standard';
+  
+  get availableFeatures() {
+    return this.planType === 'premium' 
+      ? ['basic', 'advanced', 'pro'] 
+      : ['basic'];
+  }
+}
+
+// Template level
+<div *ngIf="planType === 'premium'" class="premium-features">
+  <!-- Premium only content -->
+</div>
+
+// Customizer level
+getFieldsForPlan(): FieldConfig[] {
+  const baseFields = [...];
+  return this.planType === 'premium' 
+    ? [...baseFields, ...premiumFields] 
+    : baseFields;
+}
+```
+
+## 🎨 UI/UX Excellence Standards
+
+1. **Professional Aesthetics**
+   - Clean, modern design language
+   - Consistent spacing and typography
+   - Thoughtful color palettes
+   - High-quality placeholder content
+
+2. **Smooth Interactions**
+   - Page transitions with easing
+   - Hover effects on all interactive elements
+   - Loading skeletons instead of spinners
+   - Optimistic UI updates
+
+3. **Accessibility First**
+   - WCAG 2.1 AA compliance minimum
+   - Keyboard navigation support
+   - Screen reader friendly
+   - High contrast mode support
+
+4. **Performance Perception**
+   - Lazy load images
+   - Progressive enhancement
+   - Smooth scrolling
+   - Instant feedback
+
+## 🔒 Security Guidelines
+
+1. **No Secrets in Frontend**: Never store API keys, secrets, or sensitive data
+2. **JWT Handling**: Store tokens securely, implement proper expiration handling
+3. **Input Sanitization**: Sanitize all user inputs, especially for HTML content
+4. **API Security**: Always validate permissions on the backend
+5. **HTTPS Only**: Ensure all API calls use HTTPS in production
+
+## 📊 Success Metrics
+
+### Technical Metrics
+- Lighthouse score > 95
+- First Contentful Paint < 1.5s
+- Time to Interactive < 3s
+- No console errors in production
+
+### Business Metrics
+- Free trial to paid conversion > 15%
+- Standard to Premium upgrade > 20%
+- User satisfaction > 4.5/5
+- Support ticket rate < 5%
+
+## 🎯 Current Priorities
+
+1. **Polish Standard Plan** (Priority 1)
+   - Enhance visual design of all sections
+   - Add micro-interactions and animations
+   - Improve mobile experience
+   - Add social media integration
+
+2. **Prepare for Image API** (Priority 2)
+   - Structure components for image uploads
+   - Add placeholder UI for images
+   - Implement image optimization logic
+   - Create upload progress indicators
+
+3. **Begin Premium Structure** (Priority 3)
+   - Design multi-page navigation
+   - Plan page management UI
+   - Create premium section mockups
+   - Define upgrade paths
+
+4. **Business Type Expansion** (Priority 4)
+   - Research new business types
+   - Design industry-specific features
+   - Create specialized content
+   - Plan rollout strategy
+
+## 🚨 Common Pitfalls to Avoid
+
+1. **Don't** make Standard plan feel limited - it should feel complete
+2. **Don't** add features without clear business value
+3. **Don't** ignore mobile users - they're 60%+ of traffic
+4. **Don't** overcomplicate the UI - simplicity sells
+5. **Don't** forget loading states and error handling
+6. **Don't** bypass plan limitations client-side
+7. **Don't** store critical data in browser storage
+
+## 💡 Innovation Guidelines
+
+1. **Unique Value Props**
+   - AI-powered content suggestions
+   - Industry-specific SEO optimization
+   - Automated social media integration
+   - Smart image cropping and optimization
+
+2. **Competitive Advantages**
+   - Faster setup than competitors
+   - More beautiful default designs
+   - Better mobile experience
+   - Superior customer support
+
+3. **Future Features**
+   - Voice-guided setup
+   - A/B testing built-in
+   - Email marketing integration
+   - Appointment scheduling
 
 ---
-*End of Auto Website Builder Cursor Rules (Version 2.2)*
+*End of Webcraft Cursor Rules (Version 3.1)*

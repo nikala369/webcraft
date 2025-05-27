@@ -1,228 +1,275 @@
-# Webcraft Plan Comparison: Premium vs Premium Pro
+# Webcraft Plan Comparison: Standard vs Premium
 
 ## Overview
 
-Webcraft offers two paid subscription plans: Premium and Premium Pro. Both are fully functional website building plans that include a one-time template purchase fee and a monthly subscription for hosting and related services. This document outlines the differences between these plans, their features, limitations, and technical implementation details.
+Webcraft offers two paid subscription plans after a free trial: Standard and Premium. Both plans require a monthly subscription to publish and maintain websites. This document outlines the differences between these plans, their features, limitations, and technical implementation details.
 
 ## Business Model
 
+### Free Trial
+
+- **Full Access**: Complete builder functionality
+- **No Time Limit**: Users can try as long as they want
+- **Cannot Publish**: Subscription required to go live
+- **Save Progress**: All work is saved and can be published later
+
+### Standard Plan
+
+- **Target User**: Small businesses, freelancers, and individuals who need a professional single-page website
+- **Pricing**: $9.99/month
+- **Value Proposition**: Professional, customizable single-page websites with essential features
+
 ### Premium Plan
 
-- **Target User**: Small businesses, freelancers, and individuals who need a professional website with essential features
-- **Pricing Structure**:
-  - One-time template purchase fee ($49-$99)
-  - Monthly subscription ($9.99/month)
-- **Value Proposition**: Professional, customizable websites without the complexity
-
-### Premium Pro Plan
-
-- **Target User**: Growing businesses, agencies, and professionals who need advanced features and flexibility
-- **Pricing Structure**:
-  - One-time template purchase fee ($99-$199)
-  - Monthly subscription ($19.99/month)
-- **Value Proposition**: Advanced customization, additional page types, enhanced media handling, and premium support
+- **Target User**: Growing businesses and professionals who need multi-page websites with advanced features
+- **Pricing**: $19.99/month
+- **Value Proposition**: Multi-page websites with advanced customization and premium sections
 
 ## Feature Comparison
 
-| Feature                   | Premium                           | Premium Pro                               |
-| ------------------------- | --------------------------------- | ----------------------------------------- |
-| **Templates**             | Standard templates                | Standard + exclusive Pro templates        |
-| **Section Types**         | 5-7 core sections                 | 10-15 sections (includes Premium + extra) |
-| **Media Handling**        | Basic image upload                | Enhanced image + video support            |
-| **Pages**                 | Single page                       | Multiple pages                            |
-| **Custom CSS**            | Limited                           | Advanced                                  |
-| **Business Types**        | 6 business types                  | 12+ business types                        |
-| **Maximum Images**        | 20 images                         | 100 images                                |
-| **Maximum Section Items** | Limited (e.g., 4 menu categories) | Expanded (e.g., 8 menu categories)        |
-| **Analytics Integration** | Basic                             | Advanced with custom tracking             |
-| **Technical Support**     | Standard                          | Priority                                  |
+| Feature                      | Standard          | Premium                                       |
+| ---------------------------- | ----------------- | --------------------------------------------- |
+| **Pages**                    | Single page       | Up to 10 pages                                |
+| **Core Sections**            | 6-7 sections      | 10+ sections                                  |
+| **Advanced Sections**        | ❌                | ✅ (Testimonials, Pricing, Team, Gallery Pro) |
+| **Business Types**           | 6 types           | 6+ types (expanding)                          |
+| **Image Storage**            | 50 images         | 100 images                                    |
+| **Video Support**            | Basic (hero only) | Full video support                            |
+| **Custom Pages**             | ❌                | ✅                                            |
+| **SEO Tools**                | Basic             | Advanced                                      |
+| **Analytics**                | Basic             | Advanced                                      |
+| **Support**                  | Standard          | Priority                                      |
+| **Custom CSS**               | Limited           | Advanced                                      |
+| **Social Media Integration** | Basic             | Advanced                                      |
+| **Domain Support**           | Subdomain         | Custom domain                                 |
+
+## Section Availability
+
+### Standard Plan Sections
+
+1. **Hero Section** - Image backgrounds, text animations
+2. **About Section** - Story, mission, basic stats
+3. **Services/Menu Section** - Business-specific listings
+4. **Contact Section** - Contact info, form, map
+5. **Header** - Navigation, logo, CTA
+6. **Footer** - Links, social, copyright
+
+### Premium Plan Additional Sections
+
+1. **Testimonials** - Customer reviews with ratings
+2. **Pricing Tables** - Service/product pricing
+3. **Team Section** - Team member profiles
+4. **Gallery Pro** - Advanced media gallery
+5. **FAQ Section** - Accordion-style Q&A
+6. **Blog/News** - Article listings
+7. **Portfolio Pro** - Case studies
+8. **Stats Section** - Animated counters
 
 ## Technical Implementation
 
-### Structure Components
-
-Different structure components are used for each plan:
-
-```typescript
-// Premium Plan uses PremiumStructureComponent
-<app-premium-structure
-  [customizations]="customizationsSignal"
-  [businessType]="businessTypeSignal"
-  (componentSelected)="handleComponentSelection($event)"
-></app-premium-structure>
-
-// Premium Pro Plan uses PremiumProStructureComponent
-<app-premium-pro-structure
-  [customizations]="customizationsSignal"
-  [businessType]="businessTypeSignal"
-  (componentSelected)="handleComponentSelection($event)"
-></app-premium-pro-structure>
-```
-
-### Plan Type Detection
-
-Components can determine which plan is active:
+### Plan Detection in Components
 
 ```typescript
 @Component({
-  // ... component metadata
+  selector: "app-section",
+  template: `
+    <div class="section" [class.premium]="isPremium()">
+      <!-- Standard features -->
+      <div class="standard-features">
+        <!-- Always available -->
+      </div>
+
+      <!-- Premium only features -->
+      <div *ngIf="isPremium()" class="premium-features">
+        <!-- Premium enhancements -->
+      </div>
+
+      <!-- Upgrade prompt for Standard users -->
+      <div *ngIf="!isPremium() && showUpgradePrompt" class="upgrade-prompt">
+        <p>Unlock more features with Premium</p>
+        <button (click)="upgrade()">Upgrade Now</button>
+      </div>
+    </div>
+  `,
 })
 export class SectionComponent {
-  @Input() planType: "PREMIUM" | "PREMIUM_PRO" = "PREMIUM";
+  @Input() planType: "standard" | "premium" = "standard";
 
-  get isPremiumPro(): boolean {
-    return this.planType === "PREMIUM_PRO";
+  isPremium(): boolean {
+    return this.planType === "premium";
   }
 
-  get maxItems(): number {
-    return this.isPremiumPro ? 15 : 8;
+  getMaxItems(): number {
+    return this.isPremium() ? 20 : 10;
   }
 }
 ```
 
-### Feature Gating
-
-Templates should conditionally render features based on plan type:
-
-```html
-<!-- Base features available to all plans -->
-<div class="base-features">
-  <!-- ... -->
-</div>
-
-<!-- Premium Pro only features -->
-<div *ngIf="isPremiumPro" class="premium-pro-features">
-  <!-- Advanced features -->
-</div>
-
-<!-- Upgrade prompt for Premium users -->
-<div *ngIf="!isPremiumPro" class="upgrade-prompt">
-  <p>Unlock advanced features by upgrading to Premium Pro</p>
-  <button (click)="onUpgrade()">Upgrade Now</button>
-</div>
-```
-
-### Attachment Limitations
-
-Media uploads are handled differently based on plan:
+### Structure Components
 
 ```typescript
-uploadAttachment(file: File): void {
-  // Check file size limit based on plan
-  const maxSize = this.isPremiumPro ? 10 * 1024 * 1024 : 2 * 1024 * 1024; // 10MB vs 2MB
+// Standard Plan - Single Page
+<app-standard-structure
+  [customizations]="customizations"
+  [businessType]="businessType"
+  [planType]="'standard'"
+  (componentSelected)="handleSelection($event)"
+/>
 
-  if (file.size > maxSize) {
-    this.showError(`File exceeds the ${this.isPremiumPro ? '10MB' : '2MB'} limit for your plan`);
-    return;
-  }
-
-  // Check if user has reached their attachment limit
-  this.attachmentService.getUserAttachmentCount().pipe(
-    switchMap(count => {
-      const maxAttachments = this.isPremiumPro ? 100 : 20;
-      if (count >= maxAttachments) {
-        throw new Error(`You've reached the maximum of ${maxAttachments} media files for your plan`);
-      }
-      return this.attachmentService.uploadAttachment(file, file.type.startsWith('image/') ? 'USER_TEMPLATE_IMAGE' : 'USER_TEMPLATE_VIDEO');
-    })
-  ).subscribe({
-    next: response => this.onFileUploaded(response.fileId),
-    error: error => this.showError(error.message)
-  });
-}
+// Premium Plan - Multi Page
+<app-premium-structure
+  [customizations]="customizations"
+  [businessType]="businessType"
+  [currentPage]="currentPage"
+  [pages]="pages"
+  (componentSelected)="handleSelection($event)"
+  (pageChange)="handlePageChange($event)"
+/>
 ```
 
-## Section Configuration Differences
-
-Different sections have different capabilities based on plan:
-
-### Hero Section
-
-- **Premium**: Fixed layouts, image background only
-- **Premium Pro**: Additional layouts, video background support
-
-### Services Section
-
-- **Premium**: Up to 8 services, basic fields
-- **Premium Pro**: Up to 15 services, additional fields like duration, multiple price options
-
-### Gallery Section
-
-- **Premium**: Image gallery only, up to 8 images
-- **Premium Pro**: Images and videos, up to 20 items
-
-## Data Schema Extensions
-
-Premium Pro extends the base schema with additional fields, for example:
+### Data Schema Differences
 
 ```typescript
-// Base schema (Premium)
-interface HeroSection {
-  title: string;
-  subtitle: string;
-  backgroundImage: string;
-  textColor: string;
-}
-
-// Extended schema (Premium Pro)
-interface HeroSectionPro extends HeroSection {
-  backgroundType: "image" | "video";
-  backgroundVideo?: string;
-  overlayGradient?: {
-    startColor: string;
-    endColor: string;
-    opacity: number;
+// Standard Plan Schema
+interface StandardCustomizations {
+  fontConfig: FontConfig;
+  header: HeaderData;
+  pages: {
+    home: {
+      hero: HeroSection;
+      about: AboutSection;
+      services?: ServicesSection;
+      menu?: MenuSection;
+      contact: ContactSection;
+    };
   };
-  animation?: "fade" | "slide" | "zoom";
+  footer: FooterData;
 }
+
+// Premium Plan Schema
+interface PremiumCustomizations extends StandardCustomizations {
+  pages: {
+    [pageId: string]: {
+      meta: PageMeta;
+      sections: {
+        [sectionId: string]: SectionData;
+      };
+    };
+  };
+  navigation: NavigationConfig;
+  globalSettings: GlobalSettings;
+}
+```
+
+### Feature Gating Examples
+
+```typescript
+// Image Upload Limits
+const getImageLimit = (plan: "standard" | "premium"): number => {
+  return plan === "premium" ? 100 : 50;
+};
+
+// Section Limits
+const getSectionLimit = (plan: "standard" | "premium"): number => {
+  return plan === "premium" ? 15 : 7;
+};
+
+// Video Support
+const supportsVideo = (plan: "standard" | "premium"): boolean => {
+  return plan === "premium";
+};
 ```
 
 ## Upgrade Path
 
-Users can upgrade from Premium to Premium Pro through the following flow:
+### User Journey
 
-1. User clicks upgrade button in UI (available in multiple places)
-2. System checks if they have an active Premium subscription
-3. Checkout process shows upgrade price (difference between plans)
-4. Upon successful payment, user's plan is upgraded
-5. Template is automatically migrated to Premium Pro format
-6. User gains immediate access to Premium Pro features
+1. User on Standard plan sees Premium features
+2. Clicks "Upgrade" button
+3. Shown comparison of features
+4. Proceeds to Stripe checkout
+5. Plan upgraded immediately upon payment
+6. Access to Premium features unlocked
+7. Existing content preserved and enhanced
 
-## Implementation Considerations
-
-When developing components that work with both plans:
-
-1. **Progressive Enhancement**: Design components to work with the basic Premium plan data first, then enhance with Premium Pro features
-2. **Graceful Degradation**: When displaying a Premium Pro template to Premium users, handle missing data gracefully
-3. **Clear UI Indicators**: Use visual cues to indicate which features require Premium Pro
-4. **Performance Awareness**: Premium Pro templates may have more data and media; optimize accordingly
-5. **Consistent Experience**: Maintain a consistent UI language across plans
-
-## Backend Integration
-
-The backend APIs are aware of plan differences:
+### Technical Migration
 
 ```typescript
-// Example API response includes plan information
-{
-  "template": {
-    "id": "template-123",
-    "name": "Business Pro",
-    "plan": "PREMIUM_PRO"
-  },
-  "features": {
-    "maxPages": 5,
-    "maxAttachments": 100,
-    "videoSupport": true
-  }
+async upgradeUserPlan(userId: string): Promise<void> {
+  // 1. Update subscription in Stripe
+  const subscription = await stripe.subscriptions.update(subId, {
+    items: [{ price: 'premium_price_id' }]
+  });
+
+  // 2. Update user plan in database
+  await userService.updatePlan(userId, 'premium');
+
+  // 3. Migrate template structure
+  await templateService.migrateToMultiPage(userId);
+
+  // 4. Unlock premium features
+  await featureService.unlockPremiumFeatures(userId);
 }
 ```
 
-## Testing Considerations
+## Implementation Guidelines
 
-When testing components:
+### 1. Progressive Enhancement
 
-1. Test with both Premium and Premium Pro data models
-2. Verify correct feature gating based on plan type
-3. Test upgrade/downgrade scenarios to ensure data integrity
-4. Check responsive behavior on all device sizes for both plans
+- Build for Standard first
+- Layer Premium features on top
+- Ensure graceful degradation
+
+### 2. Clear Visual Indicators
+
+- Use badges for Premium features
+- Show lock icons on restricted items
+- Provide upgrade CTAs contextually
+
+### 3. Performance Considerations
+
+- Lazy load Premium components
+- Optimize for Standard plan users
+- Cache based on plan type
+
+### 4. Testing Strategy
+
+- Test both plan types thoroughly
+- Verify upgrade/downgrade flows
+- Check feature gating accuracy
+
+## Business Rules
+
+### Standard Plan Limitations
+
+- Maximum 1 page
+- Maximum 50 images
+- Basic customization options
+- Standard support response time
+- Subdomain only
+
+### Premium Plan Benefits
+
+- Up to 10 pages
+- 100 images + videos
+- Advanced customization
+- Priority support (< 24h)
+- Custom domain support
+- Advanced SEO tools
+- Analytics dashboard
+
+## Future Considerations
+
+### Potential Standard Enhancements
+
+- Limited testimonials (3 max)
+- Basic gallery (10 images)
+- Simple FAQ section
+
+### Potential Premium Additions
+
+- A/B testing
+- Email marketing integration
+- Advanced analytics
+- Team collaboration
+- API access
