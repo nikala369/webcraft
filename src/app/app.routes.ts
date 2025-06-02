@@ -102,10 +102,22 @@ export const appRoutes: Routes = [
             (m) => m.PreviewComponent
           ),
         children: [
+          { path: 'home', component: PreviewComponent, data: { page: 'home' } },
+          { path: 'menu', component: PreviewComponent, data: { page: 'menu' } },
           {
-            path: 'home',
+            path: 'services',
             component: PreviewComponent,
-            data: { page: 'home' },
+            data: { page: 'services' },
+          },
+          {
+            path: 'portfolio',
+            component: PreviewComponent,
+            data: { page: 'portfolio' },
+          },
+          {
+            path: 'projects',
+            component: PreviewComponent,
+            data: { page: 'projects' },
           },
           {
             path: 'about',

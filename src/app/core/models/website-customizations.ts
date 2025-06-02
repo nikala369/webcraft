@@ -4,6 +4,80 @@
  */
 
 /**
+ * Header customization data
+ */
+// Header, footer, fontConfig are common for all business types or packages!
+export interface HeaderData {
+  backgroundColor?: string;
+  textColor?: string;
+  logoUrl?: string;
+  menuItems?: Array<{ id: number; label: string; link: string }>;
+}
+
+/**
+ * Footer customization data
+ */
+export interface FooterData {
+  backgroundColor: string;
+  textColor: string;
+  copyrightText: string;
+  logoUrl?: string;
+  tagline?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  showSocialLinks?: boolean;
+  menuItems?: Array<{ id: number; label: string; link: string }>;
+  socialUrls?: {
+    facebook?: string;
+    instagram?: string;
+    tiktok?: string;
+    linkedin?: string;
+    youtube?: string;
+    [key: string]: string | undefined;
+  };
+  socialLinks?: Array<{
+    platform: 'facebook' | 'twitter' | 'instagram' | 'linkedin' | 'tiktok';
+    url: string;
+  }>;
+  showLegalLinks?: boolean;
+  privacyPolicyUrl?: string;
+  termsUrl?: string;
+  footerLayout?: 'standard' | 'compact' | 'minimal';
+}
+
+/**
+ * Font configuration
+ */
+export interface FontConfig {
+  fontId: number;
+  family: string;
+  fallback: string;
+}
+
+/**
+ * Main customization interface with all website customizable elements
+ */
+// ------------------------------------------------------------
+export interface Customizations {
+  fontConfig?: FontConfig;
+  header?: HeaderData;
+  pages?: {
+    home?: {
+      hero1?: HeroData;
+      about?: AboutData;
+      services?: ServicesData;
+      projects?: ProjectsData;
+      menu?: MenuData;
+      contact?: ContactData;
+      [key: string]: any;
+    };
+    [key: string]: any;
+  };
+  footer?: FooterData;
+}
+
+/**
  * Hero section data model
  */
 export interface HeroData {
@@ -127,75 +201,130 @@ export interface ContactData {
 }
 
 /**
- * Header customization data
+ * Premium customization interface with business-type specific pages
  */
-export interface HeaderData {
-  backgroundColor?: string;
-  textColor?: string;
-  logoUrl?: string;
-  menuItems?: Array<{ id: number; label: string; link: string }>;
-}
-
-/**
- * Footer customization data
- */
-export interface FooterData {
-  backgroundColor: string;
-  textColor: string;
-  copyrightText: string;
-  logoUrl?: string;
-  tagline?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  showSocialLinks?: boolean;
-  menuItems?: Array<{ id: number; label: string; link: string }>;
-  socialUrls?: {
-    facebook?: string;
-    instagram?: string;
-    tiktok?: string;
-    linkedin?: string;
-    youtube?: string;
-    [key: string]: string | undefined;
-  };
-  socialLinks?: Array<{
-    platform: 'facebook' | 'twitter' | 'instagram' | 'linkedin' | 'tiktok';
-    url: string;
-  }>;
-  showLegalLinks?: boolean;
-  privacyPolicyUrl?: string;
-  termsUrl?: string;
-  footerLayout?: 'standard' | 'compact' | 'minimal';
-}
-
-/**
- * Font configuration
- */
-export interface FontConfig {
-  fontId: number;
-  family: string;
-  fallback: string;
-}
-
-/**
- * Main customization interface with all website customizable elements
- */
-export interface Customizations {
+// ------------------------------------------------------------
+export interface PremiumCustomizations {
   fontConfig?: FontConfig;
   header?: HeaderData;
   pages?: {
+    // Home page - common for all business types
     home?: {
       hero1?: HeroData;
-      about?: AboutData;
-      services?: ServicesData;
-      projects?: ProjectsData;
-      menu?: MenuData;
-      contact?: ContactData;
+      // Preview of main business content
+      featuredPreview?: FeaturedPreviewData;
+      aboutPreview?: AboutPreviewData;
+      contactPreview?: ContactPreviewData;
       [key: string]: any;
     };
+
+    // Business-specific main content pages
+    // For restaurants
+    menu?: {
+      hero1?: HeroMenuData;
+      menuCategories?: MenuCategoriesData;
+      specialOffers?: SpecialOffersData;
+      dietaryInfo?: DietaryInfoData;
+      [key: string]: any;
+    };
+
+    // For salons
+    // services?: {
+    //   hero1?: HeroServicesData;
+    //   serviceCategories?: ServiceCategoriesData;
+    //   pricingPackages?: PricingPackagesData;
+    //   staffSpecialties?: StaffSpecialtiesData;
+    //   [key: string]: any;
+    // };
+
+    // For creative/portfolio
+    // portfolio?: {
+    //   hero1?: HeroPortfolioData;
+    //   projectCategories?: ProjectCategoriesData;
+    //   caseStudies?: CaseStudiesData;
+    //   testimonials?: TestimonialsData;
+    //   [key: string]: any;
+    // };
+
+    // For architecture
+    // projects?: {
+    //   hero1?: HeroProjectsData;
+    //   projectCategories?: ArchProjectCategoriesData;
+    //   caseStudies?: ArchCaseStudiesData;
+    //   awards?: AwardsData;
+    //   [key: string]: any;
+    // };
+
+    // Common pages for all business types
+    // about?: {
+    //   hero1?: HeroAboutData;
+    //   story?: StoryData;
+    //   team?: TeamData;
+    //   values?: ValuesData;
+    //   certifications?: CertificationsData;
+    //   [key: string]: any;
+    // };
+
+    // contact?: {
+    //   hero1?: HeroContactData;
+    //   contactForm?: ContactFormData;
+    //   location?: LocationData;
+    //   hours?: HoursData;
+    // For appointment-based businesses
+    //   booking?: BookingData;
+    //   [key: string]: any;
+    // };
+
     [key: string]: any;
   };
   footer?: FooterData;
+}
+
+// Premium Home page data model
+// ------------------------------------------------------------
+
+export interface FeaturedPreviewData {
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+}
+
+export interface AboutPreviewData {
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+}
+
+export interface ContactPreviewData {
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+}
+
+// Premium Menu page data model
+// ------------------------------------------------------------
+export interface HeroMenuData {
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+}
+
+export interface MenuCategoriesData {
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+}
+
+export interface SpecialOffersData {
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+}
+
+export interface DietaryInfoData {
+  title: string;
+  subtitle: string;
+  imageUrl: string;
 }
 
 /**

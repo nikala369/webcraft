@@ -236,7 +236,10 @@
       </div>
 
       <ng-container
-        *ngIf="currentPlan() === 'standard' && !showBusinessTypeSelector()"
+        *ngIf="
+          currentPlan() === 'standard' ||
+          (currentPlan() === 'premium' && !showBusinessTypeSelector())
+        "
       >
         <app-standard-structure
           [isMobileLayout]="viewMode() === 'view-mobile' || isMobileView()"
@@ -251,11 +254,11 @@
         </app-standard-structure>
       </ng-container>
 
-      <ng-container
+      <!-- <ng-container
         *ngIf="currentPlan() === 'premium' && !showBusinessTypeSelector()"
-      >
-        <!-- Premium Structure Code (if applicable) -->
-      </ng-container>
+      > -->
+      <!-- Premium Structure Code (if applicable) -->
+      <!-- </ng-container> -->
     </div>
 
     <!-- Customization Modal (for updates via modal) -->

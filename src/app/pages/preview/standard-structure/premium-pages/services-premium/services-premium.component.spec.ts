@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ContactStandardComponent } from './contact-standard.component';
+import { ServicesPremiumComponent } from './services-premium.component';
 
-describe('ContactStandardComponent', () => {
-  let component: ContactStandardComponent;
-  let fixture: ComponentFixture<ContactStandardComponent>;
+describe('ServicesPremiumComponent', () => {
+  let component: ServicesPremiumComponent;
+  let fixture: ComponentFixture<ServicesPremiumComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ContactStandardComponent]
+      imports: [ServicesPremiumComponent]
     })
     .compileComponents();
     
-    fixture = TestBed.createComponent(ContactStandardComponent);
+    fixture = TestBed.createComponent(ServicesPremiumComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

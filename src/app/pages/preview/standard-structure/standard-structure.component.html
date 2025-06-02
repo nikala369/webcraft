@@ -36,34 +36,45 @@
 
     <!-- For premium plan, conditionally render the current page based on route -->
     <ng-container *ngIf="currentPlan === 'premium'" [ngSwitch]="currentPage">
-      <app-home-standard
+      <app-home-premium
         *ngSwitchCase="'home'"
-        [pagesHomeData]="homeCustomizationsSignal"
+        [premiumHomeData]="premiumHomeCustomizationsSignal"
         [wholeData]="wholeDataSignal"
         [isMobileLayout]="isMobileLayout"
         [isMobileView]="isMobileView"
         [planType]="currentPlan"
         [businessType]="businessType"
         (sectionSelected)="handlePageSectionEdit($event)"
-      ></app-home-standard>
+      ></app-home-premium>
 
-      <app-about-standard
+      <app-menu-premium
+        *ngSwitchCase="'menu'"
+        [premiumMenuData]="premiumMenuCustomizationsSignal"
+        [wholeData]="wholeDataSignal"
+        [isMobileLayout]="isMobileLayout"
+        [isMobileView]="isMobileView"
+        [planType]="currentPlan"
+        [businessType]="businessType"
+        (sectionSelected)="handlePageSectionEdit($event)"
+      ></app-menu-premium>
+
+      <app-about-premium
         *ngSwitchCase="'about'"
-        [customizations]="aboutCustomizationsSignal"
+        [customizations]="premiumAboutCustomizationsSignal"
         [isMobileLayout]="isMobileLayout"
         [isMobileView]="isMobileView"
         [businessType]="businessType"
         (sectionSelected)="handlePageSectionEdit($event)"
-      ></app-about-standard>
+      ></app-about-premium>
 
-      <!-- <app-contact-standard
+      <app-contact-premium
         *ngSwitchCase="'contact'"
-        [customizations]="contactCustomizationsSignal"
+        [customizations]="premiumContactCustomizationsSignal"
         [isMobileLayout]="isMobileLayout"
         [isMobileView]="isMobileView"
         [businessType]="businessType"
         (sectionSelected)="handlePageSectionEdit($event)"
-      ></app-contact-standard> -->
+      ></app-contact-premium>
 
       <!-- Default case if page is not found -->
       <div *ngSwitchDefault class="page-not-found">

@@ -308,6 +308,27 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
     const isNewFlow = urlParams['newTemplate'] === 'true';
     const hasBusinessType = !!urlParams['businessType'];
 
+    // Check if we have a page from route data (for Premium navigation)
+    const routeData = this.route.snapshot.data;
+    if (routeData['page']) {
+      console.log(
+        '[PreviewComponent] Setting current page from route data:',
+        routeData['page']
+      );
+      this.currentPage.set(routeData['page']);
+    }
+
+    // Subscribe to route changes for Premium page navigation
+    this.route.data.pipe(takeUntil(this.destroy$)).subscribe((data) => {
+      if (data['page'] && data['page'] !== this.currentPage()) {
+        console.log(
+          '[PreviewComponent] Route data page changed to:',
+          data['page']
+        );
+        this.currentPage.set(data['page']);
+      }
+    });
+
     // scroll from the previous page (e.g., the pricing page).
     window.scrollTo({
       top: this.INITIAL_LOAD_SCROLL_TARGET_Y,

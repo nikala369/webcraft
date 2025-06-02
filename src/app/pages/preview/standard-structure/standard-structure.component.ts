@@ -19,10 +19,12 @@ import { Customizations } from '../../../core/models/website-customizations';
 import { SectionHoverWrapperComponent } from '../components/section-hover-wrapper/section-hover-wrapper.component';
 import { Router } from '@angular/router';
 import { HomeStandardComponent } from './home-standard/home-standard.component';
-import { AboutStandardComponent } from './about-standard/about-standard.component';
 import { FontOption } from '../components/font-selector/font-selector.component';
-import { ScrollService } from '../../../core/services/shared/scroll/scroll.service';
 import { BUSINESS_TYPE_SECTIONS } from '../../../core/models/business-types';
+import { AboutPremiumComponent } from './premium-pages/about-premium/about-premium.component';
+import { ContactPremiumComponent } from './premium-pages/contact-premium/contact-premium.component';
+import { HomePremiumComponent } from './premium-pages/home-premium/home-premium.component';
+import { MenuPremiumComponent } from './premium-pages/menu-premium/menu-premium.component';
 
 @Component({
   selector: 'app-standard-structure',
@@ -32,7 +34,10 @@ import { BUSINESS_TYPE_SECTIONS } from '../../../core/models/business-types';
     StructureFooterComponent,
     SectionHoverWrapperComponent,
     HomeStandardComponent,
-    AboutStandardComponent,
+    HomePremiumComponent,
+    AboutPremiumComponent,
+    ContactPremiumComponent,
+    MenuPremiumComponent,
     CommonModule,
   ],
   templateUrl: './standard-structure.component.html',
@@ -67,9 +72,10 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
 
   constructor(private router: Router, private el: ElementRef) {}
 
-  // Create computed signals based on the input signal
+  // Standard customizations signal
+  // ------------------------------------------------------------
   homeCustomizationsSignal = computed(() => {
-    const cust = this.customizations(); // Read the input signal
+    const cust = this.customizations();
     const homeData = cust?.pages?.home || {};
     console.log(
       `[StandardStructure] Computed homeCustomizationsSignal updated at ${Date.now()}:`,
@@ -77,27 +83,54 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
     );
     return homeData;
   });
+  // ------------------------------------------------------------
 
-  aboutCustomizationsSignal = computed(() => {
+  // Premium customizations signal
+  // ------------------------------------------------------------
+  premiumHomeCustomizationsSignal = computed(() => {
     const cust = this.customizations();
-    // Add log here if needed for debugging about page issues
-    return cust?.pages?.home?.about || {};
+    return cust?.pages?.['home'] || {};
   });
+
+  premiumMenuCustomizationsSignal = computed(() => {
+    const cust = this.customizations();
+    return cust?.pages?.['menu'] || {};
+  });
+
+  premiumAboutCustomizationsSignal = computed(() => {
+    const cust = this.customizations();
+    return cust?.pages?.['about'] || {};
+  });
+
+  premiumContactCustomizationsSignal = computed(() => {
+    const cust = this.customizations();
+    return cust?.pages?.['contact'] || {};
+  });
+
+  premiumServicesCustomizationsSignal = computed(() => {
+    const cust = this.customizations();
+    return cust?.pages?.['services'] || {};
+  });
+
+  // ------------------------------------------------------------
+
+  // Standard customizations signal
+  // ------------------------------------------------------------
 
   contactCustomizationsSignal = computed(() => {
     const cust = this.customizations();
-    // Add log here if needed for debugging contact page issues
-    return cust?.pages?.home?.contact || {};
+    return cust?.pages?.['contact'] || {};
+  });
+
+  servicesCustomizationsSignal = computed(() => {
+    const cust = this.customizations();
+    return cust?.pages?.['services'] || {};
   });
 
   // Computed signal for the whole data structure, handling null
   wholeDataSignal = computed(() => {
-    const fullData = this.customizations(); // Read the input signal
-    console.log(
-      `[StandardStructure] Computed wholeDataSignal updated at ${Date.now()}:`,
-      fullData
-    );
-    return fullData; // Return the full data (or null)
+    const fullData = this.customizations();
+    return fullData;
   });
 
   // Computed signal for available sections based on business type
@@ -227,24 +260,30 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    const queryParams = {
-      plan: this.currentPlan,
-      businessType: this.businessType,
-    };
-    console.log('Using query params:', queryParams);
+    // Update the current page signal
+    this.currentPage = page;
 
-    // Use absolute path to ensure consistent navigation
+    // Get current query params to preserve them
+    const currentQueryParams =
+      this.router.routerState.snapshot.root.queryParams;
+
+    // Navigate to the specific page route
     const url = `/preview/${page}`;
     console.log('Navigating to URL:', url);
 
     // Navigate to the page while preserving query params
     this.router
       .navigate([url], {
-        queryParams: queryParams,
-        queryParamsHandling: 'merge',
+        queryParams: currentQueryParams,
+        queryParamsHandling: 'preserve',
       })
       .then((success) => {
         console.log('Navigation result:', success ? 'Success' : 'Failed');
+
+        // Scroll to top after navigation
+        if (success) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       })
       .catch((error) => {
         console.error('Navigation error:', error);
