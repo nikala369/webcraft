@@ -5,6 +5,9 @@ import {
   signal,
   Output,
   EventEmitter,
+  OnDestroy,
+  HostBinding,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -17,7 +20,7 @@ import { BUSINESS_TYPE_MENU_ITEMS } from '../../../../core/models/business-types
   templateUrl: './structure-header.component.html',
   styleUrls: ['./structure-header.component.scss'],
 })
-export class StructureHeaderComponent implements OnInit {
+export class StructureHeaderComponent implements OnInit, OnDestroy {
   /**
    * Holds background color, text color, logoUrl, and menuItems
    * e.g. { backgroundColor, text, logoUrl, menuItems: [ { id, label, link } ] }
@@ -46,6 +49,11 @@ export class StructureHeaderComponent implements OnInit {
   @Input() businessType: string = '';
 
   /**
+   * The currently active section (for Standard plan)
+   */
+  @Input() activeSection: string = 'hero';
+
+  /**
    * The user-selected font family, passed from the parent
    * (e.g. "Roboto, sans-serif"). If none is provided, fallback to a default.
    */
@@ -64,27 +72,44 @@ export class StructureHeaderComponent implements OnInit {
   /** Signal for toggling the mobile menu overlay. */
   isMobileMenuOpen = signal(false);
 
-  // Default standard menu items - always exactly 3
+  // Smart hide functionality
+  private lastScrollTop = 0;
+  private scrollThreshold = 5;
+  private headerHeight = 80;
+
+  @HostBinding('class.hidden') isHidden = false;
+  @HostBinding('class.scrolled') isScrolled = false;
+
+  // Default standard menu items - now 4 items including About
   private standardMenuItems = [
     { id: 1, label: 'Home', link: '#hero' },
-    { id: 2, label: 'Services', link: '#services' },
-    { id: 3, label: 'About', link: '#about' },
+    { id: 2, label: 'About', link: '#about' },
+    { id: 3, label: 'Services', link: '#services' },
+    { id: 4, label: 'Contact', link: '#contact' },
   ];
 
+  // Scroll event listener
+  private scrollListener?: () => void;
+
   // Inject the Router and ActivatedRoute
-  constructor(private router: Router, private route: ActivatedRoute) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private elementRef: ElementRef
+  ) {}
 
   ngOnInit() {
     console.log('Header customizations:', this.customizations);
     console.log('Current page:', this.currentPage);
     console.log('Current plan:', this.plan);
     console.log('Business type:', this.businessType);
+    console.log('Active section:', this.activeSection);
 
-    // Ensure standard plan has exactly 3 menu items
+    // Ensure standard plan has exactly 4 menu items
     if (
       this.plan === 'standard' &&
       (!this.customizations?.menuItems ||
-        this.customizations.menuItems.length !== 3)
+        this.customizations.menuItems.length !== 4)
     ) {
       // Apply default menu items if not set correctly
       if (!this.customizations) {
@@ -106,6 +131,55 @@ export class StructureHeaderComponent implements OnInit {
         this.customizations.menuItems = this.standardMenuItems;
       }
     }
+
+    // Initialize smart hide functionality for premium plans
+    if (this.plan === 'premium' && this.getHeaderPosition() === 'smart-hide') {
+      this.initializeSmartHide();
+    }
+  }
+
+  ngOnDestroy() {
+    // Clean up scroll listener
+    if (this.scrollListener) {
+      window.removeEventListener('scroll', this.scrollListener);
+    }
+  }
+
+  // Initialize smart hide functionality
+  private initializeSmartHide() {
+    if (typeof window === 'undefined') return;
+
+    this.scrollListener = () => {
+      const currentScrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+
+      // Add scrolled class when not at top
+      this.isScrolled = currentScrollTop > 10;
+
+      // Don't hide/show if scroll difference is too small
+      if (
+        Math.abs(currentScrollTop - this.lastScrollTop) <= this.scrollThreshold
+      ) {
+        return;
+      }
+
+      // Hide header when scrolling down, show when scrolling up
+      if (
+        currentScrollTop > this.lastScrollTop &&
+        currentScrollTop > this.headerHeight
+      ) {
+        // Scrolling down
+        this.isHidden = true;
+      } else {
+        // Scrolling up
+        this.isHidden = false;
+      }
+
+      this.lastScrollTop = currentScrollTop <= 0 ? 0 : currentScrollTop;
+    };
+
+    // Add scroll listener with passive option for better performance
+    window.addEventListener('scroll', this.scrollListener, { passive: true });
   }
 
   // Get the currently displayed menu items
@@ -128,10 +202,10 @@ export class StructureHeaderComponent implements OnInit {
 
     // Fallback to standard logic
     if (this.plan === 'standard') {
-      // Always ensure exactly 3 menu items for standard plan
+      // Always ensure exactly 4 menu items for standard plan
       if (
         !this.customizations?.menuItems ||
-        this.customizations.menuItems.length !== 3
+        this.customizations.menuItems.length !== 4
       ) {
         return this.standardMenuItems;
       }
@@ -139,10 +213,10 @@ export class StructureHeaderComponent implements OnInit {
       // Map the menu items to ensure they use hash links
       return this.customizations.menuItems.map((item: any, index: number) => {
         // Extract label from existing item or use default
-        const label = item.label || this.standardMenuItems[index % 3].label;
+        const label = item.label || this.standardMenuItems[index % 4].label;
 
         // For standard plan, ensure links are hash-based for section scrolling
-        const link = item.link || this.standardMenuItems[index % 3].link;
+        const link = item.link || this.standardMenuItems[index % 4].link;
 
         return { id: item.id || index + 1, label, link };
       });
@@ -197,8 +271,12 @@ export class StructureHeaderComponent implements OnInit {
   // Check if a menu item is active
   isActive(link: string): boolean {
     if (this.plan === 'standard') {
-      // For standard plan, there's only one page, so all menu items are on "home"
-      return true;
+      // For standard plan, check if the link corresponds to the active section
+      if (link.startsWith('#')) {
+        const sectionId = link.substring(1);
+        return this.activeSection === sectionId;
+      }
+      return false;
     } else {
       // For premium plan, check current page
       const pageName = link === '/' ? 'home' : link.replace(/^\//, '');

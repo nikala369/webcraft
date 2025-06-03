@@ -1,10 +1,12 @@
 <header
   class="structure-header"
+  [attr.data-plan]="plan"
   [ngClass]="{
     'structure-header--mobile': isMobileLayout,
     'structure-header--sticky': getHeaderPosition() === 'sticky',
     'structure-header--fixed': getHeaderPosition() === 'fixed',
-    'structure-header--relative': getHeaderPosition() === 'relative'
+    'structure-header--relative': getHeaderPosition() === 'relative',
+    'structure-header--smart-hide': getHeaderPosition() === 'smart-hide'
   }"
   [ngStyle]="{
     'background-color': customizations?.backgroundColor,

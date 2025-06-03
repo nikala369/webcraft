@@ -48,7 +48,7 @@ export const BUSINESS_TYPE_SECTIONS = {
     ],
   },
   salon: {
-    standard: ['hero', 'services', 'about', 'contact'],
+    standard: ['hero', 'about', 'services', 'contact'],
     premium: [
       'hero',
       'services',
@@ -82,8 +82,9 @@ export const BUSINESS_TYPE_MENU_ITEMS = {
   restaurant: {
     standard: [
       { id: 1, label: 'Home', link: '#hero' },
-      { id: 2, label: 'Menu', link: '#menu' },
-      { id: 3, label: 'Contact', link: '#contact' },
+      { id: 2, label: 'About', link: '#about' },
+      { id: 3, label: 'Menu', link: '#menu' },
+      { id: 4, label: 'Contact', link: '#contact' },
     ],
     premium: [
       { id: 1, label: 'Home', link: '/' },
@@ -96,8 +97,9 @@ export const BUSINESS_TYPE_MENU_ITEMS = {
   salon: {
     standard: [
       { id: 1, label: 'Home', link: '#hero' },
-      { id: 2, label: 'Services', link: '#services' },
-      { id: 3, label: 'Contact', link: '#contact' },
+      { id: 2, label: 'About', link: '#about' },
+      { id: 3, label: 'Services', link: '#services' },
+      { id: 4, label: 'Contact', link: '#contact' },
     ],
     premium: [
       { id: 1, label: 'Home', link: '/' },
@@ -110,8 +112,9 @@ export const BUSINESS_TYPE_MENU_ITEMS = {
   architecture: {
     standard: [
       { id: 1, label: 'Home', link: '#hero' },
-      { id: 2, label: 'Projects', link: '#projects' },
-      { id: 3, label: 'Contact', link: '#contact' },
+      { id: 2, label: 'About', link: '#about' },
+      { id: 3, label: 'Projects', link: '#projects' },
+      { id: 4, label: 'Contact', link: '#contact' },
     ],
     premium: [
       { id: 1, label: 'Home', link: '/' },
@@ -124,15 +127,15 @@ export const BUSINESS_TYPE_MENU_ITEMS = {
   portfolio: {
     standard: [
       { id: 1, label: 'Home', link: '#hero' },
-      { id: 2, label: 'Projects', link: '#projects' },
-      { id: 3, label: 'Contact', link: '#contact' },
+      { id: 2, label: 'About', link: '#about' },
+      { id: 3, label: 'Projects', link: '#projects' },
+      { id: 4, label: 'Contact', link: '#contact' },
     ],
     premium: [
       { id: 1, label: 'Home', link: '/' },
       { id: 2, label: 'Projects', link: '/projects' },
       { id: 3, label: 'Skills', link: '/skills' },
-      { id: 4, label: 'About', link: '/about' },
-      { id: 5, label: 'Contact', link: '/contact' },
+      { id: 4, label: 'Contact', link: '/contact' },
     ],
   },
 };

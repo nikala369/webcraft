@@ -407,19 +407,6 @@ export const servicesSectionPremiumConfig: FieldConfig[] = [
 
 export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
   header: [
-    // {
-    //   key: 'stickyHeader',
-    //   label: 'Header scroll option',
-    //   type: 'select',
-    //   category: 'general',
-    //   defaultValue: 'relative',
-    //   description: 'Controls how the header behaves when scrolling the page',
-    //   options: [
-    //     { value: 'relative', label: 'Standard (Scrolls Away)' },
-    //     { value: 'sticky', label: 'Sticky (Follows Scroll)' },
-    //     { value: 'fixed', label: 'Fixed (Always Visible)' },
-    //   ],
-    // },
     // Styling settings
     {
       key: 'backgroundColor',
@@ -713,7 +700,125 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
   'pages.home.contact': contactSectionConfig,
   'pages.home.menu': menuSectionConfig,
   'pages.home.services': servicesSectionConfig,
+
+  // Premium home page sections
+  'pages.home.aboutPreview': [
+    {
+      key: 'title',
+      label: 'Section Title',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'About Us',
+      description: 'Main title for the about preview section',
+    },
+    {
+      key: 'subtitle',
+      label: 'Section Subtitle',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Discover what makes us unique',
+      description: 'Subtitle for the about preview section',
+    },
+    {
+      key: 'backgroundColor',
+      label: 'Background Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#f8f9fa',
+      description: 'Background color of the about preview section',
+    },
+  ],
+
+  'pages.home.featuredPreview': [
+    {
+      key: 'title',
+      label: 'Section Title',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Featured',
+      description: 'Main title for the featured preview section',
+    },
+    {
+      key: 'subtitle',
+      label: 'Section Subtitle',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Explore our best offerings',
+      description: 'Subtitle for the featured preview section',
+    },
+    {
+      key: 'backgroundColor',
+      label: 'Background Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#ffffff',
+      description: 'Background color of the featured preview section',
+    },
+  ],
+
+  'pages.home.ctaSection': [
+    {
+      key: 'title',
+      label: 'CTA Title',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Ready to Get Started?',
+      description: 'Main title for the call-to-action section',
+    },
+    {
+      key: 'subtitle',
+      label: 'CTA Subtitle',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Join us today and experience the difference',
+      description: 'Subtitle for the call-to-action section',
+    },
+    {
+      key: 'primaryButtonText',
+      label: 'Primary Button Text',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Get Started',
+      description: 'Text for the primary call-to-action button',
+    },
+    {
+      key: 'secondaryButtonText',
+      label: 'Secondary Button Text',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Learn More',
+      description: 'Text for the secondary call-to-action button',
+    },
+    {
+      key: 'backgroundColor',
+      label: 'Background Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#4a8dff',
+      description: 'Background color of the CTA section',
+    },
+  ],
 };
+
+/**
+ * Premium-only fields for header section
+ */
+export const headerPremiumConfig: FieldConfig[] = [
+  {
+    key: 'stickyHeader',
+    label: 'Header Behavior',
+    type: 'select',
+    category: 'general',
+    defaultValue: 'relative',
+    description: 'Controls how the header behaves when scrolling the page',
+    options: [
+      { value: 'relative', label: 'Standard (Scrolls Away)' },
+      { value: 'sticky', label: 'Sticky (Follows Scroll)' },
+      { value: 'fixed', label: 'Fixed (Always Visible)' },
+      { value: 'smart-hide', label: 'Smart Hide (Hides on Scroll Down)' },
+    ],
+  },
+];
 
 /**
  * Field configuration for customization form
@@ -750,6 +855,10 @@ export function getPlanSpecificConfig(
 
   if (plan === 'premium') {
     // Add premium-specific fields based on section
+    if (section === 'header') {
+      return [...baseConfig, ...headerPremiumConfig];
+    }
+
     if (section === 'pages.home.about') {
       return [...baseConfig, ...aboutSectionPremiumConfig];
     }

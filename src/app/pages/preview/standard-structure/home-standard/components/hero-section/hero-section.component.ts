@@ -46,15 +46,17 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   defaultHeroVideo = 'assets/standard-hero1/background-video.mp4';
 
   ngOnInit() {
-    // Set scroll effects for parallax
-    setTimeout(() => {
-      this.initHeroScrollEffects();
-    }, 100);
+    // Only enable parallax in standard plan
+    if (this.planType === 'standard') {
+      setTimeout(() => {
+        this.initHeroScrollEffects();
+      }, 100);
+    }
   }
 
   ngOnDestroy() {
     // Clean up event listeners
-    if (this.scrollHandler) {
+    if (this.scrollHandler && this.planType === 'standard') {
       window.removeEventListener('scroll', this.scrollHandler);
     }
   }
@@ -63,18 +65,8 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
    * Handle section selection
    */
   handleSectionSelection(event: { key: string; name: string; path?: string }) {
-    console.log(
-      'Hero section - handling section selection with heroData:',
-      this.data()
-    );
-    console.log(
-      'Current heroData:',
-      JSON.stringify(this.data() || {}, null, 2)
-    );
-
     // Ensure we have the correct path
     const path = event.path || 'pages.home.hero1';
-
     this.sectionSelected.emit({
       key: event.key,
       name: event.name,

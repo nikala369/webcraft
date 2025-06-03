@@ -11,6 +11,7 @@ import {
   ViewChild,
   AfterViewInit,
   Signal,
+  OnDestroy,
 } from '@angular/core';
 import { StructureHeaderComponent } from '../components/structure-header/structure-header.component';
 import { StructureFooterComponent } from '../components/structure-footer/structure-footer.component';
@@ -23,8 +24,8 @@ import { FontOption } from '../components/font-selector/font-selector.component'
 import { BUSINESS_TYPE_SECTIONS } from '../../../core/models/business-types';
 import { AboutPremiumComponent } from './premium-pages/about-premium/about-premium.component';
 import { ContactPremiumComponent } from './premium-pages/contact-premium/contact-premium.component';
-import { HomePremiumComponent } from './premium-pages/home-premium/home-premium.component';
 import { MenuPremiumComponent } from './premium-pages/menu-premium/menu-premium.component';
+import { HomePremiumComponent } from './premium-pages/home-premium/home-premium.component';
 
 @Component({
   selector: 'app-standard-structure',
@@ -43,7 +44,9 @@ import { MenuPremiumComponent } from './premium-pages/menu-premium/menu-premium.
   templateUrl: './standard-structure.component.html',
   styleUrls: ['./standard-structure.component.scss'],
 })
-export class StandardStructureComponent implements OnInit, AfterViewInit {
+export class StandardStructureComponent
+  implements OnInit, AfterViewInit, OnDestroy
+{
   @ViewChild('structureContainer') structureContainer!: ElementRef;
   @ViewChild(HomeStandardComponent) homeComponent!: HomeStandardComponent;
 
@@ -70,6 +73,9 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
   // Section references for scrolling
   sectionRefs: { [key: string]: HTMLElement } = {};
 
+  // Intersection observer for tracking active sections
+  private intersectionObserver?: IntersectionObserver;
+
   constructor(private router: Router, private el: ElementRef) {}
 
   // Standard customizations signal
@@ -77,10 +83,6 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
   homeCustomizationsSignal = computed(() => {
     const cust = this.customizations();
     const homeData = cust?.pages?.home || {};
-    console.log(
-      `[StandardStructure] Computed homeCustomizationsSignal updated at ${Date.now()}:`,
-      homeData
-    );
     return homeData;
   });
   // ------------------------------------------------------------
@@ -141,13 +143,13 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
           this.businessType as keyof typeof BUSINESS_TYPE_SECTIONS
         ]?.[this.currentPlan as 'standard' | 'premium'] || [
           'hero',
-          'services',
           'about',
+          'services',
           'contact',
         ]
       );
     }
-    return ['hero', 'services', 'about', 'contact']; // Default sections
+    return ['hero', 'about', 'services', 'contact']; // Default sections
   });
 
   ngOnInit() {
@@ -162,26 +164,81 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
     // Find all sections in the home component for scrolling
     setTimeout(() => {
       this.findSectionElements();
-    }, 1000);
+      if (this.currentPlan === 'standard') {
+        this.setupIntersectionObserver();
+      }
+    }, 500); // Reduced delay for faster initialization
+  }
+
+  ngOnDestroy() {
+    // Clean up intersection observer
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+    }
   }
 
   // Find all section elements for scrolling
   findSectionElements() {
-    if (this.structureContainer) {
-      const container = this.structureContainer.nativeElement;
+    if (!this.structureContainer) {
+      return;
+    }
 
-      // Use the computed available sections from business type
-      const sections = this.availableSections();
+    const container = this.structureContainer.nativeElement;
+    const sections = this.availableSections();
+    let foundCount = 0;
 
-      sections.forEach((sectionId) => {
-        const sectionEl = container.querySelector(`#${sectionId}`);
-        if (sectionEl) {
-          this.sectionRefs[sectionId] = sectionEl;
+    sections.forEach((sectionId) => {
+      // Try multiple selectors to find the section
+      let sectionEl =
+        container.querySelector(`#${sectionId}`) ||
+        container.querySelector(`[id="${sectionId}"]`) ||
+        document.getElementById(sectionId);
+
+      if (sectionEl) {
+        this.sectionRefs[sectionId] = sectionEl;
+        foundCount++;
+      }
+    });
+
+    // If we didn't find all sections, retry with exponential backoff
+    if (foundCount < sections.length && foundCount < 10) {
+      // Prevent infinite retries
+      const retryDelay = Math.min(500 * Math.pow(1.5, foundCount), 3000); // Max 3 seconds
+      setTimeout(() => {
+        this.findSectionElements();
+      }, retryDelay);
+    } else if (foundCount === sections.length) {
+      // All sections found successfully!
+    }
+  }
+
+  // Setup intersection observer for tracking active sections (Standard plan only)
+  setupIntersectionObserver() {
+    if (typeof window === 'undefined' || this.currentPlan !== 'standard') {
+      return;
+    }
+
+    const options = {
+      root: null,
+      rootMargin: '-20% 0px -60% 0px', // Trigger when section is 20% from top
+      threshold: 0.1,
+    };
+
+    this.intersectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const sectionId = entry.target.id;
+          if (sectionId && this.activeSection() !== sectionId) {
+            this.activeSection.set(sectionId);
+          }
         }
       });
+    }, options);
 
-      console.log('Found section elements:', Object.keys(this.sectionRefs));
-    }
+    // Observe all section elements
+    Object.values(this.sectionRefs).forEach((sectionEl) => {
+      this.intersectionObserver?.observe(sectionEl);
+    });
   }
 
   // Add a convenience method
@@ -198,18 +255,19 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
       key: componentKey,
       name: componentKey.charAt(0).toUpperCase() + componentKey.slice(1),
     };
-    console.log(selectedData, 'selected data');
     this.componentSelected.emit(selectedData);
   }
 
-  handlePageSectionEdit(fullPath: string) {
-    console.log(
-      `Standard-structure: handling page section edit for path: ${fullPath}`
-    );
+  handlePageSectionEdit(
+    event: string | { key: string; name: string; path?: string }
+  ) {
+    let fullPath: string;
 
-    // Special debug for about section
-    if (fullPath.includes('about')) {
-      console.log('DEBUG: Handling ABOUT section edit!');
+    // Handle both string and object event types
+    if (typeof event === 'string') {
+      fullPath = event;
+    } else {
+      fullPath = event.path || event.key;
     }
 
     // Split the fullPath, e.g. "pages.home.hero1" → ["pages", "home", "hero1"]
@@ -219,10 +277,6 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
     const sectionName = pathParts
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join(' ');
-
-    console.log(
-      `Standard-structure: emitting component selected with key:${fullPath}, name:${sectionName}`
-    );
 
     // Emit the event with the full key so that dynamic sidebar can look up "pages.home.hero1"
     this.componentSelected.emit({
@@ -234,29 +288,88 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
 
   // Handle section scrolling (from header navigation)
   handleSectionScroll(sectionId: string) {
-    console.log('Scrolling to section:', sectionId);
+    // Detect fullscreen mode by checking for .fullscreen-mode on body or parent
+    const isFullscreen =
+      document.body.classList.contains('fullscreen-mode') ||
+      (this.structureContainer &&
+        this.structureContainer.nativeElement.closest('.fullscreen-mode'));
 
     // Find the section element
-    const sectionEl = this.sectionRefs[sectionId];
+    let sectionEl = this.sectionRefs[sectionId];
+    if (!sectionEl) {
+      sectionEl =
+        document.getElementById(sectionId) ||
+        document.querySelector(`#${sectionId}`) ||
+        document.querySelector(`[id="${sectionId}"]`) ||
+        (this.structureContainer?.nativeElement?.querySelector(
+          `#${sectionId}`
+        ) as HTMLElement);
+      if (sectionEl) {
+        this.sectionRefs[sectionId] = sectionEl;
+      }
+    }
 
     if (sectionEl) {
-      // Scroll the section into view with smooth behavior
-      sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Dynamically calculate header height
+      let headerHeight = 0;
+      const headerEl = document.querySelector('header.structure-header');
+      if (headerEl) {
+        headerHeight = (headerEl as HTMLElement).offsetHeight;
+      } else {
+        headerHeight = 80; // fallback
+      }
 
-      // Update active section
+      // Scroll the correct container
+      if (isFullscreen && this.structureContainer) {
+        // Scroll the structure container
+        const container = this.structureContainer.nativeElement;
+        const elementPosition = sectionEl.offsetTop;
+        const offsetPosition = Math.max(0, elementPosition - headerHeight);
+        container.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth',
+        });
+      } else {
+        // Scroll the window
+        const elementPosition =
+          sectionEl.getBoundingClientRect().top + window.scrollY;
+        const offsetPosition = Math.max(0, elementPosition - headerHeight);
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth',
+        });
+      }
+
+      // Fallback: use scrollIntoView if above fails (no delay)
+      const scrolledEnough = isFullscreen
+        ? Math.abs(
+            this.structureContainer.nativeElement.scrollTop -
+              (sectionEl.offsetTop - headerHeight)
+          ) < 10
+        : Math.abs(
+            window.scrollY -
+              (sectionEl.getBoundingClientRect().top +
+                window.scrollY -
+                headerHeight)
+          ) < 10;
+      if (!scrolledEnough) {
+        sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      // Update active section immediately for better UX
       this.activeSection.set(sectionId);
-    } else {
-      console.warn(`Section with ID "${sectionId}" not found`);
     }
+  }
+
+  // Get current active section for header navigation
+  getCurrentActiveSection(): string {
+    return this.activeSection();
   }
 
   // For premium structure only
   navigateToPage(page: string) {
-    console.log('Navigating to page:', page);
-
     // Ensure we have a valid page
     if (!page) {
-      console.error('No page specified for navigation');
       return;
     }
 
@@ -269,7 +382,6 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
 
     // Navigate to the specific page route
     const url = `/preview/${page}`;
-    console.log('Navigating to URL:', url);
 
     // Navigate to the page while preserving query params
     this.router
@@ -278,8 +390,6 @@ export class StandardStructureComponent implements OnInit, AfterViewInit {
         queryParamsHandling: 'preserve',
       })
       .then((success) => {
-        console.log('Navigation result:', success ? 'Success' : 'Failed');
-
         // Scroll to top after navigation
         if (success) {
           window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -1,0 +1,53 @@
+<app-section-hover-wrapper
+  [sectionKey]="'aboutPreview'"
+  [sectionName]="'About Preview'"
+  [editable]="true"
+  [currentPlan]="planType"
+  [sectionPath]="'pages.home.aboutPreview'"
+  (sectionSelected)="handleSectionSelection($event)"
+>
+  <section id="about-preview" class="about-preview-section">
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">{{ getAboutTitle() }}</h2>
+        <div class="title-underline"></div>
+        <p class="section-subtitle">Discover what makes us unique</p>
+      </div>
+
+      <div class="about-preview-content">
+        <!-- Three Column Layout -->
+        <div class="about-columns">
+          <div
+            class="about-column"
+            *ngFor="let item of getAboutColumns(); let i = index"
+          >
+            <div class="column-icon">
+              <i [class]="item.icon"></i>
+            </div>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.description }}</p>
+          </div>
+        </div>
+
+        <!-- Business Features Grid -->
+        <div class="business-features">
+          <h3>Why Choose Us</h3>
+          <div class="features-grid">
+            <div
+              class="feature-item"
+              *ngFor="let feature of getBusinessFeatures()"
+            >
+              <div class="feature-icon">
+                <i [class]="feature.icon"></i>
+              </div>
+              <div class="feature-content">
+                <h4>{{ feature.title }}</h4>
+                <p>{{ feature.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</app-section-hover-wrapper>

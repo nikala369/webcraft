@@ -1,1 +1,46 @@
-<p>home-premium works!</p>
+<div class="home-premium">
+  <!-- Hero Section -->
+  <app-section-hover-wrapper
+    [sectionKey]="'hero1'"
+    [sectionName]="'Hero Section'"
+    [editable]="true"
+    [currentPlan]="planType"
+    [sectionPath]="'pages.home.hero1'"
+    (sectionSelected)="handleSectionSelection($event)"
+  >
+    <app-hero-section
+      [data]="heroData"
+      [isMobileLayout]="isMobileLayout"
+      [planType]="planType"
+      [businessType]="businessType"
+      (sectionSelected)="handleSectionSelection($event)"
+    ></app-hero-section>
+  </app-section-hover-wrapper>
+
+  <!-- Featured Preview Section -->
+  <app-featured-preview-section
+    [data]="featuredPreviewData"
+    [isMobileLayout]="isMobileLayout"
+    [planType]="planType"
+    [businessType]="businessType"
+    (sectionSelected)="handleSectionSelection($event)"
+  ></app-featured-preview-section>
+
+  <!-- About Preview Section -->
+  <app-about-preview-section
+    [data]="aboutPreviewData"
+    [isMobileLayout]="isMobileLayout"
+    [planType]="planType"
+    [businessType]="businessType"
+    (sectionSelected)="handleSectionSelection($event)"
+  ></app-about-preview-section>
+
+  <!-- Call to Action Section -->
+  <app-cta-section
+    [data]="ctaData"
+    [isMobileLayout]="isMobileLayout"
+    [planType]="planType"
+    [businessType]="businessType"
+    (sectionSelected)="handleSectionSelection($event)"
+  ></app-cta-section>
+</div>

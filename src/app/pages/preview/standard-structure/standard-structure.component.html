@@ -15,6 +15,7 @@
       [currentPage]="currentPage"
       [plan]="currentPlan"
       [businessType]="businessType"
+      [activeSection]="getCurrentActiveSection()"
       (pageChange)="navigateToPage($event)"
       (sectionScroll)="handleSectionScroll($event)"
     >
