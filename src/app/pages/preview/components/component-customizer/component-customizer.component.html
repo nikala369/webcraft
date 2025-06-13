@@ -26,26 +26,12 @@
       </button>
     </div>
 
-    <!-- Preset Templates (Quick Actions) -->
-    <div class="presets-section" *ngIf="hasPresets()">
-      <h3>Quick Templates</h3>
-      <div class="preset-buttons">
-        <button
-          *ngFor="let preset of getPresets()"
-          class="preset-button"
-          (click)="applyPreset(preset.id)"
-        >
-          {{ preset.label }}
-        </button>
-      </div>
-    </div>
-
     <!-- Tabbed Navigation for categories -->
     <div class="sidebar-tabs">
       <button
-        *ngFor="let category of getCategories()"
+        *ngFor="let category of categories()"
         class="tab-button"
-        [class.active]="activeCategory === category.id"
+        [class.active]="activeCategory() === category.id"
         [class.invalid]="!getCategoryValidationStatus()[category.id]"
         (click)="setActiveCategory(category.id)"
       >
@@ -53,12 +39,10 @@
       </button>
     </div>
 
-    <!-- Fields organized by category -->
+    <!-- Content area with fields -->
     <div class="sidebar-content">
       <div class="fields-container">
-        <ng-container
-          *ngFor="let field of getFieldsForCategory(); let i = index"
-        >
+        <ng-container *ngFor="let field of fieldsForCategory(); let i = index">
           <div class="field-group" [style.--index]="i">
             <div class="field-label-row" *ngIf="shouldShowFieldLabel(field)">
               <label *ngIf="shouldShowLabel(field)" [for]="field.key">
@@ -73,6 +57,69 @@
                 </div>
               </div>
             </div>
+
+            <!-- Premium Upsell for Gradients (Standard Plan Only) -->
+            <ng-container
+              *ngIf="
+                field.key === 'headerBackgroundType' && planType === 'standard'
+              "
+            >
+              <div class="premium-gradient-upsell">
+                <div class="gradient-preview-row">
+                  <div
+                    class="gradient-preview locked"
+                    title="Premium Gradient"
+                    style="
+                      background: linear-gradient(
+                        45deg,
+                        #ff9a9e 0%,
+                        #fecfef 100%
+                      );
+                    "
+                  ></div>
+                  <div
+                    class="gradient-preview locked"
+                    title="Premium Gradient"
+                    style="
+                      background: linear-gradient(
+                        45deg,
+                        #667eea 0%,
+                        #764ba2 100%
+                      );
+                    "
+                  ></div>
+                  <div
+                    class="gradient-preview locked"
+                    title="Premium Gradient"
+                    style="
+                      background: linear-gradient(
+                        45deg,
+                        #11998e 0%,
+                        #38ef7d 100%
+                      );
+                    "
+                  ></div>
+                  <div
+                    class="gradient-preview locked"
+                    title="Premium Gradient"
+                    style="
+                      background: linear-gradient(
+                        45deg,
+                        #f093fb 0%,
+                        #f5576c 100%
+                      );
+                    "
+                  ></div>
+                </div>
+                <div class="upsell-text">
+                  <span class="lock-icon">🔒</span>
+                  <span
+                    >Upgrade to <b>Premium</b> to unlock beautiful gradients and
+                    exclusive header styles!</span
+                  >
+                </div>
+              </div>
+            </ng-container>
 
             <ng-container [ngSwitch]="field.type">
               <!-- Text Field -->
@@ -140,7 +187,9 @@
               <!-- Select Field (Handles backgroundType and others) -->
               <ng-container *ngSwitchCase="'select'">
                 <!-- Special button-based selector for backgroundType -->
-                <ng-container *ngIf="field.key === 'backgroundType'; else defaultSelect">
+                <ng-container
+                  *ngIf="field.key === 'backgroundType'; else defaultSelect"
+                >
                   <div class="background-type-selector">
                     <button
                       class="type-btn"
@@ -193,15 +242,15 @@
                     class="select-input"
                     [name]="field.key"
                   >
-                    <option *ngFor="let option of field.options" [value]="option.value">
+                    <option
+                      *ngFor="let option of field.options"
+                      [value]="option.value"
+                    >
                       {{ option.label }}
                     </option>
                   </select>
                 </ng-template>
-
               </ng-container>
-
-
 
               <!-- File Field -->
               <div *ngSwitchCase="'file'" class="file-field">

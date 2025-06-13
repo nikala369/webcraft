@@ -7,6 +7,7 @@ import {
   computed,
   OnInit,
   inject,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FieldConfig, getPlanSpecificConfig } from './customizing-form-config';
@@ -28,7 +29,12 @@ export class ComponentCustomizerComponent implements OnInit {
   @Input() businessType!: string;
   originalData: any;
   isVisible = false;
-  activeCategory = 'general';
+
+  // Use a signal for activeCategory for better state management
+  activeCategory = signal('general');
+
+  // Store last-used tab per component
+  private lastActiveCategory: Record<string, string> = {};
 
   // Inject the toast service
   private toastService = inject(ToastService);
@@ -40,9 +46,6 @@ export class ComponentCustomizerComponent implements OnInit {
 
   @Input() set initialData(value: any) {
     if (value) {
-      console.log('Component customizer received initial data:', value);
-      console.log('Component key:', this.componentKey);
-
       // Store original for reset functionality
       this.originalData = structuredClone(value);
 
@@ -54,28 +57,20 @@ export class ComponentCustomizerComponent implements OnInit {
 
       // Apply default values for fields that don't have data
       if (configFields && configFields.length > 0) {
-        console.log(
-          `Applying defaults from field config for ${this.componentKey} where missing`
-        );
+        // Apply defaults from field config where missing
         configFields.forEach((field: FieldConfig) => {
           if (
             field.defaultValue !== undefined &&
             (mergedData[field.key] === undefined ||
               mergedData[field.key] === null)
           ) {
-            console.log(
-              `Setting default for ${field.key}: ${field.defaultValue}`
-            );
             mergedData[field.key] = field.defaultValue;
           }
         });
-      } else {
-        console.log('No field config found for:', this.componentKey);
       }
 
       // Set the local data signal
       this.localData.set(mergedData);
-      console.log('Final merged data for customizer:', mergedData);
     } else {
       console.warn('Component customizer received null/undefined initial data');
       // Initialize with empty object and component ID
@@ -91,11 +86,35 @@ export class ComponentCustomizerComponent implements OnInit {
 
   // Helper to get field config for this component
   getFieldsConfig(): FieldConfig[] {
-    // Use the plan-specific config function to get fields appropriate for the plan type
-    return getPlanSpecificConfig(
-      this.componentKey,
-      this.planType as 'standard' | 'premium'
-    );
+    try {
+      // Safety checks
+      if (!this.componentKey) {
+        console.warn('getFieldsConfig called without componentKey');
+        return [];
+      }
+
+      if (!this.planType) {
+        console.warn('getFieldsConfig called without planType');
+        return [];
+      }
+
+      // Use the plan-specific config function to get fields appropriate for the plan type
+      const config = getPlanSpecificConfig(
+        this.componentKey,
+        this.planType as 'standard' | 'premium'
+      );
+
+      // Safety check for config result
+      if (!Array.isArray(config)) {
+        console.warn('getPlanSpecificConfig returned non-array:', config);
+        return [];
+      }
+
+      return config;
+    } catch (error) {
+      console.error('Error in getFieldsConfig:', error);
+      return [];
+    }
   }
 
   // Form validation signal
@@ -127,32 +146,155 @@ export class ComponentCustomizerComponent implements OnInit {
     });
   });
 
+  // Make categories a computed signal based on field configurations
+  categories = computed(() => {
+    const allFields = this.getFieldsConfig();
+    const availableCategories: { id: string; label: string }[] = [];
+
+    if (allFields.some((field) => field.category === 'general')) {
+      availableCategories.push({ id: 'general', label: 'General' });
+    }
+    if (allFields.some((field) => field.category === 'content')) {
+      availableCategories.push({ id: 'content', label: 'Content' });
+    }
+    if (allFields.some((field) => field.category === 'styling')) {
+      availableCategories.push({ id: 'styling', label: 'Styling' });
+    }
+
+    if (availableCategories.length === 0) {
+      // Fallback if no categories found
+      availableCategories.push({ id: 'general', label: 'General' });
+    }
+    return availableCategories;
+  });
+
+  // Convert getFieldsForCategory to a computed signal to prevent infinite loops
+  fieldsForCategory = computed(() => {
+    try {
+      const allFields = this.getFieldsConfig();
+      if (!Array.isArray(allFields)) return [];
+
+      const currentActiveCategory = this.activeCategory(); // Use signal value
+      const data = this.localData(); // Read signal once
+
+      // Debug: Log fields for standard plan header styling
+      if (
+        this.componentKey === 'header' &&
+        this.planType === 'standard' &&
+        currentActiveCategory === 'styling'
+      ) {
+        console.log(
+          'STANDARD HEADER STYLING FIELDS:',
+          allFields.map((f) => ({ key: f.key, category: f.category }))
+        );
+      }
+
+      const categoryFields = allFields.filter(
+        (field) => field && field.category === currentActiveCategory
+      );
+
+      // GUARD: If there are no fields for the active category, return []
+      if (!categoryFields.length) {
+        console.warn('No fields found for category:', currentActiveCategory);
+        return [];
+      }
+
+      // Filter fields based on component and plan logic
+      let filteredFields = categoryFields;
+
+      if (
+        this.componentKey === 'header' &&
+        currentActiveCategory === 'content'
+      ) {
+        // For standard plan, hide the ability to add/remove menu items
+        filteredFields = categoryFields.filter((field) => {
+          if (this.planType === 'standard' && field.key === 'menuItems') {
+            return false;
+          }
+          return true;
+        });
+      }
+
+      // Apply shouldShowField logic here to avoid calling it in template
+      return filteredFields.filter((field) => {
+        // Safety check: if field is undefined or null, don't show it
+        if (!field || !field.key) {
+          return false;
+        }
+
+        // For header component, handle gradient field visibility
+        if (this.componentKey === 'header') {
+          // Only show custom gradient fields if custom is selected AND we're on premium plan
+          if (
+            field.key === 'customGradientColor1' ||
+            field.key === 'customGradientColor2' ||
+            field.key === 'customGradientAngle'
+          ) {
+            // These fields should only exist in premium plan, but double-check
+            if (this.planType === 'standard') {
+              return false; // Never show gradient fields in standard plan
+            }
+
+            // Only check headerBackgroundType if we're on premium plan
+            try {
+              const val = data['headerBackgroundType'];
+              return val === 'custom';
+            } catch (error) {
+              console.error('Error checking headerBackgroundType:', error);
+              return false;
+            }
+          }
+        }
+
+        return true;
+      });
+    } catch (error) {
+      console.error('Error in fieldsForCategory computed:', error);
+      return [];
+    }
+  });
+
+  constructor() {}
+
+  // Helper to validate and set activeCategory
+  private validateActiveCategory() {
+    const currentCats = this.categories();
+    const currentActive = this.activeCategory();
+    if (
+      currentCats.length > 0 &&
+      !currentCats.some((cat) => cat.id === currentActive)
+    ) {
+      this.activeCategory.set(currentCats[0].id);
+    }
+  }
+
   ngOnInit() {
-    // Show sidebar with animation after component is initialized
     setTimeout(() => {
       this.isVisible = true;
 
-      // Debugging statements
-      console.log('Component Customizer Initialized');
-      console.log('Component Key:', this.componentKey);
-      console.log('Plan Type:', this.planType);
-      console.log('Fields Config Available:', this.getFieldsConfig());
-      console.log('Fields for Category:', this.getFieldsForCategory());
-      console.log('Initial Data:', this.localData());
+      // Restore last-used tab if valid, else default to first
+      const availableCategories = this.categories();
+      const last = this.lastActiveCategory[this.componentKey];
+      if (last && availableCategories.some((c) => c.id === last)) {
+        this.activeCategory.set(last);
+      } else {
+        this.activeCategory.set(availableCategories[0].id);
+      }
+
+      // Validate activeCategory after setting
+      this.validateActiveCategory();
 
       // Check validation status and auto-select category with errors if any
       const validationStatus = this.getCategoryValidationStatus();
-      console.log('Initial validation status:', validationStatus);
-
-      // Find the first category with validation errors
       const invalidCategory = Object.entries(validationStatus).find(
-        ([category, isValid]) => !isValid
+        ([_category, isValid]) => !isValid
       )?.[0];
 
-      // If there's an invalid category, switch to it
-      if (invalidCategory) {
-        console.log(`Selecting category with errors: ${invalidCategory}`);
-        this.activeCategory = invalidCategory;
+      if (
+        invalidCategory &&
+        this.categories().some((c) => c.id === invalidCategory)
+      ) {
+        this.activeCategory.set(invalidCategory); // Use .set() for signals
       }
     }, 50);
 
@@ -161,7 +303,6 @@ export class ComponentCustomizerComponent implements OnInit {
     if (savedPlaceholders) {
       try {
         this.videoPlaceholders = JSON.parse(savedPlaceholders);
-        console.log('Loaded video placeholders:', this.videoPlaceholders);
       } catch (error) {
         console.error('Error parsing video placeholders:', error);
       }
@@ -178,55 +319,6 @@ export class ComponentCustomizerComponent implements OnInit {
     );
   }
 
-  // Category management
-  getCategories() {
-    // Get all available fields
-    const allFields = this.getFieldsConfig();
-
-    // Check which categories have fields
-    const hasGeneralFields = allFields.some(
-      (field) => field.category === 'general'
-    );
-    const hasContentFields = allFields.some(
-      (field) => field.category === 'content'
-    );
-    const hasStylingFields = allFields.some(
-      (field) => field.category === 'styling'
-    );
-
-    // Only add categories that have fields
-    const categories: any = [];
-
-    if (hasGeneralFields) {
-      categories.push({ id: 'general', label: 'General' });
-    }
-
-    if (hasContentFields) {
-      categories.push({ id: 'content', label: 'Content' });
-    }
-
-    if (hasStylingFields) {
-      categories.push({ id: 'styling', label: 'Styling' });
-    }
-
-    // After constructing categories array, if empty, set a default
-    if (categories.length === 0) {
-      categories.push({ id: 'general', label: 'General' });
-    }
-
-    // Ensure active category is valid
-    if (
-      categories.length > 0 &&
-      !categories.some((cat: any) => cat.id === this.activeCategory)
-    ) {
-      setTimeout(() => {
-        this.activeCategory = categories[0].id;
-      });
-    }
-
-    return categories;
-  }
-
   hasContentFields(): boolean {
     const config = this.getFieldsConfig();
     return config.some(
@@ -239,30 +331,19 @@ export class ComponentCustomizerComponent implements OnInit {
   }
 
   setActiveCategory(categoryId: string) {
-    this.activeCategory = categoryId;
+    // Only set if valid
+    if (this.categories().some((c) => c.id === categoryId)) {
+      this.activeCategory.set(categoryId);
+      this.lastActiveCategory[this.componentKey] = categoryId;
+    } else {
+      this.validateActiveCategory();
+    }
   }
 
+  // DEPRECATED: Remove this method since we now use the computed signal
   getFieldsForCategory() {
-    const allFields = this.getFieldsConfig();
-
-    // Filter fields by category
-    const categoryFields = allFields.filter(
-      (field) => field.category === this.activeCategory
-    );
-
-    // If this is the header component and we're editing menu items,
-    // filter based on plan type
-    if (this.componentKey === 'header' && this.activeCategory === 'content') {
-      return categoryFields.filter((field) => {
-        // For standard plan, hide the ability to add/remove menu items
-        if (this.planType === 'standard' && field.key === 'menuItems') {
-          return false;
-        }
-        return true;
-      });
-    }
-
-    return categoryFields;
+    // Return the computed signal value for backward compatibility
+    return this.fieldsForCategory();
   }
 
   // Check if we should show presets for this component
@@ -416,8 +497,6 @@ export class ComponentCustomizerComponent implements OnInit {
 
     // Special handling for hero section background type
     if (fieldKey === 'backgroundType') {
-      console.log(`Background type changed to: ${typedValue}`);
-
       // Switching between image and video modes
       const currentData = this.localData();
 
@@ -461,20 +540,6 @@ export class ComponentCustomizerComponent implements OnInit {
   updateColorField(fieldKey: string, value: string) {
     this.localData.update((current) => {
       return { ...current, [fieldKey]: value };
-    });
-  }
-
-  updateListField(fieldKey: string, index: number, newValue: string) {
-    this.localData.update((current) => {
-      const list = current[fieldKey] ? [...current[fieldKey]] : [];
-
-      if (typeof list[index] === 'object') {
-        list[index] = { ...list[index], label: newValue };
-      } else {
-        list[index] = newValue;
-      }
-
-      return { ...current, [fieldKey]: list };
     });
   }
 
@@ -565,6 +630,27 @@ export class ComponentCustomizerComponent implements OnInit {
     this.localData.update((current) => {
       const list = [...current[fieldKey]];
       list.splice(index, 1);
+      return { ...current, [fieldKey]: list };
+    });
+  }
+
+  /**
+   * Update a list field's item label at a given index
+   */
+  public updateListField(fieldKey: string, index: number, value: string): void {
+    this.localData.update((current) => {
+      const list = Array.isArray(current[fieldKey])
+        ? [...current[fieldKey]]
+        : [];
+      if (list.length > index) {
+        // If the item is an object (e.g., {label, link}), update label
+        if (typeof list[index] === 'object' && list[index] !== null) {
+          list[index] = { ...list[index], label: value };
+        } else {
+          // Otherwise, just update the value
+          list[index] = value;
+        }
+      }
       return { ...current, [fieldKey]: list };
     });
   }
@@ -805,7 +891,7 @@ export class ComponentCustomizerComponent implements OnInit {
     const result: Record<string, boolean> = {};
 
     // Get all available categories
-    const categories = this.getCategories().map((cat: any) => cat.id as string);
+    const categories = this.categories().map((cat) => cat.id);
 
     // Initialize all categories as valid
     categories.forEach((cat: string) => {
@@ -999,4 +1085,6 @@ export class ComponentCustomizerComponent implements OnInit {
       this.toastService.error('Failed to open editor. Please try again.');
     }
   }
+
+  // REMOVED: shouldShowField method - logic moved to fieldsForCategory computed signal
 }

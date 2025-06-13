@@ -407,6 +407,15 @@ export const servicesSectionPremiumConfig: FieldConfig[] = [
 
 export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
   header: [
+    // Content settings
+    {
+      key: 'logoUrl',
+      label: 'Logo',
+      type: 'file',
+      category: 'content',
+      description: 'Upload your business logo (max 2MB)',
+      acceptedFileTypes: 'image/*',
+    },
     // Styling settings
     {
       key: 'backgroundColor',
@@ -414,7 +423,7 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       type: 'color',
       category: 'styling',
       defaultValue: '#2876FF',
-      required: true,
+      description: 'Background color of the header',
     },
     {
       key: 'textColor',
@@ -422,24 +431,58 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       type: 'color',
       category: 'styling',
       defaultValue: '#ffffff',
-      required: true,
-    },
-    // Content settings
-    {
-      key: 'logoUrl',
-      label: 'Logo',
-      type: 'file',
-      category: 'content',
+      description: 'Color of the text and menu items',
     },
     {
-      key: 'menuItems',
-      label: 'Menu Items',
-      type: 'list',
-      category: 'content',
-      defaultValue: [
-        { id: 1, label: 'Home', link: '/' },
-        { id: 2, label: 'About', link: '/about' },
-        { id: 3, label: 'Contact', link: '/contact' },
+      key: 'headerBackgroundType',
+      label: 'Background Style',
+      type: 'select',
+      category: 'styling',
+      defaultValue: 'none',
+      description: 'Choose between solid color or premium gradients',
+      options: [
+        { value: 'none', label: 'Solid Color Only' },
+        { value: 'sunset', label: '🌅 Sunset Premium' },
+        { value: 'ocean', label: '🌊 Ocean Premium' },
+        { value: 'forest', label: '🌲 Forest Premium' },
+        { value: 'royal', label: '👑 Royal Premium' },
+        { value: 'fire', label: '🔥 Fire Premium' },
+        { value: 'midnight', label: '🌙 Midnight Premium' },
+        { value: 'custom', label: '🎨 Custom Gradient Premium' },
+      ],
+    },
+    {
+      key: 'customGradientColor1',
+      label: 'Gradient Start Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#667eea',
+      description: 'Starting color for your custom gradient',
+    },
+    {
+      key: 'customGradientColor2',
+      label: 'Gradient End Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#764ba2',
+      description: 'Ending color for your custom gradient',
+    },
+    {
+      key: 'customGradientAngle',
+      label: 'Gradient Angle',
+      type: 'select',
+      category: 'styling',
+      defaultValue: 45,
+      description: 'Direction of your custom gradient',
+      options: [
+        { value: 45, label: '45° (Diagonal)' },
+        { value: 90, label: '90° (Left to Right)' },
+        { value: 135, label: '135°' },
+        { value: 180, label: '180° (Top to Bottom)' },
+        { value: 225, label: '225°' },
+        { value: 270, label: '270° (Right to Left)' },
+        { value: 315, label: '315°' },
+        { value: 360, label: '360° (Bottom to Top)' },
       ],
     },
   ],
@@ -801,26 +844,6 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
 };
 
 /**
- * Premium-only fields for header section
- */
-export const headerPremiumConfig: FieldConfig[] = [
-  {
-    key: 'stickyHeader',
-    label: 'Header Behavior',
-    type: 'select',
-    category: 'general',
-    defaultValue: 'relative',
-    description: 'Controls how the header behaves when scrolling the page',
-    options: [
-      { value: 'relative', label: 'Standard (Scrolls Away)' },
-      { value: 'sticky', label: 'Sticky (Follows Scroll)' },
-      { value: 'fixed', label: 'Fixed (Always Visible)' },
-      { value: 'smart-hide', label: 'Smart Hide (Hides on Scroll Down)' },
-    ],
-  },
-];
-
-/**
  * Field configuration for customization form
  */
 export interface FieldConfig {
@@ -853,12 +876,34 @@ export function getPlanSpecificConfig(
 ): FieldConfig[] {
   const baseConfig = CustomizationFormConfig[section] || [];
 
-  if (plan === 'premium') {
-    // Add premium-specific fields based on section
-    if (section === 'header') {
-      return [...baseConfig, ...headerPremiumConfig];
+  if (section === 'header') {
+    if (plan === 'standard') {
+      // For standard plan, modify the header config to only show solid color option
+      return baseConfig
+        .map((field) => {
+          if (field.key === 'headerBackgroundType') {
+            return {
+              ...field,
+              options: [{ value: 'none', label: 'Solid Color Only' }],
+            };
+          }
+          return field;
+        })
+        .filter((field) => {
+          // Hide custom gradient fields for standard plan
+          return ![
+            'customGradientColor1',
+            'customGradientColor2',
+            'customGradientAngle',
+          ].includes(field.key);
+        });
+    } else {
+      // For premium plan, return full config with all gradient options
+      return baseConfig;
     }
+  }
 
+  if (plan === 'premium') {
     if (section === 'pages.home.about') {
       return [...baseConfig, ...aboutSectionPremiumConfig];
     }

@@ -137,3 +137,4 @@ export class CtaSectionComponent {
     return this.data()?.backgroundColor || '#4a8dff';
   }
 }
+ 

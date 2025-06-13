@@ -8,6 +8,8 @@ import {
   OnDestroy,
   HostBinding,
   ElementRef,
+  NgZone,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -72,14 +74,6 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
   /** Signal for toggling the mobile menu overlay. */
   isMobileMenuOpen = signal(false);
 
-  // Smart hide functionality
-  private lastScrollTop = 0;
-  private scrollThreshold = 5;
-  private headerHeight = 80;
-
-  @HostBinding('class.hidden') isHidden = false;
-  @HostBinding('class.scrolled') isScrolled = false;
-
   // Default standard menu items - now 4 items including About
   private standardMenuItems = [
     { id: 1, label: 'Home', link: '#hero' },
@@ -88,14 +82,13 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
     { id: 4, label: 'Contact', link: '#contact' },
   ];
 
-  // Scroll event listener
-  private scrollListener?: () => void;
-
   // Inject the Router and ActivatedRoute
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -131,55 +124,10 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
         this.customizations.menuItems = this.standardMenuItems;
       }
     }
-
-    // Initialize smart hide functionality for premium plans
-    if (this.plan === 'premium' && this.getHeaderPosition() === 'smart-hide') {
-      this.initializeSmartHide();
-    }
   }
 
   ngOnDestroy() {
-    // Clean up scroll listener
-    if (this.scrollListener) {
-      window.removeEventListener('scroll', this.scrollListener);
-    }
-  }
-
-  // Initialize smart hide functionality
-  private initializeSmartHide() {
-    if (typeof window === 'undefined') return;
-
-    this.scrollListener = () => {
-      const currentScrollTop =
-        window.pageYOffset || document.documentElement.scrollTop;
-
-      // Add scrolled class when not at top
-      this.isScrolled = currentScrollTop > 10;
-
-      // Don't hide/show if scroll difference is too small
-      if (
-        Math.abs(currentScrollTop - this.lastScrollTop) <= this.scrollThreshold
-      ) {
-        return;
-      }
-
-      // Hide header when scrolling down, show when scrolling up
-      if (
-        currentScrollTop > this.lastScrollTop &&
-        currentScrollTop > this.headerHeight
-      ) {
-        // Scrolling down
-        this.isHidden = true;
-      } else {
-        // Scrolling up
-        this.isHidden = false;
-      }
-
-      this.lastScrollTop = currentScrollTop <= 0 ? 0 : currentScrollTop;
-    };
-
-    // Add scroll listener with passive option for better performance
-    window.addEventListener('scroll', this.scrollListener, { passive: true });
+    // Cleanup code if needed
   }
 
   // Get the currently displayed menu items
@@ -284,10 +232,79 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Get the header position from customizations
-  getHeaderPosition(): string {
-    // Default to relative if not set
-    return this.customizations?.stickyHeader || 'relative';
+  /**
+   * Get mobile menu styles including background colors and gradients
+   */
+  getMobileMenuStyles(): any {
+    const styles: any = {};
+
+    // Handle background styling
+    const backgroundType = this.customizations?.headerBackgroundType;
+
+    if (backgroundType && backgroundType !== 'none') {
+      // Use gradient
+      const gradientValue = this.getGradientValue(backgroundType);
+      if (gradientValue) {
+        styles.background = gradientValue;
+      }
+    } else {
+      // Use solid background color
+      styles.backgroundColor =
+        this.customizations?.backgroundColor || 'rgba(0, 0, 0, 0.9)';
+    }
+
+    // Set text color and font family
+    styles.color = this.customizations?.textColor || '#fff';
+    styles.fontFamily = this.fontFamily;
+
+    return styles;
+  }
+
+  /**
+   * Get header styles including background colors and gradients
+   */
+  getHeaderStyles(): any {
+    const styles: any = {};
+
+    // Handle background styling
+    const backgroundType = this.customizations?.headerBackgroundType;
+
+    if (backgroundType && backgroundType !== 'none') {
+      // Use gradient
+      const gradientValue = this.getGradientValue(backgroundType);
+      if (gradientValue) {
+        styles.background = gradientValue;
+      }
+    } else {
+      // Use solid background color
+      styles.backgroundColor = this.customizations?.backgroundColor;
+    }
+
+    return styles;
+  }
+
+  /**
+   * Get the CSS gradient value for preset gradients or custom gradients
+   */
+  private getGradientValue(gradientType: string): string | null {
+    const gradientPresets: { [key: string]: string } = {
+      sunset: 'linear-gradient(45deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%)',
+      ocean: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+      forest: 'linear-gradient(45deg, #11998e 0%, #38ef7d 100%)',
+      royal: 'linear-gradient(45deg, #667eea 0%, #764ba2 100%)',
+      fire: 'linear-gradient(45deg, #f093fb 0%, #f5576c 100%)',
+      midnight: 'linear-gradient(45deg, #0c3483 0%, #a2b6df 100%)',
+    };
+
+    if (gradientType === 'custom') {
+      // Create custom gradient from color picker values and angle
+      const color1 = this.customizations?.customGradientColor1 || '#667eea';
+      const color2 = this.customizations?.customGradientColor2 || '#764ba2';
+      const angle = this.customizations?.customGradientAngle || 45;
+      return `linear-gradient(${angle}deg, ${color1} 0%, ${color2} 100%)`;
+    }
+
+    return gradientPresets[gradientType] || null;
   }
 
   getHamburgerIconColor(): string {

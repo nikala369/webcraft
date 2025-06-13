@@ -9,7 +9,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  min-height: 60px;
+  min-height: 60px; // Used for mobile menu top offset assumption
 
   /* Position variants */
   &--relative {
@@ -34,19 +34,20 @@
     width: 100% !important;
   }
 
-  /* Smart hide/show header for premium */
+  /* Smart hide/show header */
   &--smart-hide {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-    transform: translateY(0);
+    width: 100% !important;
+    transform: translateY(0); // Base transform
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
       box-shadow 0.3s ease;
 
     &.hidden {
-      transform: translateY(-100%);
+      transform: translateY(-100%); // Hidden transform
     }
 
     &.scrolled {
@@ -56,20 +57,53 @@
     }
   }
 
-  /* Fullscreen mode overrides - ensure header stays within fullscreen container */
+  /* Fullscreen mode overrides */
   :host-context(.fullscreen-mode) & {
-    &--sticky,
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: 100 !important;
+    width: 100% !important;
+
+    &--sticky {
+      position: sticky !important;
+      top: 0 !important;
+    }
     &--fixed,
     &--smart-hide {
-      position: absolute !important;
+      position: fixed !important;
       top: 0 !important;
       left: 0 !important;
       right: 0 !important;
-      z-index: 100 !important; /* Lower z-index within fullscreen container */
+      // Transforms for smart-hide are inherited from its base definition
     }
-
     &--relative {
       position: relative !important;
+    }
+  }
+
+  /* Normal mode (outside fullscreen) */
+  :host:not(.fullscreen-mode-context) & {
+    &--sticky {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 1000 !important;
+      width: 100% !important;
+    }
+    &--fixed,
+    &--smart-hide {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 1000 !important;
+      width: 100% !important;
+      // Transforms for smart-hide are inherited from its base definition
+    }
+    &--relative {
+      position: relative !important;
+      z-index: 100 !important;
     }
   }
 
@@ -121,140 +155,14 @@
         align-items: center;
         height: 100%;
         position: relative;
-
-        .nav-link-wrapper {
-          display: flex;
-          align-items: center;
-          height: 100%;
-
-          a {
-            display: flex;
-            align-items: center;
-            height: 100%;
-            line-height: 1;
-            padding: 0 1.25rem;
-            /* Base typography - consistent across all states */
-            font-size: 0.95rem;
-            font-weight: 500;
-            text-decoration: none;
-            color: inherit;
-            border-radius: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-          }
-        }
       }
     }
   }
 
-  /* Standard plan navigation styling */
-  &[data-plan="standard"] {
-    .structure-header__menu ul li a {
-      /* Base state - ensure clean starting point */
-      background: transparent;
-      color: inherit;
-      padding: 12px;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.06) !important;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      }
-
-      &.active {
-        background: rgba(255, 255, 255, 0.1) !important;
-        color: #ffffff !important;
-        padding: 12px;
-        /* Subtle glow effect instead of harsh background */
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1),
-          0 2px 12px rgba(0, 0, 0, 0.08);
-        /* Remove text-shadow for cleaner look */
-      }
-    }
-  }
-
-  /* Premium plan navigation styling with exclusive animations */
-  &[data-plan="premium"] {
-    .structure-header__menu ul li {
-      a {
-        overflow: hidden;
-        position: relative;
-        /* Base state - ensure clean starting point */
-        background: transparent;
-        color: inherit;
-        padding: 12px;
-
-        /* Gradient shimmer effect for premium */
-        &::after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.15),
-            transparent
-          );
-          transition: left 0.6s ease;
-        }
-
-        &:hover {
-          background: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.08),
-            rgba(255, 255, 255, 0.04)
-          ) !important;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-          transform: translateY(-2px);
-          padding: 12px;
-
-          &::after {
-            left: 100%;
-          }
-        }
-
-        &.active {
-          background: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.12),
-            rgba(255, 255, 255, 0.06)
-          ) !important;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-          color: #ffffff !important;
-          padding: 12px;
-
-          /* Subtle animated border for active state */
-          &::before {
-            content: "";
-            position: absolute;
-            top: -1px;
-            left: -1px;
-            right: -1px;
-            bottom: -1px;
-            background: linear-gradient(
-              45deg,
-              rgba(255, 255, 255, 0.1),
-              rgba(255, 255, 255, 0.05),
-              rgba(255, 255, 255, 0.08),
-              rgba(255, 255, 255, 0.03)
-            );
-            background-size: 400% 400%;
-            border-radius: 8px;
-            z-index: -1;
-            opacity: 0.6;
-            animation: gradientShift 8s ease infinite;
-          }
-        }
-      }
-    }
-  }
-
-  /* MOBILE MENU */
+  /* MOBILE HAMBURGER & MENU SECTION */
   &__mobile {
+    // This container itself doesn't need position:relative if menu is fixed
+    // but keeping it won't harm if hamburger needs it for some reason.
     position: relative;
 
     .hamburger-btn {
@@ -264,12 +172,14 @@
       padding: 0.5rem;
       border-radius: 6px;
       transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
       &:hover {
         background: rgba(255, 255, 255, 0.08);
         transform: scale(1.02);
       }
-
       &:active {
         transform: scale(0.98);
       }
@@ -278,43 +188,41 @@
         width: 20px;
         height: 20px;
         transition: transform 0.3s ease;
+        display: block;
       }
-
       &:hover svg {
         transform: rotate(90deg);
       }
     }
 
     .mobile-menu {
-      position: absolute;
-      z-index: 1000;
-      top: 3.5rem;
-      right: -12px;
-      width: 260px;
-      padding: 1.25rem;
-      border-radius: 10px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: fixed; // Position relative to viewport
+      top: 60px; // Assumes header height is 60px. Adjust if dynamic.
+      left: 0;
+      right: 0; // Spans full viewport width
+      z-index: 1000; // Ensure it's above other content
+
+      background: inherit; // Inherits backdrop-filter from .structure-header (will be overridden by ngStyle)
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+      border-radius: 0 0 18px 18px; // Rounded bottom corners, visible if not full height
+
+      padding: 1.5rem 1rem;
+
+      // Default animation properties (for Standard plan or base)
       opacity: 0;
-      transform: translateY(-15px) scale(0.96);
+      transform: translateY(-20px);
       pointer-events: none;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
-      @include m.breakpoint(md) {
-        width: 240px;
-        right: -6px;
-      }
-
-      /* Ensure mobile menu works in fullscreen mode */
       :host-context(.fullscreen-mode) & {
-        z-index: 200 !important;
+        z-index: 1100 !important; // Higher z-index in fullscreen
+        // top: 0; // If header is hidden/different in fullscreen, adjust top
       }
 
       &.open {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
         pointer-events: auto;
       }
 
@@ -322,191 +230,274 @@
         list-style: none;
         margin: 0;
         padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
 
         li {
-          margin: 0.125rem 0;
+          width: 100%;
+          // display: flex; // Not strictly necessary if <a> is block
 
           a {
-            color: inherit;
-            text-decoration: none;
-            /* Consistent typography with desktop */
-            font-weight: 500;
-            font-size: 0.9rem;
+            width: 100%;
             display: block;
-            padding: 0.75rem 0.875rem;
-            border-radius: 6px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            line-height: 1.4;
-            position: relative;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-
-            &::before {
-              content: "";
-              position: absolute;
-              left: 0;
-              top: 50%;
-              transform: translateY(-50%);
-              width: 2px;
-              height: 0;
-              background: currentColor;
-              border-radius: 1px;
-              transition: height 0.3s ease;
-            }
-
-            &:hover,
-            &:focus {
-              background: rgba(255, 255, 255, 0.12);
-              transform: translateX(6px);
-              padding-left: 1.25rem;
-
-              &::before {
-                height: 16px;
-              }
-            }
-
-            &.active {
-              background: rgba(255, 255, 255, 0.16);
-              /* Remove font-weight change for consistency */
-              /* Use text-shadow for emphasis instead */
-              text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
-              padding-left: 1.25rem;
-
-              &::before {
-                height: 18px;
-              }
-            }
+            text-align: left;
+            padding: 12px 18px;
+            font-size: 1.05em;
+            border-radius: 8px;
+            color: inherit;
+            background: transparent;
           }
         }
       }
 
-      /* Optional: Social icons on mobile */
       .mobile-social {
         display: flex;
-        gap: 0.625rem;
-        margin-top: 1.25rem;
-        padding-top: 0.875rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
 
         a {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 32px;
-          height: 32px;
-          border-radius: 6px;
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
           background: rgba(255, 255, 255, 0.08);
           transition: all 0.3s ease;
 
           &:hover {
             background: rgba(255, 255, 255, 0.16);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
           }
-
           img {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
           }
         }
       }
     }
   }
 
-  /* If you want special styling for mobile layout overall */
+  /* Modifier for overall mobile layout adjustments (header itself) */
   &--mobile {
     padding: 0.375rem 0.875rem;
-
     .structure-header__logo {
       width: 110px;
-
       .logo {
         max-width: 110px;
       }
     }
+  }
+}
 
-    .mobile-menu {
-      z-index: 1001;
+/* --- Specific Mobile Menu Animations based on Plan --- */
+.structure-header[data-plan="premium"] .structure-header__mobile .mobile-menu {
+  // Premium mobile menu initial state & transition
+  opacity: 0;
+  transform: translateY(-30px) scale(0.97);
+  transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  &.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --- NAV ITEM BASE STYLES --- */
+.structure-header__menu ul li a,
+.structure-header__mobile .mobile-menu ul li a {
+  border-radius: 8px;
+  transition: background 0.22s cubic-bezier(0.4, 0, 0.2, 1), color 0.18s,
+    box-shadow 0.18s;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  transform: none !important; // Prevent accidental transforms from other rules
+  padding: 0.5rem 0.75rem; // Base padding, plan-specific will override
+}
+
+/* --- STANDARD PLAN STYLING --- */
+.structure-header[data-plan="standard"] {
+  .structure-header__menu ul li a {
+    // Desktop
+    padding: 7px 15px;
+    background: transparent;
+
+    &.active::after {
+      display: none !important; // No underline for standard active
+    }
+
+    &:hover,
+    &.active {
+      background: rgba(0, 0, 0, 0.06);
+      color: inherit !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      opacity: 1 !important;
+    }
+  }
+
+  .structure-header__mobile .mobile-menu ul li a {
+    // Mobile
+    // Inherits base mobile link styles (padding, font-size from .mobile-menu ul li a)
+    // Standard plan specific active/hover for mobile links
+    &.active {
+      background: rgba(0, 0, 0, 0.08);
+    }
+    &:hover {
+      background: rgba(0, 0, 0, 0.06);
+    }
+    &.active::after {
+      // Ensure no underline for mobile standard active
+      display: none !important;
     }
   }
 }
 
-/* Enhanced nav link wrapper */
-.nav-link-wrapper {
-  position: relative;
-
-  a {
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* --- PREMIUM PLAN STYLING --- */
+.structure-header[data-plan="premium"] {
+  .structure-header__menu ul li a, // Desktop links
+  .structure-header__mobile .mobile-menu ul li a {
+    // Mobile links
+    padding: 7px 15px;
     position: relative;
-    overflow: hidden;
+    overflow: hidden; // Contain shimmer
+
+    &::before {
+      // Shimmer pseudo-element
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      // UPDATED: Softer, more ethereal gradient for the shimmer
+      background: linear-gradient(
+        100deg,
+        // Slightly adjusted angle
+        transparent 10%,
+        rgba(255, 255, 255, 0.04) 30%,
+        // Very faint lead-in
+        rgba(255, 255, 255, 0.2) 48%,
+        // Soft peak
+        rgba(255, 255, 255, 0.2) 52%,
+        // Hold peak briefly
+        rgba(255, 255, 255, 0.04) 70%,
+        // Very faint lead-out
+        transparent 90%
+      );
+      opacity: 0; // Initial state: invisible
+      transform: translateX(-105%) skewX(-12deg); // Initial state: off-screen left, slightly less skew
+      transition: none; // Animation handles all state changes
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    &:hover::before,
+    &.focus-visible::before {
+      // Trigger on hover and keyboard focus
+      // UPDATED: Animation call
+      animation: navShimmerExclusive 1.3s cubic-bezier(0.4, 0, 0.2, 1) 1
+        forwards;
+    }
 
     &.active {
-      /* Remove font-weight change for consistency */
-      color: currentColor;
+      // Active state for Premium
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      &::before {
+        // No shimmer on active state itself
+        opacity: 0;
+        animation: none;
+      }
     }
-
     &:hover {
-      opacity: 0.9;
+      // Hover state for Premium (can co-exist with active shimmer)
+      background: rgba(255, 255, 255, 0.12);
+      color: inherit !important;
+      opacity: 1 !important;
     }
   }
 }
 
-/* Mobile menu active state improvements */
-.mobile-menu a.active {
-  /* Remove font-weight change for consistency */
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
-}
-
-/* Gradient animation for premium active state */
-@keyframes gradientShift {
+/* UPDATED: Shimmer animation for Premium Plan - More Exclusive Feel */
+@keyframes navShimmerExclusive {
   0% {
-    background-position: 0% 50%;
+    transform: translateX(-105%) skewX(-12deg); // Start further off-screen, slightly less skew
+    opacity: 0;
   }
-  50% {
-    background-position: 100% 50%;
+  15% {
+    opacity: 0.8; // Not full opacity immediately, for a softer entry
+  }
+  85% {
+    opacity: 0.8;
   }
   100% {
-    background-position: 0% 50%;
+    transform: translateX(105%) skewX(-12deg); // End further off-screen
+    opacity: 0;
   }
 }
 
-/* Responsive improvements */
+/* Enhanced nav link wrapper (if used for dropdowns etc.) */
+.nav-link-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  a {
+    cursor: pointer;
+  }
+}
+
+/* --- RESPONSIVE ADJUSTMENTS --- */
 @media (max-width: 768px) {
   .structure-header {
-    padding: 0.375rem 0.875rem;
-    min-height: 55px;
-
+    padding: 0.375rem 1rem;
+    min-height: 55px; // If header height changes, mobile menu 'top' might need adjustment
     &__logo {
-      width: 90px;
-      height: 42px;
-      margin-right: 0.375rem;
+      width: 100px;
+      height: 40px;
+      margin-right: 0.5rem;
     }
-
     &__mobile .mobile-menu {
-      width: calc(100vw - 1.75rem);
-      right: -0.875rem;
-      left: 0.875rem;
+      padding: 1.25rem 0.75rem;
+      border-radius: 0 0 16px 16px;
+      top: 55px; // Adjust if header height is different here
     }
   }
 }
 
 @media (max-width: 480px) {
   .structure-header {
-    padding: 0.25rem 0.625rem;
-    min-height: 50px;
-
+    padding: 0.25rem 0.75rem;
+    min-height: 50px; // If header height changes, mobile menu 'top' might need adjustment
     &__logo {
-      width: 80px;
+      width: 90px;
       height: 38px;
     }
-
     &__mobile .mobile-menu {
-      width: calc(100vw - 1.25rem);
-      right: -0.625rem;
-      left: 0.625rem;
-      padding: 1rem;
+      padding: 1rem 0.5rem;
+      border-radius: 0 0 12px 12px;
+      top: 50px; // Adjust if header height is different here
+      ul li a {
+        font-size: 1em;
+        padding: 10px 15px;
+      }
+      .mobile-social {
+        gap: 0.5rem;
+        a {
+          width: 32px;
+          height: 32px;
+        }
+        img {
+          width: 16px;
+          height: 16px;
+        }
+      }
     }
   }
 }
