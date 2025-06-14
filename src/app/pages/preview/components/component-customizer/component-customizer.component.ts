@@ -59,12 +59,32 @@ export class ComponentCustomizerComponent implements OnInit {
       if (configFields && configFields.length > 0) {
         // Apply defaults from field config where missing
         configFields.forEach((field: FieldConfig) => {
-          if (
-            field.defaultValue !== undefined &&
-            (mergedData[field.key] === undefined ||
-              mergedData[field.key] === null)
-          ) {
-            mergedData[field.key] = field.defaultValue;
+          // Handle nested fields (like socialUrls.facebook)
+          if (field.key.includes('.')) {
+            const [parentKey, childKey] = field.key.split('.');
+
+            // Initialize parent object if it doesn't exist
+            if (!mergedData[parentKey]) {
+              mergedData[parentKey] = {};
+            }
+
+            // Only set default if child property doesn't exist
+            if (
+              field.defaultValue !== undefined &&
+              (mergedData[parentKey][childKey] === undefined ||
+                mergedData[parentKey][childKey] === null)
+            ) {
+              mergedData[parentKey][childKey] = field.defaultValue;
+            }
+          } else {
+            // Handle regular fields
+            if (
+              field.defaultValue !== undefined &&
+              (mergedData[field.key] === undefined ||
+                mergedData[field.key] === null)
+            ) {
+              mergedData[field.key] = field.defaultValue;
+            }
           }
         });
       }
@@ -436,6 +456,22 @@ export class ComponentCustomizerComponent implements OnInit {
 
   updateBooleanField(fieldKey: string, value: boolean): void {
     this.localData.update((data) => ({ ...data, [fieldKey]: value }));
+  }
+
+  /**
+   * Get field value handling nested objects
+   */
+  getFieldValue(fieldKey: string): any {
+    const data = this.localData();
+
+    // Check if this is a nested field (contains a dot)
+    if (fieldKey.includes('.')) {
+      const [parentKey, childKey] = fieldKey.split('.');
+      return data[parentKey]?.[childKey] || '';
+    }
+
+    // Regular field
+    return data[fieldKey] || '';
   }
 
   /**
@@ -839,10 +875,12 @@ export class ComponentCustomizerComponent implements OnInit {
       }
     });
 
-    // Merge nested properties back into result
+    // Merge nested properties back into result, preserving existing nested data
     Object.keys(nestedProperties).forEach((parent) => {
+      // Preserve existing nested data and merge with new changes
+      const existingParentData = result[parent] || {};
       result[parent] = {
-        ...(result[parent] || {}),
+        ...existingParentData,
         ...nestedProperties[parent],
       };
     });

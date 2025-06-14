@@ -8,42 +8,70 @@
  */
 // Header, footer, fontConfig are common for all business types or packages!
 export interface HeaderData {
+  // Standard fields
   backgroundColor?: string;
   textColor?: string;
   logoUrl?: string;
   menuItems?: Array<{ id: number; label: string; link: string }>;
+  // Premium fields
+  headerBackgroundType?:
+    | 'none'
+    | 'sunset'
+    | 'ocean'
+    | 'forest'
+    | 'royal'
+    | 'fire'
+    | 'midnight'
+    | 'custom';
+  customGradientColor1?: string;
+  customGradientColor2?: string;
+  customGradientAngle?: number;
+  sticky?: boolean; // Premium: sticky header
+  transparent?: boolean; // Premium: transparent header
+  shadow?: boolean; // Premium: header shadow
+  // Social icons (future-proof, premium)
+  socialIcons?: Array<{ platform: string; link: string }>;
+  // For future extensibility
+  [key: string]: any;
 }
 
 /**
  * Footer customization data
  */
 export interface FooterData {
-  backgroundColor: string;
-  textColor: string;
-  copyrightText: string;
+  // Standard fields
+  backgroundColor?: string;
+  textColor?: string;
+  copyrightText?: string;
   logoUrl?: string;
   tagline?: string;
   address?: string;
   phone?: string;
   email?: string;
+  // Social links (standard and premium)
   showSocialLinks?: boolean;
-  menuItems?: Array<{ id: number; label: string; link: string }>;
   socialUrls?: {
     facebook?: string;
     instagram?: string;
     tiktok?: string;
     linkedin?: string;
     youtube?: string;
+    twitter?: string;
     [key: string]: string | undefined;
   };
-  socialLinks?: Array<{
-    platform: 'facebook' | 'twitter' | 'instagram' | 'linkedin' | 'tiktok';
-    url: string;
-  }>;
+  socialLinks?: Array<{ platform: string; url: string }>;
+  // Legal links (premium)
   showLegalLinks?: boolean;
   privacyPolicyUrl?: string;
   termsUrl?: string;
+  // Layout options (premium)
   footerLayout?: 'standard' | 'compact' | 'minimal';
+  // Menu items (for navigation in footer)
+  menuItems?: Array<{ id: number; label: string; link: string }>;
+  // Custom widgets/sections (future)
+  customSections?: Array<{ type: string; content: any }>;
+  // For future extensibility
+  [key: string]: any;
 }
 
 /**

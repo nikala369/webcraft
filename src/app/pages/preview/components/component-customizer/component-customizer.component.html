@@ -127,7 +127,7 @@
                 *ngSwitchCase="'text'"
                 [id]="field.key"
                 type="text"
-                [ngModel]="localData()[field.key]"
+                [ngModel]="getFieldValue(field.key)"
                 (ngModelChange)="updateTextField(field.key, $event)"
                 class="text-input"
                 placeholder="{{ field.placeholder || field.label }}"

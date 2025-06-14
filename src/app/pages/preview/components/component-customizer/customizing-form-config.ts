@@ -487,24 +487,6 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
     },
   ],
   footer: [
-    // Styling settings
-    {
-      key: 'backgroundColor',
-      label: 'Background Color',
-      type: 'color',
-      category: 'styling',
-      defaultValue: '#1a1a1a',
-      description: 'Background color of the footer section',
-    },
-    {
-      key: 'textColor',
-      label: 'Text Color',
-      type: 'color',
-      category: 'styling',
-      defaultValue: '#ffffff',
-      description: 'Color of the text in the footer',
-    },
-
     // Content settings
     {
       key: 'logoUrl',
@@ -515,20 +497,20 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       acceptedFileTypes: 'image/*',
     },
     {
+      key: 'title',
+      label: 'Company Name',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Your Business',
+      description: 'Your company or business name',
+    },
+    {
       key: 'tagline',
       label: 'Company Tagline',
       type: 'text',
       category: 'content',
       defaultValue: 'Professional solutions tailored to your needs',
       description: 'Short tagline describing your business',
-    },
-    {
-      key: 'copyrightText',
-      label: 'Copyright Text',
-      type: 'text',
-      category: 'content',
-      defaultValue: `© ${new Date().getFullYear()} Your Company. All rights reserved.`,
-      description: 'Text shown in the copyright section',
     },
     {
       key: 'address',
@@ -554,6 +536,14 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       defaultValue: 'info@yourbusiness.com',
       description: 'Contact email address',
     },
+    {
+      key: 'copyrightText',
+      label: 'Copyright Text',
+      type: 'text',
+      category: 'content',
+      defaultValue: `© ${new Date().getFullYear()} Your Company. All rights reserved.`,
+      description: 'Text shown in the copyright section',
+    },
 
     // Social media settings
     {
@@ -568,13 +558,14 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
         { value: false, label: 'No' },
       ],
     },
-    // Social media URLs
+    // Standard social media URLs (3 main platforms)
     {
       key: 'socialUrls.facebook',
       label: 'Facebook URL',
       type: 'text',
       category: 'content',
-      defaultValue: 'https://facebook.com/',
+      defaultValue: '',
+      placeholder: 'https://facebook.com/yourpage',
       description: 'Your Facebook page URL',
     },
     {
@@ -582,7 +573,8 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       label: 'Instagram URL',
       type: 'text',
       category: 'content',
-      defaultValue: 'https://instagram.com/',
+      defaultValue: '',
+      placeholder: 'https://instagram.com/yourusername',
       description: 'Your Instagram profile URL',
     },
     {
@@ -590,8 +582,27 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       label: 'TikTok URL',
       type: 'text',
       category: 'content',
-      defaultValue: 'https://tiktok.com/',
+      defaultValue: '',
+      placeholder: 'https://tiktok.com/@yourusername',
       description: 'Your TikTok profile URL',
+    },
+
+    // Styling settings
+    {
+      key: 'backgroundColor',
+      label: 'Background Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#1a1a1a',
+      description: 'Background color of the footer section',
+    },
+    {
+      key: 'textColor',
+      label: 'Text Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#ffffff',
+      description: 'Color of the text in the footer',
     },
   ],
   'pages.home.hero1': [
@@ -928,66 +939,14 @@ export function getPlanSpecificConfig(
  * Configure premium-only fields for Footer section
  */
 export const footerPremiumConfig: FieldConfig[] = [
-  {
-    key: 'socialLinks',
-    label: 'Social Media Links',
-    type: 'list',
-    category: 'content',
-    defaultValue: [
-      { platform: 'facebook', url: 'https://facebook.com/' },
-      { platform: 'instagram', url: 'https://instagram.com/' },
-      { platform: 'twitter', url: 'https://twitter.com/' },
-    ],
-    description: 'Your social media profiles',
-  },
-  {
-    key: 'showLegalLinks',
-    label: 'Show Legal Links',
-    type: 'select',
-    category: 'general',
-    defaultValue: true,
-    description: 'Display Privacy Policy and Terms links',
-    options: [
-      { value: true, label: 'Yes' },
-      { value: false, label: 'No' },
-    ],
-  },
-  {
-    key: 'privacyPolicyUrl',
-    label: 'Privacy Policy URL',
-    type: 'text',
-    category: 'content',
-    defaultValue: '/privacy',
-    description: 'Link to your privacy policy page',
-  },
-  {
-    key: 'termsUrl',
-    label: 'Terms of Service URL',
-    type: 'text',
-    category: 'content',
-    defaultValue: '/terms',
-    description: 'Link to your terms of service page',
-  },
-  {
-    key: 'footerLayout',
-    label: 'Footer Layout',
-    type: 'select',
-    category: 'styling',
-    defaultValue: 'standard',
-    description: 'Choose the footer layout style',
-    options: [
-      { value: 'standard', label: 'Standard (4 columns)' },
-      { value: 'compact', label: 'Compact (3 columns)' },
-      { value: 'minimal', label: 'Minimal (2 columns)' },
-    ],
-  },
-  // Additional premium social media options
+  // Additional premium social media platforms
   {
     key: 'socialUrls.linkedin',
     label: 'LinkedIn URL',
     type: 'text',
     category: 'content',
-    defaultValue: 'https://linkedin.com/',
+    defaultValue: '',
+    placeholder: 'https://linkedin.com/in/yourprofile',
     description: 'Your LinkedIn profile or company page URL',
   },
   {
@@ -995,7 +954,26 @@ export const footerPremiumConfig: FieldConfig[] = [
     label: 'YouTube URL',
     type: 'text',
     category: 'content',
-    defaultValue: 'https://youtube.com/',
+    defaultValue: '',
+    placeholder: 'https://youtube.com/@yourchannel',
     description: 'Your YouTube channel URL',
+  },
+  {
+    key: 'socialUrls.twitter',
+    label: 'Twitter URL',
+    type: 'text',
+    category: 'content',
+    defaultValue: '',
+    placeholder: 'https://twitter.com/yourusername',
+    description: 'Your Twitter profile URL',
+  },
+  {
+    key: 'navUnderlineColor',
+    label: 'Navigation Underline Color',
+    type: 'color',
+    category: 'styling',
+    defaultValue: '#ffffff',
+    description:
+      'Color of the navigation underline for active items (Premium only)',
   },
 ];

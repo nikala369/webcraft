@@ -1,159 +1,159 @@
 <footer
   class="footer"
+  [attr.data-plan]="planType"
+  [ngClass]="{
+    'footer--mobile': isMobileLayout
+  }"
   [style.background-color]="customizations?.backgroundColor || '#1a1a1a'"
   [style.color]="customizations?.textColor || '#ffffff'"
   role="contentinfo"
 >
   <div class="footer-container">
-    <!-- Footer Top Section -->
-    <div class="footer-top">
+    <!-- Main Footer Content -->
+    <div class="footer-main">
       <!-- Brand Section -->
       <div class="footer-brand">
-        <img
-          [src]="
-            customizations?.logoUrl ||
-            '/assets/standard-header/default-logo-white.svg'
-          "
-          alt="Logo"
-          class="footer-logo"
-        />
-        <h2 class="company-name">
-          {{ customizations?.text || getCompanyName() }}
-        </h2>
-        <p class="tagline">
-          {{ customizations?.tagline || getDefaultTagline() }}
-        </p>
+        <div class="brand-logo" *ngIf="customizations?.logoUrl">
+          <img
+            [src]="customizations.logoUrl"
+            [alt]="customizations?.title || getCompanyName()"
+            class="footer-logo"
+          />
+        </div>
+        <div class="brand-content">
+          <h3 class="brand-title">
+            {{ customizations?.title || getCompanyName() }}
+          </h3>
+          <p class="brand-tagline">
+            {{ customizations?.tagline || getDefaultTagline() }}
+          </p>
+        </div>
+      </div>
 
-        <!-- Contact Info Section -->
-        <div class="contact-info" *ngIf="planType === 'premium'">
-          <div class="address" *ngIf="shouldShowAddress()">
-            <p>{{ customizations?.address || getDefaultAddress() }}</p>
+      <!-- Navigation Menu (Premium Only) -->
+      <div
+        class="footer-nav"
+        *ngIf="planType === 'premium'"
+        [style.--nav-underline-color]="
+          customizations?.navUnderlineColor || '#ffffff'
+        "
+      >
+        <h4 class="footer-section-title">Quick Links</h4>
+        <nav>
+          <ul class="nav-list">
+            <li *ngFor="let item of getNavigationItems()">
+              <a [href]="item.link" class="nav-link">{{ item.label }}</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <!-- Contact Information -->
+      <div class="footer-contact">
+        <h4 class="footer-section-title">Contact Info</h4>
+        <div class="contact-list">
+          <div
+            class="contact-item"
+            *ngIf="customizations?.address || getDefaultAddress()"
+          >
+            <svg
+              class="contact-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+              />
+            </svg>
+            <span>{{ customizations?.address || getDefaultAddress() }}</span>
           </div>
-          <div class="phone">
-            <p>{{ customizations?.phone || getDefaultPhone() }}</p>
+
+          <div
+            class="contact-item"
+            *ngIf="customizations?.phone || getDefaultPhone()"
+          >
+            <svg
+              class="contact-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"
+              />
+            </svg>
+            <a
+              [href]="'tel:' + (customizations?.phone || getDefaultPhone())"
+              class="contact-link"
+            >
+              {{ customizations?.phone || getDefaultPhone() }}
+            </a>
           </div>
-          <div class="email">
-            <p>
-              <a
-                [href]="
-                  'mailto:' + (customizations?.email || getDefaultEmail())
-                "
-              >
-                {{ customizations?.email || getDefaultEmail() }}
-              </a>
-            </p>
+
+          <div
+            class="contact-item"
+            *ngIf="customizations?.email || getDefaultEmail()"
+          >
+            <svg
+              class="contact-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+              />
+            </svg>
+            <a
+              [href]="'mailto:' + (customizations?.email || getDefaultEmail())"
+              class="contact-link"
+            >
+              {{ customizations?.email || getDefaultEmail() }}
+            </a>
           </div>
         </div>
       </div>
 
-      <!-- Menu Section -->
-      <div class="footer-menu" *ngIf="planType === 'premium'">
-        <h3>Quick Links</h3>
-        <ul>
-          <li *ngFor="let item of customizations?.menuItems">
-            <a [href]="item.link">{{ item.label }}</a>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Social Media Section -->
+      <!-- Social Media Links -->
       <div
         class="footer-social"
         *ngIf="customizations?.showSocialLinks !== false"
       >
-        <h3>Follow Us</h3>
-        <div class="social-icons">
-          <!-- Facebook -->
+        <h4 class="footer-section-title">Follow Us</h4>
+        <div class="social-links">
           <a
-            [href]="getSocialUrl('facebook')"
+            *ngFor="let platform of getSocialPlatforms()"
+            [href]="getSocialUrl(platform)"
+            [class]="'social-link social-link--' + platform"
+            [class.social-link--disabled]="!hasSocialUrl(platform)"
+            [attr.data-platform]="platform"
+            [attr.aria-label]="'Follow us on ' + platform"
             target="_blank"
-            rel="noopener"
-            class="social-icon"
-            aria-label="Facebook"
+            rel="noopener noreferrer"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path
-                d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.23.19 2.23.19v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.53-4.5-10.02-10-10.02z"
-              />
-            </svg>
-          </a>
-
-          <!-- Instagram (Added proper Instagram icon) -->
-          <a
-            [href]="getSocialUrl('instagram')"
-            target="_blank"
-            rel="noopener"
-            class="social-icon"
-            aria-label="Instagram"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path
-                d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153a4.908 4.908 0 0 1 1.153 1.772c.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 0 1-1.153 1.772 4.915 4.915 0 0 1-1.772 1.153c-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 0 1-1.772-1.153 4.904 4.904 0 0 1-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 0 1 1.153-1.772A4.897 4.897 0 0 1 5.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 1.802c-2.67 0-2.986.01-4.04.059-.976.045-1.505.207-1.858.344-.466.181-.8.398-1.15.748-.35.35-.566.684-.747 1.15-.137.353-.3.882-.344 1.857-.048 1.055-.058 1.37-.058 4.04 0 2.67.01 2.986.058 4.04.045.976.207 1.505.344 1.858.181.466.398.8.748 1.15.35.35.683.566 1.15.747.352.137.881.3 1.857.344 1.054.048 1.37.058 4.04.058 2.67 0 2.986-.01 4.04-.058.976-.045 1.505-.207 1.858-.344.466-.181.8-.398 1.15-.748.35-.35.566-.683.747-1.15.137-.352.3-.881.344-1.857.048-1.054.058-1.37.058-4.04 0-2.67-.01-2.986-.058-4.04-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 0 0-.748-1.15 3.098 3.098 0 0 0-1.15-.747c-.352-.137-.881-.3-1.857-.344-1.054-.048-1.37-.058-4.04-.058zm0 3.063a5.135 5.135 0 1 1 0 10.27 5.135 5.135 0 0 1 0-10.27zm0 8.468a3.333 3.333 0 1 0 0-6.666 3.333 3.333 0 0 0 0 6.666zm6.538-8.671a1.2 1.2 0 1 1-2.4 0 1.2 1.2 0 0 1 2.4 0z"
-              />
-            </svg>
-          </a>
-
-          <!-- TikTok (Added TikTok icon) -->
-          <a
-            [href]="getSocialUrl('tiktok')"
-            target="_blank"
-            rel="noopener"
-            class="social-icon"
-            aria-label="TikTok"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path
-                d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 19.25 5a4.257 4.257 0 0 1-2.65 4.32v2.181C13.36 11.2 12.693 8.38 12.693 8.38s-1.353.14-2.91 1.1c0 0 .152-3.477 4.817-4.477v-2.03A9.169 9.169 0 0 0 12 3c-5.523 0-10 4.477-10 10s4.477 10 10 10 10-4.477 10-10c0-.615-.058-1.197-.152-1.778h-5.248z"
-              />
-            </svg>
+            <span [innerHTML]="getSocialIcon(platform)"></span>
           </a>
         </div>
       </div>
     </div>
 
-    <!-- Footer Bottom - Copyright -->
+    <!-- Footer Bottom -->
     <div class="footer-bottom">
-      <p class="copyright">
-        {{
-          customizations?.copyrightText ||
-            "© " +
-              currentYear +
-              " " +
-              (customizations?.text || getCompanyName())
-        }}
-        <span class="all-rights">All Rights Reserved</span>
-      </p>
-
-      <!-- Legal Links (Optional - Premium Only) -->
-      <div
-        class="legal-links"
-        *ngIf="
-          planType === 'premium' && customizations?.showLegalLinks !== false
-        "
-      >
-        <a [href]="customizations?.privacyPolicyUrl || '/privacy'"
-          >Privacy Policy</a
-        >
-        <span class="divider">|</span>
-        <a [href]="customizations?.termsUrl || '/terms'">Terms of Service</a>
+      <div class="copyright">
+        <p>
+          {{
+            customizations?.copyrightText ||
+              "© " +
+                currentYear +
+                " " +
+                (customizations?.title || getCompanyName()) +
+                ". All rights reserved."
+          }}
+        </p>
       </div>
     </div>
   </div>
