@@ -33,8 +33,9 @@ export class ComponentCustomizerComponent implements OnInit {
   // Use a signal for activeCategory for better state management
   activeCategory = signal('general');
 
-  // Store last-used tab per component
+  // Store last-used tab per component with session storage persistence
   private lastActiveCategory: Record<string, string> = {};
+  private readonly TAB_MEMORY_KEY = 'webcraft_customizer_tab_memory';
 
   // Inject the toast service
   private toastService = inject(ToastService);
@@ -204,8 +205,16 @@ export class ComponentCustomizerComponent implements OnInit {
         currentActiveCategory === 'styling'
       ) {
         console.log(
-          'STANDARD HEADER STYLING FIELDS:',
+          '[PremiumUpsell] STANDARD HEADER STYLING FIELDS:',
           allFields.map((f) => ({ key: f.key, category: f.category }))
+        );
+
+        const hasHeaderBgType = allFields.some(
+          (f) => f.key === 'headerBackgroundType'
+        );
+        console.log(
+          '[PremiumUpsell] headerBackgroundType field present:',
+          hasHeaderBgType
         );
       }
 
@@ -289,15 +298,33 @@ export class ComponentCustomizerComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Load tab memory from session storage
+    this.loadTabMemoryFromStorage();
+
     setTimeout(() => {
       this.isVisible = true;
 
       // Restore last-used tab if valid, else default to first
       const availableCategories = this.categories();
       const last = this.lastActiveCategory[this.componentKey];
+
+      console.log(
+        `[TabMemory] Component: ${
+          this.componentKey
+        }, Last tab: ${last}, Available: ${availableCategories
+          .map((c) => c.id)
+          .join(', ')}`
+      );
+
       if (last && availableCategories.some((c) => c.id === last)) {
+        console.log(
+          `[TabMemory] Restoring tab: ${last} for ${this.componentKey}`
+        );
         this.activeCategory.set(last);
       } else {
+        console.log(
+          `[TabMemory] Using default tab: ${availableCategories[0].id} for ${this.componentKey}`
+        );
         this.activeCategory.set(availableCategories[0].id);
       }
 
@@ -314,6 +341,9 @@ export class ComponentCustomizerComponent implements OnInit {
         invalidCategory &&
         this.categories().some((c) => c.id === invalidCategory)
       ) {
+        console.log(
+          `[TabMemory] Overriding to invalid category: ${invalidCategory} for ${this.componentKey}`
+        );
         this.activeCategory.set(invalidCategory); // Use .set() for signals
       }
     }, 50);
@@ -355,8 +385,47 @@ export class ComponentCustomizerComponent implements OnInit {
     if (this.categories().some((c) => c.id === categoryId)) {
       this.activeCategory.set(categoryId);
       this.lastActiveCategory[this.componentKey] = categoryId;
+
+      // Persist to session storage
+      this.saveTabMemoryToStorage();
+      console.log(
+        `[TabMemory] Saved tab: ${categoryId} for ${this.componentKey}`
+      );
     } else {
       this.validateActiveCategory();
+    }
+  }
+
+  /**
+   * Load tab memory from session storage
+   */
+  private loadTabMemoryFromStorage(): void {
+    try {
+      const stored = sessionStorage.getItem(this.TAB_MEMORY_KEY);
+      if (stored) {
+        this.lastActiveCategory = JSON.parse(stored);
+        console.log(
+          '[TabMemory] Loaded from storage:',
+          this.lastActiveCategory
+        );
+      }
+    } catch (error) {
+      console.warn('[TabMemory] Failed to load from storage:', error);
+      this.lastActiveCategory = {};
+    }
+  }
+
+  /**
+   * Save tab memory to session storage
+   */
+  private saveTabMemoryToStorage(): void {
+    try {
+      sessionStorage.setItem(
+        this.TAB_MEMORY_KEY,
+        JSON.stringify(this.lastActiveCategory)
+      );
+    } catch (error) {
+      console.warn('[TabMemory] Failed to save to storage:', error);
     }
   }
 

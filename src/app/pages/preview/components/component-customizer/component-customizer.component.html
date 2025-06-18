@@ -41,6 +41,47 @@
 
     <!-- Content area with fields -->
     <div class="sidebar-content">
+      <!-- Premium Upsell Section - Independent of field loop for stability -->
+      <div
+        *ngIf="
+          planType === 'standard' &&
+          componentKey === 'header' &&
+          activeCategory() === 'styling'
+        "
+        class="premium-gradient-upsell"
+        style="margin-bottom: 1.5rem"
+      >
+        <div class="gradient-preview-row">
+          <div
+            class="gradient-preview locked"
+            title="Premium Gradient"
+            style="background: linear-gradient(45deg, #ff9a9e 0%, #fecfef 100%)"
+          ></div>
+          <div
+            class="gradient-preview locked"
+            title="Premium Gradient"
+            style="background: linear-gradient(45deg, #667eea 0%, #764ba2 100%)"
+          ></div>
+          <div
+            class="gradient-preview locked"
+            title="Premium Gradient"
+            style="background: linear-gradient(45deg, #11998e 0%, #38ef7d 100%)"
+          ></div>
+          <div
+            class="gradient-preview locked"
+            title="Premium Gradient"
+            style="background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%)"
+          ></div>
+        </div>
+        <div class="upsell-text">
+          <span class="lock-icon">🔒</span>
+          <span
+            >Upgrade to <b>Premium</b> to unlock beautiful gradients and
+            exclusive header styles!</span
+          >
+        </div>
+      </div>
+
       <div class="fields-container">
         <ng-container *ngFor="let field of fieldsForCategory(); let i = index">
           <div class="field-group" [style.--index]="i">
@@ -57,69 +98,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- Premium Upsell for Gradients (Standard Plan Only) -->
-            <ng-container
-              *ngIf="
-                field.key === 'headerBackgroundType' && planType === 'standard'
-              "
-            >
-              <div class="premium-gradient-upsell">
-                <div class="gradient-preview-row">
-                  <div
-                    class="gradient-preview locked"
-                    title="Premium Gradient"
-                    style="
-                      background: linear-gradient(
-                        45deg,
-                        #ff9a9e 0%,
-                        #fecfef 100%
-                      );
-                    "
-                  ></div>
-                  <div
-                    class="gradient-preview locked"
-                    title="Premium Gradient"
-                    style="
-                      background: linear-gradient(
-                        45deg,
-                        #667eea 0%,
-                        #764ba2 100%
-                      );
-                    "
-                  ></div>
-                  <div
-                    class="gradient-preview locked"
-                    title="Premium Gradient"
-                    style="
-                      background: linear-gradient(
-                        45deg,
-                        #11998e 0%,
-                        #38ef7d 100%
-                      );
-                    "
-                  ></div>
-                  <div
-                    class="gradient-preview locked"
-                    title="Premium Gradient"
-                    style="
-                      background: linear-gradient(
-                        45deg,
-                        #f093fb 0%,
-                        #f5576c 100%
-                      );
-                    "
-                  ></div>
-                </div>
-                <div class="upsell-text">
-                  <span class="lock-icon">🔒</span>
-                  <span
-                    >Upgrade to <b>Premium</b> to unlock beautiful gradients and
-                    exclusive header styles!</span
-                  >
-                </div>
-              </div>
-            </ng-container>
 
             <ng-container [ngSwitch]="field.type">
               <!-- Text Field -->

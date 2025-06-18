@@ -761,6 +761,11 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log(
         '🔍 Exiting fullscreen mode via PreviewComponent.toggleFullscreen'
       );
+
+      // Clear tab memory when exiting fullscreen to start fresh next time
+      sessionStorage.removeItem('webcraft_customizer_tab_memory');
+      console.log('[TabMemory] Cleared tab memory on fullscreen exit');
+
       // Body overflow/class and scroll restoration are handled by ViewManagementService
       this.viewManagementService.setFullscreen(false);
 

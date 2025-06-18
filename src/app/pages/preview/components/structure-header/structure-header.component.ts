@@ -244,51 +244,35 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get mobile menu styles including background colors and gradients
+   * Get mobile menu styles - inherit exact same colors as desktop header
    */
   getMobileMenuStyles(): any {
     const styles: any = {};
 
-    // Handle background styling
+    // Get the exact same values as desktop header
+    const backgroundColor = this.customizations?.backgroundColor || '#2876FF';
+    const textColor = this.customizations?.textColor || '#ffffff';
     const backgroundType = this.customizations?.headerBackgroundType;
 
+    // Handle background styling exactly like desktop
     if (backgroundType && backgroundType !== 'none') {
-      // Use gradient
+      // Use gradient - same as desktop
       const gradientValue = this.getGradientValue(backgroundType);
       if (gradientValue) {
         styles.background = gradientValue;
       } else {
-        // Fallback to solid background if gradient fails
-        styles.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+        styles.backgroundColor = backgroundColor;
       }
     } else {
-      // Use solid background color - ensure it's opaque
-      const bgColor =
-        this.customizations?.backgroundColor || 'rgba(0, 0, 0, 0.95)';
-
-      // If the color has transparency, make it more opaque for mobile menu
-      if (bgColor.includes('rgba')) {
-        const rgbaMatch = bgColor.match(
-          /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/
-        );
-        if (rgbaMatch) {
-          const [, r, g, b] = rgbaMatch;
-          styles.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.98)`; // Force high opacity
-        } else {
-          styles.backgroundColor = 'rgba(0, 0, 0, 0.95)'; // Fallback
-        }
-      } else {
-        styles.backgroundColor = bgColor;
-      }
+      // Use solid background color - exact same as desktop
+      styles.backgroundColor = backgroundColor;
     }
 
-    // Set text color and font family
-    styles.color = this.customizations?.textColor || '#fff';
+    // Use exact same text color as desktop
+    styles.color = textColor;
     styles.fontFamily = this.fontFamily;
 
-    // Add backdrop filter for premium feel
-    styles.backdropFilter = 'blur(20px)';
-    styles['-webkit-backdrop-filter'] = 'blur(20px)';
+    // No backdrop blur to ensure color matches desktop
 
     // Ensure visibility
     styles.minHeight = '200px';
@@ -299,9 +283,18 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
 
   /**
    * Get header styles including background colors and gradients
+   * Also sets CSS variables for mobile menu inheritance
    */
   getHeaderStyles(): any {
     const styles: any = {};
+
+    // Get the colors to use
+    const backgroundColor = this.customizations?.backgroundColor || '#2876FF';
+    const textColor = this.customizations?.textColor || '#ffffff';
+
+    // Set CSS variables for mobile menu inheritance
+    styles['--header-bg-color'] = backgroundColor;
+    styles['--header-text-color'] = textColor;
 
     // Handle background styling
     const backgroundType = this.customizations?.headerBackgroundType;
@@ -311,10 +304,12 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
       const gradientValue = this.getGradientValue(backgroundType);
       if (gradientValue) {
         styles.background = gradientValue;
+        // Also set the gradient as the CSS variable for mobile menu
+        styles['--header-bg-color'] = gradientValue;
       }
     } else {
       // Use solid background color
-      styles.backgroundColor = this.customizations?.backgroundColor;
+      styles.backgroundColor = backgroundColor;
     }
 
     return styles;

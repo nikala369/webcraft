@@ -202,20 +202,20 @@
       right: 0; // Spans full viewport width
       z-index: 10000; // Back to reasonable z-index since conflicts are resolved
 
-      // Ensure visible background - don't inherit
-      background: rgba(0, 0, 0, 0.95); // Solid fallback background
+      /* Background is set via inline styles from getMobileMenuStyles() */
+      background: none;
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
-      border-radius: 0 0 18px 18px; // Rounded bottom corners, visible if not full height
+      border-radius: 0 0 18px 18px;
 
       padding: 1.5rem 1rem;
-      color: white; // Ensure text is visible
+      color: var(--header-text-color, #ffffff);
 
-      // Default animation properties (for Standard plan or base)
+      /* Default animation */
       opacity: 0;
       transform: translateY(-20px);
       pointer-events: none;
       transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
       :host-context(.fullscreen-mode) & {
         z-index: 10001; // Slightly higher z-index in fullscreen
@@ -227,18 +227,19 @@
         transform: translateY(0);
         pointer-events: auto;
 
-        // Add backdrop overlay when open
+        // Backdrop overlay behind menu
         &::before {
           content: "";
           position: fixed;
-          top: 0; // Start from top of viewport
+          top: 0;
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0, 0, 0, 0.6); // Reasonable backdrop opacity
+          /* No background overlay, allow menu color to show through */
+          background: none;
           z-index: -1;
           animation: fadeIn 0.3s ease-in-out;
-          pointer-events: auto; // Allow clicks to close menu
+          pointer-events: auto;
         }
       }
 
