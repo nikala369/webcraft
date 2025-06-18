@@ -75,18 +75,6 @@ export const contactSectionConfig: FieldConfig[] = [
 // Premium-only fields for contact section
 export const contactSectionPremiumConfig: FieldConfig[] = [
   {
-    key: 'showSocialLinks',
-    label: 'Show Social Media Links',
-    type: 'select',
-    category: 'content',
-    defaultValue: true,
-    description: 'Display social media links in the contact section',
-    options: [
-      { value: true, label: 'Yes' },
-      { value: false, label: 'No' },
-    ],
-  },
-  {
     key: 'showMap',
     label: 'Show Map',
     type: 'select',
@@ -545,20 +533,7 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       description: 'Text shown in the copyright section',
     },
 
-    // Social media settings
-    {
-      key: 'showSocialLinks',
-      label: 'Show Social Media Links',
-      type: 'select',
-      category: 'general',
-      defaultValue: true,
-      description: 'Display social media links in the footer',
-      options: [
-        { value: true, label: 'Yes' },
-        { value: false, label: 'No' },
-      ],
-    },
-    // Standard social media URLs (3 main platforms)
+    // Social media settings - Standard social media URLs (3 main platforms)
     {
       key: 'socialUrls.facebook',
       label: 'Facebook URL',

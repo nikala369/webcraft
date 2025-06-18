@@ -200,23 +200,25 @@
       top: 60px; // Assumes header height is 60px. Adjust if dynamic.
       left: 0;
       right: 0; // Spans full viewport width
-      z-index: 1000; // Ensure it's above other content
+      z-index: 10000; // Back to reasonable z-index since conflicts are resolved
 
-      background: inherit; // Inherits backdrop-filter from .structure-header (will be overridden by ngStyle)
+      // Ensure visible background - don't inherit
+      background: rgba(0, 0, 0, 0.95); // Solid fallback background
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
       border-radius: 0 0 18px 18px; // Rounded bottom corners, visible if not full height
 
       padding: 1.5rem 1rem;
+      color: white; // Ensure text is visible
 
       // Default animation properties (for Standard plan or base)
       opacity: 0;
       transform: translateY(-20px);
       pointer-events: none;
-      transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-        transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
 
       :host-context(.fullscreen-mode) & {
-        z-index: 1100 !important; // Higher z-index in fullscreen
+        z-index: 10001; // Slightly higher z-index in fullscreen
         // top: 0; // If header is hidden/different in fullscreen, adjust top
       }
 
@@ -224,6 +226,20 @@
         opacity: 1;
         transform: translateY(0);
         pointer-events: auto;
+
+        // Add backdrop overlay when open
+        &::before {
+          content: "";
+          position: fixed;
+          top: 0; // Start from top of viewport
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.6); // Reasonable backdrop opacity
+          z-index: -1;
+          animation: fadeIn 0.3s ease-in-out;
+          pointer-events: auto; // Allow clicks to close menu
+        }
       }
 
       ul {
@@ -294,18 +310,7 @@
 }
 
 /* --- Specific Mobile Menu Animations based on Plan --- */
-.structure-header[data-plan="premium"] .structure-header__mobile .mobile-menu {
-  // Premium mobile menu initial state & transition
-  opacity: 0;
-  transform: translateY(-30px) scale(0.97);
-  transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
-    transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-  &.open {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
+/* Removed premium-specific mobile menu overrides to prevent conflicts */
 
 /* --- NAV ITEM BASE STYLES --- */
 .structure-header__menu ul li a,
@@ -326,10 +331,7 @@
     // Desktop
     padding: 7px 15px;
     background: transparent;
-
-    &.active::after {
-      display: none !important; // No underline for standard active
-    }
+    position: relative; // Add position relative for z-index context
 
     &:hover,
     &.active {
@@ -342,17 +344,10 @@
 
   .structure-header__mobile .mobile-menu ul li a {
     // Mobile
-    // Inherits base mobile link styles (padding, font-size from .mobile-menu ul li a)
-    // Standard plan specific active/hover for mobile links
-    &.active {
-      background: rgba(0, 0, 0, 0.08);
-    }
+    position: relative;
+
     &:hover {
       background: rgba(0, 0, 0, 0.06);
-    }
-    &.active::after {
-      // Ensure no underline for mobile standard active
-      display: none !important;
     }
   }
 }
@@ -364,7 +359,7 @@
     // Mobile links
     padding: 7px 15px;
     position: relative;
-    overflow: hidden; // Contain shimmer
+    overflow: hidden;
 
     &::before {
       // Shimmer pseudo-element
@@ -415,17 +410,6 @@
         // No shimmer on active state itself
         opacity: 0;
         animation: none;
-      }
-
-      &::after {
-        content: "";
-        position: absolute;
-        bottom: -2px;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: var(--nav-underline-color, #ffffff);
-        border-radius: 1px;
       }
     }
     &:hover {
@@ -512,5 +496,15 @@
         }
       }
     }
+  }
+}
+
+/* Add fadeIn animation for backdrop */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

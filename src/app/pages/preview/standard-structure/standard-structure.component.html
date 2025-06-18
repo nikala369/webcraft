@@ -5,9 +5,11 @@
 >
   <!-- Header Section -->
   <app-section-hover-wrapper
-    [isMobile]="isMobileLayout"
+    [sectionId]="'header'"
+    [editable]="true"
     [isMobileView]="isMobileView"
-    (onEdit)="handleComponentSelection('header')"
+    (editSection)="handleComponentSelection('header')"
+    [currentPlan]="currentPlan"
   >
     <app-structure-header
       [isMobileLayout]="isMobileLayout"
@@ -87,9 +89,11 @@
 
   <!-- Footer Section -->
   <app-section-hover-wrapper
-    [isMobile]="isMobileLayout"
+    [sectionId]="'footer'"
+    [editable]="true"
     [isMobileView]="isMobileView"
-    (onEdit)="handleComponentSelection('footer')"
+    (editSection)="handleComponentSelection('footer')"
+    [currentPlan]="currentPlan"
   >
     <app-structure-footer
       [customizations]="customizations()?.footer"

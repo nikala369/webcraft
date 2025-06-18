@@ -6,6 +6,12 @@
   position: relative;
 }
 
+/* Force color overrides for premium plan */
+:host(.premium-plan) {
+  --hover-accent-color: #9e6aff !important;
+  --hover-accent-color-rgb: 158, 106, 255 !important;
+}
+
 .section-hover-wrapper {
   position: relative;
   transition: all 0.3s ease-in-out;
@@ -18,10 +24,11 @@
       position: absolute;
       inset: 0;
       border: 2px solid var(--hover-accent-color);
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 0 8px
+        rgba(var(--hover-accent-color-rgb, 74, 141, 255), 0.15);
       opacity: 1;
       pointer-events: none; /* Never block clicks */
-      z-index: 5;
+      z-index: 1001;
     }
   }
 
@@ -45,7 +52,7 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
     opacity: 0;
-    z-index: 9999;
+    z-index: 9999; // Normal z-index since mobile conflicts are resolved
     pointer-events: none;
 
     /* New stacking context */
@@ -59,6 +66,8 @@
     &:hover {
       opacity: 1;
       transform: translate(-50%, -2px); /* Maintain center while moving up */
+      background-color: var(--hover-accent-color);
+      filter: brightness(1.1);
     }
 
     .edit-icon {
@@ -71,15 +80,23 @@
       }
     }
   }
+}
 
-  /* Disable hover effects in mobile view */
-  &.view-mobile {
-    .edit-button {
-      display: none;
-    }
+/* Premium plan specific overrides */
+.section-hover-wrapper[data-plan="premium"] {
+  --hover-accent-color: #9e6aff !important;
+  --hover-accent-color-rgb: 158, 106, 255 !important;
 
-    &.hover-active::before {
-      display: none;
+  &.hover-active::before {
+    border-color: #9e6aff !important;
+    box-shadow: 0 0 8px rgba(158, 106, 255, 0.15) !important;
+  }
+
+  .edit-button {
+    background-color: #9e6aff !important;
+
+    &:hover {
+      background-color: #9e6aff !important;
     }
   }
 }

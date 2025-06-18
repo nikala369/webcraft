@@ -28,9 +28,10 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   @Input() customizations!: any; // ! operator indicates definite assignment
   @Input({ required: true }) data!: Signal<any>;
   @Input() isMobileLayout: boolean = false;
-  @Input() isMobileView: any;
+  @Input() isMobileView: string = 'view-desktop';
   @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = 'restaurant';
+  @Input() editable: boolean = true;
   @Output() sectionSelected = new EventEmitter<{
     key: string;
     name: string;
@@ -46,12 +47,13 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   defaultHeroVideo = 'assets/standard-hero1/background-video.mp4';
 
   ngOnInit() {
+    // Disabled scroll effects to prevent unwanted movement
     // Only enable parallax in standard plan
-    if (this.planType === 'standard') {
-      setTimeout(() => {
-        this.initHeroScrollEffects();
-      }, 100);
-    }
+    // if (this.planType === 'standard') {
+    //   setTimeout(() => {
+    //     this.initHeroScrollEffects();
+    //   }, 100);
+    // }
   }
 
   ngOnDestroy() {
@@ -74,9 +76,19 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
     });
   }
 
+  handleSectionEdit(sectionId: string) {
+    // Emit the section selected event to open the customizer
+    console.log('Edit requested for section:', sectionId);
+    this.sectionSelected.emit({
+      key: 'hero1',
+      name: 'Hero Section',
+      path: 'pages.home.hero1',
+    });
+  }
+
   // Initialize smooth parallax scroll effect for hero section
   private initHeroScrollEffects() {
-    if (typeof window === 'undefined' || this.isMobileView) {
+    if (typeof window === 'undefined' || this.isMobileLayout) {
       return;
     }
 

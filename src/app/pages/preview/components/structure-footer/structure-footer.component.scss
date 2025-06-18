@@ -65,8 +65,8 @@ $social-twitter: #1da1f2;
       margin-bottom: 1rem;
 
       .footer-logo {
-        max-height: 50px;
-        max-width: 150px;
+        max-height: 60px;
+        max-width: 200px;
         object-fit: contain;
         filter: brightness(1.1);
         transition: $footer-transition;
@@ -203,7 +203,7 @@ $social-twitter: #1da1f2;
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.08);
         color: inherit;
-        opacity: 0.7;
+        opacity: 0.8;
         text-decoration: none;
         transition: $footer-transition;
         position: relative;
@@ -215,18 +215,12 @@ $social-twitter: #1da1f2;
           transition: $footer-transition;
         }
 
-        // Disabled state
-        &--disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-          pointer-events: none;
-        }
-
         // Standard plan hover
-        &:not(.social-link--disabled):hover {
+        &:hover {
           background: rgba(255, 255, 255, 0.15);
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          opacity: 1;
 
           svg {
             transform: scale(1.1);
@@ -234,12 +228,12 @@ $social-twitter: #1da1f2;
         }
 
         // Premium plan: brand color hover effects
-        &--facebook:not(.social-link--disabled):hover {
+        &--facebook:hover {
           background: $social-facebook;
           color: white;
         }
 
-        &--instagram:not(.social-link--disabled):hover {
+        &--instagram:hover {
           background: linear-gradient(
             45deg,
             #f09433 0%,
@@ -251,22 +245,22 @@ $social-twitter: #1da1f2;
           color: white;
         }
 
-        &--tiktok:not(.social-link--disabled):hover {
+        &--tiktok:hover {
           background: $social-tiktok;
           color: white;
         }
 
-        &--linkedin:not(.social-link--disabled):hover {
+        &--linkedin:hover {
           background: $social-linkedin;
           color: white;
         }
 
-        &--youtube:not(.social-link--disabled):hover {
+        &--youtube:hover {
           background: $social-youtube;
           color: white;
         }
 
-        &--twitter:not(.social-link--disabled):hover {
+        &--twitter:hover {
           background: $social-twitter;
           color: white;
         }
@@ -338,22 +332,96 @@ $social-twitter: #1da1f2;
 
   .footer-main {
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 3rem;
+    gap: 3.5rem;
     justify-items: center;
     text-align: center;
     margin: 0 auto 2rem auto;
+    padding: 0 1rem;
 
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
-      gap: 2rem;
+      gap: 2.5rem;
       text-align: center;
+      padding: 0;
     }
   }
 
-  // Standard social links: simpler hover
-  .social-link:not(.social-link--disabled):hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
+  // Standard navigation hover with blue underline
+  .footer-nav {
+    .nav-list {
+      li {
+        .nav-link {
+          &:hover {
+            &::after {
+              background: #2876ff; // Standard blue color
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Improved spacing for standard plan
+  .footer-brand {
+    .brand-logo {
+      margin-bottom: 1.25rem;
+
+      .footer-logo {
+        max-height: 55px;
+        max-width: 180px;
+      }
+    }
+
+    .brand-content {
+      .brand-title {
+        font-size: 1.4rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .brand-tagline {
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  .footer-contact {
+    .contact-list {
+      .contact-item {
+        margin-bottom: 1.25rem;
+        justify-content: center;
+        text-align: left;
+      }
+    }
+  }
+
+  .footer-social {
+    .social-links {
+      justify-content: center;
+      gap: 1.25rem;
+
+      .social-link {
+        width: 46px;
+        height: 46px;
+
+        // Standard social links: simpler hover
+        &:hover {
+          background: rgba(255, 255, 255, 0.15);
+          transform: translateY(-2px);
+
+          // Remove brand colors for standard plan
+          &.social-link--facebook,
+          &.social-link--instagram,
+          &.social-link--tiktok,
+          &.social-link--linkedin,
+          &.social-link--youtube,
+          &.social-link--twitter {
+            background: rgba(255, 255, 255, 0.15);
+            color: inherit;
+          }
+        }
+      }
+    }
   }
 }
 
@@ -371,16 +439,46 @@ $social-twitter: #1da1f2;
     }
   }
 
-  // Premium animations
-  .footer-brand .brand-title {
-    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  // Premium logo improvements - more space and better sizing
+  .footer-brand {
+    .brand-logo {
+      margin-bottom: 1.5rem;
+
+      .footer-logo {
+        max-height: 70px;
+        max-width: 250px;
+        object-fit: contain;
+      }
+    }
+
+    .brand-content {
+      .brand-title {
+        font-size: 1.6rem;
+        color: inherit;
+      }
+    }
+  }
+
+  // Premium navigation hover with purple underline
+  .footer-nav {
+    .nav-list {
+      li {
+        .nav-link {
+          &:hover {
+            &::after {
+              background: #9e6aff !important; // Always premium purple
+            }
+          }
+          &.active::after {
+            background: #9e6aff !important; // Always premium purple
+          }
+        }
+      }
+    }
   }
 
   // Premium social links: brand color hover
-  .social-links .social-link:not(.social-link--disabled) {
+  .social-links .social-link {
     position: relative;
 
     &::before {

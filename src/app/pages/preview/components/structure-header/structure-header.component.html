@@ -62,8 +62,9 @@
       class="mobile-menu"
       [class.open]="isMobileMenuOpen()"
       [ngStyle]="getMobileMenuStyles()"
+      (click)="onMobileMenuClick($event)"
     >
-      <ul>
+      <ul (click)="$event.stopPropagation()">
         <li *ngFor="let item of getMenuItems()">
           <a
             (click)="navigateTo(item.link)"
@@ -74,7 +75,11 @@
         </li>
       </ul>
       <!-- Optional Social Icons -->
-      <div class="mobile-social" *ngIf="customizations?.socialIcons">
+      <div
+        class="mobile-social"
+        *ngIf="customizations?.socialIcons"
+        (click)="$event.stopPropagation()"
+      >
         <a
           *ngFor="let icon of customizations?.socialIcons"
           [href]="icon.link"

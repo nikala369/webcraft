@@ -1,10 +1,9 @@
 <app-section-hover-wrapper
-  [sectionKey]="'contact'"
-  [sectionName]="'Contact Section'"
-  [editable]="true"
+  [sectionId]="'contact'"
+  [editable]="editable"
   [currentPlan]="planType"
-  [sectionPath]="'pages.home.contact'"
-  (sectionSelected)="handleSectionSelection()"
+  [isMobileView]="isMobileView"
+  (editSection)="handleSectionEdit('contact')"
 >
   <section id="contact" class="contact-section">
     <div class="section-container">

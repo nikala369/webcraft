@@ -42,8 +42,10 @@ interface MenuCategory {
 export class MenuSectionComponent implements OnChanges, OnInit {
   @Input({ required: true }) data!: Signal<any>;
   @Input() isMobileLayout: boolean = false;
+  @Input() isMobileView: string = 'view-desktop';
   @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = 'restaurant';
+  @Input() editable: boolean = true;
   @Output() sectionSelected = new EventEmitter<{
     key: string;
     name: string;
@@ -273,5 +275,15 @@ export class MenuSectionComponent implements OnChanges, OnInit {
    */
   hasImage(item: MenuItem): boolean {
     return !!item.image && item.image.trim() !== '';
+  }
+
+  handleSectionEdit(sectionId: string) {
+    // Emit the section selected event to open the customizer
+    console.log('Edit requested for section:', sectionId);
+    this.sectionSelected.emit({
+      key: 'menu',
+      name: 'Menu Section',
+      path: 'pages.home.menu',
+    });
   }
 }

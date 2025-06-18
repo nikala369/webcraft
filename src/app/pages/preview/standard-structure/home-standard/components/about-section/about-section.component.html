@@ -1,10 +1,9 @@
 <app-section-hover-wrapper
-  [sectionKey]="'about'"
-  [sectionName]="'About Section'"
-  [editable]="true"
+  [sectionId]="'about'"
+  [editable]="editable"
   [currentPlan]="planType"
-  [sectionPath]="'pages.home.about'"
-  (sectionSelected)="handleSectionSelection($event)"
+  [isMobileView]="isMobileView"
+  (editSection)="handleSectionEdit('about')"
 >
   <section id="about" class="about-section">
     <div class="section-container">

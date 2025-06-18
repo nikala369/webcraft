@@ -50,7 +50,7 @@ export class HomeStandardComponent implements OnInit, OnChanges {
   @Input({ required: true }) pagesHomeData!: Signal<any>;
   @Input({ required: true }) wholeData!: Signal<Customizations | null>;
   @Input() isMobileLayout: boolean = false;
-  @Input() isMobileView: any;
+  @Input() isMobileView: string = 'view-desktop';
   @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = 'restaurant';
   @Output() sectionSelected = new EventEmitter<string>();

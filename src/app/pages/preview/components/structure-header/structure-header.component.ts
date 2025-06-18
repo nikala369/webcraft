@@ -211,9 +211,20 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Toggle mobile menu visibility. */
+  // Toggle mobile menu
   toggleMobileMenu() {
     this.isMobileMenuOpen.update((open) => !open);
+    console.log('Mobile menu toggled:', this.isMobileMenuOpen());
+  }
+
+  /**
+   * Handle clicks on the mobile menu backdrop
+   */
+  onMobileMenuClick(event: Event): void {
+    // If clicking on the backdrop (not the menu content), close the menu
+    if (event.target === event.currentTarget) {
+      this.isMobileMenuOpen.set(false);
+    }
   }
 
   // Check if a menu item is active
@@ -246,16 +257,42 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
       const gradientValue = this.getGradientValue(backgroundType);
       if (gradientValue) {
         styles.background = gradientValue;
+      } else {
+        // Fallback to solid background if gradient fails
+        styles.backgroundColor = 'rgba(0, 0, 0, 0.95)';
       }
     } else {
-      // Use solid background color
-      styles.backgroundColor =
-        this.customizations?.backgroundColor || 'rgba(0, 0, 0, 0.9)';
+      // Use solid background color - ensure it's opaque
+      const bgColor =
+        this.customizations?.backgroundColor || 'rgba(0, 0, 0, 0.95)';
+
+      // If the color has transparency, make it more opaque for mobile menu
+      if (bgColor.includes('rgba')) {
+        const rgbaMatch = bgColor.match(
+          /rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/
+        );
+        if (rgbaMatch) {
+          const [, r, g, b] = rgbaMatch;
+          styles.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.98)`; // Force high opacity
+        } else {
+          styles.backgroundColor = 'rgba(0, 0, 0, 0.95)'; // Fallback
+        }
+      } else {
+        styles.backgroundColor = bgColor;
+      }
     }
 
     // Set text color and font family
     styles.color = this.customizations?.textColor || '#fff';
     styles.fontFamily = this.fontFamily;
+
+    // Add backdrop filter for premium feel
+    styles.backdropFilter = 'blur(20px)';
+    styles['-webkit-backdrop-filter'] = 'blur(20px)';
+
+    // Ensure visibility
+    styles.minHeight = '200px';
+    styles.display = 'block';
 
     return styles;
   }

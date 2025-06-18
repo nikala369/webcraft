@@ -196,6 +196,53 @@ export class MediaDisplayComponent {
 }
 ```
 
+## Section-Hover-Wrapper Pattern
+
+All section components should use the `SectionHoverWrapperComponent` to provide consistent editing functionality:
+
+```html
+<app-section-hover-wrapper [sectionId]="'section-name'" [editable]="editable" [currentPlan]="planType" [isMobileView]="isMobileView" (editSection)="handleSectionEdit('section-name')">
+  <!-- Section content here -->
+  <section id="section-name" class="section-name">
+    <!-- Section implementation -->
+  </section>
+</app-section-hover-wrapper>
+```
+
+### Key Properties
+
+- **sectionId**: Unique identifier for the section
+- **editable**: Whether editing is allowed (usually `true`)
+- **currentPlan**: Plan type for proper theming (`'standard'` or `'premium'`)
+- **isMobileView**: View mode (`'view-desktop'` or `'view-mobile'`)
+- **editSection**: Event emitter for section editing
+
+### Mobile Behavior
+
+The wrapper automatically:
+
+- Disables edit functionality on mobile devices (`isMobileView === 'view-mobile'`)
+- Always displays content regardless of view mode
+- Applies plan-specific hover colors (Standard: #2876ff, Premium: #9e6aff)
+
+### Implementation in Section Components
+
+```typescript
+export class SectionComponent {
+  @Input() isMobileView: string = "view-desktop";
+  @Input() planType: "standard" | "premium" = "standard";
+  @Input() editable: boolean = true;
+
+  handleSectionEdit(sectionId: string) {
+    this.sectionSelected.emit({
+      key: sectionId,
+      name: "Section Display Name",
+      path: `pages.home.${sectionId}`,
+    });
+  }
+}
+```
+
 ## Plan Differences
 
 Clearly differentiate between Premium and Premium Pro features:

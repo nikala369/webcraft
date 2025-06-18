@@ -21,6 +21,8 @@ export class CtaSectionComponent {
   @Input() isMobileLayout: boolean = false;
   @Input() planType: 'standard' | 'premium' = 'premium';
   @Input() businessType: string = 'restaurant';
+  @Input() editable: boolean = true;
+  @Input() isMobileView: string = 'view-desktop';
   @Output() sectionSelected = new EventEmitter<{
     key: string;
     name: string;
@@ -29,6 +31,13 @@ export class CtaSectionComponent {
 
   handleSectionSelection(event: { key: string; name: string; path?: string }) {
     this.sectionSelected.emit(event);
+  }
+
+  handleSectionEdit(sectionId: string) {
+    // Open the customizer or handle edit logic for the section
+    // Example: emit an event, open a sidebar, etc.
+    console.log('Edit requested for section:', sectionId);
+    // You can emit an event or call a service here
   }
 
   getCtaTitle(): string {
@@ -137,4 +146,3 @@ export class CtaSectionComponent {
     return this.data()?.backgroundColor || '#4a8dff';
   }
 }
- 

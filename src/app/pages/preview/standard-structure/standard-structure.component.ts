@@ -53,7 +53,7 @@ export class StandardStructureComponent
   // Accept the signal directly, allowing null
   @Input({ required: true }) customizations!: Signal<Customizations | null>;
   @Input() isMobileLayout = false;
-  @Input() isMobileView: any;
+  @Input() isMobileView: string = 'view-desktop';
   @Input() isViewOnly: any;
   @Input() selectedFont: FontOption | null = null;
   @Input() currentPage: string = 'home';
@@ -250,11 +250,16 @@ export class StandardStructureComponent
   handleComponentSelection(componentKey: string): void {
     if (this.isViewOnly) return;
 
-    // Create a simple object with a key and name.
+    console.log('handleComponentSelection called with:', componentKey);
+
+    // Create a simple object with a key, name, and path.
     const selectedData = {
       key: componentKey,
       name: componentKey.charAt(0).toUpperCase() + componentKey.slice(1),
+      path: componentKey, // Add path property for consistency
     };
+
+    console.log('Emitting componentSelected:', selectedData);
     this.componentSelected.emit(selectedData);
   }
 

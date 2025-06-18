@@ -1,10 +1,9 @@
 <app-section-hover-wrapper
-  [sectionKey]="'featuredPreview'"
-  [sectionName]="'Featured Preview'"
-  [editable]="true"
+  [sectionId]="'featuredPreview'"
+  [editable]="editable"
   [currentPlan]="planType"
-  [sectionPath]="'pages.home.featuredPreview'"
-  (sectionSelected)="handleSectionSelection($event)"
+  [isMobileView]="isMobileView"
+  (editSection)="handleSectionEdit('featuredPreview')"
 >
   <section id="featured-preview" class="featured-preview-section">
     <div class="section-container">
@@ -79,4 +78,3 @@
     </div>
   </section>
 </app-section-hover-wrapper>
- 

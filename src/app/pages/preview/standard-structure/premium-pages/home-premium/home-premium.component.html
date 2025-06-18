@@ -1,12 +1,11 @@
 <div class="home-premium">
   <!-- Hero Section -->
   <app-section-hover-wrapper
-    [sectionKey]="'hero1'"
-    [sectionName]="'Hero Section'"
-    [editable]="true"
+    [sectionId]="'hero1'"
+    [editable]="editable"
     [currentPlan]="planType"
-    [sectionPath]="'pages.home.hero1'"
-    (sectionSelected)="handleSectionSelection($event)"
+    [isMobileView]="isMobileView"
+    (editSection)="handleSectionEdit('hero1')"
   >
     <app-hero-section
       [data]="heroData"

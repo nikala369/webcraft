@@ -6,6 +6,8 @@ import {
   inject,
   Input,
   OnInit,
+  OnChanges,
+  SimpleChanges,
   Output,
   Renderer2,
 } from '@angular/core';
@@ -20,71 +22,72 @@ import { ThemeColorsService } from '../../../../core/services/theme/theme-colors
   templateUrl: './section-hover-wrapper.component.html',
   styleUrls: ['./section-hover-wrapper.component.scss'],
 })
-export class SectionHoverWrapperComponent implements OnInit {
+export class SectionHoverWrapperComponent implements OnInit, OnChanges {
   // Legacy inputs for backward compatibility
-  @Input() isMobile = false;
-  @Input() isMobileView: any;
-  @Input() backgroundColor: any = '';
-  @Output() onEdit = new EventEmitter<void>();
-
-  // Modern inputs for updated components
-  @Input() sectionKey: string = '';
-  @Input() sectionName: string = 'Section';
-  @Input() sectionPath: string = '';
+  @Input() sectionId: string = '';
   @Input() editable: boolean = true;
   @Input() currentPlan: string = 'standard';
-  @Input() zIndex: number = 5; // Default z-index
-  @Output() sectionSelected = new EventEmitter<{
-    key: string;
-    name: string;
-    path?: string;
-  }>();
+  @Input() isMobileView: string = 'view-desktop';
 
-  // Services
-  isViewOnlyStateService = inject(ScrollService);
-  private themeColorsService = inject(ThemeColorsService);
+  @Output() editSection = new EventEmitter<string>();
 
-  // State
+  // Component state
   isHovered = false;
-  accentColor = '';
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {}
+  // Inject services
+  private scrollService = inject(ScrollService);
+  private themeColorsService = inject(ThemeColorsService);
+  isViewOnlyStateService = inject(ScrollService);
 
-  ngOnInit() {
-    // Set accent color based on plan
-    this.accentColor = this.themeColorsService.getPrimaryColor(
-      this.currentPlan as 'standard' | 'premium'
-    );
+  ngOnInit(): void {
+    this.updateColors();
+  }
 
-    // Apply the z-index to this component
-    if (this.zIndex) {
-      this.renderer.setStyle(this.el.nativeElement, 'position', 'relative');
-      this.renderer.setStyle(this.el.nativeElement, 'z-index', this.zIndex);
+  ngOnChanges(changes: SimpleChanges): void {
+    // Update colors when plan changes
+    if (changes['currentPlan']) {
+      this.updateColors();
     }
 
-    // Apply CSS variable for accent color
-    this.renderer.setProperty(
-      this.el.nativeElement,
-      'style',
-      `--hover-accent-color: ${this.accentColor};`
-    );
+    // Reset hover state when switching to mobile view
+    if (changes['isMobileView'] && this.isMobileView === 'view-mobile') {
+      this.isHovered = false;
+    }
+  }
+
+  private updateColors(): void {
+    // Set CSS variable for hover accent color based on plan
+    const color = this.currentPlan === 'premium' ? '#9e6aff' : '#2876ff';
+
+    // Force update on document root
+    document.documentElement.style.setProperty('--hover-accent-color', color);
+
+    // Also set RGB version for rgba usage in shadows
+    const rgb = this.hexToRgb(color);
+    document.documentElement.style.setProperty('--hover-accent-color-rgb', rgb);
+
+    // Force immediate style recalculation
+    document.documentElement.offsetHeight;
   }
 
   /**
-   * Handle click on edit button
-   * Support both legacy and modern event patterns
+   * Convert hex color to RGB values
    */
-  handleEdit() {
-    if (this.sectionKey && this.sectionName) {
-      // Modern pattern
-      this.sectionSelected.emit({
-        key: this.sectionKey,
-        name: this.sectionName,
-        path: this.sectionPath,
-      });
-    } else {
-      // Legacy pattern
-      this.onEdit.emit();
+  private hexToRgb(hex: string): string {
+    // Remove # if present
+    hex = hex.replace('#', '');
+
+    // Parse values
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    return `${r}, ${g}, ${b}`;
+  }
+
+  onEditClick(): void {
+    if (this.sectionId) {
+      this.editSection.emit(this.sectionId);
     }
   }
 }

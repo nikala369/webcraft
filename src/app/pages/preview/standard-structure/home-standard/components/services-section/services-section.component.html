@@ -1,10 +1,9 @@
 <app-section-hover-wrapper
-  [sectionKey]="'services'"
-  [sectionName]="'Services Section'"
-  [editable]="true"
+  [sectionId]="'services'"
+  [editable]="editable"
   [currentPlan]="planType"
-  [sectionPath]="'pages.home.services'"
-  (sectionSelected)="handleSectionSelection()"
+  [isMobileView]="isMobileView"
+  (editSection)="handleSectionEdit('services')"
 >
   <section
     id="services"

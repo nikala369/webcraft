@@ -1,23 +1,32 @@
+<!-- Always show wrapper with content, but control edit functionality -->
 <div
   class="section-hover-wrapper"
+  [attr.data-plan]="currentPlan"
   [class.hover-active]="
-    isHovered && !isViewOnlyStateService.isOnlyViewMode() && editable
+    isHovered &&
+    !isViewOnlyStateService.isOnlyViewMode() &&
+    editable &&
+    isMobileView !== 'view-mobile'
   "
-  [class.view-mobile]="isMobileView === 'view-mobile'"
   (mouseenter)="isHovered = true"
   (mouseleave)="isHovered = false"
 >
   <!-- Section content -->
   <ng-content></ng-content>
 
-  <!-- Edit button (no full overlay) -->
+  <!-- Edit button - only show on desktop -->
   <button
-    *ngIf="!isViewOnlyStateService.isOnlyViewMode() && editable"
+    *ngIf="
+      !isViewOnlyStateService.isOnlyViewMode() &&
+      editable &&
+      isMobileView !== 'view-mobile'
+    "
     class="edit-button"
     [class.visible]="isHovered"
-    (click)="handleEdit(); $event.stopPropagation()"
+    (click)="onEditClick()"
+    type="button"
   >
-    <span class="edit-icon">✎</span>
+    <span class="edit-icon">✏️</span>
     <span class="edit-text">Edit</span>
   </button>
 </div>

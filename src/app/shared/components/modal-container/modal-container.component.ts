@@ -25,8 +25,8 @@ import { ModalConfig } from '../../../core/services/modal/modal.service'; // Adj
     <div class="modal-backdrop" (click)="onBackdropClick()"></div>
     <div
       class="modal-content"
-      [style.width]="config?.width || 'auto'"
-      [style.height]="config?.height || 'auto'"
+      [style.width]="config.width || 'auto'"
+      [style.height]="config.height || 'auto'"
       [style.maxWidth]="'90vw'"
       [style.maxHeight]="'90vh'"
     >

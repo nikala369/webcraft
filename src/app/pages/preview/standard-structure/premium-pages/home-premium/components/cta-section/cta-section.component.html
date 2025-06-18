@@ -1,10 +1,9 @@
 <app-section-hover-wrapper
-  [sectionKey]="'ctaSection'"
-  [sectionName]="'Call to Action'"
-  [editable]="true"
+  [sectionId]="'ctaSection'"
+  [editable]="editable"
   [currentPlan]="planType"
-  [sectionPath]="'pages.home.ctaSection'"
-  (sectionSelected)="handleSectionSelection($event)"
+  [isMobileView]="isMobileView"
+  (editSection)="handleSectionEdit('ctaSection')"
 >
   <section
     id="cta-section"

@@ -35,8 +35,10 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
   @Input({ required: true }) data!: Signal<any>;
   @Input() wholeData: any;
   @Input() isMobileLayout: boolean = false;
+  @Input() isMobileView: string = 'view-desktop';
   @Input() planType: 'standard' | 'premium' = 'standard';
-  @Input() businessType: string = 'salon';
+  @Input() businessType: string = 'restaurant';
+  @Input() editable: boolean = true;
   @Output() sectionSelected = new EventEmitter<{
     key: string;
     name: string;
@@ -377,4 +379,14 @@ export class ServicesSectionComponent implements OnInit, OnChanges {
         'https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
     },
   ];
+
+  handleSectionEdit(sectionId: string) {
+    // Emit the section selected event to open the customizer
+    console.log('Edit requested for section:', sectionId);
+    this.sectionSelected.emit({
+      key: 'services',
+      name: 'Services Section',
+      path: 'pages.home.services',
+    });
+  }
 }

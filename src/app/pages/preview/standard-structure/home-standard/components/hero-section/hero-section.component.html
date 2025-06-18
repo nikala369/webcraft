@@ -1,11 +1,9 @@
 <app-section-hover-wrapper
-  [sectionKey]="'hero1'"
-  [sectionName]="'Hero Section'"
-  [editable]="true"
+  [sectionId]="'hero'"
+  [editable]="editable"
   [currentPlan]="planType"
-  [sectionPath]="'pages.home.hero1'"
-  (sectionSelected)="handleSectionSelection($event)"
-  [zIndex]="9999"
+  [isMobileView]="isMobileView"
+  (editSection)="handleSectionEdit('hero')"
 >
   <div
     id="hero"

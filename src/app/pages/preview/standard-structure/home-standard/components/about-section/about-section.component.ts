@@ -38,8 +38,10 @@ interface AboutSectionData {
 export class AboutSectionComponent implements OnInit {
   @Input({ required: true }) data!: Signal<any>;
   @Input() isMobileLayout: boolean = false;
+  @Input() isMobileView: string = 'view-desktop';
   @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = 'restaurant';
+  @Input() editable: boolean = true;
   @Output() sectionSelected = new EventEmitter<{
     key: string;
     name: string;
@@ -326,5 +328,15 @@ export class AboutSectionComponent implements OnInit {
    */
   hasProp(prop: string): boolean {
     return this.data()?.pages?.home?.about?.[prop] !== undefined;
+  }
+
+  handleSectionEdit(sectionId: string) {
+    // Emit the section selected event to open the customizer
+    console.log('Edit requested for section:', sectionId);
+    this.sectionSelected.emit({
+      key: 'about',
+      name: 'About Section',
+      path: 'pages.home.about',
+    });
   }
 }

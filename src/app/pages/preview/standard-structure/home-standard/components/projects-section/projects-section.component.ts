@@ -31,8 +31,10 @@ interface ProjectItem {
 export class ProjectsSectionComponent {
   @Input({ required: true }) data!: Signal<any>;
   @Input() isMobileLayout: boolean = false;
+  @Input() isMobileView: string = 'view-desktop';
   @Input() planType: 'standard' | 'premium' = 'standard';
-  @Input() businessType: string = 'architecture';
+  @Input() businessType: string = 'restaurant';
+  @Input() editable: boolean = true;
   @Output() sectionSelected = new EventEmitter<{
     key: string;
     name: string;
@@ -223,5 +225,15 @@ export class ProjectsSectionComponent {
     return {
       'animation-delay': `${delay}s`,
     };
+  }
+
+  handleSectionEdit(sectionId: string) {
+    // Emit the section selected event to open the customizer
+    console.log('Edit requested for section:', sectionId);
+    this.sectionSelected.emit({
+      key: 'projects',
+      name: 'Projects Section',
+      path: 'pages.home.projects',
+    });
   }
 }

@@ -1,10 +1,9 @@
 <app-section-hover-wrapper
-  [sectionKey]="'menu'"
-  [sectionName]="'Menu Section'"
-  [editable]="true"
+  [sectionId]="'menu'"
+  [editable]="editable"
   [currentPlan]="planType"
-  [sectionPath]="'pages.home.menu'"
-  (sectionSelected)="handleSectionSelection()"
+  [isMobileView]="isMobileView"
+  (editSection)="handleSectionEdit('menu')"
 >
   <section id="menu" class="menu-section">
     <div class="section-container">
