@@ -24,6 +24,20 @@ export class StructureFooterComponent implements OnInit {
     return this.customizations?.textColor || '#ffffff';
   }
 
+  // Set the navigation underline color CSS variable (Premium only)
+  @HostBinding('style.--nav-underline-color') get navUnderlineColor() {
+    // Only set if we're in premium plan and have the field
+    if (this.planType === 'premium') {
+      return (
+        this.customizations?.navUnderlineColor ||
+        this.customizations?.textColor ||
+        '#ffffff'
+      );
+    }
+    // For standard plan, use text color as fallback (though navigation won't be visible)
+    return this.customizations?.textColor || '#ffffff';
+  }
+
   currentYear = new Date().getFullYear();
 
   // Standard social platforms (3 main ones)

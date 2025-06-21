@@ -466,11 +466,17 @@ $social-twitter: #1da1f2;
         .nav-link {
           &:hover {
             &::after {
-              background: #9e6aff !important; // Always premium purple
+              background: var(
+                --nav-underline-color,
+                #ffffff
+              ); // Use customized color
             }
           }
           &.active::after {
-            background: #9e6aff !important; // Always premium purple
+            background: var(
+              --nav-underline-color,
+              #ffffff
+            ); // Use customized color
           }
         }
       }

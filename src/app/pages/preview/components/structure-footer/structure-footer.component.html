@@ -31,13 +31,7 @@
       </div>
 
       <!-- Navigation Menu (Premium Only) -->
-      <div
-        class="footer-nav"
-        *ngIf="planType === 'premium'"
-        [style.--nav-underline-color]="
-          planType === 'premium' ? '#9e6aff' : '#2876ff'
-        "
-      >
+      <div class="footer-nav" *ngIf="planType === 'premium'">
         <h4 class="footer-section-title">Quick Links</h4>
         <nav>
           <ul class="nav-list">
