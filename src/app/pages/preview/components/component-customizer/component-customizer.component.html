@@ -84,7 +84,11 @@
 
       <div class="fields-container">
         <ng-container *ngFor="let field of fieldsForCategory(); let i = index">
-          <div class="field-group" [style.--index]="i">
+          <div
+            class="field-group"
+            [style.--index]="i"
+            *ngIf="shouldShowField(field)"
+          >
             <div class="field-label-row" *ngIf="shouldShowFieldLabel(field)">
               <label *ngIf="shouldShowLabel(field)" [for]="field.key">
                 {{ field.label }}

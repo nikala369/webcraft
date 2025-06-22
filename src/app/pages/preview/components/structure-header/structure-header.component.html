@@ -15,8 +15,11 @@
         customizations?.logoUrl ||
         '/assets/standard-header/default-logo-white.svg'
       "
-      alt="Logo"
+      alt="Company Logo"
       class="logo"
+      loading="lazy"
+      (error)="onLogoError($event)"
+      (load)="onLogoLoad($event)"
     />
     <!-- If there's a 'text' field for brand name, you can display it next to the logo -->
     <!-- <span class="brand-text" *ngIf="customizations?.text">{{ customizations.text }}</span> -->

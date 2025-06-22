@@ -118,10 +118,16 @@ export interface HeroData {
   overlayColor?: string;
   showContentText?: boolean;
   layout?: 'center' | 'left' | 'right';
-  showLogo?: boolean;
   titleColor?: string;
   subtitleColor?: string;
   textShadow?: 'none' | 'light' | 'medium' | 'heavy';
+  // CTA Button fields
+  showButton?: boolean;
+  buttonText?: string; // Premium only - auto-generated for standard
+  buttonLink?: string; // Premium only - auto-generated for standard
+  buttonScrollTargetID?: string; // Auto-generated based on business type
+  buttonBackgroundColor?: string;
+  buttonTextColor?: string;
 }
 
 /**

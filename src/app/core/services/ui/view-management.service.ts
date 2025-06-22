@@ -89,7 +89,7 @@ export class ViewManagementService implements OnDestroy {
   setViewMode(mode: 'view-desktop' | 'view-mobile'): void {
     if (this._viewMode() === mode) return;
     this._viewMode.set(mode);
-    // console.log(`[ViewMgmt] View mode set to: ${mode}`);
+    console.log(`[ViewMgmt] View mode set to: ${mode}`);
   }
 
   setFullscreen(enterFullscreen: boolean): void {

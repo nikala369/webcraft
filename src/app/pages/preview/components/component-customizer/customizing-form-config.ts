@@ -666,19 +666,19 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
     },
     {
       key: 'titleColor',
-      label: 'Headline Color',
+      label: 'Title Color',
       type: 'color',
       category: 'styling',
       defaultValue: '#ffffff',
-      description: 'The color of the main headline text.',
+      description: 'The color of the main title text.',
     },
     {
       key: 'subtitleColor',
-      label: 'Tagline Color',
+      label: 'Subtitle Color',
       type: 'color',
       category: 'styling',
       defaultValue: '#f0f0f0',
-      description: 'The color of the supporting tagline text.',
+      description: 'The color of the subtitle text.',
     },
 
     // GENERAL category
@@ -696,18 +696,7 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
         { value: 'right', label: 'Right-Aligned' },
       ],
     },
-    {
-      key: 'showLogo',
-      label: 'Show Logo',
-      type: 'select',
-      category: 'general',
-      defaultValue: true,
-      description: 'Show or hide the business logo in the hero section.',
-      options: [
-        { value: true, label: 'Yes' },
-        { value: false, label: 'No' },
-      ],
-    },
+
     {
       key: 'textShadow',
       label: 'Text Shadow',
@@ -886,6 +875,109 @@ export function getPlanSpecificConfig(
     } else {
       // For premium plan, return full config with all gradient options
       return baseConfig;
+    }
+  }
+
+  if (section === 'pages.home.hero1') {
+    if (plan === 'standard') {
+      // Standard plan: Remove video options, add CTA button controls
+      return baseConfig
+        .filter((field) => {
+          // Remove video-related fields
+          return !['backgroundType', 'backgroundVideo'].includes(field.key);
+        })
+        .map((field) => {
+          // Make backgroundImage always required for standard
+          if (field.key === 'backgroundImage') {
+            return {
+              ...field,
+              description:
+                'Required: Upload your hero background image (1920x1080px recommended)',
+            };
+          }
+          return field;
+        })
+        .concat([
+          // Add CTA button configuration for standard plan
+          {
+            key: 'showButton',
+            label: 'Show Call-to-Action Button',
+            type: 'select',
+            category: 'content',
+            defaultValue: true,
+            description: 'Show or hide the call-to-action button',
+            options: [
+              { value: true, label: 'Yes' },
+              { value: false, label: 'No' },
+            ],
+          },
+          {
+            key: 'buttonBackgroundColor',
+            label: 'Button Background Color',
+            type: 'color',
+            category: 'styling',
+            defaultValue: '#2876ff',
+            description: 'Background color of the call-to-action button',
+          },
+          {
+            key: 'buttonTextColor',
+            label: 'Button Text Color',
+            type: 'color',
+            category: 'styling',
+            defaultValue: '#ffffff',
+            description: 'Text color of the call-to-action button',
+          },
+        ]);
+    } else {
+      // Premium plan: Full config with video support and advanced CTA options
+      return baseConfig.concat([
+        // Premium CTA options (more advanced)
+        {
+          key: 'showButton',
+          label: 'Show Call-to-Action Button',
+          type: 'select',
+          category: 'content',
+          defaultValue: true,
+          description: 'Show or hide the call-to-action button',
+          options: [
+            { value: true, label: 'Yes' },
+            { value: false, label: 'No' },
+          ],
+        },
+        {
+          key: 'buttonText',
+          label: 'Button Text',
+          type: 'text',
+          category: 'content',
+          defaultValue: 'Get Started',
+          description: 'Custom text for the call-to-action button',
+        },
+        {
+          key: 'buttonLink',
+          label: 'Button Link',
+          type: 'text',
+          category: 'content',
+          defaultValue: '/contact',
+          description:
+            'URL or page path for the button (e.g., /about, /contact, https://example.com)',
+        },
+        {
+          key: 'buttonBackgroundColor',
+          label: 'Button Background Color',
+          type: 'color',
+          category: 'styling',
+          defaultValue: '#9e6aff',
+          description: 'Background color of the call-to-action button',
+        },
+        {
+          key: 'buttonTextColor',
+          label: 'Button Text Color',
+          type: 'color',
+          category: 'styling',
+          defaultValue: '#ffffff',
+          description: 'Text color of the call-to-action button',
+        },
+      ]);
     }
   }
 

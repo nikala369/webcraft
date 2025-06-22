@@ -105,8 +105,16 @@ export class ComponentCustomizerComponent implements OnInit {
   // Component data handling
   localData = signal<any>({});
 
+  // Cache field configuration to prevent recalculation and disappearing fields
+  private _cachedFieldsConfig: FieldConfig[] | null = null;
+
   // Helper to get field config for this component
   getFieldsConfig(): FieldConfig[] {
+    // Return cached config if available
+    if (this._cachedFieldsConfig) {
+      return this._cachedFieldsConfig;
+    }
+
     try {
       // Safety checks
       if (!this.componentKey) {
@@ -131,6 +139,8 @@ export class ComponentCustomizerComponent implements OnInit {
         return [];
       }
 
+      // Cache the configuration
+      this._cachedFieldsConfig = config;
       return config;
     } catch (error) {
       console.error('Error in getFieldsConfig:', error);
@@ -196,7 +206,6 @@ export class ComponentCustomizerComponent implements OnInit {
       if (!Array.isArray(allFields)) return [];
 
       const currentActiveCategory = this.activeCategory(); // Use signal value
-      const data = this.localData(); // Read signal once
 
       // Debug: Log fields for standard plan header styling
       if (
@@ -228,7 +237,7 @@ export class ComponentCustomizerComponent implements OnInit {
         return [];
       }
 
-      // Filter fields based on component and plan logic
+      // Filter fields based on component and plan logic (STATIC FILTERING ONLY)
       let filteredFields = categoryFields;
 
       if (
@@ -244,37 +253,27 @@ export class ComponentCustomizerComponent implements OnInit {
         });
       }
 
-      // Apply shouldShowField logic here to avoid calling it in template
+      // Only apply static filtering that doesn't depend on changing data
       return filteredFields.filter((field) => {
         // Safety check: if field is undefined or null, don't show it
         if (!field || !field.key) {
           return false;
         }
 
-        // For header component, handle gradient field visibility
+        // For header component, STATIC filtering only
         if (this.componentKey === 'header') {
-          // Only show custom gradient fields if custom is selected AND we're on premium plan
+          // For standard plan, these fields should never exist in the config anyway
           if (
-            field.key === 'customGradientColor1' ||
-            field.key === 'customGradientColor2' ||
-            field.key === 'customGradientAngle'
+            this.planType === 'standard' &&
+            (field.key === 'customGradientColor1' ||
+              field.key === 'customGradientColor2' ||
+              field.key === 'customGradientAngle')
           ) {
-            // These fields should only exist in premium plan, but double-check
-            if (this.planType === 'standard') {
-              return false; // Never show gradient fields in standard plan
-            }
-
-            // Only check headerBackgroundType if we're on premium plan
-            try {
-              const val = data['headerBackgroundType'];
-              return val === 'custom';
-            } catch (error) {
-              console.error('Error checking headerBackgroundType:', error);
-              return false;
-            }
+            return false;
           }
         }
 
+        // All other fields are shown by default
         return true;
       });
     } catch (error) {
@@ -361,6 +360,14 @@ export class ComponentCustomizerComponent implements OnInit {
 
   // Get formatted component title for display
   getComponentTitle(): string {
+    // Special case for hero1 in standard plan
+    if (
+      this.componentKey === 'pages.home.hero1' &&
+      this.planType === 'standard'
+    ) {
+      return 'Standard Hero';
+    }
+
     const parts = this.componentKey.split('.');
     const rawName = parts[parts.length - 1];
     return (
@@ -498,6 +505,25 @@ export class ComponentCustomizerComponent implements OnInit {
   // Helper for displaying field labels
   shouldShowLabel(field: FieldConfig | any): boolean {
     return field.type !== 'boolean';
+  }
+
+  // Helper to determine if the entire field should be displayed
+  shouldShowField(field: FieldConfig | any): boolean {
+    // For header component, handle gradient field visibility dynamically
+    if (this.componentKey === 'header' && this.planType === 'premium') {
+      // Only show custom gradient fields if custom is selected
+      if (
+        field.key === 'customGradientColor1' ||
+        field.key === 'customGradientColor2' ||
+        field.key === 'customGradientAngle'
+      ) {
+        const val = this.localData()['headerBackgroundType'];
+        return val === 'custom';
+      }
+    }
+
+    // All other fields are shown by default
+    return true;
   }
 
   // Helper to determine if the entire field label row should be displayed

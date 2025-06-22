@@ -422,4 +422,26 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
 
     return null;
   }
+
+  /**
+   * Handle logo loading errors by showing fallback
+   */
+  onLogoError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img && img.src !== '/assets/standard-header/default-logo-white.svg') {
+      console.warn('Logo failed to load, using fallback');
+      img.src = '/assets/standard-header/default-logo-white.svg';
+    }
+  }
+
+  /**
+   * Handle successful logo loading
+   */
+  onLogoLoad(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      // Add loaded class for any additional styling
+      img.classList.add('logo-loaded');
+    }
+  }
 }

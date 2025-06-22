@@ -42,10 +42,6 @@
 
     <div class="hero-content-wrapper">
       <div class="hero-content" [ngClass]="'layout-' + getLayout()">
-        <div *ngIf="shouldShowLogo()" class="business-logo">
-          <img [src]="getLogoUrl()" alt="Business Logo" />
-        </div>
-
         <!-- Text content (can be hidden) -->
         <ng-container *ngIf="shouldShowContentText()">
           <!-- Title -->
@@ -65,6 +61,19 @@
           >
             {{ getHeroSubtitle() }}
           </p>
+
+          <!-- CTA Button -->
+          <div *ngIf="shouldShowButton()" class="hero-cta">
+            <button
+              class="hero-button"
+              [style.background-color]="getButtonBackgroundColor()"
+              [style.color]="getButtonTextColor()"
+              (click)="handleCtaClick()"
+              type="button"
+            >
+              {{ getButtonText() }}
+            </button>
+          </div>
         </ng-container>
       </div>
     </div>

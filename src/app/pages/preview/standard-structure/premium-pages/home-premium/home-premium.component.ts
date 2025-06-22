@@ -64,9 +64,39 @@ export class HomePremiumComponent {
   }
 
   handleSectionEdit(sectionId: string) {
-    // Open the customizer or handle edit logic for the section
-    // Example: emit an event, open a sidebar, etc.
     console.log('Edit requested for section:', sectionId);
-    // You can emit an event or call a service here
+
+    // Emit the section selected event to open the customizer
+    // Map sectionId to the correct path for premium home sections
+    let sectionPath = '';
+    let sectionName = '';
+
+    switch (sectionId) {
+      case 'hero1':
+        sectionPath = 'pages.home.hero1';
+        sectionName = 'Hero Section';
+        break;
+      case 'aboutPreview':
+        sectionPath = 'pages.home.aboutPreview';
+        sectionName = 'About Preview';
+        break;
+      case 'featuredPreview':
+        sectionPath = 'pages.home.featuredPreview';
+        sectionName = 'Featured Preview';
+        break;
+      case 'ctaSection':
+        sectionPath = 'pages.home.ctaSection';
+        sectionName = 'Call to Action';
+        break;
+      default:
+        sectionPath = `pages.home.${sectionId}`;
+        sectionName = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+    }
+
+    this.sectionSelected.emit({
+      key: sectionId,
+      name: sectionName,
+      path: sectionPath,
+    });
   }
 }

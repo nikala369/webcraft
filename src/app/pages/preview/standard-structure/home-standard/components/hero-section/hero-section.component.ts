@@ -11,6 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
 import { ThemeColorsService } from '../../../../../../core/services/theme/theme-colors.service';
+import { BusinessConfigService } from '../../../../../../core/services/business-config/business-config.service';
 import {
   Customizations,
   HeroData,
@@ -39,6 +40,7 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   }>();
 
   private themeColorsService = inject(ThemeColorsService);
+  private businessConfigService = inject(BusinessConfigService);
   private el = inject(ElementRef);
   private scrollHandler: (() => void) | null = null;
 
@@ -223,23 +225,6 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get business logo or fallback
-   */
-  getLogoUrl(): string {
-    return (
-      this.customizations?.header?.logoUrl ||
-      'assets/standard-header/default-logo-white.svg'
-    );
-  }
-
-  /**
-   * Check if logo should be displayed
-   */
-  shouldShowLogo(): boolean {
-    return this.data()?.showLogo !== false;
-  }
-
-  /**
    * Get hero title or fallback
    */
   getHeroTitle(): string {
@@ -313,5 +298,140 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
       subtitles[this.businessType as keyof typeof subtitles] ||
       'Professional solutions tailored to your needs'
     );
+  }
+
+  // ======== CTA BUTTON METHODS ========
+
+  /**
+   * Check if CTA button should be displayed
+   */
+  shouldShowButton(): boolean {
+    return this.data()?.showButton !== false;
+  }
+
+  /**
+   * Get CTA button text (auto-generated for standard, customizable for premium)
+   */
+  getButtonText(): string {
+    // For premium plan, use custom text if provided
+    if (this.planType === 'premium' && this.data()?.buttonText) {
+      return this.data().buttonText;
+    }
+
+    // For standard plan or premium without custom text, use business-type-specific text
+    const ctaConfig = this.businessConfigService.getCtaButtonConfig(
+      this.businessType
+    );
+    return ctaConfig?.text || 'Get Started';
+  }
+
+  /**
+   * Get CTA button background color
+   */
+  getButtonBackgroundColor(): string {
+    return this.data()?.buttonBackgroundColor || '#2876ff';
+  }
+
+  /**
+   * Get CTA button text color
+   */
+  getButtonTextColor(): string {
+    return this.data()?.buttonTextColor || '#ffffff';
+  }
+
+  /**
+   * Handle CTA button click - smooth scroll to target section
+   */
+  handleCtaClick(): void {
+    // For premium plan, handle custom links
+    if (this.planType === 'premium' && this.data()?.buttonLink) {
+      const link = this.data().buttonLink;
+
+      // Check if it's an external URL
+      if (link.startsWith('http://') || link.startsWith('https://')) {
+        window.open(link, '_blank');
+        return;
+      }
+
+      // Check if it's an internal page route
+      if (link.startsWith('/')) {
+        // Navigate to internal page (would need router injection)
+        console.log('Navigate to:', link);
+        return;
+      }
+    }
+
+    // For standard plan or premium without custom link, scroll to business-type-specific section
+    const ctaConfig = this.businessConfigService.getCtaButtonConfig(
+      this.businessType
+    );
+    const targetId =
+      this.data()?.buttonScrollTargetID ||
+      ctaConfig?.scrollTargetID ||
+      'contact';
+
+    this.scrollToSection(targetId);
+  }
+
+  /**
+   * Smooth scroll to a section by ID
+   */
+  private scrollToSection(sectionId: string): void {
+    console.log(`[HeroSection] Attempting to scroll to section: ${sectionId}`);
+
+    // Wait a bit for DOM to be ready
+    setTimeout(() => {
+      // Find the target element using multiple strategies
+      let targetElement = document.getElementById(sectionId);
+
+      if (!targetElement) {
+        // Try with section selector
+        targetElement = document.querySelector(
+          `section#${sectionId}`
+        ) as HTMLElement;
+      }
+
+      if (!targetElement) {
+        // Try within the structure container
+        const structureContainer = document.querySelector(
+          '.structure-container'
+        );
+        if (structureContainer) {
+          targetElement = structureContainer.querySelector(
+            `#${sectionId}`
+          ) as HTMLElement;
+        }
+      }
+
+      if (!targetElement) {
+        // Try finding any element with the matching ID attribute
+        targetElement = document.querySelector(
+          `[id="${sectionId}"]`
+        ) as HTMLElement;
+      }
+
+      if (targetElement) {
+        console.log(`[HeroSection] Target element found:`, targetElement);
+
+        // Simple scrollIntoView approach that works in all cases
+        targetElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest',
+        });
+
+        console.log(
+          `[HeroSection] Scrolled to ${sectionId} using scrollIntoView`
+        );
+      } else {
+        console.warn(
+          `[HeroSection] Target section "${sectionId}" not found for CTA button scroll`
+        );
+        console.log(
+          '[HeroSection] Available elements with IDs:',
+          Array.from(document.querySelectorAll('[id]')).map((el) => el.id)
+        );
+      }
+    }, 100); // Small delay to ensure DOM is ready
   }
 }

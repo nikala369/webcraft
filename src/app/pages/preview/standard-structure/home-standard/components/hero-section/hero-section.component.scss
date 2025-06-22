@@ -38,6 +38,33 @@
   transition: background-image 1s ease-in-out;
   box-shadow: inset 0 -10px 20px -10px rgba(0, 0, 0, 0.2);
 
+  /* Add subtle texture overlay for depth */
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        circle at 20% 50%,
+        rgba(255, 255, 255, 0.02) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 80% 20%,
+        rgba(255, 255, 255, 0.02) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 40% 80%,
+        rgba(255, 255, 255, 0.02) 0%,
+        transparent 50%
+      );
+    z-index: 1;
+    pointer-events: none;
+  }
+
   /* Background container for both image and video */
   .hero-background {
     position: absolute;
@@ -82,7 +109,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 1;
+      z-index: 2; /* Above texture but below content */
 
       &.overlay-none {
         opacity: 0;
@@ -105,7 +132,7 @@
   /* Wrapper to control content positioning and animations */
   .hero-content-wrapper {
     position: relative;
-    z-index: 2;
+    z-index: 3; /* Increased to be above texture overlay */
     width: 100%;
     padding: 0 40px;
     max-width: 1400px;
@@ -169,20 +196,6 @@
       }
     }
 
-    .business-logo {
-      margin-bottom: 2rem;
-      position: relative;
-      transition: all 0.2s ease;
-
-      &:hover {
-        transform: scale(1.02);
-      }
-
-      img {
-        max-height: 80px;
-      }
-    }
-
     .hero-title {
       font-size: 3.5rem;
       font-weight: 800;
@@ -226,76 +239,107 @@
       width: fit-content;
 
       .hero-button {
-        padding: 16px 35px;
-        font-size: 1rem;
-        font-weight: 600;
-        border-radius: 50px;
-        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-          box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-        letter-spacing: 0.5px;
+        padding: 18px 40px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 12px;
+        letter-spacing: 0.8px;
         border: none;
         cursor: pointer;
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
         position: relative;
         overflow: hidden;
         z-index: 1;
         text-decoration: none;
+        text-transform: uppercase;
+        font-family: inherit;
 
-        /* Add a larger pseudo-element to expand hover area */
+        /* Professional shadow system */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+        /* Smooth transitions */
+        transition: transform 0.3s ease, box-shadow 0.3s ease,
+          background-color 0.3s ease;
+
+        /* Elegant sweep effect */
         &::before {
           content: "";
           position: absolute;
-          top: -10px;
+          top: 0;
           left: -100%;
           width: 100%;
-          height: calc(100% + 20px);
-          background: linear-gradient(
-            to right,
-            rgba(255, 255, 255, 0.2),
-            rgba(255, 255, 255, 0)
-          );
-          transform: skewX(-25deg);
-          transition: left 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-            opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-          pointer-events: none;
-          opacity: 0;
-        }
-
-        /* Background fill effect */
-        &::after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 0;
           height: 100%;
-          background-color: rgba(255, 255, 255, 0.1);
-          transition: width 0.55s ease;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent
+          );
+          transition: left 0.5s ease;
           pointer-events: none;
-          border-radius: 50px;
-          z-index: -1;
+          z-index: 2;
         }
 
-        /* Enhanced hover states */
+        /* Hover states */
         &:hover {
-          transform: translateY(-2.5px);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25),
+            0 3px 12px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+          /* Trigger elegant sweep from left to right */
+          &::before {
+            left: 100%;
+          }
+        }
+
+        /* Mouse leave - reverse sweep effect */
+        &:not(:hover)::before {
+          transition: left 0.4s ease;
+          left: -100%;
+        }
+
+        /* Active/pressed state */
+        &:active {
+          transform: translateY(-1px);
+          transition: transform 0.1s ease;
+          box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2),
+            0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        /* Focus state for accessibility */
+        &:focus {
+          outline: none;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2),
+            0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        /* Remove any click outline */
+        &:focus-visible {
+          outline: none;
+        }
+
+        /* Loading state animation (for future use) */
+        &.loading {
+          pointer-events: none;
 
           &::before {
-            left: 150%;
-            opacity: 1;
-          }
-
-          &::after {
-            width: 100%;
+            animation: loading-shine 1.5s infinite;
           }
         }
+      }
+    }
 
-        /* Active state */
-        &:active {
-          transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
+    /* Loading animation keyframes */
+    @keyframes loading-shine {
+      0% {
+        left: -100%;
+      }
+      50% {
+        left: 100%;
+      }
+      100% {
+        left: 100%;
       }
     }
   }
@@ -372,13 +416,31 @@
 
       .hero-cta {
         flex-wrap: wrap;
-        max-width: 280px;
+        max-width: 320px;
         width: 100%;
 
         .hero-button {
           width: 100%;
-          font-size: 0.85rem;
-          padding: 14px 30px;
+          font-size: 1rem;
+          padding: 18px 32px; /* Increased for better touch targets */
+          letter-spacing: 0.6px;
+          border-radius: 10px;
+          min-height: 54px; /* Ensure good touch target size */
+
+          /* Enhanced mobile interactions */
+          &:hover {
+            transform: translateY(-2px) scale(1.01);
+          }
+
+          &:active {
+            transform: translateY(0) scale(0.99);
+            transition: transform 0.1s ease;
+          }
+
+          /* Improve touch feedback */
+          &:focus {
+            transform: translateY(-1px);
+          }
         }
       }
     }

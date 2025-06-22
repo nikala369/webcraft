@@ -9,9 +9,12 @@
   >
     <app-hero-section
       [data]="heroData"
+      [customizations]="wholeData()"
       [isMobileLayout]="isMobileLayout"
+      [isMobileView]="isMobileView"
       [planType]="planType"
       [businessType]="businessType"
+      [editable]="editable"
       (sectionSelected)="handleSectionSelection($event)"
     ></app-hero-section>
   </app-section-hover-wrapper>

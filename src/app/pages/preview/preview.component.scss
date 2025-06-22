@@ -262,6 +262,20 @@ $z-layers: (
           background-color: rgba(255, 255, 255, 0.18);
           box-shadow: 0 2px 12px rgba(255, 255, 255, 0.1);
         }
+
+        /* Ensure consistent icon sizing for mobile toggle */
+        ::ng-deep app-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          svg {
+            width: 25px !important;
+            height: 25px !important;
+            max-width: 25px;
+            max-height: 25px;
+          }
+        }
       }
 
       .fullscreen-icon-container {
@@ -715,6 +729,35 @@ $z-layers: (
       transform: translateX(-50%) !important;
       right: auto !important; /* Reset any right property */
       margin: 0 !important; /* Reset any margins */
+
+      /* Scale down content for mobile view simulation */
+      ::ng-deep {
+        .structure-header__logo {
+          width: 100px !important;
+          height: 35px !important;
+
+          .logo {
+            max-height: 28px !important;
+            min-height: 20px !important;
+          }
+        }
+
+        /* Scale down hero content appropriately */
+        .hero-content {
+          .business-logo img {
+            max-width: 120px !important;
+            max-height: 120px !important;
+          }
+
+          .hero-title {
+            font-size: 2rem !important;
+          }
+
+          .hero-subtitle {
+            font-size: 1rem !important;
+          }
+        }
+      }
     }
   }
 

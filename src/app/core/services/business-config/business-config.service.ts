@@ -15,10 +15,46 @@ import {
   ServicesData,
 } from '../../models/website-customizations';
 
+export interface BusinessTypeConfig {
+  displayName: string;
+  color: string;
+  sections: string[];
+  // CTA Button configuration for hero1
+  ctaButton?: {
+    text: string;
+    scrollTargetID: string;
+    description: string;
+  };
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class BusinessConfigService {
+  // Business configs will come from backend template data
+  // This is now just a fallback for development
+  private businessConfigs: Record<string, BusinessTypeConfig> = {};
+
+  /**
+   * Set business config from backend template data
+   * This should be called when template is loaded from API
+   */
+  setBusinessConfigFromTemplate(
+    businessType: string,
+    templateConfig: any
+  ): void {
+    this.businessConfigs[businessType] = {
+      displayName: templateConfig.displayName || businessType,
+      color: templateConfig.brandColor || '#666666',
+      sections: templateConfig.sections || ['hero1', 'about', 'contact'],
+      ctaButton: templateConfig.ctaButton || {
+        text: 'Get Started',
+        scrollTargetID: 'contact',
+        description: 'Default CTA button',
+      },
+    };
+  }
+
   /**
    * Get menu items for a specific business type and plan
    */
@@ -107,6 +143,9 @@ export class BusinessConfigService {
       portfolio: 'Showcasing creativity and skill in every project',
     };
 
+    // Get CTA button configuration for this business type
+    const ctaConfig = this.getCtaButtonConfig(businessType);
+
     return {
       backgroundType: 'image',
       backgroundImage: 'assets/standard-hero1/background-image1.jpg',
@@ -121,10 +160,15 @@ export class BusinessConfigService {
         heroSubtitles[businessType as keyof typeof heroSubtitles] ||
         'Professional solutions tailored to your business needs',
       layout: 'center',
-      showLogo: true,
       titleColor: '#ffffff',
       subtitleColor: '#f0f0f0',
       textShadow: 'medium',
+      // CTA Button defaults
+      showButton: true,
+      buttonText: ctaConfig?.text || 'Get Started',
+      buttonScrollTargetID: ctaConfig?.scrollTargetID || 'contact',
+      buttonBackgroundColor: '#2876ff',
+      buttonTextColor: '#ffffff',
     };
   }
 
@@ -699,5 +743,64 @@ export class BusinessConfigService {
       default:
         return defaultUrls;
     }
+  }
+
+  getBusinessTypeConfig(businessType: string): BusinessTypeConfig | null {
+    return this.businessConfigs[businessType] || null;
+  }
+
+  getAllBusinessTypes(): Record<string, BusinessTypeConfig> {
+    return { ...this.businessConfigs };
+  }
+
+  getBusinessTypeDisplayName(businessType: string): string {
+    const config = this.getBusinessTypeConfig(businessType);
+    return config?.displayName || businessType;
+  }
+
+  getBusinessTypeColor(businessType: string): string {
+    const config = this.getBusinessTypeConfig(businessType);
+    return config?.color || '#666666';
+  }
+
+  getBusinessTypeSections(businessType: string): string[] {
+    const config = this.getBusinessTypeConfig(businessType);
+    return config?.sections || ['hero1', 'about', 'services', 'contact'];
+  }
+
+  /**
+   * Get CTA button configuration for a specific business type
+   */
+  getCtaButtonConfig(
+    businessType: string
+  ): { text: string; scrollTargetID: string; description: string } | null {
+    const config = this.getBusinessTypeConfig(businessType);
+    return config?.ctaButton || null;
+  }
+
+  /**
+   * Generate default hero1 data with business-type-specific CTA button
+   */
+  getDefaultHero1Data(businessType: string): any {
+    const ctaConfig = this.getCtaButtonConfig(businessType);
+
+    return {
+      backgroundImage: '',
+      title: 'Grow Your Business With Us',
+      subtitle: 'Professional solutions tailored to your business needs',
+      overlayOpacity: 'medium',
+      overlayColor: '#000000',
+      showContentText: true,
+      layout: 'center',
+      titleColor: '#ffffff',
+      subtitleColor: '#f0f0f0',
+      textShadow: 'medium',
+      // CTA Button defaults
+      showButton: true,
+      buttonText: ctaConfig?.text || 'Get Started',
+      buttonScrollTargetID: ctaConfig?.scrollTargetID || 'contact',
+      buttonBackgroundColor: '#2876ff',
+      buttonTextColor: '#ffffff',
+    };
   }
 }
