@@ -23,9 +23,35 @@ import { ModalService } from '../../../../core/services/modal/modal.service';
   styleUrls: ['./component-customizer.component.scss'],
 })
 export class ComponentCustomizerComponent implements OnInit {
-  @Input() componentKey!: string;
+  private _componentKey!: string;
+  @Input() set componentKey(value: string) {
+    if (this._componentKey !== value) {
+      this._componentKey = value;
+      // Clear cached config when component key changes
+      this._cachedFieldsConfig = null;
+    }
+  }
+  get componentKey(): string {
+    return this._componentKey;
+  }
+
   @Input() componentPath?: string;
-  @Input() planType: string = 'standard'; // Default to standard plan
+
+  private _planType: string = 'standard';
+  @Input() set planType(value: string) {
+    if (this._planType !== value) {
+      console.log(
+        `[ComponentCustomizer] Plan type changed from ${this._planType} to ${value} - clearing cache`
+      );
+      this._planType = value;
+      // Clear cached config when plan type changes
+      this._cachedFieldsConfig = null;
+    }
+  }
+  get planType(): string {
+    return this._planType;
+  }
+
   @Input() businessType!: string;
   originalData: any;
   isVisible = false;
@@ -132,6 +158,26 @@ export class ComponentCustomizerComponent implements OnInit {
         this.componentKey,
         this.planType as 'standard' | 'premium'
       );
+
+      // Debug log for header configuration
+      if (this.componentKey === 'header') {
+        console.log(
+          `[ComponentCustomizer] Loading config for header with plan: ${this.planType}`
+        );
+        console.log(
+          `[ComponentCustomizer] Header config fields:`,
+          config.map((f) => f.key)
+        );
+        const headerBgType = config.find(
+          (f) => f.key === 'headerBackgroundType'
+        );
+        if (headerBgType) {
+          console.log(
+            `[ComponentCustomizer] headerBackgroundType options:`,
+            headerBgType.options
+          );
+        }
+      }
 
       // Safety check for config result
       if (!Array.isArray(config)) {
