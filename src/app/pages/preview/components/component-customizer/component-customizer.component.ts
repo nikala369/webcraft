@@ -672,6 +672,52 @@ export class ComponentCustomizerComponent implements OnInit {
     // Update the field value
     this.localData.update((data) => ({ ...data, [fieldKey]: typedValue }));
 
+    // SPECIAL HANDLING: When headerBackgroundType changes to 'custom', apply default values for gradient fields
+    if (fieldKey === 'headerBackgroundType' && typedValue === 'custom') {
+      const allFields = this.getFieldsConfig();
+      const currentData = this.localData();
+
+      // Apply defaults for gradient fields that are now visible and don't have values
+      this.localData.update((data) => {
+        const updatedData = { ...data };
+
+        // Apply default for customGradientAngle if not set
+        if (!updatedData['customGradientAngle']) {
+          const gradientAngleField = allFields.find(
+            (f) => f.key === 'customGradientAngle'
+          );
+          if (gradientAngleField?.defaultValue !== undefined) {
+            updatedData['customGradientAngle'] =
+              gradientAngleField.defaultValue;
+          }
+        }
+
+        // Apply default for customGradientColor1 if not set
+        if (!updatedData['customGradientColor1']) {
+          const gradientColor1Field = allFields.find(
+            (f) => f.key === 'customGradientColor1'
+          );
+          if (gradientColor1Field?.defaultValue !== undefined) {
+            updatedData['customGradientColor1'] =
+              gradientColor1Field.defaultValue;
+          }
+        }
+
+        // Apply default for customGradientColor2 if not set
+        if (!updatedData['customGradientColor2']) {
+          const gradientColor2Field = allFields.find(
+            (f) => f.key === 'customGradientColor2'
+          );
+          if (gradientColor2Field?.defaultValue !== undefined) {
+            updatedData['customGradientColor2'] =
+              gradientColor2Field.defaultValue;
+          }
+        }
+
+        return updatedData;
+      });
+    }
+
     // Special handling for hero section background type
     if (fieldKey === 'backgroundType') {
       // Switching between image and video modes
@@ -1265,5 +1311,12 @@ export class ComponentCustomizerComponent implements OnInit {
     }
   }
 
-  // REMOVED: shouldShowField method - logic moved to fieldsForCategory computed signal
+  /**
+   * Show notification when standard user tries to access video backgrounds
+   */
+  showVideoPremiumNotice(): void {
+    this.toastService.error(
+      'Video backgrounds are available in Premium plan. Upgrade to unlock this feature!'
+    );
+  }
 }

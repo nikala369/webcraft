@@ -82,6 +82,35 @@
         </div>
       </div>
 
+      <!-- Hero1 Premium Upsell Section for Standard Plan -->
+      <div
+        *ngIf="
+          planType === 'standard' &&
+          componentKey === 'pages.home.hero1' &&
+          activeCategory() === 'content'
+        "
+        class="premium-hero-upsell"
+        style="margin-bottom: 1.5rem"
+      >
+        <div class="hero-preview-row">
+          <div class="hero-feature-preview">
+            <div class="feature-icon">🎬</div>
+            <div class="feature-label">Video Backgrounds</div>
+          </div>
+          <div class="hero-feature-preview">
+            <div class="feature-icon">🎨</div>
+            <div class="feature-label">Custom Animations</div>
+          </div>
+        </div>
+        <div class="upsell-text">
+          <span class="lock-icon">🔒</span>
+          <span
+            >Upgrade to <b>Premium</b> to unlock video backgrounds and exclusive
+            hero banner styles!</span
+          >
+        </div>
+      </div>
+
       <div class="fields-container">
         <ng-container *ngFor="let field of fieldsForCategory(); let i = index">
           <div
@@ -193,10 +222,24 @@
                       </svg>
                       <span>Image</span>
                     </button>
+                    <!-- Video button: available in premium, locked for standard -->
                     <button
                       class="type-btn"
-                      [ngClass]="{ active: localData()[field.key] === 'video' }"
-                      (click)="updateSelectField(field.key, 'video')"
+                      [ngClass]="{
+                        active: localData()[field.key] === 'video',
+                        locked: planType === 'standard'
+                      }"
+                      [disabled]="planType === 'standard'"
+                      (click)="
+                        planType === 'premium'
+                          ? updateSelectField(field.key, 'video')
+                          : showVideoPremiumNotice()
+                      "
+                      [title]="
+                        planType === 'standard'
+                          ? 'Video backgrounds available in Premium plan'
+                          : 'Video background'
+                      "
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -211,6 +254,9 @@
                         <path d="M10 8l6 4-6 4V8z" />
                       </svg>
                       <span>Video</span>
+                      <span *ngIf="planType === 'standard'" class="premium-lock"
+                        >🔒</span
+                      >
                     </button>
                   </div>
                 </ng-container>
