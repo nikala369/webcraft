@@ -15,7 +15,8 @@ export interface HeaderData {
   menuItems?: Array<{ id: number; label: string; link: string }>;
   // Premium fields
   headerBackgroundType?:
-    | 'none'
+    | 'solid'
+    | 'none' // deprecated, kept for backward compatibility
     | 'sunset'
     | 'ocean'
     | 'forest'

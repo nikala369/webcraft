@@ -14,11 +14,12 @@ import { FieldConfig, getPlanSpecificConfig } from './customizing-form-config';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../../core/services/toast/toast.service';
 import { ModalService } from '../../../../core/services/modal/modal.service';
+import { CustomSelectComponent } from '../../../../shared/components/custom-select/custom-select.component';
 
 @Component({
   selector: 'app-component-customizer',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CustomSelectComponent],
   templateUrl: './component-customizer.component.html',
   styleUrls: ['./component-customizer.component.scss'],
 })
@@ -116,6 +117,19 @@ export class ComponentCustomizerComponent implements OnInit {
         });
       }
 
+      // Smart CTA button logging for hero sections
+      if (this.componentKey.includes('hero1')) {
+        console.log(
+          `[SmartCTA] Hero1 configuration for business type: ${this.businessType}`
+        );
+        console.log(`[SmartCTA] Plan: ${this.planType}`);
+        console.log(`[SmartCTA] Button text default: ${mergedData.buttonText}`);
+        console.log(
+          `[SmartCTA] Button scroll target: ${mergedData.buttonScrollTargetID}`
+        );
+        console.log(`[SmartCTA] Button link: ${mergedData.buttonLink}`);
+      }
+
       // Set the local data signal
       this.localData.set(mergedData);
     } else {
@@ -154,9 +168,11 @@ export class ComponentCustomizerComponent implements OnInit {
       }
 
       // Use the plan-specific config function to get fields appropriate for the plan type
+      // Pass business type for smart defaults
       const config = getPlanSpecificConfig(
         this.componentKey,
-        this.planType as 'standard' | 'premium'
+        this.planType as 'standard' | 'premium',
+        this.businessType // Pass business type for smart CTA defaults
       );
 
       // Debug log for header configuration
@@ -1318,5 +1334,20 @@ export class ComponentCustomizerComponent implements OnInit {
     this.toastService.error(
       'Video backgrounds are available in Premium plan. Upgrade to unlock this feature!'
     );
+  }
+
+  /**
+   * Convert field options to custom select format
+   */
+  getSelectOptions(field: FieldConfig): any[] {
+    if (!field.options) return [];
+
+    return field.options.map((option) => ({
+      value: option.value,
+      label: option.label,
+      icon:
+        option.icon ||
+        (option.label.includes('🌅') ? option.label.split(' ')[0] : undefined),
+    }));
   }
 }

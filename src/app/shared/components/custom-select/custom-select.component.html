@@ -1,0 +1,73 @@
+<div class="custom-select" [class.disabled]="disabled" [class.open]="isOpen()">
+  <label *ngIf="label" class="select-label">
+    {{ label }}
+    <span *ngIf="description" class="select-description">{{
+      description
+    }}</span>
+  </label>
+
+  <!-- Select trigger -->
+  <div
+    class="select-trigger"
+    (click)="toggleDropdown()"
+    [class.focused]="isOpen()"
+    [style.border-color]="isOpen() ? getAccentColor() : null"
+  >
+    <span class="select-value">
+      <span *ngIf="selectedOption()?.icon" class="option-icon">{{
+        selectedOption()?.icon
+      }}</span>
+      {{ displayText() }}
+    </span>
+    <svg
+      class="dropdown-arrow"
+      [class.rotated]="isOpen()"
+      width="12"
+      height="8"
+      viewBox="0 0 12 8"
+      fill="none"
+    >
+      <path
+        d="M1 1.5L6 6.5L11 1.5"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  </div>
+
+  <!-- Dropdown options -->
+  <div class="select-dropdown" *ngIf="isOpen()" [@dropdownAnimation]>
+    <!-- Options list -->
+    <div class="options-list">
+      <div
+        *ngFor="let option of options"
+        class="select-option"
+        [class.selected]="option.value === selectedValue()"
+        [class.disabled]="option.disabled"
+        [style.--accent-color]="getAccentColor()"
+        (click)="selectOption(option)"
+      >
+        <span *ngIf="option.icon" class="option-icon">{{ option.icon }}</span>
+        <span class="option-label">{{ option.label }}</span>
+        <svg
+          *ngIf="option.value === selectedValue()"
+          class="check-icon"
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+        >
+          <path
+            d="M13.5 4.5L6 12L2.5 8.5"
+            [attr.stroke]="getAccentColor()"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>

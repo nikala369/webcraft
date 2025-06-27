@@ -194,4 +194,20 @@ export class HomeStandardComponent implements OnInit, OnChanges {
   shouldDisplaySection(sectionKey: string): boolean {
     return this.getBusinessTypeSections().includes(sectionKey);
   }
+
+  /**
+   * Check if current business type should show restaurant-style menu section
+   */
+  isRestaurantType(): boolean {
+    return ['restaurant', 'cafe', 'bar'].includes(this.businessType);
+  }
+
+  /**
+   * Check if current business type should show services section
+   */
+  isServiceType(): boolean {
+    return ['salon', 'spa', 'beauty', 'fitness', 'gym'].includes(
+      this.businessType
+    );
+  }
 }

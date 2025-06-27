@@ -263,20 +263,39 @@
 
                 <!-- Default select dropdown for other select fields -->
                 <ng-template #defaultSelect>
-                  <select
-                    [id]="field.key"
+                  <!-- For header background type in standard plan, show as solid color only (no dropdown) -->
+                  <div
+                    *ngIf="
+                      componentKey === 'header' &&
+                      field.key === 'headerBackgroundType' &&
+                      planType === 'standard'
+                    "
+                    class="solid-color-notice"
+                  >
+                    <span class="solid-color-label"
+                      >Background Style: Solid Color</span
+                    >
+                    <p class="solid-color-hint">
+                      Premium plans unlock gradient backgrounds
+                    </p>
+                  </div>
+
+                  <!-- For all other selects, use our custom select component -->
+                  <app-custom-select
+                    *ngIf="
+                      !(
+                        componentKey === 'header' &&
+                        field.key === 'headerBackgroundType' &&
+                        planType === 'standard'
+                      )
+                    "
                     [ngModel]="localData()[field.key]"
                     (ngModelChange)="updateSelectField(field.key, $event)"
-                    class="select-input"
-                    [name]="field.key"
-                  >
-                    <option
-                      *ngFor="let option of field.options"
-                      [value]="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
+                    [options]="getSelectOptions(field)"
+                    [placeholder]="field.placeholder || 'Select ' + field.label"
+                    [description]="field.description"
+                    [planType]="planType === 'premium' ? 'premium' : 'standard'"
+                  ></app-custom-select>
                 </ng-template>
               </ng-container>
 

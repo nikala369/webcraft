@@ -1,0 +1,201 @@
+.custom-select {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+  z-index: 10; // Ensure select has proper z-index
+
+  &.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  // When dropdown is open, increase z-index
+  &.open {
+    z-index: 99998; // Just below the dropdown itself
+  }
+}
+
+.select-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #e0e0e0;
+
+  .select-description {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #999;
+  }
+}
+
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  &.focused {
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.1);
+  }
+
+  .select-value {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fff;
+    font-size: 0.875rem;
+
+    .option-icon {
+      font-size: 1.125rem;
+    }
+  }
+
+  .dropdown-arrow {
+    color: #999;
+    transition: transform 0.2s ease;
+
+    &.rotated {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 99999; // Extremely high z-index to cover all sidebar content
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  animation: dropdownSlide 0.2s ease-out;
+
+  // Ensure dropdown can extend beyond parent boundaries
+  min-width: 100%;
+  width: max-content;
+  max-width: 300px; // Reasonable max width
+
+  // When dropdown should appear above the select
+  &.dropdown-above {
+    top: auto;
+    bottom: calc(100% + 4px);
+    animation: dropdownSlideUp 0.2s ease-out;
+  }
+
+  @keyframes dropdownSlide {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes dropdownSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.options-list {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0.5rem;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+.select-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+
+  &:hover:not(.disabled) {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &.selected {
+    background: rgba(var(--accent-color-rgb, 40, 118, 255), 0.1);
+    color: var(--accent-color, #2876ff);
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .option-icon {
+    font-size: 1.125rem;
+    flex-shrink: 0;
+  }
+
+  .option-label {
+    flex: 1;
+    font-size: 0.875rem;
+    color: inherit;
+  }
+
+  .check-icon {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+}
+
+// Premium theme adjustments
+:host-context(.plan-premium) {
+  --accent-color: #9e6aff;
+  --accent-color-rgb: 158, 106, 255;
+}
+
+// Standard theme adjustments
+:host-context(.plan-standard) {
+  --accent-color: #2876ff;
+  --accent-color-rgb: 40, 118, 255;
+}

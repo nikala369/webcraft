@@ -26,9 +26,9 @@
 
     <!-- 3. Business-specific sections -->
 
-    <!-- Menu Section (Restaurant only) -->
+    <!-- Menu Section (Restaurant, Cafe, Bar) -->
     <app-menu-section
-      *ngIf="businessType === 'restaurant'"
+      *ngIf="isRestaurantType()"
       [data]="menuDataSignal"
       [isMobileLayout]="isMobileLayout"
       [isMobileView]="isMobileView"
@@ -38,9 +38,9 @@
     >
     </app-menu-section>
 
-    <!-- Services Section (Salon only) -->
+    <!-- Services Section (Salon, Spa, Beauty, Fitness, Gym) -->
     <app-services-section
-      *ngIf="businessType === 'salon'"
+      *ngIf="isServiceType()"
       [data]="servicesDataSignal"
       [isMobileLayout]="isMobileLayout"
       [isMobileView]="isMobileView"

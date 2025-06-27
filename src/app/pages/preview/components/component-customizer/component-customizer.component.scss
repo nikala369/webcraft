@@ -26,6 +26,7 @@ $premium-color: #9e6aff;
   display: flex;
   flex-direction: column;
   pointer-events: none;
+  overflow: visible; // Allow dropdowns to extend beyond container
 
   &.visible {
     pointer-events: all;
@@ -71,14 +72,13 @@ $premium-color: #9e6aff;
 .customizer-sidebar {
   position: relative;
   width: 100%;
-  max-height: 90vh;
-  height: 85vh;
+  height: 100vh; // Full height instead of 85vh
   background-color: $dark-bg;
   color: $light-text;
   box-shadow: 0 10px 30px $shadow-color;
-  border-bottom-left-radius: 15px;
-  border-bottom-right-radius: 15px;
-  overflow: hidden;
+  border-bottom-left-radius: 0; // Remove bottom radius for full height
+  border-bottom-right-radius: 0; // Remove bottom radius for full height
+  overflow: visible; // Allow dropdowns to extend beyond sidebar
   display: flex;
   flex-direction: column;
   z-index: 1001;
@@ -186,6 +186,7 @@ $premium-color: #9e6aff;
   .sidebar-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: visible; // Allow horizontal overflow for dropdowns
     height: calc(100% - 170px);
     padding: 20px 42.5px 55px 42.5px;
     scrollbar-width: thin;
@@ -215,9 +216,14 @@ $premium-color: #9e6aff;
       grid-template-columns: 1fr;
       gap: 15px;
       padding-bottom: 20px;
+      position: relative; // Only if needed for layout
+      // No z-index here
 
       .field-group {
         margin-bottom: 20px;
+        position: relative; // Needed for dropdown positioning
+        // No z-index here to avoid stacking context
+        // No transform here
 
         .field-label-row {
           display: flex;
@@ -340,10 +346,18 @@ $premium-color: #9e6aff;
           }
         }
 
+        // Custom select component - no z-index to avoid stacking context
+        app-custom-select {
+          position: relative;
+          // No z-index here to avoid creating stacking context
+        }
+
         // Color picker
         .color-field {
           display: flex;
           align-items: center;
+          position: relative;
+          // No z-index here
 
           .color-input {
             -webkit-appearance: none;
@@ -394,6 +408,9 @@ $premium-color: #9e6aff;
 
         // File upload field
         .file-field {
+          position: relative;
+          // No z-index here
+
           .file-controls {
             margin-bottom: 10px;
           }
@@ -478,6 +495,9 @@ $premium-color: #9e6aff;
 
         // List field
         .list-field {
+          position: relative;
+          // No z-index here
+
           .list-item {
             display: flex;
             align-items: center;
@@ -1005,14 +1025,12 @@ $premium-color: #9e6aff;
 }
 
 // Animations
-@keyframes fadeIn {
+@keyframes fadeInOpacity {
   from {
     opacity: 0;
-    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -1040,8 +1058,24 @@ $premium-color: #9e6aff;
   }
 }
 
-.field-group {
-  animation: fadeIn 0.3s ease-out forwards;
-  animation-delay: calc(var(--index) * 0.05s);
-  opacity: 0;
+// Solid color notice for standard plan
+.solid-color-notice {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+
+  .solid-color-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #e0e0e0;
+    margin-bottom: 0.25rem;
+  }
+
+  .solid-color-hint {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #999;
+  }
 }

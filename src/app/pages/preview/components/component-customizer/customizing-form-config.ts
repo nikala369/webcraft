@@ -393,6 +393,67 @@ export const servicesSectionPremiumConfig: FieldConfig[] = [
   },
 ];
 
+/**
+ * Get smart CTA button defaults based on business type
+ */
+function getSmartCTADefaults(
+  businessType: string,
+  plan: 'standard' | 'premium'
+) {
+  const defaults = {
+    buttonText: 'Get Started',
+    buttonScrollTargetID: 'contact',
+    buttonLink: '/contact',
+  };
+
+  switch (businessType) {
+    case 'restaurant':
+    case 'cafe':
+    case 'bar':
+      defaults.buttonText = 'View Menu';
+      defaults.buttonScrollTargetID = 'menu';
+      defaults.buttonLink = plan === 'premium' ? '/menu' : '#menu';
+      break;
+
+    case 'salon':
+    case 'spa':
+    case 'beauty':
+      defaults.buttonText = 'Book Appointment';
+      defaults.buttonScrollTargetID = 'services';
+      defaults.buttonLink = plan === 'premium' ? '/services' : '#services';
+      break;
+
+    case 'fitness':
+    case 'gym':
+      defaults.buttonText = 'Join Now';
+      defaults.buttonScrollTargetID = 'services';
+      defaults.buttonLink = plan === 'premium' ? '/services' : '#services';
+      break;
+
+    case 'architecture':
+    case 'portfolio':
+    case 'creative':
+      defaults.buttonText = 'View Portfolio';
+      defaults.buttonScrollTargetID = 'projects';
+      defaults.buttonLink = plan === 'premium' ? '/portfolio' : '#projects';
+      break;
+
+    case 'consulting':
+    case 'business':
+    case 'professional':
+      defaults.buttonText = 'Get Consultation';
+      defaults.buttonScrollTargetID = 'contact';
+      defaults.buttonLink = '/contact';
+      break;
+
+    default:
+      // Keep defaults for unknown business types
+      break;
+  }
+
+  return defaults;
+}
+
 export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
   header: [
     // Content settings
@@ -426,17 +487,17 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       label: 'Background Style',
       type: 'select',
       category: 'styling',
-      defaultValue: 'none',
-      description: 'Choose between solid color or premium gradients',
+      defaultValue: 'solid',
+      description: 'Choose your header background style',
       options: [
-        { value: 'none', label: 'Solid Color Only' },
-        { value: 'sunset', label: '🌅 Sunset Premium' },
-        { value: 'ocean', label: '🌊 Ocean Premium' },
-        { value: 'forest', label: '🌲 Forest Premium' },
-        { value: 'royal', label: '👑 Royal Premium' },
-        { value: 'fire', label: '🔥 Fire Premium' },
-        { value: 'midnight', label: '🌙 Midnight Premium' },
-        { value: 'custom', label: '🎨 Custom Gradient Premium' },
+        { value: 'solid', label: 'Solid Color' },
+        { value: 'sunset', label: '🌅 Sunset Gradient' },
+        { value: 'ocean', label: '🌊 Ocean Gradient' },
+        { value: 'forest', label: '🌲 Forest Gradient' },
+        { value: 'royal', label: '👑 Royal Gradient' },
+        { value: 'fire', label: '🔥 Fire Gradient' },
+        { value: 'midnight', label: '🌙 Midnight Gradient' },
+        { value: 'custom', label: '🎨 Custom Gradient' },
       ],
     },
     {
@@ -457,7 +518,7 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
     },
     {
       key: 'customGradientAngle',
-      label: 'Gradient Angle',
+      label: 'Gradient Direction',
       type: 'select',
       category: 'styling',
       defaultValue: 45,
@@ -834,7 +895,7 @@ export interface FieldConfig {
     | 'specializedList';
   category: 'general' | 'styling' | 'content' | 'advanced';
   defaultValue?: any;
-  options?: Array<{ value: any; label: string }>;
+  options?: Array<{ value: any; label: string; icon?: string }>;
   description?: string;
   required?: boolean;
   acceptedFileTypes?: string;
@@ -847,19 +908,20 @@ export interface FieldConfig {
  */
 export function getPlanSpecificConfig(
   section: string,
-  plan: 'standard' | 'premium'
+  plan: 'standard' | 'premium',
+  businessType?: string
 ): FieldConfig[] {
   const baseConfig = CustomizationFormConfig[section] || [];
 
   if (section === 'header') {
     if (plan === 'standard') {
-      // For standard plan, modify the header config to only show solid color option
+      // For standard plan, only show solid color option
       return baseConfig
         .map((field) => {
           if (field.key === 'headerBackgroundType') {
             return {
               ...field,
-              options: [{ value: 'none', label: 'Solid Color Only' }],
+              options: [{ value: 'solid', label: 'Solid Color' }],
             };
           }
           return field;
@@ -879,8 +941,17 @@ export function getPlanSpecificConfig(
   }
 
   if (section === 'pages.home.hero1') {
+    // Get smart CTA button defaults based on business type
+    const ctaDefaults = businessType
+      ? getSmartCTADefaults(businessType, plan)
+      : {
+          buttonText: 'Get Started',
+          buttonScrollTargetID: 'contact',
+          buttonLink: '/contact',
+        };
+
     if (plan === 'standard') {
-      // Standard plan: Remove video options, add CTA button controls
+      // Standard plan: Remove video options, add smart CTA button controls
       return baseConfig
         .filter((field) => {
           // Remove video-related fields
@@ -898,7 +969,7 @@ export function getPlanSpecificConfig(
           return field;
         })
         .concat([
-          // Add CTA button configuration for standard plan
+          // Add smart CTA button configuration for standard plan
           {
             key: 'showButton',
             label: 'Show Call-to-Action Button',
@@ -911,6 +982,7 @@ export function getPlanSpecificConfig(
               { value: false, label: 'No' },
             ],
           },
+          // Note: buttonText and buttonScrollTargetID are auto-generated based on business type for standard plan
           {
             key: 'buttonBackgroundColor',
             label: 'Button Background Color',
@@ -929,9 +1001,9 @@ export function getPlanSpecificConfig(
           },
         ]);
     } else {
-      // Premium plan: Full config with video support and advanced CTA options
+      // Premium plan: Full config with video support but smart CTA (no custom text/link)
       return baseConfig.concat([
-        // Premium CTA options (more advanced)
+        // Premium CTA options (smart defaults like standard, but with premium styling)
         {
           key: 'showButton',
           label: 'Show Call-to-Action Button',
@@ -944,23 +1016,7 @@ export function getPlanSpecificConfig(
             { value: false, label: 'No' },
           ],
         },
-        {
-          key: 'buttonText',
-          label: 'Button Text',
-          type: 'text',
-          category: 'content',
-          defaultValue: 'Get Started',
-          description: 'Custom text for the call-to-action button',
-        },
-        {
-          key: 'buttonLink',
-          label: 'Button Link',
-          type: 'text',
-          category: 'content',
-          defaultValue: '/contact',
-          description:
-            'URL or page path for the button (e.g., /about, /contact, https://example.com)',
-        },
+        // Note: buttonText and buttonScrollTargetID are auto-generated based on business type for premium plan too
         {
           key: 'buttonBackgroundColor',
           label: 'Button Background Color',

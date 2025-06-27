@@ -255,7 +255,11 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
     const backgroundType = this.customizations?.headerBackgroundType;
 
     // Handle background styling exactly like desktop
-    if (backgroundType && backgroundType !== 'none') {
+    if (
+      backgroundType &&
+      backgroundType !== 'solid' &&
+      backgroundType !== 'none'
+    ) {
       // Use gradient - same as desktop
       const gradientValue = this.getGradientValue(backgroundType);
       if (gradientValue) {
@@ -299,7 +303,11 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
     // Handle background styling
     const backgroundType = this.customizations?.headerBackgroundType;
 
-    if (backgroundType && backgroundType !== 'none') {
+    if (
+      backgroundType &&
+      backgroundType !== 'solid' &&
+      backgroundType !== 'none'
+    ) {
       // Use gradient
       const gradientValue = this.getGradientValue(backgroundType);
       if (gradientValue) {

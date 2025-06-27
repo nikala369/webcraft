@@ -126,6 +126,68 @@ export class BusinessConfigService {
   }
 
   /**
+   * Get smart CTA button defaults based on business type
+   */
+  private getSmartCTADefaults(businessType: string): {
+    buttonText: string;
+    buttonScrollTargetID: string;
+  } {
+    console.log(
+      `[BusinessConfigService] Getting smart CTA defaults for business type: ${businessType}`
+    );
+
+    switch (businessType) {
+      case 'restaurant':
+      case 'cafe':
+      case 'bar':
+        return {
+          buttonText: 'View Menu',
+          buttonScrollTargetID: 'menu',
+        };
+
+      case 'salon':
+      case 'spa':
+      case 'beauty':
+        return {
+          buttonText: 'Book Appointment',
+          buttonScrollTargetID: 'services',
+        };
+
+      case 'fitness':
+      case 'gym':
+        return {
+          buttonText: 'Join Now',
+          buttonScrollTargetID: 'services',
+        };
+
+      case 'architecture':
+      case 'portfolio':
+      case 'creative':
+        return {
+          buttonText: 'View Portfolio',
+          buttonScrollTargetID: 'projects',
+        };
+
+      case 'consulting':
+      case 'business':
+      case 'professional':
+        return {
+          buttonText: 'Get Consultation',
+          buttonScrollTargetID: 'contact',
+        };
+
+      default:
+        console.log(
+          `[BusinessConfigService] Using default CTA for unknown business type: ${businessType}`
+        );
+        return {
+          buttonText: 'Get Started',
+          buttonScrollTargetID: 'contact',
+        };
+    }
+  }
+
+  /**
    * Generate appropriate default hero data based on business type
    */
   getDefaultHeroData(businessType: string): HeroData {
@@ -143,8 +205,8 @@ export class BusinessConfigService {
       portfolio: 'Showcasing creativity and skill in every project',
     };
 
-    // Get CTA button configuration for this business type
-    const ctaConfig = this.getCtaButtonConfig(businessType);
+    // Smart CTA button defaults based on business type
+    const ctaDefaults = this.getSmartCTADefaults(businessType);
 
     return {
       backgroundType: 'image',
@@ -163,10 +225,10 @@ export class BusinessConfigService {
       titleColor: '#ffffff',
       subtitleColor: '#f0f0f0',
       textShadow: 'medium',
-      // CTA Button defaults
+      // CTA Button defaults - smart defaults based on business type
       showButton: true,
-      buttonText: ctaConfig?.text || 'Get Started',
-      buttonScrollTargetID: ctaConfig?.scrollTargetID || 'contact',
+      buttonText: ctaDefaults.buttonText,
+      buttonScrollTargetID: ctaDefaults.buttonScrollTargetID,
       buttonBackgroundColor: '#2876ff',
       buttonTextColor: '#ffffff',
     };
@@ -782,7 +844,8 @@ export class BusinessConfigService {
    * Generate default hero1 data with business-type-specific CTA button
    */
   getDefaultHero1Data(businessType: string): any {
-    const ctaConfig = this.getCtaButtonConfig(businessType);
+    // Use smart CTA defaults
+    const ctaDefaults = this.getSmartCTADefaults(businessType);
 
     return {
       backgroundImage: '',
@@ -795,10 +858,10 @@ export class BusinessConfigService {
       titleColor: '#ffffff',
       subtitleColor: '#f0f0f0',
       textShadow: 'medium',
-      // CTA Button defaults
+      // CTA Button defaults - smart defaults based on business type
       showButton: true,
-      buttonText: ctaConfig?.text || 'Get Started',
-      buttonScrollTargetID: ctaConfig?.scrollTargetID || 'contact',
+      buttonText: ctaDefaults.buttonText,
+      buttonScrollTargetID: ctaDefaults.buttonScrollTargetID,
       buttonBackgroundColor: '#2876ff',
       buttonTextColor: '#ffffff',
     };

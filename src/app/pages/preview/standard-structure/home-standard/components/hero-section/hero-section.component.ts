@@ -310,19 +310,16 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get CTA button text (auto-generated for standard, customizable for premium)
+   * Get CTA button text (auto-generated based on business type)
    */
   getButtonText(): string {
-    // For premium plan, use custom text if provided
-    if (this.planType === 'premium' && this.data()?.buttonText) {
-      return this.data().buttonText;
-    }
-
-    // For standard plan or premium without custom text, use business-type-specific text
-    const ctaConfig = this.businessConfigService.getCtaButtonConfig(
+    // Use the smart CTA defaults directly from business config service
+    const smartDefaults = this.businessConfigService.getDefaultHero1Data(
       this.businessType
     );
-    return ctaConfig?.text || 'Get Started';
+    return (
+      this.data()?.buttonText || smartDefaults?.buttonText || 'Get Started'
+    );
   }
 
   /**
@@ -343,33 +340,18 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
    * Handle CTA button click - smooth scroll to target section
    */
   handleCtaClick(): void {
-    // For premium plan, handle custom links
-    if (this.planType === 'premium' && this.data()?.buttonLink) {
-      const link = this.data().buttonLink;
-
-      // Check if it's an external URL
-      if (link.startsWith('http://') || link.startsWith('https://')) {
-        window.open(link, '_blank');
-        return;
-      }
-
-      // Check if it's an internal page route
-      if (link.startsWith('/')) {
-        // Navigate to internal page (would need router injection)
-        console.log('Navigate to:', link);
-        return;
-      }
-    }
-
-    // For standard plan or premium without custom link, scroll to business-type-specific section
-    const ctaConfig = this.businessConfigService.getCtaButtonConfig(
+    // Use smart defaults from business config service
+    const smartDefaults = this.businessConfigService.getDefaultHero1Data(
       this.businessType
     );
     const targetId =
       this.data()?.buttonScrollTargetID ||
-      ctaConfig?.scrollTargetID ||
+      smartDefaults?.buttonScrollTargetID ||
       'contact';
 
+    console.log(
+      `[HeroSection] CTA clicked for business type: ${this.businessType}, scrolling to: ${targetId}`
+    );
     this.scrollToSection(targetId);
   }
 
