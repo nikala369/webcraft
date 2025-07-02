@@ -76,11 +76,8 @@
 }
 
 .select-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 99999; // Extremely high z-index to cover all sidebar content
+  position: fixed;
+  z-index: 999999;
   background: #1e1e1e;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -88,33 +85,12 @@
   overflow: hidden;
   animation: dropdownSlide 0.2s ease-out;
 
-  // Ensure dropdown can extend beyond parent boundaries
-  min-width: 100%;
-  width: max-content;
-  max-width: 300px; // Reasonable max width
-
-  // When dropdown should appear above the select
-  &.dropdown-above {
-    top: auto;
-    bottom: calc(100% + 4px);
-    animation: dropdownSlideUp 0.2s ease-out;
-  }
+  // Position and dimensions will be set via [ngStyle] in template
 
   @keyframes dropdownSlide {
     from {
       opacity: 0;
       transform: translateY(-8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes dropdownSlideUp {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
     }
     to {
       opacity: 1;

@@ -1,0 +1,183 @@
+:host {
+  --primary-accent-color: var(--theme-primary-color, #9e6aff);
+  --primary-accent-color-rgb: var(--theme-primary-color-rgb, 158, 106, 255);
+  --text-color: #333333;
+  --text-light: #666666;
+}
+
+.about-hero-section {
+  padding: 8rem 0 6rem;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--primary-accent-color-rgb), 0.05) 0%,
+    transparent 100%
+  );
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+      circle at 80% 20%,
+      rgba(var(--primary-accent-color-rgb), 0.08) 0%,
+      transparent 50%
+    );
+    pointer-events: none;
+  }
+
+  .hero-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+
+    @media (max-width: 968px) {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      padding: 0 1.5rem;
+    }
+  }
+
+  .hero-content {
+    .hero-text {
+      margin-bottom: 3rem;
+
+      .hero-title {
+        font-size: 4rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0 0 1.5rem 0;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+
+        @media (max-width: 968px) {
+          font-size: 3.5rem;
+        }
+
+        @media (max-width: 768px) {
+          font-size: 2.75rem;
+        }
+
+        @media (max-width: 480px) {
+          font-size: 2.25rem;
+        }
+      }
+
+      .hero-subtitle {
+        font-size: 1.375rem;
+        color: var(--text-light);
+        margin: 0;
+        line-height: 1.6;
+        max-width: 600px;
+
+        @media (max-width: 968px) {
+          margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+          font-size: 1.25rem;
+        }
+      }
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 2rem;
+
+      @media (max-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+      }
+
+      .stat-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 16px;
+        border: 1px solid rgba(var(--primary-accent-color-rgb), 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+
+        &:hover {
+          transform: translateY(-4px);
+          background: rgba(255, 255, 255, 0.9);
+          box-shadow: 0 10px 30px rgba(var(--primary-accent-color-rgb), 0.15);
+          border-color: rgba(var(--primary-accent-color-rgb), 0.2);
+
+          .stat-number {
+            transform: scale(1.05);
+          }
+        }
+
+        .stat-number {
+          font-size: 2.5rem;
+          font-weight: 700;
+          color: var(--primary-accent-color);
+          line-height: 1;
+          margin-bottom: 0.5rem;
+          transition: transform 0.3s ease;
+
+          @media (max-width: 768px) {
+            font-size: 2rem;
+          }
+        }
+
+        .stat-label {
+          font-size: 0.875rem;
+          color: var(--text-light);
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+    }
+  }
+
+  .hero-image {
+    position: relative;
+
+    img {
+      width: 100%;
+      height: 400px;
+      object-fit: cover;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+
+      @media (max-width: 968px) {
+        height: 300px;
+      }
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
+      background: linear-gradient(
+        135deg,
+        var(--primary-accent-color) 0%,
+        rgba(var(--primary-accent-color-rgb), 0.7) 100%
+      );
+      border-radius: 25px;
+      z-index: -1;
+      opacity: 0.3;
+    }
+  }
+}

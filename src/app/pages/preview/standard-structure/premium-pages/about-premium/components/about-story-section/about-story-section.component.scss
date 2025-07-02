@@ -1,0 +1,127 @@
+:host {
+  --primary-accent-color: var(--theme-primary-color, #9e6aff);
+  --primary-accent-color-rgb: var(--theme-primary-color-rgb, 158, 106, 255);
+}
+
+.story-section {
+  padding: 5rem 0;
+  position: relative;
+
+  .section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .story-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+
+    @media (max-width: 968px) {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+  }
+
+  .story-text {
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: inherit;
+
+      @media (max-width: 768px) {
+        font-size: 2rem;
+      }
+    }
+
+    .story-description {
+      font-size: 1.125rem;
+      line-height: 1.8;
+      margin-bottom: 2.5rem;
+      color: inherit;
+      opacity: 0.85;
+    }
+  }
+
+  .story-highlights {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    .highlight-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.25rem;
+
+      .highlight-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(var(--primary-accent-color-rgb), 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        i {
+          font-size: 1.5rem;
+          color: var(--primary-accent-color);
+        }
+      }
+
+      .highlight-content {
+        flex: 1;
+
+        h4 {
+          font-size: 1.125rem;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          color: inherit;
+        }
+
+        p {
+          font-size: 0.95rem;
+          line-height: 1.6;
+          color: inherit;
+          opacity: 0.8;
+        }
+      }
+    }
+  }
+
+  .story-image {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+
+    @media (max-width: 968px) {
+      order: -1;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        135deg,
+        rgba(var(--primary-accent-color-rgb), 0.1) 0%,
+        transparent 100%
+      );
+      pointer-events: none;
+    }
+  }
+}

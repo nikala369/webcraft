@@ -10,7 +10,6 @@
       <!-- Section Header -->
       <div class="section-header">
         <h2 class="section-title">{{ data().title }}</h2>
-        <div class="title-underline"></div>
         <p class="section-subtitle">{{ data().subtitle }}</p>
       </div>
 
@@ -27,22 +26,26 @@
         <!-- About Text -->
         <div class="about-text">
           <!-- Story Section -->
-          <h3>{{ data().storyTitle }}</h3>
-          <p>{{ data().storyText }}</p>
+          <div class="content-block">
+            <h3>{{ data().storyTitle }}</h3>
+            <p>{{ data().storyText }}</p>
+          </div>
 
           <!-- Mission Section -->
-          <h3>{{ data().missionTitle }}</h3>
-          <p>{{ data().missionText }}</p>
+          <div class="content-block">
+            <h3>{{ data().missionTitle }}</h3>
+            <p>{{ data().missionText }}</p>
+          </div>
 
           <!-- Additional content for premium users -->
           <ng-container *ngIf="planType === 'premium' && data().values?.length">
-            <div class="about-values">
+            <div class="content-block about-values">
               <h3>{{ data().valuesTitle || "Our Values" }}</h3>
-              <ul>
-                <li *ngFor="let value of data().values">
+              <div class="values-grid">
+                <span *ngFor="let value of data().values" class="value-tag">
                   {{ value }}
-                </li>
-              </ul>
+                </span>
+              </div>
             </div>
           </ng-container>
         </div>

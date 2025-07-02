@@ -9,7 +9,7 @@
   <!-- Select trigger -->
   <div
     class="select-trigger"
-    (click)="toggleDropdown()"
+    (click)="toggleDropdown($event)"
     [class.focused]="isOpen()"
     [style.border-color]="isOpen() ? getAccentColor() : null"
   >
@@ -38,16 +38,31 @@
   </div>
 
   <!-- Dropdown options -->
-  <div class="select-dropdown" *ngIf="isOpen()" [@dropdownAnimation]>
+  <div
+    class="select-dropdown"
+    *ngIf="isOpen()"
+    [@dropdownAnimation]
+    [ngStyle]="{
+      position: 'fixed',
+      'top.px': dropdownPosition()?.top,
+      'left.px': dropdownPosition()?.left,
+      'width.px': dropdownPosition()?.width,
+      'max-height.px': dropdownPosition()?.maxHeight
+    }"
+  >
     <!-- Options list -->
-    <div class="options-list">
+    <div
+      class="options-list"
+      [style.max-height.px]="(dropdownPosition()?.maxHeight || 240) - 32"
+    >
       <div
         *ngFor="let option of options"
         class="select-option"
         [class.selected]="option.value === selectedValue()"
         [class.disabled]="option.disabled"
         [style.--accent-color]="getAccentColor()"
-        (click)="selectOption(option)"
+        (click)="selectOption(option, $event)"
+        (mousedown)="$event.preventDefault()"
       >
         <span *ngIf="option.icon" class="option-icon">{{ option.icon }}</span>
         <span class="option-label">{{ option.label }}</span>

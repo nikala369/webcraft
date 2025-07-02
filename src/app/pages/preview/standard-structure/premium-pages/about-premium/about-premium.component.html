@@ -1,1 +1,133 @@
-<p style="border: 1px solid red;">about-premium works!</p>
+<div class="about-premium">
+  <!-- Hero Section -->
+  <app-about-hero-section
+    [data]="heroData()"
+    [isMobileLayout]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    [businessType]="businessType"
+    (sectionSelected)="handleSectionSelection($event)"
+  ></app-about-hero-section>
+
+  <!-- Story Section -->
+  <app-about-story-section
+    [data]="storyData()"
+    [isMobileLayout]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    [businessType]="businessType"
+    (sectionSelected)="handleSectionSelection($event)"
+  ></app-about-story-section>
+
+  <!-- Team Section -->
+  <app-about-team-section
+    [data]="teamData()"
+    [isMobileLayout]="isMobileLayout"
+    [isMobileView]="isMobileView"
+    [businessType]="businessType"
+    (sectionSelected)="handleSectionSelection($event)"
+  ></app-about-team-section>
+
+  <!-- Values Section -->
+  <app-section-hover-wrapper
+    [sectionId]="'values'"
+    [editable]="editable"
+    [currentPlan]="planType"
+    [isMobileView]="isMobileView"
+    (editSection)="handleSectionEdit('values')"
+  >
+    <section id="about-values" class="values-section">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title">Our Values</h2>
+          <p class="section-subtitle">
+            The principles that guide everything we do
+          </p>
+        </div>
+        <div class="values-grid">
+          <div class="value-card" *ngFor="let value of getCompanyValues()">
+            <div class="value-icon">
+              <i [class]="value.icon"></i>
+            </div>
+            <h3 class="value-title">{{ value.title }}</h3>
+            <p class="value-description">{{ value.description }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </app-section-hover-wrapper>
+
+  <!-- Testimonials Section -->
+  <app-section-hover-wrapper
+    [sectionId]="'testimonials'"
+    [editable]="editable"
+    [currentPlan]="planType"
+    [isMobileView]="isMobileView"
+    (editSection)="handleSectionEdit('testimonials')"
+  >
+    <section id="about-testimonials" class="testimonials-section">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title">What Our Clients Say</h2>
+          <p class="section-subtitle">Real feedback from real customers</p>
+        </div>
+        <div class="testimonials-grid">
+          <div
+            class="testimonial-card"
+            *ngFor="let testimonial of getTestimonials()"
+          >
+            <div class="testimonial-content">
+              <div class="quote-icon">
+                <i class="fas fa-quote-left"></i>
+              </div>
+              <p class="testimonial-text">{{ testimonial.text }}</p>
+              <div class="testimonial-author">
+                <img [src]="testimonial.avatar" [alt]="testimonial.name" />
+                <div class="author-info">
+                  <h4 class="author-name">{{ testimonial.name }}</h4>
+                  <p class="author-title">{{ testimonial.title }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </app-section-hover-wrapper>
+
+  <!-- CTA Section -->
+  <app-section-hover-wrapper
+    [sectionId]="'cta'"
+    [editable]="editable"
+    [currentPlan]="planType"
+    [isMobileView]="isMobileView"
+    (editSection)="handleSectionEdit('cta')"
+  >
+    <section id="about-cta" class="cta-section">
+      <div class="section-container">
+        <div class="cta-content">
+          <h2 class="cta-title">Ready to Work With Us?</h2>
+          <p class="cta-subtitle">
+            Let's start your journey to success together
+          </p>
+          <div class="cta-buttons">
+            <a
+              [routerLink]="'/preview/contact'"
+              [queryParams]="{ plan: planType, businessType: businessType }"
+              queryParamsHandling="merge"
+              class="btn-primary"
+            >
+              Get In Touch
+            </a>
+            <a
+              [routerLink]="'/preview/home'"
+              [queryParams]="{ plan: planType, businessType: businessType }"
+              queryParamsHandling="merge"
+              class="btn-secondary"
+            >
+              View Our Work
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </app-section-hover-wrapper>
+</div>

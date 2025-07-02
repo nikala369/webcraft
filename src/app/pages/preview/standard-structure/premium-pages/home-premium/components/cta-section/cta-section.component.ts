@@ -34,10 +34,14 @@ export class CtaSectionComponent {
   }
 
   handleSectionEdit(sectionId: string) {
-    // Open the customizer or handle edit logic for the section
-    // Example: emit an event, open a sidebar, etc.
-    console.log('Edit requested for section:', sectionId);
-    // You can emit an event or call a service here
+    console.log('[CtaSection] handleSectionEdit called with:', sectionId);
+    const eventData = {
+      key: 'ctaSection',
+      name: 'Call to Action Section',
+      path: 'pages.home.ctaSection',
+    };
+    console.log('[CtaSection] Emitting sectionSelected event:', eventData);
+    this.sectionSelected.emit(eventData);
   }
 
   getCtaTitle(): string {

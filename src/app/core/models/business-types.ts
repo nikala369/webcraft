@@ -41,7 +41,6 @@ export const BUSINESS_TYPE_SECTIONS = {
       'hero',
       'about',
       'menu',
-      'gallery',
       'testimonials',
       'reservations',
       'contact',
@@ -51,9 +50,9 @@ export const BUSINESS_TYPE_SECTIONS = {
     standard: ['hero', 'about', 'services', 'contact'],
     premium: [
       'hero',
+      'about',
       'services',
       'stylists',
-      'gallery',
       'booking',
       'testimonials',
       'contact',
@@ -89,7 +88,7 @@ export const BUSINESS_TYPE_MENU_ITEMS = {
     premium: [
       { id: 1, label: 'Home', link: '/' },
       { id: 2, label: 'Menu', link: '/menu' },
-      { id: 3, label: 'Gallery', link: '/gallery' },
+      { id: 3, label: 'About', link: '/about' },
       { id: 4, label: 'Reservations', link: '/reservations' },
       { id: 5, label: 'Contact', link: '/contact' },
     ],
@@ -104,8 +103,8 @@ export const BUSINESS_TYPE_MENU_ITEMS = {
     premium: [
       { id: 1, label: 'Home', link: '/' },
       { id: 2, label: 'Services', link: '/services' },
-      { id: 3, label: 'Stylists', link: '/stylists' },
-      { id: 4, label: 'Gallery', link: '/gallery' },
+      { id: 3, label: 'About', link: '/about' },
+      { id: 4, label: 'Stylists', link: '/stylists' },
       { id: 5, label: 'Contact', link: '/contact' },
     ],
   },
@@ -119,7 +118,7 @@ export const BUSINESS_TYPE_MENU_ITEMS = {
     premium: [
       { id: 1, label: 'Home', link: '/' },
       { id: 2, label: 'Projects', link: '/projects' },
-      { id: 3, label: 'Process', link: '/process' },
+      { id: 3, label: 'About', link: '/about' },
       { id: 4, label: 'Team', link: '/team' },
       { id: 5, label: 'Contact', link: '/contact' },
     ],
@@ -134,8 +133,9 @@ export const BUSINESS_TYPE_MENU_ITEMS = {
     premium: [
       { id: 1, label: 'Home', link: '/' },
       { id: 2, label: 'Projects', link: '/projects' },
-      { id: 3, label: 'Skills', link: '/skills' },
-      { id: 4, label: 'Contact', link: '/contact' },
+      { id: 3, label: 'About', link: '/about' },
+      { id: 4, label: 'Skills', link: '/skills' },
+      { id: 5, label: 'Contact', link: '/contact' },
     ],
   },
 };

@@ -15,28 +15,57 @@ $transition-medium: all 0.3s ease;
 $transition-slow: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 $premium-color: #9e6aff;
 
-// Main container
+// Main container - Revolutionary new design!
 .customizer-sidebar-container {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 10px;
+  right: 10px;
+  width: 340px; // Compact 20% width
+  height: calc(100vh - 20px);
+  max-height: calc(100vh - 20px);
   z-index: 1000;
-  display: flex;
-  flex-direction: column;
   pointer-events: none;
-  overflow: visible; // Allow dropdowns to extend beyond container
+  overflow: visible !important; // Ensure dropdowns can overflow
+
+  // Always draggable, so these styles always apply
+  &.draggable {
+    position: fixed !important;
+    cursor: default;
+
+    .customizer-sidebar {
+      cursor: default;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+
+      // Make header draggable with grab cursor
+      .sidebar-header {
+        cursor: grab;
+        user-select: none;
+        -webkit-user-select: none;
+
+        &:active {
+          cursor: grabbing;
+        }
+      }
+
+      // Add subtle animation when dragging
+      &.dragging {
+        transition: none !important;
+        box-shadow: 0 16px 64px rgba(0, 0, 0, 0.4),
+          0 12px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2);
+
+        .sidebar-header {
+          cursor: grabbing;
+        }
+      }
+    }
+  }
 
   &.visible {
     pointer-events: all;
 
     .customizer-sidebar {
       transform: translateY(0);
-      opacity: 1;
-    }
-
-    .sidebar-backdrop {
       opacity: 1;
     }
   }
@@ -47,196 +76,334 @@ $premium-color: #9e6aff;
     .customizer-sidebar {
       transform: translateY(-100%);
       opacity: 0;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.2s ease;
+    }
+  }
+
+  // Resize handle styles
+  &.resizable {
+    .resize-handle {
+      position: absolute;
+      background: transparent;
+      transition: background-color 0.2s ease;
+      z-index: 10;
+
+      &:hover {
+        background-color: rgba($primary-color, 0.3);
+      }
+
+      &.resize-handle-left {
+        left: 0;
+        top: 0;
+        width: 4px;
+        height: 100%;
+        cursor: ew-resize;
+
+        &:hover {
+          background-color: rgba($primary-color, 0.5);
+        }
+      }
+
+      &.resize-handle-bottom {
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 4px;
+        cursor: ns-resize;
+
+        &:hover {
+          background-color: rgba($primary-color, 0.5);
+        }
+      }
+
+      &.resize-handle-corner {
+        right: 0;
+        bottom: 0;
+        width: 20px;
+        height: 20px;
+        cursor: nwse-resize;
+        background: transparent;
+
+        &::before {
+          content: "";
+          position: absolute;
+          bottom: 3px;
+          right: 3px;
+          width: 0;
+          height: 0;
+          border-style: solid;
+          border-width: 0 0 8px 8px;
+          border-color: transparent transparent rgba(255, 255, 255, 0.3)
+            transparent;
+          transition: border-color 0.2s ease;
+        }
+
+        &:hover::before {
+          border-color: transparent transparent rgba($primary-color, 0.8)
+            transparent;
+        }
+      }
     }
 
-    .sidebar-backdrop {
-      opacity: 0;
+    &.resizing {
+      .resize-handle {
+        background-color: rgba($primary-color, 0.3) !important;
+      }
     }
   }
 }
 
-// Semi-transparent backdrop
+// Remove backdrop completely for better UX
 .sidebar-backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  transition: opacity 0.4s ease;
+  display: none; // No more backdrop overlay!
 }
 
-// Main sidebar container
+// Compact sidebar container
 .customizer-sidebar {
   position: relative;
   width: 100%;
-  height: 100vh; // Full height instead of 85vh
-  background-color: $dark-bg;
+  height: 100%;
+  background: linear-gradient(145deg, #1f1f2e 0%, #232338 100%);
   color: $light-text;
-  box-shadow: 0 10px 30px $shadow-color;
-  border-bottom-left-radius: 0; // Remove bottom radius for full height
-  border-bottom-right-radius: 0; // Remove bottom radius for full height
-  overflow: visible; // Allow dropdowns to extend beyond sidebar
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden; // Keep hidden to maintain rounded corners
   display: flex;
   flex-direction: column;
   z-index: 1001;
-  transform: translateY(-100%);
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+  transform: translateY(-100%); // Start from top instead of right
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
   opacity: 0;
+  backdrop-filter: blur(20px);
 
-  // Header section
+  // Glassmorphism effect
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+    border-radius: 16px;
+    pointer-events: none;
+  }
+
+  // Compact header section
   .sidebar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 25px;
-    background-color: $darker-bg;
-    border-bottom: 1px solid $border-color;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 2;
+    backdrop-filter: blur(10px);
 
     h2 {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       margin: 0;
       font-weight: 600;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
+      background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .close-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
       border: none;
-      background-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: $transition-fast;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(10px);
 
       svg {
-        transition: $transition-fast;
+        transition: all 0.2s ease;
+        width: 18px;
+        height: 18px;
       }
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.2);
-        transform: rotate(90deg);
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
 
         svg {
           stroke: $primary-color;
+          transform: rotate(90deg);
         }
+      }
+
+      &:active {
+        transform: scale(0.95);
       }
     }
   }
 
-  // Tabs navigation
+  // Compact tabs navigation
   .sidebar-tabs {
     display: flex;
-    padding: 0 25px;
-    background-color: $darker-bg;
-    border-bottom: 1px solid $border-color;
+    padding: 0 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    z-index: 2;
 
     .tab-button {
-      padding: 15px 20px;
+      padding: 12px 16px;
       background: none;
       border: none;
-      color: $muted-text;
+      color: rgba(255, 255, 255, 0.6);
       font-weight: 500;
-      font-size: 0.95rem;
+      font-size: 0.875rem;
       cursor: pointer;
       position: relative;
-      transition: $transition-medium;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 8px 8px 0 0;
+      margin: 0 2px;
 
       &:hover {
-        color: $light-text;
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.05);
+        transform: translateY(-1px);
       }
 
       &.active {
         color: $light-text;
+        background: linear-gradient(
+          135deg,
+          rgba($primary-color, 0.2) 0%,
+          rgba($primary-color, 0.1) 100%
+        );
 
         &:after {
           content: "";
           position: absolute;
           bottom: 0;
-          left: 20%;
-          width: 60%;
-          height: 3px;
-          background-color: $primary-color;
-          border-radius: 3px 3px 0 0;
+          left: 15%;
+          width: 70%;
+          height: 2px;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            $primary-color 50%,
+            transparent 100%
+          );
+          border-radius: 2px 2px 0 0;
         }
       }
 
       &.invalid {
+        color: #ff6b6b;
+
         &:after {
           content: "";
           position: absolute;
           bottom: 0;
-          left: 20%;
-          width: 60%;
-          height: 3px;
-          background-color: #e53935;
-          border-radius: 3px 3px 0 0;
+          left: 15%;
+          width: 70%;
+          height: 2px;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            #ff6b6b 50%,
+            transparent 100%
+          );
+          border-radius: 2px 2px 0 0;
         }
+
         animation: pulse-error 2s infinite;
       }
     }
   }
 
-  // Content area with fields
+  // Compact content area
   .sidebar-content {
     flex: 1;
     overflow-y: auto;
-    overflow-x: visible; // Allow horizontal overflow for dropdowns
-    height: calc(100% - 170px);
-    padding: 20px 42.5px 55px 42.5px;
+    overflow-x: visible !important; // Allow horizontal overflow for dropdowns
+    height: calc(100% - 140px);
+    padding: 16px 20px 50px 20px;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
     scroll-behavior: smooth;
+    position: relative;
+    z-index: 1;
 
     &::-webkit-scrollbar {
-      width: 6px;
+      width: 4px;
     }
 
     &::-webkit-scrollbar-track {
       background: rgba(0, 0, 0, 0.1);
-      border-radius: 3px;
+      border-radius: 2px;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.2) 0%,
+        rgba(255, 255, 255, 0.1) 100%
+      );
+      border-radius: 2px;
 
       &:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.3) 0%,
+          rgba(255, 255, 255, 0.2) 100%
+        );
       }
     }
 
     .fields-container {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 15px;
-      padding-bottom: 20px;
-      position: relative; // Only if needed for layout
-      // No z-index here
+      gap: 12px;
+      padding-bottom: 16px;
+      position: relative;
 
       .field-group {
-        margin-bottom: 20px;
-        position: relative; // Needed for dropdown positioning
-        // No z-index here to avoid stacking context
-        // No transform here
+        margin-bottom: 16px;
+        position: relative;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(255, 255, 255, 0.1);
+        }
 
         .field-label-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 8px;
+          margin-bottom: 10px;
 
           label {
             display: block;
             margin-bottom: 0px;
-            font-size: 1rem;
-            color: #468bff;
+            font-size: 0.9rem;
+            color: #5a9aff;
             font-weight: 600;
+            text-shadow: 0 0 10px rgba(90, 154, 255, 0.3);
           }
         }
 
@@ -304,33 +471,36 @@ $premium-color: #9e6aff;
           }
         }
 
-        // Input styles
+        // Compact input styles
         .text-input,
         .textarea-input,
         .select-input {
           width: 100%;
-          padding: 12px 15px;
-          border-radius: 8px;
-          border: 1px solid $input-border;
-          background-color: $input-bg;
+          padding: 10px 14px;
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.03);
           color: $light-text;
-          font-size: 0.95rem;
-          transition: $transition-fast;
+          font-size: 0.875rem;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          backdrop-filter: blur(10px);
 
           &:focus {
-            border-color: rgba($primary-color, 0.5);
+            border-color: rgba($primary-color, 0.6);
             outline: none;
-            box-shadow: 0 0 0 3px rgba($primary-color, 0.15);
+            box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-1px);
           }
 
           &::placeholder {
-            color: rgba($muted-text, 0.6);
+            color: rgba(255, 255, 255, 0.4);
           }
         }
 
         .textarea-input {
           resize: vertical;
-          min-height: 120px;
+          min-height: 100px;
         }
 
         .select-input {
@@ -346,10 +516,10 @@ $premium-color: #9e6aff;
           }
         }
 
-        // Custom select component - no z-index to avoid stacking context
+        // Custom select component - Position relative for dropdown
         app-custom-select {
           position: relative;
-          // No z-index here to avoid creating stacking context
+          display: block;
         }
 
         // Color picker
@@ -357,7 +527,6 @@ $premium-color: #9e6aff;
           display: flex;
           align-items: center;
           position: relative;
-          // No z-index here
 
           .color-input {
             -webkit-appearance: none;
@@ -409,7 +578,6 @@ $premium-color: #9e6aff;
         // File upload field
         .file-field {
           position: relative;
-          // No z-index here
 
           .file-controls {
             margin-bottom: 10px;
@@ -496,7 +664,6 @@ $premium-color: #9e6aff;
         // List field
         .list-field {
           position: relative;
-          // No z-index here
 
           .list-item {
             display: flex;
@@ -556,64 +723,95 @@ $premium-color: #9e6aff;
     }
   }
 
-  // Action buttons
+  // Compact action buttons
   .sidebar-actions {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 15px 25px;
-    background-color: $darker-bg;
-    border-top: 1px solid $border-color;
+    padding: 12px 20px;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 10;
     display: flex;
-    justify-content: space-between;
+    gap: 10px;
+    backdrop-filter: blur(15px);
 
     button {
       flex: 1;
-      padding: 12px 15px;
-      border-radius: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
       border: none;
       font-weight: 600;
+      font-size: 0.875rem;
       cursor: pointer;
-      transition: $transition-fast;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
 
-      &:not(:last-child) {
-        margin-right: 15px;
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s;
+      }
+
+      &:hover::before {
+        left: 100%;
       }
 
       &.apply-btn {
-        background-color: $primary-color;
+        background: linear-gradient(
+          135deg,
+          $primary-color 0%,
+          darken($primary-color, 10%) 100%
+        );
         color: white;
+        box-shadow: 0 4px 15px rgba($primary-color, 0.3);
 
         &:hover:not(:disabled) {
-          background: darken(#2876ff, 5%);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba($primary-color, 0.4);
         }
 
         &:active:not(:disabled) {
-          transform: translateY(0);
+          transform: translateY(-1px);
         }
 
         &:disabled {
           opacity: 0.6;
           cursor: not-allowed;
+          transform: none;
+          box-shadow: 0 2px 8px rgba($primary-color, 0.2);
         }
       }
 
       &.cancel-btn {
-        background-color: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.078);
         color: $light-text;
+        border: 1px solid rgba(255, 255, 255, 0.1);
 
         &:hover {
-          background-color: rgba(255, 255, 255, 0.15);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+          background: rgba(255, 255, 255, 0.15);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         &:active {
-          transform: translateY(0);
+          transform: translateY(-1px);
         }
       }
     }
@@ -877,6 +1075,71 @@ $premium-color: #9e6aff;
   }
 }
 
+// About premium upsell
+.premium-about-upsell {
+  background-color: rgba(158, 106, 255, 0.08);
+  border: 1px solid rgba(158, 106, 255, 0.25);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+
+  .about-features-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 15px;
+
+    .about-feature-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: not-allowed;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .feature-icon {
+        font-size: 1.5rem;
+        margin-bottom: 6px;
+        filter: grayscale(50%) opacity(0.7);
+      }
+
+      .feature-label {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.2;
+      }
+    }
+  }
+
+  .upsell-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #c4a7ff;
+    font-size: 0.9rem;
+    font-weight: 500;
+
+    .lock-icon {
+      font-size: 1.1rem;
+    }
+
+    b {
+      color: #9e6aff;
+      font-weight: 700;
+    }
+  }
+}
+
 // Video upgrade message
 .video-upgrade-message {
   display: flex;
@@ -1077,5 +1340,122 @@ $premium-color: #9e6aff;
     margin: 0;
     font-size: 0.75rem;
     color: #999;
+  }
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  cursor: move;
+  color: #999;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #fff;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+
+  .reset-position-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(10px);
+    color: rgba(255, 255, 255, 0.7);
+
+    svg {
+      width: 18px;
+      height: 18px;
+      transition: all 0.2s ease;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+      color: $primary-color;
+
+      svg {
+        transform: rotate(-360deg);
+      }
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+// When draggable, show visual indicator on header
+.customizer-sidebar-container.draggable {
+  .sidebar-header {
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 8px;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 20px;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.3) 0px,
+        rgba(255, 255, 255, 0.3) 2px,
+        transparent 2px,
+        transparent 4px
+      );
+      border-radius: 2px;
+      opacity: 0.6;
+      transition: opacity 0.2s ease;
+    }
+
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+}
+
+// Fix for select dropdowns to appear above everything
+:host ::ng-deep {
+  .custom-select {
+    position: relative;
+    z-index: auto !important;
+
+    .select-dropdown {
+      position: fixed !important; // Use fixed positioning
+      z-index: 99999 !important; // Extremely high z-index
+      // Position will be calculated by JS
+    }
   }
 }

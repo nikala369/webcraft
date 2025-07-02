@@ -1,0 +1,40 @@
+<app-section-hover-wrapper
+  [sectionId]="'story'"
+  [editable]="true"
+  [currentPlan]="'premium'"
+  [isMobileView]="isMobileView"
+  (editSection)="handleSectionEdit('story')"
+>
+  <section
+    id="about-story"
+    class="story-section"
+    [style.background-color]="data?.backgroundColor || '#ffffff'"
+    [style.color]="data?.textColor || '#333333'"
+  >
+    <div class="section-container">
+      <div class="story-content">
+        <div class="story-text">
+          <h2 class="section-title">{{ data?.title || "Our Story" }}</h2>
+          <p class="story-description">{{ getStoryText() }}</p>
+          <div class="story-highlights">
+            <div
+              class="highlight-item"
+              *ngFor="let highlight of getStoryHighlights()"
+            >
+              <div class="highlight-icon">
+                <i [class]="highlight.icon"></i>
+              </div>
+              <div class="highlight-content">
+                <h4>{{ highlight.title }}</h4>
+                <p>{{ highlight.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="story-image">
+          <img [src]="getStoryImage()" alt="Our Story" />
+        </div>
+      </div>
+    </div>
+  </section>
+</app-section-hover-wrapper>

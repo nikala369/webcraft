@@ -20,29 +20,56 @@
   </app-section-hover-wrapper>
 
   <!-- Featured Preview Section -->
-  <app-featured-preview-section
-    [data]="featuredPreviewData"
-    [isMobileLayout]="isMobileLayout"
-    [planType]="planType"
-    [businessType]="businessType"
-    (sectionSelected)="handleSectionSelection($event)"
-  ></app-featured-preview-section>
+  <app-section-hover-wrapper
+    [sectionId]="'featuredPreview'"
+    [editable]="editable"
+    [currentPlan]="planType"
+    [isMobileView]="isMobileView"
+    (editSection)="handleSectionEdit('featuredPreview')"
+  >
+    <app-featured-preview-section
+      [data]="featuredPreviewData"
+      [isMobileLayout]="isMobileLayout"
+      [isMobileView]="isMobileView"
+      [planType]="planType"
+      [businessType]="businessType"
+      (sectionSelected)="handleSectionSelection($event)"
+    ></app-featured-preview-section>
+  </app-section-hover-wrapper>
 
   <!-- About Preview Section -->
-  <app-about-preview-section
-    [data]="aboutPreviewData"
-    [isMobileLayout]="isMobileLayout"
-    [planType]="planType"
-    [businessType]="businessType"
-    (sectionSelected)="handleSectionSelection($event)"
-  ></app-about-preview-section>
+  <app-section-hover-wrapper
+    [sectionId]="'aboutPreview'"
+    [editable]="editable"
+    [currentPlan]="planType"
+    [isMobileView]="isMobileView"
+    (editSection)="handleSectionEdit('aboutPreview')"
+  >
+    <app-about-preview-section
+      [data]="aboutPreviewData"
+      [isMobileLayout]="isMobileLayout"
+      [isMobileView]="isMobileView"
+      [planType]="planType"
+      [businessType]="businessType"
+      (sectionSelected)="handleSectionSelection($event)"
+    ></app-about-preview-section>
+  </app-section-hover-wrapper>
 
   <!-- Call to Action Section -->
-  <app-cta-section
-    [data]="ctaData"
-    [isMobileLayout]="isMobileLayout"
-    [planType]="planType"
-    [businessType]="businessType"
-    (sectionSelected)="handleSectionSelection($event)"
-  ></app-cta-section>
+  <app-section-hover-wrapper
+    [sectionId]="'ctaSection'"
+    [editable]="editable"
+    [currentPlan]="planType"
+    [isMobileView]="isMobileView"
+    (editSection)="handleSectionEdit('ctaSection')"
+  >
+    <app-cta-section
+      [data]="ctaData"
+      [isMobileLayout]="isMobileLayout"
+      [isMobileView]="isMobileView"
+      [planType]="planType"
+      [businessType]="businessType"
+      (sectionSelected)="handleSectionSelection($event)"
+    ></app-cta-section>
+  </app-section-hover-wrapper>
 </div>

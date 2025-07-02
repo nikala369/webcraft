@@ -43,10 +43,20 @@ export class FeaturedPreviewSectionComponent {
   }
 
   handleSectionEdit(sectionId: string) {
-    // Open the customizer or handle edit logic for the section
-    // Example: emit an event, open a sidebar, etc.
-    console.log('Edit requested for section:', sectionId);
-    // You can emit an event or call a service here
+    console.log(
+      '[FeaturedPreviewSection] handleSectionEdit called with:',
+      sectionId
+    );
+    const eventData = {
+      key: 'featuredPreview',
+      name: 'Featured Preview Section',
+      path: 'pages.home.featuredPreview',
+    };
+    console.log(
+      '[FeaturedPreviewSection] Emitting sectionSelected event:',
+      eventData
+    );
+    this.sectionSelected.emit(eventData);
   }
 
   getFeaturedTitle(): string {

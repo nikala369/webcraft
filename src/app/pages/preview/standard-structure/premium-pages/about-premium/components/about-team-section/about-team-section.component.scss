@@ -1,0 +1,132 @@
+:host {
+  --primary-accent-color: var(--theme-primary-color, #9e6aff);
+  --primary-accent-color-rgb: var(--theme-primary-color-rgb, 158, 106, 255);
+}
+
+.team-section {
+  padding: 5rem 0;
+
+  .section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: inherit;
+
+      @media (max-width: 768px) {
+        font-size: 2rem;
+      }
+    }
+
+    .section-subtitle {
+      font-size: 1.125rem;
+      color: inherit;
+      opacity: 0.8;
+    }
+  }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 3rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+  }
+
+  .team-member {
+    text-align: center;
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .member-image {
+      width: 150px;
+      height: 150px;
+      margin: 0 auto 1.5rem;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .member-info {
+      .member-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: inherit;
+      }
+
+      .member-role {
+        font-size: 0.95rem;
+        color: var(--primary-accent-color);
+        font-weight: 500;
+        margin-bottom: 1rem;
+      }
+
+      .member-bio {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: inherit;
+        opacity: 0.8;
+        margin-bottom: 1.5rem;
+      }
+    }
+
+    .member-social {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+
+      .social-link {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(var(--primary-accent-color-rgb), 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        text-decoration: none;
+
+        i {
+          font-size: 1rem;
+          color: var(--primary-accent-color);
+        }
+
+        &:hover {
+          background: var(--primary-accent-color);
+          transform: translateY(-2px);
+
+          i {
+            color: white;
+          }
+        }
+      }
+    }
+  }
+}

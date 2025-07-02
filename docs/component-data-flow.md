@@ -75,25 +75,58 @@ interface Customizations {
 4. **Section Components** (MenuSection, ServicesSection, etc.) access their specific data through nesting paths:
    - E.g., For MenuSection: `customizations?.pages?.home?.menu` or `wholeData?.pages?.home?.menu`
 
-## Customization Mechanism
+## Component Customizer System (Updated January 2025)
 
-### Editing Flow
+### Architecture Overview
+
+The Component Customizer is a sophisticated sidebar-based editing interface that provides:
+
+- **Draggable & Resizable Interface**: Users can reposition and resize the customizer sidebar
+- **Tab-Based Organization**: Fields are organized into General, Content, and Styling tabs
+- **Dynamic Field Rendering**: Fields are conditionally shown based on component type and plan
+- **Real-time Validation**: Required fields are validated with visual feedback
+- **Specialized Editors**: Complex data structures (menu items, services) use modal editors
+
+### Recent Improvements
+
+1. **Fixed Dropdown Positioning**: Custom select dropdowns now properly account for parent transforms when the sidebar is dragged
+2. **Enhanced Animations**: Sidebar now slides down from top when opening, slides up when closing
+3. **Performance Optimizations**: Fixed "dead zone" issues with hero1 section using immediate visibility and special animation handling
+4. **Improved File Upload UI**: Background image/video fields now correctly show/hide based on selected background type
+
+### Customization Flow
 
 1. User clicks on a section in the preview
 2. `SectionHoverWrapperComponent` emits a `sectionSelected` event with section key and path
 3. Event bubbles up through component hierarchy to `PreviewComponent`
-4. `PreviewComponent` opens the `ComponentCustomizerComponent` with the selected section's data
+4. `PreviewComponent` opens the `ComponentCustomizerComponent` with:
+   - `componentKey`: The section identifier (e.g., 'hero1')
+   - `componentPath`: Full path in data structure (e.g., 'pages.home.hero1')
+   - `initialData`: Current section data
+   - `planType`: Current plan (standard/premium)
+   - `businessType`: Current business type
 5. User makes changes in the customizer
 6. Customizer emits an `update` event with the modified data
-7. `PreviewComponent` updates the main customizations signal with the new data
+7. `PreviewComponent.handleComponentUpdate()` updates the main customizations signal
 8. Updates flow down to all components through the signal system
 
 ### Path-Based Data Access
 
 Sections use specific paths to access their data:
 
+- Header: `header`
+- Footer: `footer`
+- Hero section: `pages.home.hero1`
+- About section: `pages.home.about`
 - Menu section: `pages.home.menu`
 - Services section: `pages.home.services`
+- Contact section: `pages.home.contact`
+
+For Premium plan:
+
+- About Preview: `pages.home.aboutPreview`
+- Featured Preview: `pages.home.featuredPreview`
+- CTA Section: `pages.home.ctaSection`
 
 This path-based approach allows deep customization while maintaining a consistent data structure.
 
@@ -339,3 +372,25 @@ This section details the specific data flow when a user edits a nested component
 - **Path-Based Traversal:** `PreviewComponent.handleComponentUpdate` _must_ use the `path` to correctly locate the nested object to update.
 - **Merge, Don't Overwrite:** Updates must be _merged_ into the existing data object using the spread operator (`...`) in `PreviewComponent.handleComponentUpdate` to avoid losing other properties within that section's data.
 - **Deep Cloning:** Use `structuredClone()` within `handleComponentUpdate` _before_ making modifications to ensure immutability when updating the signal.
+
+## Component Customizer Performance Optimizations
+
+### Field Rendering Optimization
+
+- Fields are memoized using a `fieldCache` Map to prevent unnecessary re-renders
+- `trackByFieldId` function ensures stable DOM elements during updates
+- Computed signals are used for reactive field visibility and values
+
+### Tab Memory System
+
+- Last active tab per component is persisted in sessionStorage
+- Automatically restores previous tab when reopening customizer
+- Clears memory when exiting fullscreen mode
+
+### Animation Performance
+
+- Uses `requestAnimationFrame` for smooth position updates
+- CSS `will-change` property optimizes transform animations
+- Transitions are temporarily disabled during drag operations
+
+For more detailed information about the Component Customizer system, see the dedicated [Component Customizer Guide](./component-customizer-guide.md).

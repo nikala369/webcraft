@@ -1,52 +1,76 @@
-<app-section-hover-wrapper
-  [sectionId]="'aboutPreview'"
-  [editable]="editable"
-  [currentPlan]="planType"
-  [isMobileView]="isMobileView"
-  (editSection)="handleSectionEdit('aboutPreview')"
+<section
+  class="about-preview-section"
+  [style.backgroundColor]="getBackgroundColor()"
+  [style.color]="getTextColor()"
+  [style.--primary-accent-color]="getAccentColor()"
+  [style.--section-bg-color]="getBackgroundColor()"
+  [style.--text-color]="getTextColor()"
+  id="aboutPreview"
+  (click)="handleSectionEdit()"
 >
-  <section id="about-preview" class="about-preview-section">
-    <div class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">{{ getAboutTitle() }}</h2>
-        <div class="title-underline"></div>
-        <p class="section-subtitle">Discover what makes us unique</p>
+  <div class="section-container">
+    <!-- Section Header -->
+    <div class="section-header">
+      <h2 class="section-title">
+        {{ getTitle() }}
+      </h2>
+      <p class="section-subtitle">
+        {{ getSubtitle() }}
+      </p>
+    </div>
+
+    <!-- Stats Section - Customizable -->
+    <div class="stats-section" *ngIf="shouldShowStats()">
+      <div
+        class="stat-item"
+        *ngFor="let stat of businessStats(); let i = index"
+        [style.animation-delay]="i * 0.1 + 's'"
+      >
+        <div class="stat-number">{{ stat.number }}</div>
+        <div class="stat-label">{{ stat.label }}</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-grid">
+      <!-- Story Section -->
+      <div class="story-section">
+        <div class="story-header">
+          <div class="story-icon">
+            <span>📖</span>
+          </div>
+          <h3 class="story-title">{{ getStoryTitle() }}</h3>
+        </div>
+        <p class="story-description">
+          {{ getStoryDescription() }}
+        </p>
+        <a
+          [routerLink]="'/preview/about'"
+          [queryParams]="{ plan: planType, businessType: businessType }"
+          queryParamsHandling="merge"
+          class="read-more-link"
+        >
+          {{ getLinkText() }}
+          <i class="fas fa-arrow-right"></i>
+        </a>
       </div>
 
-      <div class="about-preview-content">
-        <!-- Three Column Layout -->
-        <div class="about-columns">
-          <div
-            class="about-column"
-            *ngFor="let item of getAboutColumns(); let i = index"
-          >
-            <div class="column-icon">
-              <i [class]="item.icon"></i>
-            </div>
-            <h3>{{ item.title }}</h3>
-            <p>{{ item.description }}</p>
+      <!-- Key Features - Customizable -->
+      <div class="key-features" *ngIf="shouldShowFeatures()">
+        <div
+          class="feature-item"
+          *ngFor="let feature of keyFeatures(); let i = index"
+          [style.animation-delay]="i * 0.15 + 's'"
+        >
+          <div class="feature-icon">
+            <span>{{ feature.icon }}</span>
           </div>
-        </div>
-
-        <!-- Business Features Grid -->
-        <div class="business-features">
-          <h3>Why Choose Us</h3>
-          <div class="features-grid">
-            <div
-              class="feature-item"
-              *ngFor="let feature of getBusinessFeatures()"
-            >
-              <div class="feature-icon">
-                <i [class]="feature.icon"></i>
-              </div>
-              <div class="feature-content">
-                <h4>{{ feature.title }}</h4>
-                <p>{{ feature.description }}</p>
-              </div>
-            </div>
+          <div class="feature-content">
+            <h4 class="feature-title">{{ feature.title }}</h4>
+            <p class="feature-description">{{ feature.description }}</p>
           </div>
         </div>
       </div>
     </div>
-  </section>
-</app-section-hover-wrapper>
+  </div>
+</section>

@@ -33,6 +33,7 @@ export class SectionHoverWrapperComponent implements OnInit, OnChanges {
 
   // Component state
   isHovered = false;
+  private isProcessingClick = false;
 
   // Inject services
   private scrollService = inject(ScrollService);
@@ -86,8 +87,29 @@ export class SectionHoverWrapperComponent implements OnInit, OnChanges {
   }
 
   onEditClick(): void {
-    if (this.sectionId) {
-      this.editSection.emit(this.sectionId);
+    // Prevent double-click issues
+    if (this.isProcessingClick) {
+      console.log('[SectionHoverWrapper] Click already processing, ignoring');
+      return;
     }
+
+    if (!this.sectionId) {
+      console.warn('[SectionHoverWrapper] No sectionId provided');
+      return;
+    }
+
+    console.log(
+      '[SectionHoverWrapper] Edit clicked for section:',
+      this.sectionId
+    );
+    this.isProcessingClick = true;
+
+    // Emit the event
+    this.editSection.emit(this.sectionId);
+
+    // Reset processing flag after a short delay
+    setTimeout(() => {
+      this.isProcessingClick = false;
+    }, 300);
   }
 }

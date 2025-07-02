@@ -266,6 +266,11 @@ export class StandardStructureComponent
   handlePageSectionEdit(
     event: string | { key: string; name: string; path?: string }
   ) {
+    console.log(
+      '[StandardStructure] handlePageSectionEdit called with event:',
+      event
+    );
+
     let fullPath: string;
 
     // Handle both string and object event types
@@ -275,6 +280,8 @@ export class StandardStructureComponent
       fullPath = event.path || event.key;
     }
 
+    console.log('[StandardStructure] fullPath extracted:', fullPath);
+
     // Split the fullPath, e.g. "pages.home.hero1" → ["pages", "home", "hero1"]
     const pathParts = fullPath.split('.');
 
@@ -283,12 +290,19 @@ export class StandardStructureComponent
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join(' ');
 
-    // Emit the event with the full key so that dynamic sidebar can look up "pages.home.hero1"
-    this.componentSelected.emit({
+    const eventData = {
       key: fullPath,
       name: sectionName,
       path: fullPath,
-    });
+    };
+
+    console.log(
+      '[StandardStructure] About to emit componentSelected:',
+      eventData
+    );
+
+    // Emit the event with the full key so that dynamic sidebar can look up "pages.home.hero1"
+    this.componentSelected.emit(eventData);
   }
 
   // Handle section scrolling (from header navigation)

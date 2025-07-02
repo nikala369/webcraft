@@ -1,80 +1,72 @@
-<app-section-hover-wrapper
-  [sectionId]="'featuredPreview'"
-  [editable]="editable"
-  [currentPlan]="planType"
-  [isMobileView]="isMobileView"
-  (editSection)="handleSectionEdit('featuredPreview')"
->
-  <section id="featured-preview" class="featured-preview-section">
-    <div class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">{{ getFeaturedTitle() }}</h2>
-        <div class="title-underline"></div>
-        <p class="section-subtitle">{{ getFeaturedSubtitle() }}</p>
-      </div>
+<section id="featured-preview" class="featured-preview-section">
+  <div class="section-container">
+    <div class="section-header">
+      <h2 class="section-title">{{ getFeaturedTitle() }}</h2>
+      <div class="title-underline"></div>
+      <p class="section-subtitle">{{ getFeaturedSubtitle() }}</p>
+    </div>
 
-      <div class="featured-content">
-        <!-- Featured Items Grid -->
+    <div class="featured-content">
+      <!-- Featured Items Grid -->
+      <div
+        class="featured-grid"
+        [ngClass]="{ 'featured-grid--mobile': isMobileLayout }"
+        *ngIf="getFeaturedItems().length > 0"
+      >
         <div
-          class="featured-grid"
-          [ngClass]="{ 'featured-grid--mobile': isMobileLayout }"
-          *ngIf="getFeaturedItems().length > 0"
+          *ngFor="let item of getFeaturedItems(); let i = index"
+          class="featured-item"
+          [style.animation-delay]="i * 0.1 + 's'"
         >
-          <div
-            *ngFor="let item of getFeaturedItems(); let i = index"
-            class="featured-item"
-            [style.animation-delay]="i * 0.1 + 's'"
-          >
-            <div class="featured-item-image">
-              <img [src]="item.imageUrl" [alt]="item.title" />
-              <div class="image-overlay">
-                <span class="category-badge">{{ item.category }}</span>
-              </div>
-            </div>
-
-            <div class="featured-item-content">
-              <h3 class="item-title">{{ item.title }}</h3>
-              <p class="item-description">{{ item.description }}</p>
-
-              <a
-                *ngIf="item.link"
-                [href]="item.link"
-                class="item-link"
-                [attr.aria-label]="'Learn more about ' + item.title"
-              >
-                Learn More
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M7 17L17 7M17 7H7M17 7V17" />
-                </svg>
-              </a>
+          <div class="featured-item-image">
+            <img [src]="item.imageUrl" [alt]="item.title" />
+            <div class="image-overlay">
+              <span class="category-badge">{{ item.category }}</span>
             </div>
           </div>
-        </div>
 
-        <!-- Call to Action -->
-        <div class="featured-cta">
-          <a [href]="getCtaLink()" class="cta-button">
-            {{ getCtaText() }}
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
+          <div class="featured-item-content">
+            <h3 class="item-title">{{ item.title }}</h3>
+            <p class="item-description">{{ item.description }}</p>
+
+            <a
+              *ngIf="item.link"
+              [href]="item.link"
+              class="item-link"
+              [attr.aria-label]="'Learn more about ' + item.title"
             >
-              <path d="M5 12H19M19 12L12 5M19 12L12 19" />
-            </svg>
-          </a>
+              Learn More
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M7 17L17 7M17 7H7M17 7V17" />
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
+
+      <!-- Call to Action -->
+      <div class="featured-cta">
+        <a [href]="getCtaLink()" class="cta-button">
+          {{ getCtaText() }}
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M5 12H19M19 12L12 5M19 12L12 19" />
+          </svg>
+        </a>
+      </div>
     </div>
-  </section>
-</app-section-hover-wrapper>
+  </div>
+</section>

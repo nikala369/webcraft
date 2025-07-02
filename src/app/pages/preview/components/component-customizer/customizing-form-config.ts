@@ -782,6 +782,7 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
 
   // Premium home page sections
   'pages.home.aboutPreview': [
+    // Content category
     {
       key: 'title',
       label: 'Section Title',
@@ -799,12 +800,78 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       description: 'Subtitle for the about preview section',
     },
     {
+      key: 'storyTitle',
+      label: 'Story Title',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Our Mission',
+      description: 'Title for the story/mission section',
+    },
+    {
+      key: 'storyDescription',
+      label: 'Story Description',
+      type: 'textarea',
+      category: 'content',
+      defaultValue:
+        'We are committed to excellence in everything we do, delivering exceptional value and service to our clients.',
+      description: 'Description text for the story/mission section',
+    },
+    {
+      key: 'linkText',
+      label: 'Link Text',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Learn More About Us',
+      description: 'Text for the link to the full about page',
+    },
+    {
+      key: 'showStats',
+      label: 'Show Statistics',
+      type: 'select',
+      category: 'content',
+      defaultValue: true,
+      description: 'Display business statistics section',
+      options: [
+        { value: true, label: 'Yes' },
+        { value: false, label: 'No' },
+      ],
+    },
+    {
+      key: 'showFeatures',
+      label: 'Show Features',
+      type: 'select',
+      category: 'content',
+      defaultValue: true,
+      description: 'Display key features section',
+      options: [
+        { value: true, label: 'Yes' },
+        { value: false, label: 'No' },
+      ],
+    },
+    // Styling category
+    {
       key: 'backgroundColor',
       label: 'Background Color',
       type: 'color',
       category: 'styling',
       defaultValue: '#f8f9fa',
       description: 'Background color of the about preview section',
+    },
+    {
+      key: 'textColor',
+      label: 'Text Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#333333',
+      description: 'Text color of the about preview section',
+    },
+    {
+      key: 'accentColor',
+      label: 'Accent Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#9e6aff',
+      description: 'Accent color for highlights and decorative elements',
     },
   ],
 
@@ -877,6 +944,146 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       description: 'Background color of the CTA section',
     },
   ],
+
+  // Premium About Page sections
+  'pages.about.hero': [
+    {
+      key: 'title',
+      label: 'Hero Title',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'About Our Company',
+      description: 'Main title for the about hero section',
+    },
+    {
+      key: 'subtitle',
+      label: 'Hero Subtitle',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Building excellence through dedication and innovation',
+      description: 'Subtitle for the about hero section',
+    },
+    {
+      key: 'heroImage',
+      label: 'Hero Image',
+      type: 'file',
+      category: 'content',
+      description: 'Main hero image for the about page',
+      acceptedFileTypes: 'image/*',
+    },
+    {
+      key: 'backgroundColor',
+      label: 'Background Color',
+      type: 'color',
+      category: 'styling',
+      defaultValue: '#f8f9fa',
+      description: 'Background color of the hero section',
+    },
+  ],
+
+  'pages.about.story': [
+    {
+      key: 'title',
+      label: 'Story Title',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Our Story',
+      description: 'Title for the story section',
+    },
+    {
+      key: 'text',
+      label: 'Story Content',
+      type: 'textarea',
+      category: 'content',
+      defaultValue:
+        'Our company was founded on the principles of excellence...',
+      description: 'Main story content',
+    },
+    {
+      key: 'storyImage',
+      label: 'Story Image',
+      type: 'file',
+      category: 'content',
+      description: 'Image for the story section',
+      acceptedFileTypes: 'image/*',
+    },
+  ],
+
+  'pages.about.team': [
+    {
+      key: 'title',
+      label: 'Section Title',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Meet Our Team',
+      description: 'Title for the team section',
+    },
+    {
+      key: 'subtitle',
+      label: 'Section Subtitle',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'The passionate people behind our success',
+      description: 'Subtitle for the team section',
+    },
+  ],
+
+  'pages.about.values': [
+    {
+      key: 'title',
+      label: 'Section Title',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Our Values',
+      description: 'Title for the values section',
+    },
+    {
+      key: 'subtitle',
+      label: 'Section Subtitle',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'The principles that guide everything we do',
+      description: 'Subtitle for the values section',
+    },
+  ],
+
+  'pages.about.testimonials': [
+    {
+      key: 'title',
+      label: 'Section Title',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'What Our Clients Say',
+      description: 'Title for the testimonials section',
+    },
+    {
+      key: 'subtitle',
+      label: 'Section Subtitle',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Real feedback from real customers',
+      description: 'Subtitle for the testimonials section',
+    },
+  ],
+
+  'pages.about.cta': [
+    {
+      key: 'title',
+      label: 'CTA Title',
+      type: 'text',
+      category: 'content',
+      defaultValue: 'Ready to Work With Us?',
+      description: 'Title for the call-to-action section',
+    },
+    {
+      key: 'subtitle',
+      label: 'CTA Subtitle',
+      type: 'text',
+      category: 'content',
+      defaultValue: "Let's start your journey to success together",
+      description: 'Subtitle for the call-to-action section',
+    },
+  ],
 };
 
 /**
@@ -892,7 +1099,8 @@ export interface FieldConfig {
     | 'color'
     | 'file'
     | 'list'
-    | 'specializedList';
+    | 'specializedList'
+    | 'boolean';
   category: 'general' | 'styling' | 'content' | 'advanced';
   defaultValue?: any;
   options?: Array<{ value: any; label: string; icon?: string }>;

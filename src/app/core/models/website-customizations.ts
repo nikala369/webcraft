@@ -325,9 +325,27 @@ export interface FeaturedPreviewData {
 }
 
 export interface AboutPreviewData {
-  title: string;
-  subtitle: string;
-  imageUrl: string;
+  title?: string;
+  subtitle?: string;
+  storyTitle?: string;
+  storyDescription?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  accentColor?: string;
+  showStats?: boolean;
+  showFeatures?: boolean;
+  linkText?: string;
+  // Business-specific customizable stats
+  stats?: Array<{
+    number: string;
+    label: string;
+  }>;
+  // Business-specific customizable features
+  features?: Array<{
+    icon: string;
+    title: string;
+    description: string;
+  }>;
 }
 
 export interface ContactPreviewData {

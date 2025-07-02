@@ -1,77 +1,69 @@
-<app-section-hover-wrapper
-  [sectionId]="'ctaSection'"
-  [editable]="editable"
-  [currentPlan]="planType"
-  [isMobileView]="isMobileView"
-  (editSection)="handleSectionEdit('ctaSection')"
+<section
+  id="cta-section"
+  class="cta-section"
+  [style.background]="
+    'linear-gradient(135deg, ' +
+    getBackgroundColor() +
+    ' 0%, ' +
+    getBackgroundColor() +
+    'dd 100%)'
+  "
 >
-  <section
-    id="cta-section"
-    class="cta-section"
-    [style.background]="
-      'linear-gradient(135deg, ' +
-      getBackgroundColor() +
-      ' 0%, ' +
-      getBackgroundColor() +
-      'dd 100%)'
-    "
-  >
-    <!-- Animated background elements -->
-    <div class="cta-background">
-      <div class="floating-element floating-element--1"></div>
-      <div class="floating-element floating-element--2"></div>
-      <div class="floating-element floating-element--3"></div>
-      <div class="floating-element floating-element--4"></div>
-    </div>
+  <!-- Animated background elements -->
+  <div class="cta-background">
+    <div class="floating-element floating-element--1"></div>
+    <div class="floating-element floating-element--2"></div>
+    <div class="floating-element floating-element--3"></div>
+    <div class="floating-element floating-element--4"></div>
+  </div>
 
-    <div class="section-container">
-      <div
-        class="cta-content"
-        [ngClass]="{ 'cta-content--mobile': isMobileLayout }"
-      >
-        <div class="cta-text">
-          <h2 class="cta-title">{{ getCtaTitle() }}</h2>
-          <p class="cta-subtitle">{{ getCtaSubtitle() }}</p>
-        </div>
+  <div class="section-container">
+    <div
+      class="cta-content"
+      [ngClass]="{ 'cta-content--mobile': isMobileLayout }"
+    >
+      <div class="cta-text">
+        <h2 class="cta-title">{{ getCtaTitle() }}</h2>
+        <p class="cta-subtitle">{{ getCtaSubtitle() }}</p>
+      </div>
 
-        <div class="cta-actions">
-          <a
-            [href]="getPrimaryButtonLink()"
-            class="cta-button cta-button--primary"
-            [attr.aria-label]="getPrimaryButtonText()"
+      <div class="cta-actions">
+        <a
+          [href]="getPrimaryButtonLink()"
+          class="cta-button cta-button--primary"
+          [attr.aria-label]="getPrimaryButtonText()"
+        >
+          {{ getPrimaryButtonText() }}
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
           >
-            {{ getPrimaryButtonText() }}
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M5 12H19M19 12L12 5M19 12L12 19" />
-            </svg>
-          </a>
+            <path d="M5 12H19M19 12L12 5M19 12L12 19" />
+          </svg>
+        </a>
 
-          <a
-            [href]="getSecondaryButtonLink()"
-            class="cta-button cta-button--secondary"
-            [attr.aria-label]="getSecondaryButtonText()"
+        <a
+          [href]="getSecondaryButtonLink()"
+          class="cta-button cta-button--secondary"
+          [attr.aria-label]="getSecondaryButtonText()"
+        >
+          {{ getSecondaryButtonText() }}
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
           >
-            {{ getSecondaryButtonText() }}
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M15 18L9 12L15 6" />
-            </svg>
-          </a>
-        </div>
+            <path d="M15 18L9 12L15 6" />
+          </svg>
+        </a>
       </div>
     </div>
-  </section>
-</app-section-hover-wrapper>
+  </div>
+</section>

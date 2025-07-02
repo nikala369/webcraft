@@ -198,15 +198,75 @@ export class MediaDisplayComponent {
 
 ## Section-Hover-Wrapper Pattern
 
-All section components should use the `SectionHoverWrapperComponent` to provide consistent editing functionality:
+All section components should use the `SectionHoverWrapperComponent` to provide consistent editing functionality. There are two main patterns:
+
+### Pattern 1: Parent Component Wrapper (Recommended for Premium)
+
+For premium pages with multiple sections, wrap each section in the parent component:
 
 ```html
+<!-- In parent component (e.g., home-premium.component.html) -->
+<app-section-hover-wrapper [sectionId]="'aboutPreview'" [editable]="editable" [currentPlan]="planType" [isMobileView]="isMobileView" (editSection)="handleSectionEdit('aboutPreview')">
+  <app-about-preview-section [data]="aboutPreviewData" [isMobileLayout]="isMobileLayout" [isMobileView]="isMobileView" [planType]="planType" [businessType]="businessType" (sectionSelected)="handleSectionSelection($event)"></app-about-preview-section>
+</app-section-hover-wrapper>
+```
+
+### Pattern 2: Self-Wrapped Components (Standard Sections)
+
+For standalone sections, wrap within the component itself:
+
+```html
+<!-- In section component template -->
 <app-section-hover-wrapper [sectionId]="'section-name'" [editable]="editable" [currentPlan]="planType" [isMobileView]="isMobileView" (editSection)="handleSectionEdit('section-name')">
-  <!-- Section content here -->
   <section id="section-name" class="section-name">
     <!-- Section implementation -->
   </section>
 </app-section-hover-wrapper>
+```
+
+### Critical Event Flow Requirements
+
+**For Premium Parent Components:**
+
+1. Parent component must implement `handleSectionEdit(sectionId: string)` method
+2. Parent component must emit `sectionSelected` event with correct path
+3. Child components should NOT have internal section-hover-wrapper
+4. Data must be passed using computed signals without parentheses: `[data]="aboutPreviewData"`
+
+**Example Parent Component Implementation:**
+
+```typescript
+export class HomePremiumComponent {
+  // Computed signals for data
+  aboutPreviewData = computed(() => {
+    return this.premiumHomeData()?.aboutPreview || {};
+  });
+
+  handleSectionEdit(sectionId: string) {
+    console.log("[HomePremium] handleSectionEdit called with sectionId:", sectionId);
+
+    let sectionPath = "";
+    let sectionName = "";
+
+    switch (sectionId) {
+      case "aboutPreview":
+        sectionPath = "pages.home.aboutPreview";
+        sectionName = "About Preview";
+        break;
+      // ... other cases
+    }
+
+    this.sectionSelected.emit({
+      key: sectionId,
+      name: sectionName,
+      path: sectionPath,
+    });
+  }
+
+  handleSectionSelection(event: { key: string; name: string; path?: string }) {
+    this.sectionSelected.emit(event);
+  }
+}
 ```
 
 ### Key Properties
@@ -227,6 +287,8 @@ The wrapper automatically:
 
 ### Implementation in Section Components
 
+**For Self-Wrapped Components:**
+
 ```typescript
 export class SectionComponent {
   @Input() isMobileView: string = "view-desktop";
@@ -240,6 +302,19 @@ export class SectionComponent {
       path: `pages.home.${sectionId}`,
     });
   }
+}
+```
+
+**For Parent-Wrapped Components:**
+
+```typescript
+export class SectionComponent {
+  @Input() isMobileView: string = "view-desktop";
+  @Input() planType: "standard" | "premium" = "standard";
+  @Input() editable: boolean = true;
+
+  // NO handleSectionEdit method needed - handled by parent
+  // NO internal section-hover-wrapper needed
 }
 ```
 

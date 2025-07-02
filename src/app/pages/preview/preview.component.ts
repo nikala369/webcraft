@@ -230,34 +230,68 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
     const selected = this.selectedComponent();
     const customizations = this.customizations();
 
+    console.log(
+      '[PreviewComponent] selectedCustomization computed - selected:',
+      selected
+    );
+    console.log(
+      '[PreviewComponent] selectedCustomization computed - customizations:',
+      customizations
+    );
+
     if (!selected || !customizations) {
-      console.log('No selection or customizations available');
+      console.log(
+        '[PreviewComponent] selectedCustomization - No selection or customizations available'
+      );
       return null;
     }
 
     try {
       // Handle path-based selection
       if (selected.path) {
+        console.log(
+          '[PreviewComponent] selectedCustomization - Using path-based selection:',
+          selected.path
+        );
         const pathParts = selected.path.split('.');
         let current: any = customizations;
 
         for (const part of pathParts) {
           if (!current[part]) {
-            console.warn(`Missing path segment: ${part} in ${selected.path}`);
-            return null;
+            console.warn(
+              `[PreviewComponent] selectedCustomization - Missing path segment: ${part} in ${selected.path}`
+            );
+            console.warn(
+              `[PreviewComponent] selectedCustomization - Creating placeholder object for missing path`
+            );
+            // Create the missing path segment in a cloned object so we don't mutate original state
+            return { ...selected, data: {} };
           }
           current = current[part];
         }
-        return { ...selected, data: current };
+        const result = { ...selected, data: current };
+        console.log(
+          '[PreviewComponent] selectedCustomization - Path-based result:',
+          result
+        );
+        return result;
       }
 
       // Handle direct key access
-      return {
+      const result = {
         ...selected,
         data: customizations[selected.key as keyof Customizations],
       };
+      console.log(
+        '[PreviewComponent] selectedCustomization - Direct key access result:',
+        result
+      );
+      return result;
     } catch (error) {
-      console.error('Error accessing customization data:', error);
+      console.error(
+        '[PreviewComponent] selectedCustomization - Error accessing customization data:',
+        error
+      );
       return null;
     }
   });
@@ -270,7 +304,17 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
     // Effect to open sidebar when component is selected
     effect(
       () => {
-        this.modalStateService.setModalOpen(this.selectedComponent() !== null);
+        const selectedComponent = this.selectedComponent();
+        const isModalOpen = selectedComponent !== null;
+        console.log(
+          '[PreviewComponent] Modal effect triggered - selectedComponent:',
+          selectedComponent
+        );
+        console.log(
+          '[PreviewComponent] Modal effect triggered - setting modal open to:',
+          isModalOpen
+        );
+        this.modalStateService.setModalOpen(isModalOpen);
       },
       { allowSignalWrites: true }
     );
@@ -465,6 +509,10 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   handleBusinessTypeSelection(type: string): void {
     console.log('Business type selected:', type);
+    console.log(
+      'Current plan when selecting business type:',
+      this.currentPlan()
+    );
 
     // If business type changed, update it
     if (this.businessType() !== type) {
@@ -497,7 +545,11 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
       });
 
       // Initialize with default customizations for this business type
+      console.log(
+        '[PreviewComponent] About to initialize default customizations'
+      );
       this.initializeDefaultCustomizations();
+      console.log('[PreviewComponent] Default customizations initialized');
 
       // Advance to step 3 (Customize) after selecting business type
       this.currentStep.set(3);
@@ -526,11 +578,21 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
     const businessTypeKey = this.businessType();
     const plan = this.currentPlan();
 
+    console.log('[PreviewComponent] initializeDefaultCustomizations called');
+    console.log('[PreviewComponent] businessType:', businessTypeKey);
+    console.log('[PreviewComponent] plan:', plan);
+
     const { customizations, font } =
       this.templateInitializationService.getDefaultsForTypeAndPlan(
         businessTypeKey,
         plan
       );
+
+    console.log('[PreviewComponent] Generated customizations:', customizations);
+    console.log(
+      '[PreviewComponent] Premium home sections:',
+      customizations?.pages?.home
+    );
 
     // Update the state with the default customizations
     this.customizations.set(customizations);
@@ -1163,9 +1225,29 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
     name: string;
     path?: string;
   }): void {
-    console.log('Component selected for editing:', component);
+    console.log(
+      '[PreviewComponent] handleComponentSelection called with component:',
+      component
+    );
+
+    // Log current customizations state
+    console.log(
+      '[PreviewComponent] Current customizations:',
+      this.customizations()
+    );
+    console.log('[PreviewComponent] Current plan:', this.currentPlan());
+
+    // If path contains pages.home, check if that data exists
+    if (component.path?.includes('pages.home')) {
+      const cust = this.customizations();
+      console.log('[PreviewComponent] pages.home data:', cust?.pages?.home);
+    }
+
     // Check if editing is allowed (mobile view restrictions)
     if (!this.isEditingAllowed()) {
+      console.log(
+        '[PreviewComponent] Editing not allowed - mobile view restriction'
+      );
       this.confirmationService.showConfirmation(
         'Editing is not available in mobile preview mode. Please switch to desktop view to edit.',
         'info',
@@ -1174,7 +1256,16 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    this.selectedComponent.set(component);
+    // If it's the same component, just toggle
+    const currentComponent = this.selectedComponent();
+    if (currentComponent && currentComponent.key === component.key) {
+      console.log('[PreviewComponent] Same component clicked, closing sidebar');
+      this.selectedComponent.set(null);
+    } else {
+      // Set the new component directly
+      console.log('[PreviewComponent] Setting selectedComponent:', component);
+      this.selectedComponent.set(component);
+    }
   }
 
   /**

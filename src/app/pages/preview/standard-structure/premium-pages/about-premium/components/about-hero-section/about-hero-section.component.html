@@ -1,0 +1,44 @@
+<app-section-hover-wrapper
+  [sectionId]="'hero'"
+  [editable]="true"
+  [currentPlan]="'premium'"
+  [isMobileView]="isMobileView"
+  (editSection)="handleSectionEdit('hero')"
+>
+  <section
+    class="about-hero-section"
+    [style.background-color]="data?.backgroundColor || '#f8f9fa'"
+    [style.color]="data?.textColor || '#333333'"
+    id="hero"
+  >
+    <div class="hero-container">
+      <!-- Hero Content -->
+      <div class="hero-content">
+        <div class="hero-text">
+          <h1 class="hero-title">
+            {{ data?.title || getBusinessTypeTitle() }}
+          </h1>
+          <p class="hero-subtitle">
+            {{ data?.subtitle || getBusinessTypeSubtitle() }}
+          </p>
+        </div>
+
+        <!-- Hero Stats -->
+        <div class="hero-stats">
+          <div
+            class="stat-item"
+            *ngFor="let stat of getHeroStats(); let i = index"
+          >
+            <div class="stat-number">{{ stat.number }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Image -->
+      <div class="hero-image" *ngIf="data?.heroImage">
+        <img [src]="data.heroImage" [alt]="data?.title || 'About Us'" />
+      </div>
+    </div>
+  </section>
+</app-section-hover-wrapper>

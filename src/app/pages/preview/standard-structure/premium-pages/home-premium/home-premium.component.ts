@@ -48,7 +48,11 @@ export class HomePremiumComponent {
   });
 
   aboutPreviewData = computed(() => {
-    return this.premiumHomeData()?.aboutPreview || {};
+    const homeData = this.premiumHomeData();
+    console.log('[HomePremium] premiumHomeData:', homeData);
+    const aboutPreview = homeData?.aboutPreview || {};
+    console.log('[HomePremium] aboutPreviewData computed:', aboutPreview);
+    return aboutPreview;
   });
 
   featuredPreviewData = computed(() => {
@@ -60,11 +64,16 @@ export class HomePremiumComponent {
   });
 
   handleSectionSelection(event: { key: string; name: string; path?: string }) {
+    console.log('[HomePremium] handleSectionSelection received event:', event);
+    console.log('[HomePremium] About to emit sectionSelected to parent');
     this.sectionSelected.emit(event);
   }
 
   handleSectionEdit(sectionId: string) {
-    console.log('Edit requested for section:', sectionId);
+    console.log(
+      '[HomePremium] handleSectionEdit called with sectionId:',
+      sectionId
+    );
 
     // Emit the section selected event to open the customizer
     // Map sectionId to the correct path for premium home sections
@@ -93,10 +102,13 @@ export class HomePremiumComponent {
         sectionName = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
     }
 
-    this.sectionSelected.emit({
+    const eventData = {
       key: sectionId,
       name: sectionName,
       path: sectionPath,
-    });
+    };
+
+    console.log('[HomePremium] handleSectionEdit emitting event:', eventData);
+    this.sectionSelected.emit(eventData);
   }
 }

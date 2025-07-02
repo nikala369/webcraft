@@ -82,7 +82,7 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
     // Emit the section selected event to open the customizer
     console.log('Edit requested for section:', sectionId);
     this.sectionSelected.emit({
-      key: 'hero1',
+      key: 'pages.home.hero1',
       name: 'Hero Section',
       path: 'pages.home.hero1',
     });

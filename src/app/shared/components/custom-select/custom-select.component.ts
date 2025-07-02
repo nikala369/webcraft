@@ -8,6 +8,7 @@ import {
   forwardRef,
   signal,
   computed,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -57,7 +58,7 @@ export interface SelectOption {
     ]),
   ],
 })
-export class CustomSelectComponent implements ControlValueAccessor {
+export class CustomSelectComponent implements ControlValueAccessor, OnInit {
   @Input() options: SelectOption[] = [];
   @Input() placeholder: string = 'Select an option';
   @Input() disabled: boolean = false;
@@ -70,6 +71,14 @@ export class CustomSelectComponent implements ControlValueAccessor {
   // Signals for reactive state
   isOpen = signal(false);
   selectedValue = signal<any>(null);
+
+  // Dropdown positioning signals
+  dropdownPosition = signal<{
+    top: number;
+    left: number;
+    width: number;
+    maxHeight?: number;
+  } | null>(null);
 
   // Computed values
   selectedOption = computed(() => {
@@ -88,6 +97,15 @@ export class CustomSelectComponent implements ControlValueAccessor {
 
   constructor(private elementRef: ElementRef) {}
 
+  ngOnInit(): void {
+    console.log('[CustomSelect] Component initialized:', {
+      label: this.label,
+      options: this.options,
+      placeholder: this.placeholder,
+      disabled: this.disabled,
+    });
+  }
+
   writeValue(value: any): void {
     this.selectedValue.set(value);
   }
@@ -105,40 +123,108 @@ export class CustomSelectComponent implements ControlValueAccessor {
   }
 
   // Component methods
-  toggleDropdown(): void {
-    if (!this.disabled) {
-      this.isOpen.update((v) => !v);
+  toggleDropdown(event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+    }
 
-      // Add smart positioning after dropdown opens
-      if (this.isOpen()) {
-        setTimeout(() => this.positionDropdown(), 10);
+    if (!this.disabled) {
+      const newState = !this.isOpen();
+      console.log('[CustomSelect] Toggle dropdown:', {
+        component: this.label,
+        newState,
+        options: this.options,
+        optionsLength: this.options?.length,
+      });
+
+      if (newState) {
+        // Calculate position when opening
+        this.calculateDropdownPosition();
+      }
+
+      this.isOpen.set(newState);
+    }
+  }
+
+  private calculateDropdownPosition(): void {
+    const triggerElement: HTMLElement | null =
+      this.elementRef.nativeElement.querySelector('.select-trigger');
+    if (!triggerElement) return;
+
+    // Bounding rect for the trigger (viewport coordinates)
+    const triggerRect = triggerElement.getBoundingClientRect();
+
+    // Find the nearest transformed ancestor (the sidebar container) – it will be the containing block for position:fixed
+    let transformedParent: HTMLElement = this.elementRef
+      .nativeElement as HTMLElement;
+    while (transformedParent && transformedParent !== document.body) {
+      const style = window.getComputedStyle(transformedParent);
+      if (style.transform && style.transform !== 'none') {
+        break;
+      }
+      if (transformedParent.parentElement) {
+        transformedParent = transformedParent.parentElement as HTMLElement;
+      } else {
+        break;
       }
     }
-  }
 
-  // Smart dropdown positioning with simple above/below logic
-  private positionDropdown(): void {
-    const selectElement = this.elementRef.nativeElement;
-    const dropdown = selectElement.querySelector('.select-dropdown');
-
-    if (!dropdown) return;
-
-    const rect = selectElement.getBoundingClientRect();
-    const dropdownHeight = dropdown.offsetHeight || 200; // Fallback height
-    const viewportHeight = window.innerHeight;
-    const spaceBelow = viewportHeight - rect.bottom - 20; // Add some padding
-    const spaceAbove = rect.top - 20; // Add some padding
-
-    // Determine if dropdown should appear above or below
-    if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-      dropdown.classList.add('dropdown-above');
-    } else {
-      dropdown.classList.remove('dropdown-above');
+    // Fallback to the host element if none found or hit document.body
+    if (transformedParent === document.body) {
+      transformedParent = this.elementRef.nativeElement as HTMLElement;
     }
+
+    const parentRect = transformedParent.getBoundingClientRect();
+
+    // Coordinates relative to transformed parent
+    const relativeLeft = triggerRect.left - parentRect.left;
+    const relativeTopBelow = triggerRect.bottom - parentRect.top + 8; // 8px gap
+    const relativeTopAbove = triggerRect.top - parentRect.top - 8; // Gap above if flipped
+
+    // Viewport height for available space calculation
+    const viewportHeight = window.innerHeight;
+    const dropdownMaxHeight = Math.min(240 + 32, viewportHeight * 0.6);
+
+    // Determine whether to open below or above
+    const spaceBelow = viewportHeight - triggerRect.bottom - 8;
+    const spaceAbove = triggerRect.top - 8;
+    let top = 0;
+    let maxHeight = dropdownMaxHeight;
+    if (spaceBelow >= dropdownMaxHeight || spaceBelow >= spaceAbove) {
+      // Open below
+      top = relativeTopBelow;
+      maxHeight = Math.min(dropdownMaxHeight, spaceBelow);
+    } else {
+      // Open above
+      top = relativeTopAbove - Math.min(dropdownMaxHeight, spaceAbove);
+      maxHeight = Math.min(dropdownMaxHeight, spaceAbove);
+    }
+
+    // Ensure the dropdown stays within the parent horizontally
+    let left = relativeLeft;
+    const dropdownWidth = triggerRect.width;
+    const parentWidth = parentRect.width;
+    if (left + dropdownWidth > parentWidth) {
+      left = parentWidth - dropdownWidth - 8;
+    }
+    if (left < 0) left = 0;
+
+    this.dropdownPosition.set({
+      top: top < 0 ? 0 : top,
+      left,
+      width: dropdownWidth,
+      maxHeight: maxHeight < 100 ? 100 : maxHeight,
+    });
   }
 
-  selectOption(option: SelectOption): void {
+  selectOption(option: SelectOption, event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+
     if (!option.disabled) {
+      console.log('[CustomSelect] Option selected:', option);
       this.selectedValue.set(option.value);
       this.onChange(option.value);
       this.selectionChange.emit(option.value);
@@ -149,7 +235,14 @@ export class CustomSelectComponent implements ControlValueAccessor {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.elementRef.nativeElement.contains(event.target)) {
+    const target = event.target as HTMLElement;
+
+    // Don't close if clicking inside the component or its dropdown
+    const clickedInside =
+      this.elementRef.nativeElement.contains(target) ||
+      target.closest('.select-dropdown') !== null;
+
+    if (!clickedInside && this.isOpen()) {
       this.isOpen.set(false);
     }
   }
@@ -158,8 +251,8 @@ export class CustomSelectComponent implements ControlValueAccessor {
   @HostListener('window:resize', ['$event'])
   onWindowChange(): void {
     if (this.isOpen()) {
-      // Reposition dropdown on scroll or resize
-      setTimeout(() => this.positionDropdown(), 10);
+      // Recalculate position on scroll/resize
+      this.calculateDropdownPosition();
     }
   }
 

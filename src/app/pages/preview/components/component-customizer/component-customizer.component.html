@@ -1,29 +1,99 @@
-<div class="customizer-sidebar-container" [class.visible]="isVisible">
+<div
+  class="customizer-sidebar-container"
+  [class.visible]="isVisible"
+  [class.draggable]="true"
+  [class.resizable]="true"
+  appDraggable
+  [dragEnabled]="true"
+  [dragHandle]="'.sidebar-header'"
+  [dragBoundary]="'window'"
+  [initialPosition]="{ x: 0, y: 0 }"
+  [constrainToViewport]="true"
+  [savePosition]="false"
+  [positionKey]="positionKey()"
+  (dragStart)="onDragStart($event)"
+  (dragMove)="onDragMove($event)"
+  (dragEnd)="onDragEnd($event)"
+  appResizable
+  [resizeEnabled]="true"
+  [resizeHandles]="['corner']"
+  [resizeBounds]="{
+    minWidth: 280,
+    maxWidth: 600,
+    minHeight: 400,
+    maxHeight: maxResizeHeight()
+  }"
+  [saveSize]="false"
+  [sizeKey]="sizeKey()"
+  (resizeStart)="onResizeStart($event)"
+  (resizing)="onResizing($event)"
+  (resizeEnd)="onResizeEnd($event)"
+>
   <div class="customizer-sidebar">
     <!-- Header with title and close button -->
     <div class="sidebar-header">
-      <h2>{{ getComponentTitle() }}</h2>
-      <button
-        class="close-btn"
-        (click)="cancel()"
-        aria-label="Close customizer"
-      >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+      <div class="header-left">
+        <div class="drag-handle">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="6" cy="6" r="1.5" fill="currentColor" />
+            <circle cx="14" cy="6" r="1.5" fill="currentColor" />
+            <circle cx="6" cy="10" r="1.5" fill="currentColor" />
+            <circle cx="14" cy="10" r="1.5" fill="currentColor" />
+            <circle cx="6" cy="14" r="1.5" fill="currentColor" />
+            <circle cx="14" cy="14" r="1.5" fill="currentColor" />
+          </svg>
+        </div>
+        <h2>{{ getComponentTitle() }}</h2>
+      </div>
+      <div class="header-actions">
+        <button
+          *ngIf="hasMovedFromDefault()"
+          class="reset-position-btn"
+          (click)="resetToDefault()"
+          title="Reset to default position"
+          aria-label="Reset to default position"
         >
-          <path
-            d="M18 6L6 18M6 6L18 18"
-            stroke="white"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </button>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4 10a6 6 0 0111.18-3H13v3h5V5h-2.51A8 8 0 1118 10h-2a6 6 0 11-12 0z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+        <button
+          class="close-btn"
+          (click)="cancel()"
+          aria-label="Close customizer"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M18 6L6 18M6 6L18 18"
+              stroke="white"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Tabbed Navigation for categories -->
@@ -32,7 +102,7 @@
         *ngFor="let category of categories()"
         class="tab-button"
         [class.active]="activeCategory() === category.id"
-        [class.invalid]="!getCategoryValidationStatus()[category.id]"
+        [class.invalid]="!categoryValidationStatus()[category.id]"
         (click)="setActiveCategory(category.id)"
       >
         {{ category.label }}
@@ -111,15 +181,54 @@
         </div>
       </div>
 
-      <div class="fields-container">
-        <ng-container *ngFor="let field of fieldsForCategory(); let i = index">
-          <div
-            class="field-group"
-            [style.--index]="i"
-            *ngIf="shouldShowField(field)"
+      <!-- About Section Premium Upsell for Standard Plan -->
+      <div
+        *ngIf="
+          planType === 'standard' &&
+          componentKey === 'pages.home.about' &&
+          activeCategory() === 'content'
+        "
+        class="premium-about-upsell"
+        style="margin-bottom: 1.5rem"
+      >
+        <div class="about-features-row">
+          <div class="about-feature-preview">
+            <div class="feature-icon">👥</div>
+            <div class="feature-label">Team Section</div>
+          </div>
+          <div class="about-feature-preview">
+            <div class="feature-icon">📅</div>
+            <div class="feature-label">Company Timeline</div>
+          </div>
+          <div class="about-feature-preview">
+            <div class="feature-icon">💬</div>
+            <div class="feature-label">Testimonials</div>
+          </div>
+          <div class="about-feature-preview">
+            <div class="feature-icon">🏆</div>
+            <div class="feature-label">Awards & Certifications</div>
+          </div>
+        </div>
+        <div class="upsell-text">
+          <span class="lock-icon">🔒</span>
+          <span
+            >Upgrade to <b>Premium</b> to unlock a full About page with team
+            profiles, company timeline, testimonials, and more!</span
           >
-            <div class="field-label-row" *ngIf="shouldShowFieldLabel(field)">
-              <label *ngIf="shouldShowLabel(field)" [for]="field.key">
+        </div>
+      </div>
+
+      <div class="fields-container">
+        <ng-container
+          *ngFor="
+            let field of visibleFields();
+            let i = index;
+            trackBy: trackByFieldId
+          "
+        >
+          <div class="field-group" [style.--index]="i" *ngIf="field.visible">
+            <div class="field-label-row" *ngIf="field.showLabel">
+              <label [for]="field.key">
                 {{ field.label }}
               </label>
 
@@ -138,7 +247,7 @@
                 *ngSwitchCase="'text'"
                 [id]="field.key"
                 type="text"
-                [ngModel]="getFieldValue(field.key)"
+                [ngModel]="field.value"
                 (ngModelChange)="updateTextField(field.key, $event)"
                 class="text-input"
                 placeholder="{{ field.placeholder || field.label }}"
@@ -149,7 +258,7 @@
               <textarea
                 *ngSwitchCase="'textarea'"
                 [id]="field.key"
-                [ngModel]="localData()[field.key]"
+                [ngModel]="field.value"
                 (ngModelChange)="updateTextField(field.key, $event)"
                 class="textarea-input"
                 placeholder="{{ field.placeholder || field.label }}"
@@ -162,7 +271,7 @@
                 <input
                   type="color"
                   [id]="field.key"
-                  [ngModel]="localData()[field.key]"
+                  [ngModel]="field.value"
                   (ngModelChange)="updateColorField(field.key, $event)"
                   class="color-input"
                   [name]="field.key + '_picker'"
@@ -170,12 +279,10 @@
                 <div class="color-preview-wrapper">
                   <div
                     class="color-preview"
-                    [style.background-color]="
-                      localData()[field.key] || '#ffffff'
-                    "
+                    [style.background-color]="field.value || '#ffffff'"
                   ></div>
                   <span class="color-value">{{
-                    localData()[field.key] || "#ffffff"
+                    field.value || "#ffffff"
                   }}</span>
                 </div>
               </div>
@@ -186,7 +293,7 @@
                   <input
                     type="checkbox"
                     [id]="field.key"
-                    [ngModel]="localData()[field.key]"
+                    [ngModel]="field.value"
                     (ngModelChange)="updateBooleanField(field.key, $event)"
                     class="checkbox-input"
                     [name]="field.key"
@@ -204,7 +311,7 @@
                   <div class="background-type-selector">
                     <button
                       class="type-btn"
-                      [ngClass]="{ active: localData()[field.key] === 'image' }"
+                      [ngClass]="{ active: field.value === 'image' }"
                       (click)="updateSelectField(field.key, 'image')"
                     >
                       <svg
@@ -226,7 +333,7 @@
                     <button
                       class="type-btn"
                       [ngClass]="{
-                        active: localData()[field.key] === 'video',
+                        active: field.value === 'video',
                         locked: planType === 'standard'
                       }"
                       [disabled]="planType === 'standard'"
@@ -289,9 +396,9 @@
                         planType === 'standard'
                       )
                     "
-                    [ngModel]="localData()[field.key]"
+                    [ngModel]="field.value"
                     (ngModelChange)="updateSelectField(field.key, $event)"
-                    [options]="getSelectOptions(field)"
+                    [options]="selectOptionsMap()[field.key] || []"
                     [placeholder]="field.placeholder || 'Select ' + field.label"
                     [description]="field.description"
                     [planType]="planType === 'premium' ? 'premium' : 'standard'"
@@ -318,8 +425,7 @@
                         class="file-input"
                         [ngClass]="{
                           'highlight-required':
-                            isFieldRequired(field.key) &&
-                            !localData()[field.key]
+                            isFieldRequired(field.key) && !field.value
                         }"
                         accept="image/*"
                       />
@@ -330,20 +436,16 @@
                         class="required-notice"
                       >
                         Required:
-                        <span *ngIf="!localData()[field.key]"
-                          >Please upload a file.</span
-                        >
-                        <span *ngIf="localData()[field.key]"
-                          >✓ File uploaded</span
-                        >
+                        <span *ngIf="!field.value">Please upload a file.</span>
+                        <span *ngIf="field.value">✓ File uploaded</span>
                       </span>
                       <span *ngIf="field.label" class="hint"
                         >Image file, max 2MB</span
                       >
                     </div>
                     <!-- Show image preview if image has been uploaded -->
-                    <div class="file-preview" *ngIf="localData()[field.key]">
-                      <img [src]="localData()[field.key]" alt="File preview" />
+                    <div class="file-preview" *ngIf="field.value">
+                      <img [src]="field.value" alt="File preview" />
                     </div>
                   </ng-container>
                 </ng-container>
@@ -362,8 +464,7 @@
                         class="file-input"
                         [ngClass]="{
                           'highlight-required':
-                            isFieldRequired(field.key) &&
-                            !localData()[field.key]
+                            isFieldRequired(field.key) && !field.value
                         }"
                         accept="video/*"
                       />
@@ -374,12 +475,8 @@
                         class="required-notice"
                       >
                         Required:
-                        <span *ngIf="!localData()[field.key]"
-                          >Please upload a video.</span
-                        >
-                        <span *ngIf="localData()[field.key]"
-                          >✓ Video uploaded</span
-                        >
+                        <span *ngIf="!field.value">Please upload a video.</span>
+                        <span *ngIf="field.value">✓ Video uploaded</span>
                       </span>
                       <span *ngIf="field.label" class="hint"
                         >Video file, max 10MB, MP4 format recommended</span
@@ -395,12 +492,9 @@
                       </span>
                     </div>
                     <!-- Show video preview if video has been uploaded -->
-                    <div class="file-preview" *ngIf="localData()[field.key]">
+                    <div class="file-preview" *ngIf="field.value">
                       <video controls>
-                        <source
-                          [src]="localData()[field.key]"
-                          type="video/mp4"
-                        />
+                        <source [src]="field.value" type="video/mp4" />
                         Your browser does not support the video tag.
                       </video>
                     </div>
@@ -422,7 +516,7 @@
                       class="file-input"
                       [ngClass]="{
                         'highlight-required':
-                          isFieldRequired(field.key) && !localData()[field.key]
+                          isFieldRequired(field.key) && !field.value
                       }"
                       accept="image/*"
                     />
@@ -433,20 +527,16 @@
                       class="required-notice"
                     >
                       Required:
-                      <span *ngIf="!localData()[field.key]"
-                        >Please upload a file.</span
-                      >
-                      <span *ngIf="localData()[field.key]"
-                        >✓ File uploaded</span
-                      >
+                      <span *ngIf="!field.value">Please upload a file.</span>
+                      <span *ngIf="field.value">✓ File uploaded</span>
                     </span>
                     <span *ngIf="field.label" class="hint"
                       >Image file, max 2MB</span
                     >
                   </div>
                   <!-- Show image preview if image has been uploaded -->
-                  <div class="file-preview" *ngIf="localData()[field.key]">
-                    <img [src]="localData()[field.key]" alt="File preview" />
+                  <div class="file-preview" *ngIf="field.value">
+                    <img [src]="field.value" alt="File preview" />
                   </div>
                 </ng-container>
               </div>
@@ -455,7 +545,7 @@
               <div *ngSwitchCase="'list'" class="list-field">
                 <div
                   *ngFor="
-                    let item of localData()[field.key];
+                    let item of field.value;
                     let i = index;
                     trackBy: trackByIndex
                   "
@@ -583,6 +673,5 @@
     </div>
   </div>
 
-  <!-- Backdrop for closing -->
-  <div class="sidebar-backdrop" (click)="handleBackdropClick($event)"></div>
+  <!-- No backdrop needed for better UX -->
 </div>

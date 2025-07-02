@@ -132,10 +132,6 @@ export class BusinessConfigService {
     buttonText: string;
     buttonScrollTargetID: string;
   } {
-    console.log(
-      `[BusinessConfigService] Getting smart CTA defaults for business type: ${businessType}`
-    );
-
     switch (businessType) {
       case 'restaurant':
       case 'cafe':
@@ -604,18 +600,18 @@ export class BusinessConfigService {
     businessType: string,
     plan: 'standard' | 'premium'
   ): Customizations {
-    return {
+    const standardCustomizations: Customizations = {
       fontConfig: {
         fontId: 1,
         family: 'Roboto',
         fallback: 'sans-serif',
       },
-      header: this.getDefaultHeaderData(businessType, plan),
+      header: this.getDefaultHeaderData(businessType, 'standard'),
       pages: {
         home: {
           hero1: this.getDefaultHeroData(businessType),
           about: this.getDefaultAboutData(businessType),
-          // Add default data for relevant sections based on business type
+          contact: this.getDefaultContactData(businessType),
           ...(businessType === 'restaurant'
             ? { menu: this.getDefaultMenuData() }
             : {}),
@@ -625,12 +621,45 @@ export class BusinessConfigService {
           ...(businessType === 'architecture' || businessType === 'portfolio'
             ? { projects: this.getDefaultProjectsData(businessType) }
             : {}),
-          // Always include contact
-          contact: this.getDefaultContactData(businessType),
         },
       },
       footer: this.getDefaultFooterData(businessType),
     };
+
+    if (plan === 'premium') {
+      // Safely access pages.home with proper null checking
+      const standardHome = standardCustomizations.pages?.home || {};
+
+      const premiumHome = {
+        ...standardHome,
+        aboutPreview: this.getPremiumAboutPreviewData(businessType),
+        featuredPreview: this.getPremiumFeaturedPreviewData(businessType),
+        ctaSection: this.getPremiumCtaSectionData(businessType),
+      };
+
+      const premiumPages = {
+        ...(standardCustomizations.pages || {}),
+        home: premiumHome,
+        about: this.getPremiumAboutPageData(businessType),
+        contact: this.getPremiumContactPageData(businessType),
+        menu:
+          businessType === 'restaurant'
+            ? this.getPremiumMenuPageData(businessType)
+            : undefined,
+        services:
+          businessType === 'salon'
+            ? this.getPremiumServicesPageData(businessType)
+            : undefined,
+      };
+
+      return {
+        ...standardCustomizations,
+        header: this.getDefaultHeaderData(businessType, 'premium'),
+        pages: premiumPages,
+      };
+    }
+
+    return standardCustomizations;
   }
 
   /**
@@ -865,5 +894,1221 @@ export class BusinessConfigService {
       buttonBackgroundColor: '#2876ff',
       buttonTextColor: '#ffffff',
     };
+  }
+
+  // ========================================
+  // PREMIUM DATA CONFIGURATION METHODS
+  // ========================================
+
+  /**
+   * Get premium about preview section data for home page
+   */
+  private getPremiumAboutPreviewData(businessType: string): any {
+    const businessSpecific = {
+      restaurant: {
+        title: 'Our Culinary Journey',
+        subtitle:
+          'Discover the passion and tradition behind every dish we create.',
+      },
+      salon: {
+        title: 'Beauty & Expertise Combined',
+        subtitle:
+          'Experience our commitment to making you look and feel amazing.',
+      },
+      architecture: {
+        title: 'Design Philosophy',
+        subtitle:
+          'Explore our approach to creating spaces that inspire and endure.',
+      },
+      portfolio: {
+        title: 'Creative Vision',
+        subtitle: 'Discover the story behind my work and creative process.',
+      },
+    };
+
+    const config = businessSpecific[
+      businessType as keyof typeof businessSpecific
+    ] || {
+      title: 'About Our Company',
+      subtitle: 'Learn more about our values, mission, and what drives us.',
+    };
+
+    return {
+      title: config.title,
+      subtitle: config.subtitle,
+      storyTitle: this.getStoryTitle(businessType),
+      storyDescription: this.getStoryDescription(businessType),
+      linkText: this.getLinkText(businessType),
+      backgroundColor: '#f8f9fa',
+      textColor: '#333333',
+      accentColor: '#9e6aff',
+      showStats: true,
+      showFeatures: true,
+      stats: this.getBusinessStats(businessType),
+      features: this.getKeyFeatures(businessType),
+    };
+  }
+
+  /**
+   * Get premium featured preview section data for home page
+   */
+  private getPremiumFeaturedPreviewData(businessType: string): any {
+    const businessSpecific = {
+      restaurant: {
+        title: 'Signature Dishes',
+        subtitle:
+          'Taste our most celebrated creations and seasonal specialties.',
+      },
+      salon: {
+        title: 'Popular Services',
+        subtitle:
+          'Discover our most requested treatments and styling services.',
+      },
+      architecture: {
+        title: 'Featured Projects',
+        subtitle:
+          'Explore our award-winning designs and architectural achievements.',
+      },
+      portfolio: {
+        title: 'Latest Work',
+        subtitle: 'Browse my most recent projects and creative collaborations.',
+      },
+    };
+
+    const config = businessSpecific[
+      businessType as keyof typeof businessSpecific
+    ] || {
+      title: 'Featured Highlights',
+      subtitle: 'Explore our best offerings and most popular services.',
+    };
+
+    return {
+      title: config.title,
+      subtitle: config.subtitle,
+      backgroundColor: '#ffffff',
+      textColor: '#333333',
+      accentColor: '#9e6aff',
+    };
+  }
+
+  /**
+   * Get premium CTA section data for home page
+   */
+  private getPremiumCtaSectionData(businessType: string): any {
+    const businessSpecific = {
+      restaurant: {
+        title: 'Ready for an Unforgettable Dining Experience?',
+        subtitle: 'Reserve your table today and taste the difference.',
+        primaryButtonText: 'Make Reservation',
+        secondaryButtonText: 'View Menu',
+      },
+      salon: {
+        title: 'Ready to Transform Your Look?',
+        subtitle: 'Book your appointment and let our experts take care of you.',
+        primaryButtonText: 'Book Appointment',
+        secondaryButtonText: 'View Services',
+      },
+      architecture: {
+        title: 'Ready to Bring Your Vision to Life?',
+        subtitle:
+          "Let's discuss your project and create something extraordinary.",
+        primaryButtonText: 'Start Project',
+        secondaryButtonText: 'View Portfolio',
+      },
+      portfolio: {
+        title: 'Ready to Collaborate?',
+        subtitle:
+          "Let's work together to bring your creative vision to reality.",
+        primaryButtonText: 'Start Project',
+        secondaryButtonText: 'View Work',
+      },
+    };
+
+    const config = businessSpecific[
+      businessType as keyof typeof businessSpecific
+    ] || {
+      title: 'Ready to Get Started?',
+      subtitle: 'Join us today and experience the difference.',
+      primaryButtonText: 'Get Started',
+      secondaryButtonText: 'Learn More',
+    };
+
+    return {
+      title: config.title,
+      subtitle: config.subtitle,
+      primaryButtonText: config.primaryButtonText,
+      secondaryButtonText: config.secondaryButtonText,
+      backgroundColor: '#9e6aff',
+      textColor: '#ffffff',
+      buttonStyle: 'premium',
+    };
+  }
+
+  /**
+   * Get premium about page data with comprehensive sections
+   */
+  private getPremiumAboutPageData(businessType: string): any {
+    const businessSpecific = {
+      restaurant: {
+        hero: {
+          title: 'Our Culinary Story',
+          subtitle: 'Where tradition meets innovation in every dish',
+          description:
+            'From farm-fresh ingredients to time-honored techniques, discover the passion that drives our kitchen.',
+        },
+        story: {
+          title: 'Our Journey',
+          content:
+            'Founded with a vision to create memorable dining experiences, our restaurant has been serving the community with exceptional cuisine and warm hospitality. Every dish tells a story of tradition, innovation, and our commitment to culinary excellence.',
+          highlights: [
+            'Farm-to-table philosophy',
+            'Award-winning chef team',
+            'Locally sourced ingredients',
+            'Sustainable practices',
+          ],
+        },
+        team: {
+          title: 'Meet Our Team',
+          subtitle: 'The passionate people behind your dining experience',
+          members: [
+            {
+              id: 1,
+              name: 'Chef Maria Rodriguez',
+              role: 'Executive Chef',
+              bio: 'With over 15 years of culinary experience, Chef Maria brings creativity and passion to every dish.',
+              image: '/assets/team/chef-maria.jpg',
+              specialties: ['Mediterranean Cuisine', 'Pastry Arts'],
+            },
+            {
+              id: 2,
+              name: 'James Thompson',
+              role: 'Sous Chef',
+              bio: 'James specializes in innovative flavor combinations and seasonal menu development.',
+              image: '/assets/team/chef-james.jpg',
+              specialties: ['Seasonal Menus', 'Sauce Mastery'],
+            },
+          ],
+        },
+        values: {
+          title: 'Our Values',
+          subtitle: 'The principles that guide our kitchen',
+          items: [
+            {
+              icon: '🌱',
+              title: 'Sustainability',
+              description:
+                'We source responsibly and minimize our environmental impact.',
+            },
+            {
+              icon: '🥇',
+              title: 'Quality',
+              description: 'Only the finest ingredients make it to your plate.',
+            },
+            {
+              icon: '❤️',
+              title: 'Hospitality',
+              description: 'Every guest is treated like family.',
+            },
+            {
+              icon: '🎨',
+              title: 'Creativity',
+              description: 'We constantly innovate while respecting tradition.',
+            },
+          ],
+        },
+      },
+      salon: {
+        hero: {
+          title: 'Beauty & Wellness Excellence',
+          subtitle: 'Where expertise meets personalized care',
+          description:
+            'Discover a sanctuary dedicated to enhancing your natural beauty with professional treatments and personalized service.',
+        },
+        story: {
+          title: 'Our Story',
+          content:
+            'Our salon was born from a passion for helping people look and feel their absolute best. With years of experience and continuous education, we stay at the forefront of beauty trends and techniques to provide you with exceptional service.',
+          highlights: [
+            'Certified professionals',
+            'Premium product lines',
+            'Personalized consultations',
+            'Relaxing atmosphere',
+          ],
+        },
+        team: {
+          title: 'Our Expert Team',
+          subtitle: 'Skilled professionals dedicated to your beauty',
+          members: [
+            {
+              id: 1,
+              name: 'Sarah Johnson',
+              role: 'Master Stylist',
+              bio: 'Sarah has over 10 years of experience in hair styling and color techniques.',
+              image: '/assets/team/sarah-johnson.jpg',
+              specialties: ['Color Correction', 'Balayage', 'Bridal Styling'],
+            },
+            {
+              id: 2,
+              name: 'Lisa Chen',
+              role: 'Esthetician',
+              bio: 'Lisa specializes in advanced skincare treatments and facial therapies.',
+              image: '/assets/team/lisa-chen.jpg',
+              specialties: [
+                'Anti-Aging Treatments',
+                'Acne Solutions',
+                'Chemical Peels',
+              ],
+            },
+          ],
+        },
+        values: {
+          title: 'Our Commitment',
+          subtitle: 'What drives our passion for beauty',
+          items: [
+            {
+              icon: '✨',
+              title: 'Excellence',
+              description:
+                'We strive for perfection in every service we provide.',
+            },
+            {
+              icon: '🤝',
+              title: 'Trust',
+              description:
+                'Building lasting relationships through honest consultation.',
+            },
+            {
+              icon: '🌿',
+              title: 'Wellness',
+              description: 'Promoting health and well-being inside and out.',
+            },
+            {
+              icon: '💎',
+              title: 'Luxury',
+              description: 'Creating an indulgent experience for every client.',
+            },
+          ],
+        },
+      },
+      architecture: {
+        hero: {
+          title: 'Architectural Innovation',
+          subtitle: 'Designing spaces that inspire and endure',
+          description:
+            'From concept to completion, we create architectural solutions that blend functionality with aesthetic excellence.',
+        },
+        story: {
+          title: 'Our Design Philosophy',
+          content:
+            'We believe that great architecture has the power to transform lives and communities. Our approach combines innovative design with sustainable practices, creating spaces that are both beautiful and environmentally responsible.',
+          highlights: [
+            'Sustainable design practices',
+            'Award-winning projects',
+            'Collaborative approach',
+            'Innovative solutions',
+          ],
+        },
+        team: {
+          title: 'Design Team',
+          subtitle: 'Architects and designers shaping the future',
+          members: [
+            {
+              id: 1,
+              name: 'Michael Anderson',
+              role: 'Principal Architect',
+              bio: 'Michael leads our design team with over 20 years of architectural experience.',
+              image: '/assets/team/michael-anderson.jpg',
+              specialties: [
+                'Sustainable Design',
+                'Commercial Projects',
+                'Urban Planning',
+              ],
+            },
+            {
+              id: 2,
+              name: 'Elena Vasquez',
+              role: 'Senior Designer',
+              bio: 'Elena specializes in residential design and interior space planning.',
+              image: '/assets/team/elena-vasquez.jpg',
+              specialties: [
+                'Residential Design',
+                'Interior Architecture',
+                'Space Planning',
+              ],
+            },
+          ],
+        },
+        values: {
+          title: 'Design Principles',
+          subtitle: 'The foundation of our architectural practice',
+          items: [
+            {
+              icon: '🏗️',
+              title: 'Innovation',
+              description:
+                'Pushing boundaries with cutting-edge design solutions.',
+            },
+            {
+              icon: '🌍',
+              title: 'Sustainability',
+              description: 'Creating environmentally responsible architecture.',
+            },
+            {
+              icon: '🎯',
+              title: 'Functionality',
+              description:
+                'Designing spaces that work beautifully for their users.',
+            },
+            {
+              icon: '🏆',
+              title: 'Excellence',
+              description: 'Delivering exceptional quality in every project.',
+            },
+          ],
+        },
+      },
+      portfolio: {
+        hero: {
+          title: 'Creative Portfolio',
+          subtitle: 'Bringing ideas to life through design',
+          description:
+            'Explore my journey as a creative professional and the diverse projects that showcase my passion for design.',
+        },
+        story: {
+          title: 'My Creative Journey',
+          content:
+            "As a creative professional, I've had the privilege of working on diverse projects that challenge and inspire me. My approach combines strategic thinking with creative execution to deliver impactful results for my clients.",
+          highlights: [
+            'Multi-disciplinary expertise',
+            'Client-focused approach',
+            'Award-winning work',
+            'Continuous learning',
+          ],
+        },
+        team: {
+          title: 'Collaboration Network',
+          subtitle: 'Working with talented professionals',
+          members: [
+            {
+              id: 1,
+              name: 'Alex Morgan',
+              role: 'Creative Director',
+              bio: 'Leading creative vision and strategic direction for client projects.',
+              image: '/assets/team/alex-morgan.jpg',
+              specialties: [
+                'Brand Strategy',
+                'Visual Identity',
+                'Creative Direction',
+              ],
+            },
+          ],
+        },
+        values: {
+          title: 'Creative Values',
+          subtitle: 'What drives my creative process',
+          items: [
+            {
+              icon: '💡',
+              title: 'Innovation',
+              description:
+                'Constantly exploring new ideas and creative solutions.',
+            },
+            {
+              icon: '🎨',
+              title: 'Artistry',
+              description: 'Bringing aesthetic excellence to every project.',
+            },
+            {
+              icon: '🤝',
+              title: 'Collaboration',
+              description:
+                'Working closely with clients to achieve their vision.',
+            },
+            {
+              icon: '📈',
+              title: 'Results',
+              description:
+                'Delivering measurable impact through creative work.',
+            },
+          ],
+        },
+      },
+    };
+
+    const config =
+      businessSpecific[businessType as keyof typeof businessSpecific] ||
+      businessSpecific.portfolio;
+
+    return {
+      hero: {
+        title: config.hero.title,
+        subtitle: config.hero.subtitle,
+        description: config.hero.description,
+        backgroundColor: '#f8f9fa',
+        textColor: '#333333',
+        heroImage: '/assets/about/hero-image.jpg',
+      },
+      story: {
+        title: config.story.title,
+        content: config.story.content,
+        highlights: config.story.highlights,
+        storyImage: '/assets/about/story-image.jpg',
+        backgroundColor: '#ffffff',
+        textColor: '#333333',
+      },
+      team: {
+        title: config.team.title,
+        subtitle: config.team.subtitle,
+        members: config.team.members,
+        backgroundColor: '#f8f9fa',
+        textColor: '#333333',
+      },
+      values: {
+        title: config.values.title,
+        subtitle: config.values.subtitle,
+        items: config.values.items,
+        backgroundColor: '#ffffff',
+        textColor: '#333333',
+      },
+      testimonials: {
+        title: 'What Our Clients Say',
+        subtitle: 'Real feedback from real customers',
+        testimonials: this.getDefaultTestimonials(businessType),
+        backgroundColor: '#f8f9fa',
+        textColor: '#333333',
+      },
+      cta: {
+        title: 'Ready to Work With Us?',
+        subtitle: "Let's start your journey to success together",
+        primaryButtonText: 'Get Started',
+        secondaryButtonText: 'Contact Us',
+        backgroundColor: '#9e6aff',
+        textColor: '#ffffff',
+      },
+    };
+  }
+
+  /**
+   * Get premium contact page data
+   */
+  private getPremiumContactPageData(businessType: string): any {
+    const businessSpecific = {
+      restaurant: {
+        hero: {
+          title: 'Visit Us Today',
+          subtitle: 'Experience exceptional dining in a welcoming atmosphere',
+        },
+        form: {
+          title: 'Make a Reservation',
+          subtitle: 'Book your table for an unforgettable dining experience',
+          buttonText: 'Reserve Table',
+        },
+        location: {
+          title: 'Find Us',
+          subtitle: 'Located in the heart of the city',
+        },
+        hours: {
+          title: 'Hours of Operation',
+          schedule: {
+            'Monday - Thursday': '5:00 PM - 10:00 PM',
+            'Friday - Saturday': '5:00 PM - 11:00 PM',
+            Sunday: '4:00 PM - 9:00 PM',
+          },
+        },
+      },
+      salon: {
+        hero: {
+          title: 'Book Your Appointment',
+          subtitle: 'Transform your look with our expert stylists',
+        },
+        form: {
+          title: 'Schedule Your Visit',
+          subtitle: 'Book an appointment or consultation today',
+          buttonText: 'Book Appointment',
+        },
+        location: {
+          title: 'Visit Our Salon',
+          subtitle: 'Conveniently located for your beauty needs',
+        },
+        hours: {
+          title: 'Salon Hours',
+          schedule: {
+            'Tuesday - Friday': '9:00 AM - 7:00 PM',
+            Saturday: '8:00 AM - 6:00 PM',
+            Sunday: '10:00 AM - 4:00 PM',
+            Monday: 'Closed',
+          },
+        },
+      },
+      architecture: {
+        hero: {
+          title: 'Start Your Project',
+          subtitle: "Let's bring your architectural vision to life",
+        },
+        form: {
+          title: 'Project Consultation',
+          subtitle: 'Tell us about your project and vision',
+          buttonText: 'Request Consultation',
+        },
+        location: {
+          title: 'Our Studio',
+          subtitle: 'Visit our design studio for consultations',
+        },
+        hours: {
+          title: 'Studio Hours',
+          schedule: {
+            'Monday - Friday': '9:00 AM - 6:00 PM',
+            Saturday: '10:00 AM - 2:00 PM',
+            Sunday: 'By Appointment',
+          },
+        },
+      },
+      portfolio: {
+        hero: {
+          title: "Let's Collaborate",
+          subtitle: 'Ready to bring your creative vision to life?',
+        },
+        form: {
+          title: 'Project Inquiry',
+          subtitle: 'Tell me about your project and goals',
+          buttonText: 'Send Message',
+        },
+        location: {
+          title: 'Based In',
+          subtitle: 'Available for projects worldwide',
+        },
+        hours: {
+          title: 'Availability',
+          schedule: {
+            'Monday - Friday': '9:00 AM - 6:00 PM',
+            Weekends: 'By Appointment',
+          },
+        },
+      },
+    };
+
+    const config =
+      businessSpecific[businessType as keyof typeof businessSpecific] ||
+      businessSpecific.portfolio;
+
+    return {
+      hero: {
+        title: config.hero.title,
+        subtitle: config.hero.subtitle,
+        backgroundColor: '#f8f9fa',
+        textColor: '#333333',
+        heroImage: '/assets/contact/hero-image.jpg',
+      },
+      contactForm: {
+        title: config.form.title,
+        subtitle: config.form.subtitle,
+        buttonText: config.form.buttonText,
+        backgroundColor: '#ffffff',
+        textColor: '#333333',
+        fields: [
+          { name: 'name', label: 'Full Name', type: 'text', required: true },
+          {
+            name: 'email',
+            label: 'Email Address',
+            type: 'email',
+            required: true,
+          },
+          {
+            name: 'phone',
+            label: 'Phone Number',
+            type: 'tel',
+            required: false,
+          },
+          { name: 'subject', label: 'Subject', type: 'text', required: true },
+          {
+            name: 'message',
+            label: 'Message',
+            type: 'textarea',
+            required: true,
+          },
+        ],
+      },
+      location: {
+        title: config.location.title,
+        subtitle: config.location.subtitle,
+        address: this.getDefaultAddress(businessType),
+        phone: this.getDefaultPhone(),
+        email: this.getDefaultEmail(businessType),
+        showMap: true,
+        mapLocation: this.getDefaultAddress(businessType),
+        backgroundColor: '#f8f9fa',
+        textColor: '#333333',
+      },
+      hours: {
+        title: config.hours.title,
+        schedule: config.hours.schedule,
+        backgroundColor: '#ffffff',
+        textColor: '#333333',
+      },
+    };
+  }
+
+  /**
+   * Get premium menu page data for restaurants
+   */
+  private getPremiumMenuPageData(businessType: string): any {
+    return {
+      hero: {
+        title: 'Our Menu',
+        subtitle: 'Crafted with passion, served with pride',
+        description:
+          'Discover our carefully curated selection of dishes made with the finest ingredients.',
+        backgroundColor: '#f8f9fa',
+        textColor: '#333333',
+        heroImage: '/assets/menu/hero-image.jpg',
+      },
+      menuCategories: {
+        title: 'Menu Categories',
+        subtitle: 'Explore our culinary offerings',
+        categories: [
+          {
+            id: 'appetizers',
+            name: 'Appetizers',
+            description: 'Start your meal with our delicious starters',
+            image: '/assets/menu/appetizers.jpg',
+            items: [
+              {
+                id: 'bruschetta',
+                name: 'Artisan Bruschetta',
+                description:
+                  'Toasted sourdough with heirloom tomatoes, fresh basil, and aged balsamic',
+                price: '$12',
+                dietary: ['vegetarian'],
+                featured: true,
+              },
+              {
+                id: 'calamari',
+                name: 'Crispy Calamari',
+                description:
+                  'Fresh squid rings with spicy marinara and lemon aioli',
+                price: '$14',
+                dietary: [],
+                featured: false,
+              },
+            ],
+          },
+          {
+            id: 'mains',
+            name: 'Main Courses',
+            description: 'Our signature dishes and chef specialties',
+            image: '/assets/menu/mains.jpg',
+            items: [
+              {
+                id: 'salmon',
+                name: 'Pan-Seared Salmon',
+                description:
+                  'Atlantic salmon with roasted vegetables and herb butter',
+                price: '$28',
+                dietary: ['gluten-free'],
+                featured: true,
+              },
+              {
+                id: 'ribeye',
+                name: 'Prime Ribeye',
+                description:
+                  '12oz dry-aged ribeye with truffle mashed potatoes',
+                price: '$42',
+                dietary: [],
+                featured: true,
+              },
+            ],
+          },
+        ],
+        backgroundColor: '#ffffff',
+        textColor: '#333333',
+      },
+      specialOffers: {
+        title: 'Special Offers',
+        subtitle: 'Limited time seasonal specials',
+        offers: [
+          {
+            id: 'happy-hour',
+            title: 'Happy Hour',
+            description: 'Half price appetizers and cocktails',
+            time: 'Monday - Friday, 3-6 PM',
+            image: '/assets/menu/happy-hour.jpg',
+          },
+          {
+            id: 'wine-wednesday',
+            title: 'Wine Wednesday',
+            description: '50% off all wine bottles',
+            time: 'Every Wednesday',
+            image: '/assets/menu/wine-wednesday.jpg',
+          },
+        ],
+        backgroundColor: '#f8f9fa',
+        textColor: '#333333',
+      },
+      dietaryInfo: {
+        title: 'Dietary Information',
+        subtitle: 'We cater to all dietary preferences',
+        options: [
+          {
+            icon: '🌱',
+            label: 'Vegetarian',
+            description: 'Plant-based options available',
+          },
+          {
+            icon: '🌾',
+            label: 'Gluten-Free',
+            description: 'Certified gluten-free dishes',
+          },
+          {
+            icon: '🥛',
+            label: 'Dairy-Free',
+            description: 'Lactose-free alternatives',
+          },
+          {
+            icon: '🥗',
+            label: 'Vegan',
+            description: 'Completely plant-based meals',
+          },
+        ],
+        backgroundColor: '#ffffff',
+        textColor: '#333333',
+      },
+    };
+  }
+
+  /**
+   * Get premium services page data for salons
+   */
+  private getPremiumServicesPageData(businessType: string): any {
+    return {
+      hero: {
+        title: 'Our Services',
+        subtitle: 'Professional beauty treatments tailored for you',
+        description:
+          'Discover our comprehensive range of beauty and wellness services.',
+        backgroundColor: '#f8f9fa',
+        textColor: '#333333',
+        heroImage: '/assets/services/hero-image.jpg',
+      },
+      serviceCategories: {
+        title: 'Service Categories',
+        subtitle: 'Expert treatments for every beauty need',
+        categories: [
+          {
+            id: 'hair',
+            name: 'Hair Services',
+            description: 'Cut, color, and styling by expert stylists',
+            image: '/assets/services/hair.jpg',
+            services: [
+              {
+                id: 'haircut',
+                name: 'Precision Cut & Style',
+                description: 'Professional haircut with personalized styling',
+                price: 'From $65',
+                duration: '60 minutes',
+                featured: true,
+              },
+              {
+                id: 'color',
+                name: 'Color & Highlights',
+                description:
+                  'Full color service with professional consultation',
+                price: 'From $120',
+                duration: '2-3 hours',
+                featured: true,
+              },
+            ],
+          },
+          {
+            id: 'skincare',
+            name: 'Skincare Treatments',
+            description: 'Advanced facial treatments and skincare',
+            image: '/assets/services/skincare.jpg',
+            services: [
+              {
+                id: 'facial',
+                name: 'Signature Facial',
+                description: 'Customized facial treatment for your skin type',
+                price: 'From $85',
+                duration: '75 minutes',
+                featured: true,
+              },
+              {
+                id: 'chemical-peel',
+                name: 'Chemical Peel',
+                description: 'Professional exfoliation for renewed skin',
+                price: 'From $150',
+                duration: '45 minutes',
+                featured: false,
+              },
+            ],
+          },
+        ],
+        backgroundColor: '#ffffff',
+        textColor: '#333333',
+      },
+      packages: {
+        title: 'Service Packages',
+        subtitle: 'Save with our curated service combinations',
+        packages: [
+          {
+            id: 'bridal',
+            name: 'Bridal Package',
+            description: 'Complete bridal beauty preparation',
+            services: [
+              'Trial styling',
+              'Wedding day hair & makeup',
+              'Touch-up kit',
+            ],
+            price: '$350',
+            savings: 'Save $50',
+            image: '/assets/services/bridal.jpg',
+          },
+          {
+            id: 'spa-day',
+            name: 'Spa Day Experience',
+            description: 'Full day of relaxation and beauty',
+            services: [
+              'Facial treatment',
+              'Hair styling',
+              'Manicure & pedicure',
+            ],
+            price: '$275',
+            savings: 'Save $40',
+            image: '/assets/services/spa-day.jpg',
+          },
+        ],
+        backgroundColor: '#f8f9fa',
+        textColor: '#333333',
+      },
+      booking: {
+        title: 'Book Your Appointment',
+        subtitle: 'Schedule your beauty transformation today',
+        bookingOptions: [
+          {
+            method: 'online',
+            label: 'Book Online',
+            description: '24/7 online booking',
+          },
+          {
+            method: 'phone',
+            label: 'Call Us',
+            description: 'Speak with our team',
+          },
+          {
+            method: 'walk-in',
+            label: 'Walk-In',
+            description: 'Subject to availability',
+          },
+        ],
+        backgroundColor: '#ffffff',
+        textColor: '#333333',
+      },
+    };
+  }
+
+  /**
+   * Get story title based on business type for about preview
+   */
+  private getStoryTitle(businessType: string): string {
+    const titles: Record<string, string> = {
+      restaurant: 'Culinary Excellence',
+      cafe: 'Coffee Artistry',
+      bar: 'Mixology Mastery',
+      salon: 'Beauty Innovation',
+      spa: 'Wellness Philosophy',
+      fitness: 'Health Commitment',
+      architecture: 'Design Vision',
+      portfolio: 'Creative Process',
+      consulting: 'Strategic Approach',
+      default: 'Our Mission',
+    };
+    return titles[businessType] || titles['default'];
+  }
+
+  /**
+   * Get story description based on business type for about preview
+   */
+  private getStoryDescription(businessType: string): string {
+    const descriptions: Record<string, string> = {
+      restaurant:
+        'We believe great food brings people together. Every dish is crafted with passion, using the finest ingredients to create memorable dining experiences.',
+      cafe: 'From bean to cup, we ensure every coffee experience is exceptional. Our commitment to quality and community creates the perfect atmosphere.',
+      bar: 'Our skilled bartenders create unique cocktails that tell a story. We combine traditional techniques with innovative flavors.',
+      salon:
+        'We transform not just how you look, but how you feel. Our expert team stays ahead of trends to bring you the latest in beauty.',
+      spa: 'Your well-being is our priority. We create a sanctuary where you can escape, relax, and rejuvenate your mind and body.',
+      fitness:
+        'We believe fitness is a journey, not a destination. Our expert trainers and state-of-the-art equipment help you achieve your goals.',
+      architecture:
+        'We design spaces that inspire and endure. Our innovative approach combines functionality with aesthetic excellence.',
+      portfolio:
+        'Every project is an opportunity to push creative boundaries. We bring ideas to life through thoughtful design and execution.',
+      consulting:
+        'We partner with businesses to unlock their potential. Our strategic insights drive growth and sustainable success.',
+      default:
+        'We are committed to excellence in everything we do, delivering exceptional value and service to our clients.',
+    };
+    return descriptions[businessType] || descriptions['default'];
+  }
+
+  /**
+   * Get link text based on business type for about preview
+   */
+  private getLinkText(businessType: string): string {
+    const linkTexts: Record<string, string> = {
+      restaurant: 'Discover Our Story',
+      cafe: 'Learn About Our Coffee',
+      bar: 'Meet Our Mixologists',
+      salon: 'Meet Our Team',
+      spa: 'Explore Our Services',
+      fitness: 'Join Our Community',
+      architecture: 'View Our Portfolio',
+      portfolio: 'View My Work',
+      consulting: 'Learn Our Approach',
+      default: 'Learn More About Us',
+    };
+    return linkTexts[businessType] || linkTexts['default'];
+  }
+
+  /**
+   * Get business statistics based on business type for about preview
+   */
+  private getBusinessStats(
+    businessType: string
+  ): Array<{ number: string; label: string }> {
+    const stats: Record<string, Array<{ number: string; label: string }>> = {
+      restaurant: [
+        { number: '500+', label: 'Happy Customers' },
+        { number: '5★', label: 'Average Rating' },
+        { number: '10+', label: 'Years Experience' },
+      ],
+      cafe: [
+        { number: '1000+', label: 'Cups Served Daily' },
+        { number: '15+', label: 'Coffee Varieties' },
+        { number: '5★', label: 'Customer Rating' },
+      ],
+      salon: [
+        { number: '200+', label: 'Satisfied Clients' },
+        { number: '8+', label: 'Expert Stylists' },
+        { number: '15+', label: 'Years Experience' },
+      ],
+      architecture: [
+        { number: '100+', label: 'Projects Completed' },
+        { number: '20+', label: 'Awards Won' },
+        { number: '15+', label: 'Years Experience' },
+      ],
+      portfolio: [
+        { number: '50+', label: 'Projects Completed' },
+        { number: '25+', label: 'Happy Clients' },
+        { number: '8+', label: 'Years Experience' },
+      ],
+      default: [
+        { number: '100+', label: 'Happy Clients' },
+        { number: '5★', label: 'Rating' },
+        { number: '10+', label: 'Years Experience' },
+      ],
+    };
+    return stats[businessType] || stats['default'];
+  }
+
+  /**
+   * Get key features based on business type for about preview
+   */
+  private getKeyFeatures(
+    businessType: string
+  ): Array<{ icon: string; title: string; description: string }> {
+    const features: Record<
+      string,
+      Array<{ icon: string; title: string; description: string }>
+    > = {
+      restaurant: [
+        {
+          icon: 'fas fa-award',
+          title: 'Award-Winning',
+          description: 'Recognized for culinary excellence',
+        },
+        {
+          icon: 'fas fa-leaf',
+          title: 'Fresh Ingredients',
+          description: 'Locally sourced, premium quality',
+        },
+        {
+          icon: 'fas fa-users',
+          title: 'Expert Chefs',
+          description: 'Passionate culinary professionals',
+        },
+      ],
+      cafe: [
+        {
+          icon: 'fas fa-coffee',
+          title: 'Premium Coffee',
+          description: 'Ethically sourced, expertly roasted',
+        },
+        {
+          icon: 'fas fa-heart',
+          title: 'Community Focus',
+          description: 'Building connections over coffee',
+        },
+        {
+          icon: 'fas fa-clock',
+          title: 'Fresh Daily',
+          description: 'Baked goods made fresh every day',
+        },
+      ],
+      salon: [
+        {
+          icon: 'fas fa-star',
+          title: 'Expert Stylists',
+          description: 'Trained in latest techniques',
+        },
+        {
+          icon: 'fas fa-palette',
+          title: 'Color Specialists',
+          description: 'Custom color solutions',
+        },
+        {
+          icon: 'fas fa-gem',
+          title: 'Premium Products',
+          description: 'High-quality professional brands',
+        },
+      ],
+      architecture: [
+        {
+          icon: 'fas fa-drafting-compass',
+          title: 'Innovation',
+          description: 'Pushing boundaries with cutting-edge design',
+        },
+        {
+          icon: 'fas fa-leaf',
+          title: 'Sustainability',
+          description: 'Creating environmentally responsible architecture',
+        },
+        {
+          icon: 'fas fa-star',
+          title: 'Excellence',
+          description: 'Delivering exceptional quality in every project',
+        },
+      ],
+      portfolio: [
+        {
+          icon: 'fas fa-lightbulb',
+          title: 'Innovation',
+          description: 'Constantly exploring new creative solutions',
+        },
+        {
+          icon: 'fas fa-palette',
+          title: 'Artistry',
+          description: 'Bringing aesthetic excellence to every project',
+        },
+        {
+          icon: 'fas fa-handshake',
+          title: 'Collaboration',
+          description: 'Working closely with clients to achieve their vision',
+        },
+      ],
+      default: [
+        {
+          icon: 'fas fa-star',
+          title: 'Excellence',
+          description: 'Committed to the highest standards',
+        },
+        {
+          icon: 'fas fa-users',
+          title: 'Expert Team',
+          description: 'Experienced professionals',
+        },
+        {
+          icon: 'fas fa-heart',
+          title: 'Customer Focus',
+          description: 'Your satisfaction is our priority',
+        },
+      ],
+    };
+    return features[businessType] || features['default'];
+  }
+
+  /**
+   * Get default testimonials for different business types
+   */
+  private getDefaultTestimonials(businessType: string): any[] {
+    const testimonialsByType = {
+      restaurant: [
+        {
+          id: 1,
+          name: 'Sarah Johnson',
+          rating: 5,
+          text: 'Absolutely incredible dining experience! Every dish was perfectly prepared and the service was outstanding.',
+          image: '/assets/testimonials/sarah-j.jpg',
+          location: 'Local Food Lover',
+        },
+        {
+          id: 2,
+          name: 'Michael Chen',
+          rating: 5,
+          text: 'The best restaurant in the city! The atmosphere is perfect for special occasions and the food is exceptional.',
+          image: '/assets/testimonials/michael-c.jpg',
+          location: 'Regular Customer',
+        },
+      ],
+      salon: [
+        {
+          id: 1,
+          name: 'Emma Rodriguez',
+          rating: 5,
+          text: "I've never felt more beautiful! The stylists here really understand what works for each client.",
+          image: '/assets/testimonials/emma-r.jpg',
+          location: 'Loyal Client',
+        },
+        {
+          id: 2,
+          name: 'Jessica Taylor',
+          rating: 5,
+          text: "Professional, friendly, and incredibly talented. I won't go anywhere else for my beauty needs.",
+          image: '/assets/testimonials/jessica-t.jpg',
+          location: 'Happy Customer',
+        },
+      ],
+      architecture: [
+        {
+          id: 1,
+          name: 'David Wilson',
+          rating: 5,
+          text: 'They transformed our vision into reality. The design process was collaborative and the result exceeded our expectations.',
+          image: '/assets/testimonials/david-w.jpg',
+          location: 'Homeowner',
+        },
+        {
+          id: 2,
+          name: 'Lisa Martinez',
+          rating: 5,
+          text: 'Professional, creative, and detail-oriented. Our new office space is both functional and inspiring.',
+          image: '/assets/testimonials/lisa-m.jpg',
+          location: 'Business Owner',
+        },
+      ],
+      portfolio: [
+        {
+          id: 1,
+          name: 'Alex Thompson',
+          rating: 5,
+          text: 'Working with this creative professional was a game-changer for our brand. Highly recommended!',
+          image: '/assets/testimonials/alex-t.jpg',
+          location: 'Client',
+        },
+        {
+          id: 2,
+          name: 'Maria Garcia',
+          rating: 5,
+          text: 'Exceptional creativity and professionalism. The final result was exactly what we envisioned.',
+          image: '/assets/testimonials/maria-g.jpg',
+          location: 'Satisfied Client',
+        },
+      ],
+    };
+
+    return (
+      testimonialsByType[businessType as keyof typeof testimonialsByType] ||
+      testimonialsByType.portfolio
+    );
   }
 }

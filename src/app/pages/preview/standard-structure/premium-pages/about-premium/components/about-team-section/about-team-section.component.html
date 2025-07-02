@@ -1,0 +1,46 @@
+<app-section-hover-wrapper
+  [sectionId]="'team'"
+  [editable]="true"
+  [currentPlan]="'premium'"
+  [isMobileView]="isMobileView"
+  (editSection)="handleSectionEdit('team')"
+>
+  <section
+    id="about-team"
+    class="team-section"
+    [style.background-color]="data?.backgroundColor || '#f8f9fa'"
+    [style.color]="data?.textColor || '#333333'"
+  >
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">{{ data?.title || "Meet Our Team" }}</h2>
+        <p class="section-subtitle">
+          {{ data?.subtitle || "The passionate people behind our success" }}
+        </p>
+      </div>
+      <div class="team-grid">
+        <div class="team-member" *ngFor="let member of getTeamMembers()">
+          <div class="member-image">
+            <img [src]="member.image" [alt]="member.name" />
+          </div>
+          <div class="member-info">
+            <h3 class="member-name">{{ member.name }}</h3>
+            <p class="member-role">{{ member.role }}</p>
+            <p class="member-bio">{{ member.bio }}</p>
+            <div class="member-social" *ngIf="member.social">
+              <a
+                *ngFor="let social of member.social"
+                [href]="social.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="social-link"
+              >
+                <i [class]="social.icon"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</app-section-hover-wrapper>
