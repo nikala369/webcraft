@@ -571,8 +571,8 @@ export class ComponentCustomizerComponent implements OnInit {
       `[ComponentCustomizer] ngOnInit called for component: ${this.componentKey}`
     );
 
-    // Make sidebar interactive immediately to avoid first-click being lost (hero1 lag fix)
-    this.isVisible = true;
+    // DON'T make sidebar visible immediately - this breaks the opening animation
+    // this.isVisible = true; // REMOVED
 
     // Ensure componentKey is set
     if (!this.componentKey) {
@@ -588,84 +588,96 @@ export class ComponentCustomizerComponent implements OnInit {
     // Always start from default position when opening
     this.clearSavedPositionAndSize();
 
-    // Use requestAnimationFrame for smoother initialization
+    // Use proper animation sequence for smooth slide-down opening
     requestAnimationFrame(() => {
+      // First frame: Set up the initial state (sidebar is positioned but hidden)
       this.isVisible = true;
 
-      // Special handling for hero1 to ensure proper visibility
-      if (this.componentKey === 'pages.home.hero1') {
-        // Force the container to be visible immediately
+      requestAnimationFrame(() => {
+        // Second frame: Add the visible class to trigger the slide-down animation
         const container = this.el.nativeElement;
         if (container) {
-          container.style.opacity = '1';
-          container.style.visibility = 'visible';
-          // Add another frame to ensure all styles are applied
+          container.classList.add('visible');
+        }
+
+        // Special handling for hero1 to ensure proper visibility
+        if (this.componentKey === 'pages.home.hero1') {
+          // Additional frame for hero1 to ensure all styles are applied
           requestAnimationFrame(() => {
             const sidebar = container.querySelector('.customizer-sidebar');
             if (sidebar) {
-              (sidebar as HTMLElement).style.opacity = '1';
-              (sidebar as HTMLElement).style.transform = 'translateX(0)';
+              // Ensure no lingering transform styles
+              (sidebar as HTMLElement).style.transform = '';
+              (sidebar as HTMLElement).style.opacity = '';
             }
           });
         }
-      }
 
-      // Ensure we have fields config before proceeding
-      const fieldsConfig = this.getFieldsConfig();
-      console.log(
-        `[ComponentCustomizer] Fields config in ngOnInit:`,
-        fieldsConfig
-      );
-
-      // Restore last-used tab if valid, else default to first
-      const availableCategories = this.categories();
-      const last = this.lastActiveCategory[this.componentKey];
-
-      console.log(
-        `[TabMemory] Component: ${
-          this.componentKey
-        }, Last tab: ${last}, Available: ${availableCategories
-          .map((c) => c.id)
-          .join(', ')}`
-      );
-
-      if (last && availableCategories.some((c) => c.id === last)) {
-        console.log(
-          `[TabMemory] Restoring tab: ${last} for ${this.componentKey}`
-        );
-        this.activeCategory.set(last);
-      } else if (availableCategories.length > 0) {
-        console.log(
-          `[TabMemory] Using default tab: ${availableCategories[0].id} for ${this.componentKey}`
-        );
-        this.activeCategory.set(availableCategories[0].id);
-      } else {
-        console.error(
-          `[TabMemory] No categories available for ${this.componentKey}!`
-        );
-        // Force general category as fallback
-        this.activeCategory.set('general');
-      }
-
-      // Validate activeCategory after setting
-      this.validateActiveCategory();
-
-      // Check validation status and auto-select category with errors if any
-      const validationStatus = this.categoryValidationStatus();
-      const invalidCategory = Object.entries(validationStatus).find(
-        ([_category, isValid]) => !isValid
-      )?.[0];
-
-      if (
-        invalidCategory &&
-        this.categories().some((c) => c.id === invalidCategory)
-      ) {
-        console.log(
-          `[TabMemory] Overriding to invalid category: ${invalidCategory} for ${this.componentKey}`
-        );
-        this.activeCategory.set(invalidCategory);
-      }
+        // Continue with the rest of initialization...
+        this.completeInitialization();
+      });
     });
+  }
+
+  /**
+   * Complete the initialization process after animation setup
+   */
+  private completeInitialization(): void {
+    // Ensure we have fields config before proceeding
+    const fieldsConfig = this.getFieldsConfig();
+    console.log(
+      `[ComponentCustomizer] Fields config in ngOnInit:`,
+      fieldsConfig
+    );
+
+    // Restore last-used tab if valid, else default to first
+    const availableCategories = this.categories();
+    const last = this.lastActiveCategory[this.componentKey];
+
+    console.log(
+      `[TabMemory] Component: ${
+        this.componentKey
+      }, Last tab: ${last}, Available: ${availableCategories
+        .map((c) => c.id)
+        .join(', ')}`
+    );
+
+    if (last && availableCategories.some((c) => c.id === last)) {
+      console.log(
+        `[TabMemory] Restoring tab: ${last} for ${this.componentKey}`
+      );
+      this.activeCategory.set(last);
+    } else if (availableCategories.length > 0) {
+      console.log(
+        `[TabMemory] Using default tab: ${availableCategories[0].id} for ${this.componentKey}`
+      );
+      this.activeCategory.set(availableCategories[0].id);
+    } else {
+      console.error(
+        `[TabMemory] No categories available for ${this.componentKey}!`
+      );
+      // Force general category as fallback
+      this.activeCategory.set('general');
+    }
+
+    // Validate activeCategory after setting
+    this.validateActiveCategory();
+
+    // Check validation status and auto-select category with errors if any
+    const validationStatus = this.categoryValidationStatus();
+    const invalidCategory = Object.entries(validationStatus).find(
+      ([_category, isValid]) => !isValid
+    )?.[0];
+
+    if (
+      invalidCategory &&
+      this.categories().some((c) => c.id === invalidCategory)
+    ) {
+      console.log(
+        `[TabMemory] Overriding to invalid category: ${invalidCategory} for ${this.componentKey}`
+      );
+      this.activeCategory.set(invalidCategory);
+    }
 
     // Load video placeholders from session storage if they exist
     const savedPlaceholders = sessionStorage.getItem('videoPlaceholders');
@@ -1356,7 +1368,7 @@ export class ComponentCustomizerComponent implements OnInit {
 
   startClosingAnimation(): void {
     const container = document.querySelector('.customizer-sidebar-container');
-    const sidebar = container?.querySelector('.customizer-sidebar');
+    const sidebar = container?.querySelector('.customizer-sidebar') || null;
 
     // Special handling for hero1 to ensure smooth closing
     if (this.componentKey === 'pages.home.hero1') {
@@ -1378,26 +1390,38 @@ export class ComponentCustomizerComponent implements OnInit {
 
       // Add micro-delay for hero1 to ensure DOM is ready
       requestAnimationFrame(() => {
-        // Remove lingering dragging class
-        sidebar?.classList.remove('dragging');
-
-        // Trigger exit animation
-        container?.classList.add('closing');
-        container?.classList.remove('visible');
+        this.triggerClosingAnimation(container, sidebar);
       });
     } else {
       // Normal flow for other components
-      // Remove lingering dragging class
-      sidebar?.classList.remove('dragging');
-
-      // Trigger exit animation
-      container?.classList.add('closing');
-      container?.classList.remove('visible');
+      this.triggerClosingAnimation(container, sidebar);
     }
+  }
 
-    setTimeout(() => {
-      this.close.emit();
-    }, 200); // unified duration
+  /**
+   * Trigger the actual closing animation
+   */
+  private triggerClosingAnimation(
+    container: Element | null,
+    sidebar: Element | null
+  ): void {
+    // Remove lingering dragging class
+    sidebar?.classList.remove('dragging');
+
+    // IMPORTANT: Add the closing class FIRST while keeping visible class
+    // This ensures the CSS transition can work properly
+    container?.classList.add('closing');
+
+    // Then in the next animation frame, remove the visible class
+    // This triggers the actual slide-up animation
+    requestAnimationFrame(() => {
+      container?.classList.remove('visible');
+
+      // After animation completes, emit close event
+      setTimeout(() => {
+        this.close.emit();
+      }, 200); // Match the CSS transition duration
+    });
   }
 
   // Check which categories have required but invalid fields

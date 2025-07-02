@@ -26,6 +26,8 @@ $premium-color: #9e6aff;
   z-index: 1000;
   pointer-events: none;
   overflow: visible !important; // Ensure dropdowns can overflow
+  opacity: 0; // Start invisible for smooth fade-in
+  transition: opacity 0.2s ease; // Smooth container fade
 
   // Always draggable, so these styles always apply
   &.draggable {
@@ -63,21 +65,36 @@ $premium-color: #9e6aff;
 
   &.visible {
     pointer-events: all;
+    opacity: 1; // Fade in the container
 
     .customizer-sidebar {
-      transform: translateY(0);
+      transform: translateY(0); // Slide down to normal position
       opacity: 1;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.3s ease; // Smooth slide-down animation
     }
   }
 
   &.closing {
     pointer-events: all;
+    opacity: 1; // Keep container visible during closing animation
 
     .customizer-sidebar {
-      transform: translateY(-100%);
-      opacity: 0;
+      transform: translateY(
+        -100%
+      ) !important; // Slide up to close - use !important to override visible state
+      opacity: 0 !important;
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-        opacity 0.2s ease;
+        opacity 0.2s ease !important;
+    }
+  }
+
+  // When not visible and not closing, ensure proper initial state
+  &:not(.visible):not(.closing) {
+    .customizer-sidebar {
+      transform: translateY(-100%); // Keep hidden above viewport
+      opacity: 0;
+      transition: none; // No transition for initial state
     }
   }
 
@@ -173,9 +190,8 @@ $premium-color: #9e6aff;
   display: flex;
   flex-direction: column;
   z-index: 1001;
-  transform: translateY(-100%); // Start from top instead of right
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
-  opacity: 0;
+  transform: translateY(-100%); // Start from top (hidden above viewport)
+  opacity: 0; // Start invisible
   backdrop-filter: blur(20px);
 
   // Glassmorphism effect
