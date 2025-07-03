@@ -6,6 +6,8 @@ import {
   signal,
   computed,
   OnInit,
+  OnChanges,
+  SimpleChanges,
   inject,
   effect,
   ChangeDetectionStrategy,
@@ -15,8 +17,18 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import {
+  trigger,
+  state,
+  style,
+  transition,
+  animate,
+  query,
+  stagger,
+} from '@angular/animations';
 import { ToastService } from '../../../../core/services/toast/toast.service';
 import { ModalService } from '../../../../core/services/modal/modal.service';
+import { CustomizerSoundService } from '../../../../core/services/audio/customizer-sound.service';
 import { CustomSelectComponent } from '../../../../shared/components/custom-select/custom-select.component';
 import {
   DraggableDirective,
@@ -41,8 +53,41 @@ import { FieldConfig, getPlanSpecificConfig } from './customizing-form-config';
   templateUrl: './component-customizer.component.html',
   styleUrls: ['./component-customizer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('slideDown', [
+      transition(':enter', [
+        style({
+          transform: 'translateY(-100%)',
+          opacity: 0,
+        }),
+        animate(
+          '400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          style({
+            transform: 'translateY(0)',
+            opacity: 1,
+          })
+        ),
+      ]),
+      transition(':leave', [
+        animate(
+          '200ms cubic-bezier(0.16, 1, 0.3, 1)',
+          style({
+            transform: 'translateY(-100%)',
+            opacity: 0,
+          })
+        ),
+      ]),
+    ]),
+    trigger('fadeIn', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('200ms ease', style({ opacity: 1 })),
+      ]),
+      transition(':leave', [animate('200ms ease', style({ opacity: 0 }))]),
+    ]),
+  ],
 })
-export class ComponentCustomizerComponent implements OnInit {
+export class ComponentCustomizerComponent implements OnInit, OnChanges {
   @ViewChild(DraggableDirective) draggableDirective!: DraggableDirective;
   @ViewChild(ResizableDirective) resizableDirective!: ResizableDirective;
 
@@ -82,7 +127,10 @@ export class ComponentCustomizerComponent implements OnInit {
 
   @Input() businessType!: string;
   originalData: any;
-  isVisible = false;
+  isVisible = signal(false);
+  isReady = signal(false);
+  isDragging = signal(false);
+  isResizing = signal(false);
 
   // Use a signal for activeCategory for better state management
   activeCategory = signal('general');
@@ -94,6 +142,7 @@ export class ComponentCustomizerComponent implements OnInit {
   // Inject the toast service
   private toastService = inject(ToastService);
   private modalService = inject(ModalService);
+  private customizerSoundService = inject(CustomizerSoundService);
 
   // Data structure for storing video placeholder metadata
   videoPlaceholders: Record<string, { fileName: string; timestamp: string }> =
@@ -566,96 +615,206 @@ export class ComponentCustomizerComponent implements OnInit {
     }
   }
 
-  ngOnInit() {
-    console.log(
-      `[ComponentCustomizer] ngOnInit called for component: ${this.componentKey}`
-    );
+  /**
+   * ngOnChanges - Handle input changes and state initialization
+   * This is the proper Angular lifecycle hook for reacting to @Input changes
+   */
+  ngOnChanges(changes: SimpleChanges): void {
+    // Initialize state when inputs change
+    if (
+      changes['componentKey'] ||
+      changes['initialData'] ||
+      changes['planType'] ||
+      changes['businessType']
+    ) {
+      console.log('[ComponentCustomizer] Input changes detected:', {
+        componentKey: this.componentKey,
+        hasData: !!this.initialData,
+        planType: this.planType,
+        businessType: this.businessType,
+      });
 
-    // DON'T make sidebar visible immediately - this breaks the opening animation
-    // this.isVisible = true; // REMOVED
+      // Initialize local data
+      if (this.initialData) {
+        this.localData.set({
+          id: this.componentKey,
+          ...structuredClone(this.initialData),
+        });
+        this.originalData = structuredClone(this.initialData);
+      }
 
-    // Ensure componentKey is set
-    if (!this.componentKey) {
-      console.error(
-        '[ComponentCustomizer] ngOnInit called without componentKey!'
-      );
-      return;
+      // Load tab memory
+      this.loadTabMemoryFromStorage();
+
+      // Clear saved position and size for fresh start
+      this.clearSavedPositionAndSize();
+
+      // Make visible immediately for interactivity
+      this.isVisible.set(true);
+
+      // Play opening sound effect
+      this.customizerSoundService.play(true);
+
+      // Restore last active or default category BEFORE animation
+      this.restoreActiveCategory();
+
+      // Trigger slide-down animation after a brief delay so sidebar starts hidden then animates
+      requestAnimationFrame(() => {
+        this.isReady.set(true);
+      });
     }
+  }
+
+  /**
+   * ngOnInit - Signal that component is ready for animation
+   * This is simplified to only handle the readiness signal
+   */
+  ngOnInit(): void {
+    console.log(
+      '[ComponentCustomizer] ngOnInit - component ready for animation'
+    );
 
     // Load tab memory from session storage
     this.loadTabMemoryFromStorage();
 
-    // Always start from default position when opening
+    // Clear saved position and size to ensure default position
     this.clearSavedPositionAndSize();
 
-    // Use proper animation sequence for smooth slide-down opening
-    requestAnimationFrame(() => {
-      // First frame: Set up the initial state (sidebar is positioned but hidden)
-      this.isVisible = true;
+    // Initialize drag position tracking
+    this.initializeDragPositionTracking();
 
-      requestAnimationFrame(() => {
-        // Second frame: Add the visible class to trigger the slide-down animation
-        const container = this.el.nativeElement;
-        if (container) {
-          container.classList.add('visible');
-        }
+    // Signal that component is ready
+    this.isReady.set(true);
 
-        // Special handling for hero1 to ensure proper visibility
-        if (this.componentKey === 'pages.home.hero1') {
-          // Additional frame for hero1 to ensure all styles are applied
-          requestAnimationFrame(() => {
-            const sidebar = container.querySelector('.customizer-sidebar');
-            if (sidebar) {
-              // Ensure no lingering transform styles
-              (sidebar as HTMLElement).style.transform = '';
-              (sidebar as HTMLElement).style.opacity = '';
-            }
-          });
-        }
-
-        // Continue with the rest of initialization...
-        this.completeInitialization();
-      });
-    });
+    // Make component visible to trigger :enter animation
+    setTimeout(() => {
+      this.isVisible.set(true);
+    }, 50); // Small delay to ensure DOM is ready
   }
 
   /**
-   * Complete the initialization process after animation setup
+   * Initialize drag position tracking for reset button functionality
    */
-  private completeInitialization(): void {
-    // Ensure we have fields config before proceeding
-    const fieldsConfig = this.getFieldsConfig();
-    console.log(
-      `[ComponentCustomizer] Fields config in ngOnInit:`,
-      fieldsConfig
-    );
+  private initializeDragPositionTracking(): void {
+    // Set up initial position tracking
+    this.dragPosition.set({ x: 0, y: 0 });
+    this.defaultPosition.set({ x: 0, y: 0 });
+
+    // Watch for draggable directive changes after view init
+    setTimeout(() => {
+      if (this.draggableDirective) {
+        // Listen for position changes from the directive
+        console.log('[ComponentCustomizer] Draggable directive is available');
+      }
+    }, 100);
+  }
+
+  /**
+   * Initialize component state based on inputs
+   */
+  private initializeComponentState(): void {
+    console.log('[ComponentCustomizer] Initializing component state');
+
+    // Ensure componentKey is set
+    if (!this.componentKey) {
+      console.error(
+        '[ComponentCustomizer] Cannot initialize without componentKey'
+      );
+      return;
+    }
+
+    // Clear cached config when component key or plan changes
+    this._cachedFieldsConfig = null;
+
+    // Initialize with merged data if we have initial data
+    if (this.originalData) {
+      this.setupInitialData();
+    } else {
+      // Initialize with empty object and component ID
+      this.localData.set({ id: this.componentKey });
+    }
 
     // Restore last-used tab if valid, else default to first
-    const availableCategories = this.categories();
-    const last = this.lastActiveCategory[this.componentKey];
+    this.restoreActiveCategory();
+  }
 
+  /**
+   * Setup initial data with field defaults
+   */
+  private setupInitialData(): void {
+    // Store original for reset functionality
+    const originalCopy = structuredClone(this.originalData);
+
+    // Get fields configuration
+    const configFields = this.getFieldsConfig();
+    console.log('[ComponentCustomizer] Config fields:', configFields);
+
+    // Start with component ID and existing data
+    const mergedData = { id: this.componentKey, ...originalCopy };
+
+    // Apply default values for fields that don't have data
+    if (configFields && configFields.length > 0) {
+      configFields.forEach((field: FieldConfig) => {
+        // Handle nested fields (like socialUrls.facebook)
+        if (field.key.includes('.')) {
+          const [parentKey, childKey] = field.key.split('.');
+
+          // Initialize parent object if it doesn't exist
+          if (!mergedData[parentKey]) {
+            mergedData[parentKey] = {};
+          }
+
+          // Only set default if child property doesn't exist
+          if (
+            field.defaultValue !== undefined &&
+            (mergedData[parentKey][childKey] === undefined ||
+              mergedData[parentKey][childKey] === null)
+          ) {
+            mergedData[parentKey][childKey] = field.defaultValue;
+          }
+        } else {
+          // Handle regular fields
+          if (
+            field.defaultValue !== undefined &&
+            (mergedData[field.key] === undefined ||
+              mergedData[field.key] === null)
+          ) {
+            mergedData[field.key] = field.defaultValue;
+          }
+        }
+      });
+    }
+
+    // Set the local data signal
+    this.localData.set(mergedData);
+    console.log('[ComponentCustomizer] Final merged data:', mergedData);
+  }
+
+  /**
+   * Restore active category from memory or set default
+   */
+  private restoreActiveCategory(): void {
+    const availableCategories = this.categories();
+    const lastCategory = this.lastActiveCategory[this.componentKey];
+
+    console.log('[TabMemory] Restoring category for:', this.componentKey);
+    console.log('[TabMemory] Last category:', lastCategory);
     console.log(
-      `[TabMemory] Component: ${
-        this.componentKey
-      }, Last tab: ${last}, Available: ${availableCategories
-        .map((c) => c.id)
-        .join(', ')}`
+      '[TabMemory] Available categories:',
+      availableCategories.map((c) => c.id)
     );
 
-    if (last && availableCategories.some((c) => c.id === last)) {
-      console.log(
-        `[TabMemory] Restoring tab: ${last} for ${this.componentKey}`
-      );
-      this.activeCategory.set(last);
+    if (
+      lastCategory &&
+      availableCategories.some((c) => c.id === lastCategory)
+    ) {
+      console.log('[TabMemory] Restoring tab:', lastCategory);
+      this.activeCategory.set(lastCategory);
     } else if (availableCategories.length > 0) {
-      console.log(
-        `[TabMemory] Using default tab: ${availableCategories[0].id} for ${this.componentKey}`
-      );
+      console.log('[TabMemory] Using default tab:', availableCategories[0].id);
       this.activeCategory.set(availableCategories[0].id);
     } else {
-      console.error(
-        `[TabMemory] No categories available for ${this.componentKey}!`
-      );
+      console.error('[TabMemory] No categories available!');
       // Force general category as fallback
       this.activeCategory.set('general');
     }
@@ -671,22 +830,13 @@ export class ComponentCustomizerComponent implements OnInit {
 
     if (
       invalidCategory &&
-      this.categories().some((c) => c.id === invalidCategory)
+      availableCategories.some((c) => c.id === invalidCategory)
     ) {
       console.log(
-        `[TabMemory] Overriding to invalid category: ${invalidCategory} for ${this.componentKey}`
+        '[TabMemory] Overriding to invalid category:',
+        invalidCategory
       );
       this.activeCategory.set(invalidCategory);
-    }
-
-    // Load video placeholders from session storage if they exist
-    const savedPlaceholders = sessionStorage.getItem('videoPlaceholders');
-    if (savedPlaceholders) {
-      try {
-        this.videoPlaceholders = JSON.parse(savedPlaceholders);
-      } catch (error) {
-        console.error('Error parsing video placeholders:', error);
-      }
     }
   }
 
@@ -1354,9 +1504,6 @@ export class ComponentCustomizerComponent implements OnInit {
   }
 
   cancel(): void {
-    // Start the closing animation
-    this.startClosingAnimation();
-
     // Reset to original data
     if (this.originalData) {
       this.localData.set({
@@ -1364,64 +1511,41 @@ export class ComponentCustomizerComponent implements OnInit {
         ...structuredClone(this.originalData),
       });
     }
+
+    // Play closing sound effect
+    this.customizerSoundService.play(false);
+
+    // Simply set visible to false - Angular animations will handle the rest
+    this.isVisible.set(false);
+
+    // Emit close after animation completes
+    setTimeout(() => {
+      this.close.emit();
+    }, 200); // Match the :leave animation duration
   }
 
   startClosingAnimation(): void {
-    const container = document.querySelector('.customizer-sidebar-container');
-    const sidebar = container?.querySelector('.customizer-sidebar') || null;
+    // Play closing sound effect
+    this.customizerSoundService.play(false);
 
-    // Special handling for hero1 to ensure smooth closing
-    if (this.componentKey === 'pages.home.hero1') {
-      // Clear any potential blocking states
-      if (container) {
-        // Force clear any inline styles that might block animation
-        (container as HTMLElement).style.pointerEvents = '';
-        (container as HTMLElement).style.zIndex = '';
-      }
-      if (sidebar) {
-        // Ensure sidebar is in correct state
-        (sidebar as HTMLElement).style.transition = '';
-        (sidebar as HTMLElement).style.transform = '';
-        (sidebar as HTMLElement).style.opacity = '';
+    // Simplified - just trigger the :leave animation
+    this.isVisible.set(false);
 
-        // Force reflow to ensure styles are applied
-        void (sidebar as HTMLElement).offsetHeight;
-      }
-
-      // Add micro-delay for hero1 to ensure DOM is ready
-      requestAnimationFrame(() => {
-        this.triggerClosingAnimation(container, sidebar);
-      });
-    } else {
-      // Normal flow for other components
-      this.triggerClosingAnimation(container, sidebar);
-    }
+    // Emit close after animation completes
+    setTimeout(() => {
+      this.close.emit();
+    }, 200); // Match the :leave animation duration
   }
 
   /**
-   * Trigger the actual closing animation
+   * Trigger the actual closing animation - now simplified
    */
   private triggerClosingAnimation(
     container: Element | null,
     sidebar: Element | null
   ): void {
-    // Remove lingering dragging class
-    sidebar?.classList.remove('dragging');
-
-    // IMPORTANT: Add the closing class FIRST while keeping visible class
-    // This ensures the CSS transition can work properly
-    container?.classList.add('closing');
-
-    // Then in the next animation frame, remove the visible class
-    // This triggers the actual slide-up animation
-    requestAnimationFrame(() => {
-      container?.classList.remove('visible');
-
-      // After animation completes, emit close event
-      setTimeout(() => {
-        this.close.emit();
-      }, 200); // Match the CSS transition duration
-    });
+    // This method is now simplified - just delegate to startClosingAnimation
+    this.startClosingAnimation();
   }
 
   // Check which categories have required but invalid fields
@@ -1675,19 +1799,47 @@ export class ComponentCustomizerComponent implements OnInit {
   hasMovedFromDefault(): boolean {
     const pos = this.dragPosition();
     const defaultPos = this.defaultPosition();
+    const hasMoved =
+      Math.abs(pos.x - defaultPos.x) > 5 || Math.abs(pos.y - defaultPos.y) > 5;
+
+    console.log('[ComponentCustomizer] hasMovedFromDefault check:', {
+      currentPosition: pos,
+      defaultPosition: defaultPos,
+      hasMoved: hasMoved,
+    });
+
     // Consider moved if more than 5px from default
-    return (
-      Math.abs(pos.x - defaultPos.x) > 5 || Math.abs(pos.y - defaultPos.y) > 5
-    );
+    return hasMoved;
   }
 
   // Reset to default position
   resetToDefault(): void {
     console.log('[ComponentCustomizer] Resetting to default position and size');
+    console.log(
+      '[ComponentCustomizer] Current position before reset:',
+      this.dragPosition()
+    );
+    console.log(
+      '[ComponentCustomizer] Draggable directive available:',
+      !!this.draggableDirective
+    );
+    console.log(
+      '[ComponentCustomizer] Resizable directive available:',
+      !!this.resizableDirective
+    );
 
     // Reset position using the ViewChild reference
     if (this.draggableDirective) {
+      console.log(
+        '[ComponentCustomizer] Calling draggableDirective.setPosition(0, 0)'
+      );
       this.draggableDirective.setPosition(0, 0);
+      this.dragPosition.set({ x: 0, y: 0 });
+    } else {
+      console.warn(
+        '[ComponentCustomizer] Draggable directive not available for reset'
+      );
+      // Fallback: just update the signal
       this.dragPosition.set({ x: 0, y: 0 });
     }
 
@@ -1695,47 +1847,96 @@ export class ComponentCustomizerComponent implements OnInit {
     if (this.resizableDirective) {
       const defaultWidth = 340;
       const defaultHeight = window.innerHeight - 100;
+      console.log(
+        '[ComponentCustomizer] Calling resizableDirective.resetSize:',
+        { defaultWidth, defaultHeight }
+      );
       this.resizableDirective.resetSize(defaultWidth, defaultHeight);
       this.sidebarSize.set({ width: defaultWidth, height: defaultHeight });
+    } else {
+      console.warn(
+        '[ComponentCustomizer] Resizable directive not available for reset'
+      );
+      // Fallback: just update the signal
+      this.sidebarSize.set({
+        width: 340,
+        height: window.innerHeight - 100,
+      });
     }
 
     // Clear saved position and size
     const posKey = this.positionKey();
     const szKey = this.sizeKey();
+    console.log('[ComponentCustomizer] Clearing localStorage keys:', {
+      posKey,
+      szKey,
+    });
     if (posKey) {
       localStorage.removeItem(posKey);
     }
     if (szKey) {
       localStorage.removeItem(szKey);
     }
+
+    console.log(
+      '[ComponentCustomizer] Reset completed. New position:',
+      this.dragPosition()
+    );
   }
 
   // Handle drag events
-  onDragStart(position: DragPosition): void {
-    console.log('[ComponentCustomizer] Drag started at:', position);
+  onDragStart(event: any): void {
+    this.isDragging.set(true);
+    console.log('[ComponentCustomizer] Drag started', event);
   }
 
-  onDragMove(position: DragPosition): void {
-    this.dragPosition.set(position);
+  onDragMove(event: any): void {
+    // Update drag position during move for accurate reset detection
+    if (event && typeof event.x === 'number' && typeof event.y === 'number') {
+      console.log('[ComponentCustomizer] Drag move - updating position:', {
+        x: event.x,
+        y: event.y,
+      });
+      this.dragPosition.set({ x: event.x, y: event.y });
+    }
   }
 
-  onDragEnd(position: DragPosition): void {
-    console.log('[ComponentCustomizer] Drag ended at:', position);
-    this.dragPosition.set(position);
+  onDragEnd(event: any): void {
+    this.isDragging.set(false);
+    // Update final drag position
+    if (event && typeof event.x === 'number' && typeof event.y === 'number') {
+      console.log('[ComponentCustomizer] Drag end - final position:', {
+        x: event.x,
+        y: event.y,
+      });
+      this.dragPosition.set({ x: event.x, y: event.y });
+    }
+    console.log('[ComponentCustomizer] Drag ended', event);
   }
 
   // Handle resize events
-  onResizeStart(event: ResizeEvent): void {
-    console.log('[ComponentCustomizer] Resize started:', event);
+  onResizeStart(event: any): void {
+    this.isResizing.set(true);
+    console.log('[ComponentCustomizer] Resize started', event);
   }
 
-  onResizing(event: ResizeEvent): void {
-    this.sidebarSize.set({ width: event.width, height: event.height });
+  onResizing(event: any): void {
+    if (!event?.size) return;
+
+    const newHeight = event.size.height;
+    const headerHeight = 60;
+    const tabsHeight = 48;
+    const footerHeight = 60;
+    const padding = 40;
+    const contentHeight =
+      newHeight - headerHeight - tabsHeight - footerHeight - padding;
+
+    // You can emit this height if needed for content adjustment
   }
 
-  onResizeEnd(event: ResizeEvent): void {
-    console.log('[ComponentCustomizer] Resize ended:', event);
-    this.sidebarSize.set({ width: event.width, height: event.height });
+  onResizeEnd(event: any): void {
+    this.isResizing.set(false);
+    console.log('[ComponentCustomizer] Resize ended', event);
   }
 
   // Load saved position on init
@@ -1765,5 +1966,10 @@ export class ComponentCustomizerComponent implements OnInit {
       width: 340,
       height: window.innerHeight - 100,
     });
+
+    // Also reset the directive position if available
+    if (this.draggableDirective) {
+      this.draggableDirective.setPosition(0, 0);
+    }
   }
 }

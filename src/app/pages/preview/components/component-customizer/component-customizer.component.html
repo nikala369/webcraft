@@ -1,6 +1,7 @@
 <div
+  *ngIf="isVisible()"
   class="customizer-sidebar-container"
-  [class.visible]="isVisible"
+  [@fadeIn]
   [class.draggable]="true"
   [class.resizable]="true"
   appDraggable
@@ -29,7 +30,13 @@
   (resizing)="onResizing($event)"
   (resizeEnd)="onResizeEnd($event)"
 >
-  <div class="customizer-sidebar">
+  <div
+    class="customizer-sidebar"
+    [@slideDown]
+    [class.visible]="isReady()"
+    [class.dragging]="isDragging()"
+    [class.resizing]="isResizing()"
+  >
     <!-- Header with title and close button -->
     <div class="sidebar-header">
       <div class="header-left">
@@ -53,8 +60,9 @@
       </div>
       <div class="header-actions">
         <button
-          *ngIf="hasMovedFromDefault()"
           class="reset-position-btn"
+          [disabled]="!hasMovedFromDefault()"
+          [class.disabled]="!hasMovedFromDefault()"
           (click)="resetToDefault()"
           title="Reset to default position"
           aria-label="Reset to default position"

@@ -24,10 +24,8 @@ $premium-color: #9e6aff;
   height: calc(100vh - 20px);
   max-height: calc(100vh - 20px);
   z-index: 1000;
-  pointer-events: none;
+  pointer-events: all; // Always allow pointer events
   overflow: visible !important; // Ensure dropdowns can overflow
-  opacity: 0; // Start invisible for smooth fade-in
-  transition: opacity 0.2s ease; // Smooth container fade
 
   // Always draggable, so these styles always apply
   &.draggable {
@@ -37,136 +35,15 @@ $premium-color: #9e6aff;
     .customizer-sidebar {
       cursor: default;
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.2),
-        0 0 0 1px rgba(255, 255, 255, 0.1);
-
-      // Make header draggable with grab cursor
-      .sidebar-header {
-        cursor: grab;
-        user-select: none;
-        -webkit-user-select: none;
-
-        &:active {
-          cursor: grabbing;
-        }
-      }
-
-      // Add subtle animation when dragging
-      &.dragging {
-        transition: none !important;
-        box-shadow: 0 16px 64px rgba(0, 0, 0, 0.4),
-          0 12px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2);
-
-        .sidebar-header {
-          cursor: grabbing;
-        }
-      }
+        0 0 0 1px rgba(255, 255, 255, 0.08);
     }
   }
 
-  &.visible {
-    pointer-events: all;
-    opacity: 1; // Fade in the container
-
-    .customizer-sidebar {
-      transform: translateY(0); // Slide down to normal position
-      opacity: 1;
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-        opacity 0.3s ease; // Smooth slide-down animation
-    }
-  }
-
-  &.closing {
-    pointer-events: all;
-    opacity: 1; // Keep container visible during closing animation
-
-    .customizer-sidebar {
-      transform: translateY(
-        -100%
-      ) !important; // Slide up to close - use !important to override visible state
-      opacity: 0 !important;
-      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-        opacity 0.2s ease !important;
-    }
-  }
-
-  // When not visible and not closing, ensure proper initial state
-  &:not(.visible):not(.closing) {
-    .customizer-sidebar {
-      transform: translateY(-100%); // Keep hidden above viewport
-      opacity: 0;
-      transition: none; // No transition for initial state
-    }
-  }
-
-  // Resize handle styles
+  // Resizable styles
   &.resizable {
-    .resize-handle {
-      position: absolute;
-      background: transparent;
-      transition: background-color 0.2s ease;
-      z-index: 10;
-
-      &:hover {
-        background-color: rgba($primary-color, 0.3);
-      }
-
-      &.resize-handle-left {
-        left: 0;
-        top: 0;
-        width: 4px;
-        height: 100%;
-        cursor: ew-resize;
-
-        &:hover {
-          background-color: rgba($primary-color, 0.5);
-        }
-      }
-
-      &.resize-handle-bottom {
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        height: 4px;
-        cursor: ns-resize;
-
-        &:hover {
-          background-color: rgba($primary-color, 0.5);
-        }
-      }
-
-      &.resize-handle-corner {
-        right: 0;
-        bottom: 0;
-        width: 20px;
-        height: 20px;
-        cursor: nwse-resize;
-        background: transparent;
-
-        &::before {
-          content: "";
-          position: absolute;
-          bottom: 3px;
-          right: 3px;
-          width: 0;
-          height: 0;
-          border-style: solid;
-          border-width: 0 0 8px 8px;
-          border-color: transparent transparent rgba(255, 255, 255, 0.3)
-            transparent;
-          transition: border-color 0.2s ease;
-        }
-
-        &:hover::before {
-          border-color: transparent transparent rgba($primary-color, 0.8)
-            transparent;
-        }
-      }
-    }
-
-    &.resizing {
-      .resize-handle {
-        background-color: rgba($primary-color, 0.3) !important;
-      }
+    .customizer-sidebar {
+      box-shadow: 0 16px 64px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
     }
   }
 }
@@ -190,9 +67,16 @@ $premium-color: #9e6aff;
   display: flex;
   flex-direction: column;
   z-index: 1001;
-  transform: translateY(-100%); // Start from top (hidden above viewport)
-  opacity: 0; // Start invisible
   backdrop-filter: blur(20px);
+  transform: translateY(-100%); // Start from top (off-screen)
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+
+  // When visible, slide down to normal position
+  &.visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
 
   // Glassmorphism effect
   &::before {
@@ -210,6 +94,7 @@ $premium-color: #9e6aff;
     );
     border-radius: 16px;
     pointer-events: none;
+    z-index: -1;
   }
 
   // Compact header section
@@ -1415,7 +1300,7 @@ $premium-color: #9e6aff;
       transition: all 0.2s ease;
     }
 
-    &:hover {
+    &:hover:not(:disabled):not(.disabled) {
       background: rgba(255, 255, 255, 0.2);
       transform: scale(1.1);
       color: $primary-color;
@@ -1425,8 +1310,20 @@ $premium-color: #9e6aff;
       }
     }
 
-    &:active {
+    &:active:not(:disabled):not(.disabled) {
       transform: scale(0.95);
+    }
+
+    &:disabled,
+    &.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.3);
+
+      svg {
+        transform: none !important;
+      }
     }
   }
 }
