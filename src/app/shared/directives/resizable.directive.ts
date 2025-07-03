@@ -413,8 +413,6 @@ export class ResizableDirective implements OnInit, OnDestroy {
 
   // --- Public API ---
   public resetSize(width: number, height: number): void {
-    console.log('[ResizableDirective] Resetting size to:', width, height);
-
     // Apply new dimensions
     this.renderer.setStyle(this.element, 'width', `${width}px`);
     this.renderer.setStyle(this.element, 'height', `${height}px`);

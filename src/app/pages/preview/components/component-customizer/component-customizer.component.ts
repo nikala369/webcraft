@@ -627,13 +627,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
       changes['planType'] ||
       changes['businessType']
     ) {
-      console.log('[ComponentCustomizer] Input changes detected:', {
-        componentKey: this.componentKey,
-        hasData: !!this.initialData,
-        planType: this.planType,
-        businessType: this.businessType,
-      });
-
       // Initialize local data
       if (this.initialData) {
         this.localData.set({
@@ -646,8 +639,7 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
       // Load tab memory
       this.loadTabMemoryFromStorage();
 
-      // Clear saved position and size for fresh start
-      this.clearSavedPositionAndSize();
+      // Do NOT clear position here! Only on ngOnInit/open/reset.
 
       // Make visible immediately for interactivity
       this.isVisible.set(true);
@@ -670,10 +662,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
    * This is simplified to only handle the readiness signal
    */
   ngOnInit(): void {
-    console.log(
-      '[ComponentCustomizer] ngOnInit - component ready for animation'
-    );
-
     // Load tab memory from session storage
     this.loadTabMemoryFromStorage();
 
@@ -699,14 +687,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
     // Set up initial position tracking
     this.dragPosition.set({ x: 0, y: 0 });
     this.defaultPosition.set({ x: 0, y: 0 });
-
-    // Watch for draggable directive changes after view init
-    setTimeout(() => {
-      if (this.draggableDirective) {
-        // Listen for position changes from the directive
-        console.log('[ComponentCustomizer] Draggable directive is available');
-      }
-    }, 100);
   }
 
   /**
@@ -797,24 +777,14 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
     const availableCategories = this.categories();
     const lastCategory = this.lastActiveCategory[this.componentKey];
 
-    console.log('[TabMemory] Restoring category for:', this.componentKey);
-    console.log('[TabMemory] Last category:', lastCategory);
-    console.log(
-      '[TabMemory] Available categories:',
-      availableCategories.map((c) => c.id)
-    );
-
     if (
       lastCategory &&
       availableCategories.some((c) => c.id === lastCategory)
     ) {
-      console.log('[TabMemory] Restoring tab:', lastCategory);
       this.activeCategory.set(lastCategory);
     } else if (availableCategories.length > 0) {
-      console.log('[TabMemory] Using default tab:', availableCategories[0].id);
       this.activeCategory.set(availableCategories[0].id);
     } else {
-      console.error('[TabMemory] No categories available!');
       // Force general category as fallback
       this.activeCategory.set('general');
     }
@@ -832,10 +802,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
       invalidCategory &&
       availableCategories.some((c) => c.id === invalidCategory)
     ) {
-      console.log(
-        '[TabMemory] Overriding to invalid category:',
-        invalidCategory
-      );
       this.activeCategory.set(invalidCategory);
     }
   }
@@ -877,9 +843,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
 
       // Persist to session storage
       this.saveTabMemoryToStorage();
-      console.log(
-        `[TabMemory] Saved tab: ${categoryId} for ${this.componentKey}`
-      );
     } else {
       this.validateActiveCategory();
     }
@@ -893,13 +856,8 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
       const stored = sessionStorage.getItem(this.TAB_MEMORY_KEY);
       if (stored) {
         this.lastActiveCategory = JSON.parse(stored);
-        console.log(
-          '[TabMemory] Loaded from storage:',
-          this.lastActiveCategory
-        );
       }
     } catch (error) {
-      console.warn('[TabMemory] Failed to load from storage:', error);
       this.lastActiveCategory = {};
     }
   }
@@ -914,7 +872,7 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
         JSON.stringify(this.lastActiveCategory)
       );
     } catch (error) {
-      console.warn('[TabMemory] Failed to save to storage:', error);
+      // Silently fail if storage is not available
     }
   }
 
@@ -1422,15 +1380,12 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
    * Updates a specific field in the local data
    */
   private updateLocalData(fieldKey: string, value: any): void {
-    console.log(`Updating local data for ${fieldKey} with:`, value);
-
     // Update the signal with the new data
     this.localData.update((data) => {
       const updatedData = {
         ...data,
         [fieldKey]: value,
       };
-      console.log('Updated local data:', updatedData);
       return updatedData;
     });
 
@@ -1448,7 +1403,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
   applyChanges(closeSidebar: boolean = false): void {
     // Changed default to false - keep sidebar open
     const result = { ...this.localData() };
-    console.log('Applying customizer changes with result:', result);
 
     // Remove the ID field we added for internal tracking
     if (result.id === this.componentKey) {
@@ -1486,8 +1440,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
       };
     });
 
-    console.log('Final changes to apply:', result);
-
     // Emit update event with the result
     this.update.emit(result);
 
@@ -1495,11 +1447,9 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
     this.toastService.success('Changes applied successfully!');
 
     // Only trigger closing animation if closeSidebar is true
+    // DO NOT reset position when applying changes - keep sidebar where user positioned it
     if (closeSidebar) {
-      console.log('Closing sidebar after applying changes');
       this.startClosingAnimation();
-    } else {
-      console.log('Keeping sidebar open after applying changes');
     }
   }
 
@@ -1665,12 +1615,9 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
    * Opens the modal for the specialized editor (Menu, Services, Projects).
    */
   openSpecializedEditor(fieldKey: string): void {
-    console.log(`Opening specialized editor for ${fieldKey}`);
-
     try {
       // Get the current data for this field
       const currentData = this.localData()[fieldKey] || [];
-      console.log(`Current data for ${fieldKey}:`, currentData);
 
       // Handle different specialized editors based on field key and component key
       switch (fieldKey) {
@@ -1686,7 +1633,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
                   : [],
                 planType: this.planType || 'standard',
                 onSave: (updatedCategories: any[]) => {
-                  console.log('Menu categories saved:', updatedCategories);
                   // Update the local data
                   this.updateLocalData(fieldKey, updatedCategories);
                 },
@@ -1694,10 +1640,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
             };
 
             // Open the modal with the MenuEditorComponent
-            console.log(
-              'Opening MenuEditorComponent modal with config:',
-              modalConfig
-            );
             this.modalService.open(m.MenuEditorComponent, modalConfig);
           });
           break;
@@ -1716,7 +1658,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
                   planType: this.planType || 'standard',
                   businessType: this.businessType || 'salon',
                   onSave: (updatedServices: any[]) => {
-                    console.log('Services saved:', updatedServices);
                     // Update the local data
                     this.updateLocalData(fieldKey, updatedServices);
                     // Immediately apply changes to parent without closing sidebar
@@ -1726,10 +1667,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
               };
 
               // Open the modal with the ServicesEditorComponent
-              console.log(
-                'Opening ServicesEditorComponent modal with config:',
-                modalConfig
-              );
               this.modalService.open(m.ServicesEditorComponent, modalConfig);
             });
           } else {
@@ -1799,46 +1736,19 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
   hasMovedFromDefault(): boolean {
     const pos = this.dragPosition();
     const defaultPos = this.defaultPosition();
-    const hasMoved =
-      Math.abs(pos.x - defaultPos.x) > 5 || Math.abs(pos.y - defaultPos.y) > 5;
-
-    console.log('[ComponentCustomizer] hasMovedFromDefault check:', {
-      currentPosition: pos,
-      defaultPosition: defaultPos,
-      hasMoved: hasMoved,
-    });
-
     // Consider moved if more than 5px from default
-    return hasMoved;
+    return (
+      Math.abs(pos.x - defaultPos.x) > 5 || Math.abs(pos.y - defaultPos.y) > 5
+    );
   }
 
   // Reset to default position
   resetToDefault(): void {
-    console.log('[ComponentCustomizer] Resetting to default position and size');
-    console.log(
-      '[ComponentCustomizer] Current position before reset:',
-      this.dragPosition()
-    );
-    console.log(
-      '[ComponentCustomizer] Draggable directive available:',
-      !!this.draggableDirective
-    );
-    console.log(
-      '[ComponentCustomizer] Resizable directive available:',
-      !!this.resizableDirective
-    );
-
     // Reset position using the ViewChild reference
     if (this.draggableDirective) {
-      console.log(
-        '[ComponentCustomizer] Calling draggableDirective.setPosition(0, 0)'
-      );
       this.draggableDirective.setPosition(0, 0);
       this.dragPosition.set({ x: 0, y: 0 });
     } else {
-      console.warn(
-        '[ComponentCustomizer] Draggable directive not available for reset'
-      );
       // Fallback: just update the signal
       this.dragPosition.set({ x: 0, y: 0 });
     }
@@ -1847,16 +1757,9 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
     if (this.resizableDirective) {
       const defaultWidth = 340;
       const defaultHeight = window.innerHeight - 100;
-      console.log(
-        '[ComponentCustomizer] Calling resizableDirective.resetSize:',
-        { defaultWidth, defaultHeight }
-      );
       this.resizableDirective.resetSize(defaultWidth, defaultHeight);
       this.sidebarSize.set({ width: defaultWidth, height: defaultHeight });
     } else {
-      console.warn(
-        '[ComponentCustomizer] Resizable directive not available for reset'
-      );
       // Fallback: just update the signal
       this.sidebarSize.set({
         width: 340,
@@ -1867,36 +1770,22 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
     // Clear saved position and size
     const posKey = this.positionKey();
     const szKey = this.sizeKey();
-    console.log('[ComponentCustomizer] Clearing localStorage keys:', {
-      posKey,
-      szKey,
-    });
     if (posKey) {
       localStorage.removeItem(posKey);
     }
     if (szKey) {
       localStorage.removeItem(szKey);
     }
-
-    console.log(
-      '[ComponentCustomizer] Reset completed. New position:',
-      this.dragPosition()
-    );
   }
 
   // Handle drag events
   onDragStart(event: any): void {
     this.isDragging.set(true);
-    console.log('[ComponentCustomizer] Drag started', event);
   }
 
   onDragMove(event: any): void {
     // Update drag position during move for accurate reset detection
     if (event && typeof event.x === 'number' && typeof event.y === 'number') {
-      console.log('[ComponentCustomizer] Drag move - updating position:', {
-        x: event.x,
-        y: event.y,
-      });
       this.dragPosition.set({ x: event.x, y: event.y });
     }
   }
@@ -1905,19 +1794,13 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
     this.isDragging.set(false);
     // Update final drag position
     if (event && typeof event.x === 'number' && typeof event.y === 'number') {
-      console.log('[ComponentCustomizer] Drag end - final position:', {
-        x: event.x,
-        y: event.y,
-      });
       this.dragPosition.set({ x: event.x, y: event.y });
     }
-    console.log('[ComponentCustomizer] Drag ended', event);
   }
 
   // Handle resize events
   onResizeStart(event: any): void {
     this.isResizing.set(true);
-    console.log('[ComponentCustomizer] Resize started', event);
   }
 
   onResizing(event: any): void {
@@ -1936,7 +1819,6 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
 
   onResizeEnd(event: any): void {
     this.isResizing.set(false);
-    console.log('[ComponentCustomizer] Resize ended', event);
   }
 
   // Load saved position on init

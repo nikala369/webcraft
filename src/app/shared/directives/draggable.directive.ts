@@ -439,8 +439,6 @@ export class DraggableDirective implements OnInit, OnDestroy {
 
   // Public API methods
   public setPosition(x: number, y: number): void {
-    console.log('[DraggableDirective] Setting position to:', x, y);
-
     // Clear any ongoing animations
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
@@ -481,8 +479,6 @@ export class DraggableDirective implements OnInit, OnDestroy {
   }
 
   public resetPosition(): void {
-    console.log('[DraggableDirective] Resetting position to origin');
-
     // Clear any ongoing animations
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
