@@ -33,7 +33,11 @@
     <!-- Main Introductory Text (hidden in fullscreen or when showing business type selector) -->
     <div
       class="preview-intro"
-      *ngIf="!isFullscreen() && !showBusinessTypeSelector()"
+      *ngIf="
+        !isFullscreen() &&
+        !showBusinessTypeSelector() &&
+        !showTemplateNameInput()
+      "
     >
       <h1 class="preview-main-title">Customize Your Website</h1>
 
@@ -51,9 +55,23 @@
       (businessTypeSelected)="handleBusinessTypeSelection($event)"
     ></app-business-type-selector>
 
+    <!-- Template Name Input Modal -->
+    <app-template-name-input
+      *ngIf="showTemplateNameInput() && !isFullscreen()"
+      [businessType]="businessType()"
+      [businessTypeName]="businessTypeDisplayName()"
+      [plan]="currentPlan()"
+      [accentColor]="currentPlan() === 'premium' ? '#9e6aff' : '#4a8dff'"
+      (templateNameConfirmed)="handleTemplateNameConfirmed($event)"
+      (canceled)="handleTemplateNameCanceled()"
+    ></app-template-name-input>
+
     <div
       *ngIf="
-        !isFullscreen() && hasStartedBuilding() && !showBusinessTypeSelector()
+        !isFullscreen() &&
+        hasStartedBuilding() &&
+        !showBusinessTypeSelector() &&
+        !showTemplateNameInput()
       "
       style="height: 10px"
       class="preview-container-spacer"
@@ -65,10 +83,11 @@
       class="preview-header"
       [ngClass]="{ 'fullscreen-mode-border-remove': isFullscreen() }"
     >
-      <!-- Theme Selector -->
+      <!-- Theme Selector (shown for new templates and first-time creation) -->
       <app-theme-switcher
         *ngIf="
-          !isViewOnlyStateService.isOnlyViewMode() && !currentUserTemplateId()
+          !isViewOnlyStateService.isOnlyViewMode() &&
+          (!currentUserTemplateId() || isFirstTimeCreation())
         "
         class="preview-header__left"
         (themeChange)="loadTheme($event)"
@@ -79,10 +98,12 @@
       >
       </app-theme-switcher>
 
-      <!-- Template Info (Display when editing existing template) -->
+      <!-- Template Info (Display when editing existing saved template) -->
       <div
         *ngIf="
-          currentUserTemplateId() && !isViewOnlyStateService.isOnlyViewMode()
+          currentUserTemplateId() &&
+          !isViewOnlyStateService.isOnlyViewMode() &&
+          !isFirstTimeCreation()
         "
         class="preview-header__left template-info"
         [ngClass]="{
@@ -125,10 +146,12 @@
         </div>
       </div>
 
-      <!-- Business Type Selector (Only shown when creating new template) -->
+      <!-- Business Type Selector (Only shown when creating new template - not during first-time creation) -->
       <app-business-type-selector
         *ngIf="
-          !isViewOnlyStateService.isOnlyViewMode() && !currentUserTemplateId()
+          !isViewOnlyStateService.isOnlyViewMode() &&
+          !currentUserTemplateId() &&
+          !isFirstTimeCreation()
         "
         class="preview-header__center-left"
         [currentPlan]="currentPlan()"
@@ -199,13 +222,20 @@
             ? '1.5px solid #9e6aff'
             : '',
         display:
-          showBusinessTypeSelector() && !isFullscreen() ? 'none' : 'block'
+          (showBusinessTypeSelector() || showTemplateNameInput()) &&
+          !isFullscreen()
+            ? 'none'
+            : 'block'
       }"
     >
       <!-- Overlays: Shown in non-fullscreen mode -->
       <div
         class="preview-hover-overlay"
-        *ngIf="!isFullscreen() && !showBusinessTypeSelector()"
+        *ngIf="
+          !isFullscreen() &&
+          !showBusinessTypeSelector() &&
+          !showTemplateNameInput()
+        "
       >
         <ng-container *ngIf="!hasStartedBuilding()">
           <button class="start-fullscreen-btn" (click)="startBuilding()">
@@ -237,8 +267,9 @@
 
       <ng-container
         *ngIf="
-          currentPlan() === 'standard' ||
-          (currentPlan() === 'premium' && !showBusinessTypeSelector())
+          (currentPlan() === 'standard' ||
+            (currentPlan() === 'premium' && !showBusinessTypeSelector())) &&
+          !showTemplateNameInput()
         "
       >
         <app-standard-structure
@@ -300,8 +331,9 @@
   </div>
 
   <!-- Floating Checkout Button (positioned above footer with high z-index) -->
+  <!-- Only show for draft (unpublished) templates -->
   <app-floating-checkout-button
-    *ngIf="hasSavedChanges() && !isFullscreen()"
+    *ngIf="shouldShowPublishButton() && !isFullscreen()"
     [showTooltip]="false"
     (checkoutClicked)="publishTemplate()"
   ></app-floating-checkout-button>
@@ -320,7 +352,7 @@
       (click)="exitViewOnly()"
       title="Switch to Edit Mode"
     >
-      <i class="fas fa-edit"></i>
+      <app-icon name="edit" width="18" height="18"></app-icon>
       <span>Edit</span>
     </button>
   </div>

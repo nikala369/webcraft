@@ -24,6 +24,7 @@ export interface UserTemplate {
   };
   config: string;
   name: string;
+  published?: boolean; // Publication status - true if template is published, false or undefined if draft
 }
 
 /**

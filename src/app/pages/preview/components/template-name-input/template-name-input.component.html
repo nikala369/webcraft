@@ -1,0 +1,64 @@
+<div class="template-name-input-container">
+  <div class="template-name-input-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Name Your Website</h2>
+      <p class="modal-subtitle">
+        Give your {{ businessTypeName || "business" }} website a name
+      </p>
+    </div>
+
+    <div class="modal-body">
+      <div class="input-group">
+        <label for="templateName" class="input-label">Template Name</label>
+        <input
+          id="templateName"
+          type="text"
+          class="template-name-input"
+          [class.error]="!isValid() && templateName().length > 0"
+          [value]="templateName()"
+          (input)="onNameInput($event)"
+          (keydown)="onKeyDown($event)"
+          placeholder="Enter template name for your website"
+          maxlength="50"
+          autofocus
+        />
+        <div class="input-footer">
+          <span class="character-count">{{ templateName().length }}/50</span>
+          <div class="error-message" *ngIf="errorMessage()">
+            {{ errorMessage() }}
+          </div>
+        </div>
+      </div>
+
+      <div class="plan-info">
+        <div class="plan-badge" [class.premium]="plan === 'premium'">
+          {{ plan === "premium" ? "Premium" : "Standard" }} Plan
+        </div>
+        <div class="business-type-info">
+          <img
+            [src]="'assets/business-types/' + businessType + '.svg'"
+            [alt]="businessTypeName + ' icon'"
+            class="business-type-icon"
+          />
+          <span class="business-type-name">{{ businessTypeName }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">
+        Back
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [class.disabled]="!isValid()"
+        [disabled]="!isValid()"
+        (click)="onConfirm()"
+        [style.background-color]="accentColor"
+      >
+        Create Website
+      </button>
+    </div>
+  </div>
+</div>

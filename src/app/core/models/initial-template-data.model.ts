@@ -49,6 +49,9 @@ export interface InitialTemplateData {
   /** Whether the user has saved changes */
   hasSavedChangesFlag: boolean;
 
+  /** Whether the template is published */
+  isPublished?: boolean;
+
   /** Initial mode for preview (edit or view) */
   initialMode?: 'edit' | 'view';
 

@@ -39,10 +39,14 @@
         *ngFor="let type of businessTypes"
         class="business-type-card"
         [class.selected]="isSelected(type.id)"
-        [class.disabled]="isDisabled"
+        [class.disabled]="isDisabled || !type.enabled"
+        [class.coming-soon]="type.comingSoon"
         (click)="selectBusinessType(type.id)"
         [style.border-color]="isSelected(type.id) ? accentColor : ''"
       >
+        <!-- Coming Soon Badge -->
+        <div class="coming-soon-badge" *ngIf="type.comingSoon">Coming Soon</div>
+
         <div class="business-type-icon">
           <!-- Restaurant icon -->
           <img
@@ -58,13 +62,6 @@
             src="assets/business-types/salon.svg"
           />
 
-          <!-- Architecture icon -->
-          <img
-            style="width: 40px; height: 40px"
-            *ngIf="type.id === 'architecture'"
-            src="assets/business-types/architecture.svg"
-          />
-
           <!-- Portfolio icon -->
           <img
             style="width: 40px; height: 40px"
@@ -78,7 +75,6 @@
             *ngIf="
               type.id !== 'restaurant' &&
               type.id !== 'salon' &&
-              type.id !== 'architecture' &&
               type.id !== 'portfolio'
             "
             src="assets/business-types/generic.svg"
@@ -134,13 +130,6 @@
             src="assets/business-types/salon.svg"
           />
 
-          <!-- Architecture icon -->
-          <img
-            style="width: 22px; height: 22px"
-            *ngIf="selectedBusinessType === 'architecture'"
-            src="assets/business-types/architecture.svg"
-          />
-
           <!-- Portfolio icon -->
           <img
             style="width: 22px; height: 22px"
@@ -155,7 +144,6 @@
               selectedBusinessType &&
               selectedBusinessType !== 'restaurant' &&
               selectedBusinessType !== 'salon' &&
-              selectedBusinessType !== 'architecture' &&
               selectedBusinessType !== 'portfolio'
             "
             src="assets/business-types/generic.svg"
@@ -214,8 +202,15 @@
           *ngFor="let type of businessTypes"
           class="dropdown-item"
           [class.selected]="isSelected(type.id)"
+          [class.disabled]="!type.enabled"
+          [class.coming-soon]="type.comingSoon"
           (click)="selectBusinessType(type.id)"
         >
+          <!-- Coming Soon Badge for dropdown -->
+          <div class="coming-soon-badge-small" *ngIf="type.comingSoon">
+            Coming Soon
+          </div>
+
           <div class="business-type-icon">
             <!-- Restaurant icon -->
             <img
@@ -231,13 +226,6 @@
               src="assets/business-types/salon.svg"
             />
 
-            <!-- Architecture icon -->
-            <img
-              style="width: 22px; height: 22px"
-              *ngIf="type.id === 'architecture'"
-              src="assets/business-types/architecture.svg"
-            />
-
             <!-- Portfolio icon -->
             <img
               style="width: 22px; height: 22px"
@@ -251,7 +239,6 @@
               *ngIf="
                 type.id !== 'restaurant' &&
                 type.id !== 'salon' &&
-                type.id !== 'architecture' &&
                 type.id !== 'portfolio'
               "
               src="assets/business-types/generic.svg"

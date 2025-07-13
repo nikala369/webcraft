@@ -21,6 +21,8 @@ import { CommonModule } from '@angular/common';
 import {
   BUSINESS_TYPES,
   BusinessType,
+  getAllBusinessTypes,
+  getEnabledBusinessTypes,
 } from '../../../../core/models/business-types';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { ThemeColorsService } from '../../../../core/services/theme/theme-colors.service';
@@ -52,8 +54,8 @@ export class BusinessTypeSelectorComponent implements OnInit {
 
   // Template types from API
   templateTypes: TemplateType[] = [];
-  // Fallback to local data if API fails
-  businessTypes = BUSINESS_TYPES;
+  // Use all business types (including coming soon ones) for display
+  businessTypes = getAllBusinessTypes();
 
   dropdownOpen = false;
   accentColor = '';
@@ -188,26 +190,21 @@ export class BusinessTypeSelectorComponent implements OnInit {
   private mapTemplateTypesToBusinessTypes(): void {
     if (this.templateTypes.length === 0) return;
 
-    // Keep the original business types if there's a match, or create new
-    this.businessTypes = this.templateTypes.map((type) => {
-      // Try to find a match in our local data for additional props like description
-      const existingType = BUSINESS_TYPES.find((bt) => bt.id === type.key);
+    // Keep the original business types with their enabled/disabled states
+    // Only update the ones that exist in both API and local data
+    this.businessTypes = getAllBusinessTypes().map((localType) => {
+      // Try to find a match in API data
+      const apiType = this.templateTypes.find((at) => at.key === localType.id);
 
-      if (existingType) {
+      if (apiType) {
         return {
-          ...existingType,
-          id: type.key,
-          name: type.name,
+          ...localType,
+          name: apiType.name,
         };
       }
 
-      // No match, create new entry
-      return {
-        id: type.key,
-        name: type.name,
-        description: `Website templates for ${type.name} businesses`,
-        icon: type.key.toLowerCase(),
-      };
+      // No API match, keep the local type as-is
+      return localType;
     });
   }
 
@@ -216,6 +213,22 @@ export class BusinessTypeSelectorComponent implements OnInit {
    */
   selectBusinessType(type: string): void {
     if (this.isDisabled) return;
+
+    // Find the business type to check if it's enabled
+    const businessType = this.businessTypes.find((bt) => bt.id === type);
+
+    if (!businessType) {
+      console.warn(`Business type ${type} not found`);
+      return;
+    }
+
+    // Prevent selection of disabled/coming soon types
+    if (!businessType.enabled || businessType.comingSoon) {
+      // Show a subtle notification or just return early
+      console.log(`Business type ${businessType.name} is coming soon`);
+      // You could emit a notification event here if needed
+      return;
+    }
 
     this.selectedBusinessType = type;
     this.businessTypeSelected.emit(type);

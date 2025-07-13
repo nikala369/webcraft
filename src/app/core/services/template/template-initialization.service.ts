@@ -216,6 +216,7 @@ export class TemplateInitializationService {
           availableThemes: themes,
           hasStartedBuilding: true,
           hasSavedChangesFlag: true,
+          isPublished: template.published || false,
           initialMode: mode as 'edit' | 'view',
         };
 
@@ -331,7 +332,7 @@ export class TemplateInitializationService {
         // Create initial data
         const result: InitialTemplateData = {
           currentUserTemplateId: null,
-          currentTemplateName: templateName,
+          currentTemplateName: null, // Don't pre-set template name - let user choose in modal
           customizations,
           businessType: businessType,
           businessTypeName,
@@ -341,7 +342,7 @@ export class TemplateInitializationService {
           selectedFont: font,
           selectedBaseTemplateId: themes.length > 0 ? themes[0].id : null,
           availableThemes: themes,
-          hasStartedBuilding: true,
+          hasStartedBuilding: false, // Don't auto-start building - user must click "Start Crafting"
           hasSavedChangesFlag: false,
           initialMode: 'edit' as 'edit' | 'view',
           isCreatingNew: true,
@@ -393,7 +394,7 @@ export class TemplateInitializationService {
           selectedFont: font,
           selectedBaseTemplateId: themes.length > 0 ? themes[0].id : null,
           availableThemes: themes,
-          hasStartedBuilding: true,
+          hasStartedBuilding: false, // Don't auto-start building - user must click "Start Crafting"
           hasSavedChangesFlag: false,
           initialMode: 'edit' as 'edit' | 'view',
         };

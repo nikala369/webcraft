@@ -50,12 +50,14 @@
   .business-types-grid {
     display: grid;
     grid-template-columns: repeat(
-      4,
+      3,
       1fr
-    ); /* Always 4 cards in a row by default */
+    ); /* 3 columns to perfectly fit restaurant + 2 coming soon */
     gap: 1.5rem;
     margin-bottom: 2rem;
-    max-width: 100%;
+    max-width: 800px; /* Constrain width so cards don't get too wide */
+    margin-left: auto;
+    margin-right: auto;
     align-items: stretch; /* Ensure all cards are stretched to the same height */
   }
 
@@ -87,6 +89,37 @@
       }
     }
 
+    // Coming Soon state
+    &.coming-soon {
+      opacity: 0.7;
+      cursor: not-allowed;
+
+      &:hover {
+        transform: none;
+        background: #1c1f2e;
+        box-shadow: none;
+
+        .business-type-icon {
+          svg {
+            transform: none;
+            stroke: rgba(255, 255, 255, 0.8);
+          }
+        }
+      }
+    }
+
+    // Disabled state
+    &.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+
+      &:hover {
+        transform: none;
+        background: #1c1f2e;
+        box-shadow: none;
+      }
+    }
+
     &.selected {
       /* FIX: use the RGB var for correct RGBA tint */
       background: rgba(var(--accent-color-rgb), 0.05);
@@ -113,6 +146,23 @@
         filter: drop-shadow(0 0 5px rgba(var(--accent-color-rgb), 0.5));
       }
     }
+  }
+
+  // Coming Soon Badge for main cards
+  .coming-soon-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, #ff9800, #ff5722);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    z-index: 10;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(255, 87, 34, 0.3);
   }
 
   .business-type-icon {
@@ -305,6 +355,26 @@
           background: rgba(255, 255, 255, 0.05);
         }
 
+        // Coming Soon state for dropdown
+        &.coming-soon {
+          opacity: 0.7;
+          cursor: not-allowed;
+
+          &:hover {
+            background: transparent;
+          }
+        }
+
+        // Disabled state for dropdown
+        &.disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+
+          &:hover {
+            background: transparent;
+          }
+        }
+
         &.selected {
           background: rgba(var(--accent-color-rgb), 0.15);
 
@@ -350,6 +420,20 @@
         }
       }
     }
+  }
+
+  // Coming Soon Badge for dropdown (smaller)
+  .coming-soon-badge-small {
+    background: linear-gradient(135deg, #ff9800, #ff5722);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 0.15rem 0.4rem;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-left: auto;
+    box-shadow: 0 1px 4px rgba(255, 87, 34, 0.3);
   }
 
   /* Loading overlay styling */

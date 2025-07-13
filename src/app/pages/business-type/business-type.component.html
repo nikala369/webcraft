@@ -11,9 +11,14 @@
         *ngFor="let type of businessTypes"
         class="business-type-card"
         [class.selected]="selectedType === type.id"
+        [class.disabled]="!type.enabled"
+        [class.coming-soon]="type.comingSoon"
         [ngStyle]="getCardStyle(type.id)"
         (click)="selectBusinessType(type.id)"
       >
+        <!-- Coming Soon Badge -->
+        <div class="coming-soon-badge" *ngIf="type.comingSoon">Coming Soon</div>
+
         <div class="business-type-icon">
           <img
             [src]="'assets/business-types/' + type.id + '.svg'"

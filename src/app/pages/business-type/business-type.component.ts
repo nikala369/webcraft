@@ -1,7 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { BUSINESS_TYPES, BusinessType } from '../../core/models/business-types';
+import {
+  BUSINESS_TYPES,
+  BusinessType,
+  getAllBusinessTypes,
+  getEnabledBusinessTypes,
+} from '../../core/models/business-types';
 import { ThemeColorsService } from '../../core/services/theme/theme-colors.service';
 
 @Component({
@@ -12,7 +17,8 @@ import { ThemeColorsService } from '../../core/services/theme/theme-colors.servi
   styleUrls: ['./business-type.component.scss'],
 })
 export class BusinessTypeComponent implements OnInit {
-  businessTypes = BUSINESS_TYPES;
+  // Show all business types (including coming soon) for display
+  businessTypes = getAllBusinessTypes();
   selectedType: string | null = null;
   currentPlan: 'standard' | 'premium' = 'standard';
   accentColor = '';
@@ -41,6 +47,20 @@ export class BusinessTypeComponent implements OnInit {
   }
 
   selectBusinessType(type: string) {
+    // Find the business type to check if it's enabled
+    const businessType = this.businessTypes.find((bt) => bt.id === type);
+
+    if (!businessType) {
+      console.warn(`Business type ${type} not found`);
+      return;
+    }
+
+    // Prevent selection of disabled/coming soon types
+    if (!businessType.enabled || businessType.comingSoon) {
+      console.log(`Business type ${businessType.name} is coming soon`);
+      return;
+    }
+
     this.selectedType = type;
   }
 
