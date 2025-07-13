@@ -453,7 +453,11 @@
                     </div>
                     <!-- Show image preview if image has been uploaded -->
                     <div class="file-preview" *ngIf="field.value">
-                      <img [src]="field.value" alt="File preview" />
+                      <app-reactive-image
+                        [src]="field.value"
+                        alt="File preview"
+                        style="width: 100%; height: 100%; object-fit: contain"
+                      ></app-reactive-image>
                     </div>
                   </ng-container>
                 </ng-container>
@@ -502,7 +506,10 @@
                     <!-- Show video preview if video has been uploaded -->
                     <div class="file-preview" *ngIf="field.value">
                       <video controls>
-                        <source [src]="field.value" type="video/mp4" />
+                        <source
+                          [src]="getImageUrl(field.value)"
+                          type="video/mp4"
+                        />
                         Your browser does not support the video tag.
                       </video>
                     </div>
@@ -544,7 +551,11 @@
                   </div>
                   <!-- Show image preview if image has been uploaded -->
                   <div class="file-preview" *ngIf="field.value">
-                    <img [src]="field.value" alt="File preview" />
+                    <app-reactive-image
+                      [src]="field.value"
+                      alt="File preview"
+                      style="width: 100%; height: 100%; object-fit: contain"
+                    ></app-reactive-image>
                   </div>
                 </ng-container>
               </div>

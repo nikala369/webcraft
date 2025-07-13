@@ -11,6 +11,7 @@ import {
   inject,
   effect,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   ElementRef,
   HostListener,
   ViewChild,
@@ -29,7 +30,9 @@ import {
 import { ToastService } from '../../../../core/services/toast/toast.service';
 import { ModalService } from '../../../../core/services/modal/modal.service';
 import { CustomizerSoundService } from '../../../../core/services/audio/customizer-sound.service';
+import { ImageService } from '../../../../core/services/shared/image/image.service';
 import { CustomSelectComponent } from '../../../../shared/components/custom-select/custom-select.component';
+import { ReactiveImageComponent } from '../../../../shared/components/reactive-image/reactive-image.component';
 import {
   DraggableDirective,
   DragPosition,
@@ -47,6 +50,7 @@ import { FieldConfig, getPlanSpecificConfig } from './customizing-form-config';
     CommonModule,
     FormsModule,
     CustomSelectComponent,
+    ReactiveImageComponent,
     DraggableDirective,
     ResizableDirective,
   ],
@@ -109,6 +113,7 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
   }
 
   @Input() componentPath?: string;
+  @Input() userTemplateId?: string;
 
   private _planType: string = 'standard';
   @Input() set planType(value: string) {
@@ -143,6 +148,8 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
   private toastService = inject(ToastService);
   private modalService = inject(ModalService);
   private customizerSoundService = inject(CustomizerSoundService);
+  private imageService = inject(ImageService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Data structure for storing video placeholder metadata
   videoPlaceholders: Record<string, { fileName: string; timestamp: string }> =
@@ -314,6 +321,14 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
     }
     // Regular field
     return data[fieldKey] || '';
+  }
+
+  /**
+   * Get image URL for display from objectId, temporary file, or legacy URL
+   * This is now handled by the ImageService and ReactiveImageComponent
+   */
+  getImageUrl(imageValue: any): string {
+    return this.imageService.getImageUrl(imageValue);
   }
 
   // Convert select options to computed signal
@@ -1251,16 +1266,21 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
     });
   }
 
+  // Store pending file uploads
+  private pendingUploads = new Map<string, File>();
+
   /**
-   * Handle file upload with validation and scrolling
+   * Handle file selection (not upload yet)
    */
   handleFileUpload(event: Event, fieldKey: string): void {
-    console.log(`Handling file upload for ${fieldKey}`);
+    console.log(`Handling file selection for ${fieldKey}`);
     const input = event.target as HTMLInputElement;
     const files = input.files;
 
     if (!files || files.length === 0) {
       console.log('No file selected');
+      // Clear pending upload if any
+      this.pendingUploads.delete(fieldKey);
       return;
     }
 
@@ -1288,36 +1308,26 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
       );
       // Reset the input to clear the invalid selection
       input.value = '';
+      this.pendingUploads.delete(fieldKey);
       return;
     }
 
-    // Read file as data URL
-    const reader = new FileReader();
-    reader.onload = (readerEvent) => {
-      if (readerEvent.target?.result) {
-        const result = readerEvent.target.result as string;
+    // Store the file for later upload on apply changes
+    this.pendingUploads.set(fieldKey, file);
 
-        // Update local data with the new file
-        const updatedData = { ...this.localData() };
-        updatedData[fieldKey] = result;
+    // Create temporary preview URL for immediate display
+    const tempUrl = URL.createObjectURL(file);
 
-        // For video uploads, also check if we need to save a placeholder
-        if (file.type.includes('video')) {
-          // Store a placeholder for videos to avoid storage quota issues
-          this.storeVideoPlaceholder(fieldKey, file.name);
-        }
+    // Update local data with temporary marker
+    const updatedData = { ...this.localData() };
+    updatedData[fieldKey] = `temp:${tempUrl}`;
 
-        this.localData.set(updatedData);
-        console.log(`Updated ${fieldKey} with file data`);
-      }
-    };
+    this.localData.set(updatedData);
+    console.log(`Stored file for ${fieldKey}, will upload on apply changes`);
 
-    reader.onerror = (error) => {
-      console.error('Error reading file:', error);
-      this.toastService.error('Error uploading file. Please try again.');
-    };
-
-    reader.readAsDataURL(file);
+    this.toastService.success(
+      'File selected. Click "Apply Changes" to upload.'
+    );
   }
 
   /**
@@ -1397,17 +1407,116 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Direct application of customizations without loading from theme service
-   * This is critical for preventing saved customizations from being overridden
+   * Direct application of customizations with file uploads
+   * This uploads pending files first, then applies changes
    */
   applyChanges(closeSidebar: boolean = false): void {
-    // Changed default to false - keep sidebar open
+    // Check if we have pending uploads
+    if (this.pendingUploads.size > 0) {
+      this.uploadPendingFiles()
+        .then(() => {
+          this.finalizeApplyChanges(closeSidebar);
+        })
+        .catch((error) => {
+          console.error('Error uploading files:', error);
+          this.toastService.error('Failed to upload files. Please try again.');
+        });
+    } else {
+      // No pending uploads, apply changes directly
+      this.finalizeApplyChanges(closeSidebar);
+    }
+  }
+
+  /**
+   * Upload all pending files to backend
+   */
+  private async uploadPendingFiles(): Promise<void> {
+    if (!this.userTemplateId) {
+      throw new Error('Template ID is required for file upload.');
+    }
+
+    this.toastService.info('Uploading files...');
+
+    const uploadPromises: Promise<void>[] = [];
+
+    for (const [fieldKey, file] of this.pendingUploads.entries()) {
+      const uploadPromise = this.imageService
+        .uploadImage(file, this.userTemplateId, fieldKey)
+        .toPromise()
+        .then((objectId) => {
+          console.log(`File uploaded for ${fieldKey}, objectId:`, objectId);
+
+          // Validate objectId format
+          if (
+            !objectId ||
+            typeof objectId !== 'string' ||
+            objectId.includes('{')
+          ) {
+            console.error('Invalid objectId received:', objectId);
+            throw new Error('Invalid response from server');
+          }
+
+          // Get current temp value before updating
+          const currentValue = this.localData()[fieldKey];
+
+          // Update local data with the objectId (replace temp URL)
+          this.localData.update((data) => {
+            const updated = { ...data };
+            updated[fieldKey] = objectId;
+            return updated;
+          });
+
+          // Clean up temp URL using the value we captured before update
+          if (
+            typeof currentValue === 'string' &&
+            currentValue.startsWith('temp:')
+          ) {
+            const tempUrl = currentValue.replace('temp:', '');
+            if (tempUrl.startsWith('blob:')) {
+              URL.revokeObjectURL(tempUrl);
+              console.log(`Cleaned up temp URL for ${fieldKey}`);
+            }
+          }
+
+          // Trigger change detection to update the UI immediately
+          this.cdr.detectChanges();
+        })
+        .catch((error) => {
+          console.error(`Upload failed for ${fieldKey}:`, error);
+          throw error;
+        });
+
+      uploadPromises.push(uploadPromise);
+    }
+
+    // Wait for all uploads to complete
+    await Promise.all(uploadPromises);
+
+    // Clear pending uploads
+    this.pendingUploads.clear();
+
+    this.toastService.success('Files uploaded successfully!');
+  }
+
+  /**
+   * Finalize applying changes after uploads are complete
+   */
+  private finalizeApplyChanges(closeSidebar: boolean = false): void {
     const result = { ...this.localData() };
 
     // Remove the ID field we added for internal tracking
     if (result.id === this.componentKey) {
       delete result.id;
     }
+
+    // Clean any temp: prefixes that might still be there
+    Object.keys(result).forEach((key) => {
+      if (typeof result[key] === 'string' && result[key].startsWith('temp:')) {
+        // This shouldn't happen if uploads worked, but clean it up just in case
+        console.warn(`Found temp value for ${key} after upload, removing`);
+        delete result[key];
+      }
+    });
 
     // Process nested object values (like socialUrls.facebook)
     const nestedProperties: Record<string, any> = {};

@@ -111,8 +111,8 @@ export interface Customizations {
  */
 export interface HeroData {
   backgroundType?: 'image' | 'video';
-  backgroundImage: string;
-  backgroundVideo?: string;
+  backgroundImage: string; // ObjectId from backend or legacy URL
+  backgroundVideo?: string; // ObjectId from backend or legacy URL
   title: string;
   subtitle: string;
   overlayOpacity?: 'none' | 'light' | 'medium' | 'heavy';
@@ -138,7 +138,7 @@ export interface AboutData {
   title?: string;
   subtitle?: string;
   content?: string;
-  imageUrl?: string;
+  imageUrl?: string; // ObjectId from backend or legacy URL
   backgroundColor?: string;
   textColor?: string;
   storyTitle?: string;
@@ -160,10 +160,16 @@ export interface ServicesData {
     title: string;
     description: string;
     icon?: string;
+    imageUrl?: string; // ObjectId from backend or legacy URL
     price?: string;
+    duration?: string; // e.g., '30 minutes', '1 hour'
+    category?: string; // Service category grouping
+    featured?: boolean;
   }>;
   backgroundColor?: string;
   textColor?: string;
+  cardBackgroundColor?: string;
+  accentColor?: string;
 }
 
 /**
@@ -175,16 +181,23 @@ export interface MenuData {
   categories?: Array<{
     id: string;
     name: string;
+    description?: string;
+    imageUrl?: string; // ObjectId from backend or legacy URL
     items: Array<{
       id: string;
       name: string;
       description: string;
       price: string;
+      imageUrl?: string; // ObjectId from backend or legacy URL
       featured?: boolean;
+      dietary?: string[]; // e.g., ['vegetarian', 'gluten-free', 'spicy']
+      allergens?: string[]; // e.g., ['nuts', 'dairy', 'eggs']
     }>;
   }>;
   backgroundColor?: string;
   textColor?: string;
+  cardBackgroundColor?: string;
+  accentColor?: string;
 }
 
 /**
@@ -197,11 +210,18 @@ export interface ProjectsData {
     id: number;
     title: string;
     description: string;
-    imageUrl: string;
+    imageUrl: string; // ObjectId from backend or legacy URL
+    thumbnailUrl?: string; // Optional thumbnail for performance
     link?: string;
+    category?: string;
+    tags?: string[];
+    featured?: boolean;
+    completedDate?: string;
   }>;
   backgroundColor?: string;
   textColor?: string;
+  cardBackgroundColor?: string;
+  accentColor?: string;
 }
 
 /**

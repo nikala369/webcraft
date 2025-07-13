@@ -12,21 +12,8 @@ import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
 import { ThemeColorsService } from '../../../../../../core/services/theme/theme-colors.service';
 import { BusinessConfigService } from '../../../../../../core/services/business-config/business-config.service';
-
-interface AboutSectionData {
-  title?: string;
-  subtitle?: string;
-  storyTitle?: string;
-  storyText?: string;
-  missionTitle?: string;
-  missionText?: string;
-  content?: string;
-  imageUrl?: string;
-  backgroundColor?: string;
-  textColor?: string;
-  values?: string[];
-  valuesTitle?: string;
-}
+import { AboutData } from '../../../../../../core/models/website-customizations';
+import { ImageService } from '../../../../../../core/services/shared/image/image.service';
 
 @Component({
   selector: 'app-about-section',
@@ -50,6 +37,7 @@ export class AboutSectionComponent implements OnInit {
 
   private themeColorsService = inject(ThemeColorsService);
   private businessConfigService = inject(BusinessConfigService);
+  private imageService = inject(ImageService);
 
   // Default about section image based on business type
   get defaultAboutImage(): string {
@@ -93,8 +81,12 @@ export class AboutSectionComponent implements OnInit {
   private getBusinessTypeImage(): string {
     // If we already have a custom image in the data, don't override it
     const customImage = this.data()?.imageUrl;
-    if (customImage && customImage.trim() !== '') {
-      return customImage;
+    if (customImage) {
+      // Get URL from objectId or legacy URL
+      const imageUrl = this.imageService.getImageUrl(customImage);
+      if (imageUrl && imageUrl.trim() !== '') {
+        return imageUrl;
+      }
     }
 
     // Otherwise, use a business-type specific default
@@ -142,13 +134,13 @@ export class AboutSectionComponent implements OnInit {
   /**
    * Get business-specific about content with merged defaults
    */
-  getAboutContent(): AboutSectionData {
+  getAboutContent(): AboutData {
     // Get customized content if available
-    const customContent: AboutSectionData = this.data() || {};
+    const customContent: AboutData = this.data() || {};
 
     // Get default content from BusinessConfigService if available
     // This is the preferred way to get defaults
-    let defaultContent: AboutSectionData;
+    let defaultContent: AboutData;
     try {
       defaultContent = this.businessConfigService.getDefaultAboutData(
         this.businessType
@@ -172,7 +164,7 @@ export class AboutSectionComponent implements OnInit {
     // Use spread operator to merge, with custom content taking precedence
     const mergedContent = { ...defaultContent, ...customContent };
 
-    // Ensure imageUrl is set
+    // Ensure imageUrl is set - it's now just a string (objectId or legacy URL)
     if (!mergedContent.imageUrl || mergedContent.imageUrl.trim() === '') {
       mergedContent.imageUrl = this.defaultAboutImage;
     }
@@ -185,7 +177,10 @@ export class AboutSectionComponent implements OnInit {
    */
   getAboutImage(): string {
     const aboutContent = this.getAboutContent();
-    return aboutContent.imageUrl || this.defaultAboutImage;
+    if (aboutContent.imageUrl) {
+      return this.imageService.getImageUrl(aboutContent.imageUrl);
+    }
+    return this.defaultAboutImage;
   }
 
   /**

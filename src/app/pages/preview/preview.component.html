@@ -306,6 +306,7 @@
         [initialData]="selectedCustomization()?.data"
         [planType]="currentPlan()"
         [businessType]="businessType()"
+        [userTemplateId]="currentUserTemplateId() || undefined"
         (update)="handleComponentUpdate($event)"
         (close)="selectedComponent.set(null)"
       >

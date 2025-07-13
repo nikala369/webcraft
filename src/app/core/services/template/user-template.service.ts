@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, throwError, map, of } from 'rxjs';
+import { Observable, catchError, throwError, map, tap, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Customizations } from '../../models/website-customizations';
 import {
@@ -273,12 +273,32 @@ export class UserTemplateService {
 
     const url = `${this.apiUrl}${this.apiPrefix}/template/user-template/attachment?userTemplateId=${userTemplateId}&attachmentType=USER_TEMPLATE_IMAGE`;
 
-    return this.http.post(url, formData, { responseType: 'text' }).pipe(
-      catchError((error) => {
-        console.error('Error uploading user template image:', error);
-        return throwError(() => error);
-      })
-    );
+    return this.http
+      .post<{ message: string; data: { objectId: string } }>(url, formData)
+      .pipe(
+        tap((response: { message: string; data: { objectId: string } }) => {
+          console.log('UserTemplateService: Upload response:', response);
+        }),
+        map((response: { message: string; data: { objectId: string } }) => {
+          const objectId = response.data.objectId;
+          console.log('UserTemplateService: Extracted objectId:', objectId);
+
+          // Validate extracted objectId
+          if (!objectId || typeof objectId !== 'string') {
+            console.error(
+              'UserTemplateService: Invalid objectId in response:',
+              response
+            );
+            throw new Error('Invalid objectId in response');
+          }
+
+          return objectId;
+        }),
+        catchError((error) => {
+          console.error('UserTemplateService: Upload error:', error);
+          return throwError(() => error);
+        })
+      );
   }
 
   /**
@@ -287,7 +307,26 @@ export class UserTemplateService {
    * @returns The full URL for the attachment
    */
   getUserTemplateAttachmentUrl(objectId: string): string {
-    return `${this.apiUrl}${this.apiPrefix}/template/user-template/attachment/${objectId}`;
+    return `${this.apiUrl}${this.apiPrefix}/template/user-template/attachment/${objectId}?attachmentType=USER_TEMPLATE_IMAGE`;
+  }
+
+  /**
+   * Fetch an image with auth headers and return as blob URL
+   * @param objectId The attachment object ID
+   * @returns Observable with blob URL
+   */
+  getImageBlob(objectId: string): Observable<string> {
+    const url = this.getUserTemplateAttachmentUrl(objectId);
+
+    return this.http.get(url, { responseType: 'blob' }).pipe(
+      map((blob) => {
+        return URL.createObjectURL(blob);
+      }),
+      catchError((error) => {
+        console.error('Error fetching image blob:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**

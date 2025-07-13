@@ -10,18 +10,20 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
+import { ReactiveImageComponent } from '../../../../../../shared/components/reactive-image/reactive-image.component';
 import { ThemeColorsService } from '../../../../../../core/services/theme/theme-colors.service';
 import { BusinessConfigService } from '../../../../../../core/services/business-config/business-config.service';
 import {
   Customizations,
   HeroData,
 } from '../../../../../../core/models/website-customizations';
+import { ImageService } from '../../../../../../core/services/shared/image/image.service';
 import { Signal } from '@angular/core';
 
 @Component({
   selector: 'app-hero-section',
   standalone: true,
-  imports: [CommonModule, SectionHoverWrapperComponent],
+  imports: [CommonModule, SectionHoverWrapperComponent, ReactiveImageComponent],
   templateUrl: './hero-section.component.html',
   styleUrls: ['./hero-section.component.scss'],
 })
@@ -41,6 +43,7 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
 
   private themeColorsService = inject(ThemeColorsService);
   private businessConfigService = inject(BusinessConfigService);
+  private imageService = inject(ImageService);
   private el = inject(ElementRef);
   private scrollHandler: (() => void) | null = null;
 
@@ -184,7 +187,12 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
       return '';
     }
 
-    return this.data()?.backgroundImage || this.defaultHeroImage;
+    const backgroundImage = this.data()?.backgroundImage;
+    if (backgroundImage) {
+      return this.imageService.getImageUrl(backgroundImage);
+    }
+
+    return this.defaultHeroImage;
   }
 
   /**
@@ -199,7 +207,12 @@ export class HeroSectionComponent implements OnInit, OnDestroy {
       return '';
     }
 
-    return this.data()?.backgroundVideo || this.defaultHeroVideo;
+    const backgroundVideo = this.data()?.backgroundVideo;
+    if (backgroundVideo) {
+      return this.imageService.getImageUrl(backgroundVideo);
+    }
+
+    return this.defaultHeroVideo;
   }
 
   /**

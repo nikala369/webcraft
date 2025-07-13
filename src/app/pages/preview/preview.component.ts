@@ -28,6 +28,7 @@ import {
   ANIMATION_DURATIONS,
 } from '../../core/services/ui/view-management.service';
 import { TemplateInitializationService } from '../../core/services/template/template-initialization.service';
+import { ImageService } from '../../core/services/shared/image/image.service';
 
 // Components
 import { ThemeSwitcherComponent } from './components/theme-switcher/theme-switcher.component';
@@ -108,6 +109,7 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
   public viewManagementService = inject(ViewManagementService);
   public isViewOnlyStateService = inject(ScrollService);
   private modalStateService = inject(ScrollService);
+  private imageService = inject(ImageService);
 
   // ======== TEMPLATE STATE ========
   templateState = signal<TemplateState>({
@@ -246,13 +248,8 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Effect to update theme colors when plan changes
     this.themeColorsService.setPlan(this.currentPlan());
-  }
-
-  ngOnInit(): void {
-    this.initializeFromRoute();
 
     // Watch for fullscreen state changes to reset preview position when exiting
-    // Only run this effect after component is fully initialized
     let previousFullscreenState: boolean | null = null;
     let isInitialized = false;
 
@@ -281,6 +278,10 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
 
       previousFullscreenState = currentFullscreenState;
     });
+  }
+
+  ngOnInit(): void {
+    this.initializeFromRoute();
   }
 
   ngOnDestroy(): void {
@@ -320,6 +321,14 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
    * Apply initial data to component signals
    */
   private applyInitialData(initialData: InitialTemplateData): void {
+    // Clean malformed objectIds from customizations data (fix for legacy data)
+    let cleanedCustomizations = initialData.customizations;
+    if (cleanedCustomizations) {
+      cleanedCustomizations = this.imageService.cleanMalformedObjectIds(
+        cleanedCustomizations
+      );
+    }
+
     // Set all signals from initial data
     this.currentUserTemplateId.set(initialData.currentUserTemplateId);
     this.currentTemplateName.set(initialData.currentTemplateName);
@@ -329,7 +338,7 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
     this.currentPlan.set(initialData.plan);
     this.currentPage.set('home');
     this.currentStep.set(initialData.currentStep);
-    this.customizations.set(initialData.customizations);
+    this.customizations.set(cleanedCustomizations); // Use cleaned customizations
     this.selectedFont.set(initialData.selectedFont as FontOption);
     this.selectedBaseTemplateId.set(initialData.selectedBaseTemplateId);
     this.availableThemes.set(initialData.availableThemes);
