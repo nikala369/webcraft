@@ -781,6 +781,18 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
     const selected = this.selectedComponent();
     if (!selected) return;
 
+    // Debug logging for menu updates
+    if (selected.path === 'pages.home.menu' || selected.key === 'menu') {
+      console.log('[Preview] Menu update received:', {
+        selected,
+        update,
+        hasCategories: !!update.categories,
+        categoriesCount: update.categories?.length || 0,
+        firstCategory: update.categories?.[0],
+        updateKeys: Object.keys(update),
+      });
+    }
+
     this.customizations.update((current) => {
       if (!current) return current;
 
@@ -799,14 +811,48 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
 
         const lastPart = pathParts[pathParts.length - 1];
         if (!target[lastPart]) target[lastPart] = {};
-        target[lastPart] = { ...target[lastPart], ...update };
+
+        // For menu data, directly replace the entire object to preserve structure
+        if (selected.path === 'pages.home.menu' || selected.key === 'menu') {
+          // Ensure the menu object structure is preserved
+          const existingMenu = target[lastPart] || {};
+          target[lastPart] = { ...existingMenu, ...update };
+
+          console.log('[Preview] Menu data after update:', {
+            path: selected.path,
+            menuData: target[lastPart],
+            hasCategories: !!target[lastPart].categories,
+            categoriesCount: target[lastPart].categories?.length || 0,
+          });
+        } else {
+          target[lastPart] = { ...target[lastPart], ...update };
+        }
       } else {
         // Handle direct key updates
-        const key = selected.key as keyof Customizations;
-        updated[key] = {
-          ...(updated[key] || {}),
-          ...update,
-        } as any;
+        const key = selected.key;
+        if (key === 'menu') {
+          // Special handling for menu updates
+          const existingMenu = (updated as any)[key] || {};
+          (updated as any)[key] = { ...existingMenu, ...update };
+        } else {
+          // For other components, use the original logic
+          (updated as any)[key] = {
+            ...((updated as any)[key] || {}),
+            ...update,
+          };
+        }
+      }
+
+      // Debug log the updated customizations for menu
+      if (selected.path === 'pages.home.menu' || selected.key === 'menu') {
+        console.log('[Preview] Updated customizations:', {
+          fullCustomizations: updated,
+          menuSection: updated.pages?.home?.menu,
+          hasMenuSection: !!updated.pages?.home?.menu,
+          menuCategories: updated.pages?.home?.menu?.categories,
+          menuCategoriesCount:
+            updated.pages?.home?.menu?.categories?.length || 0,
+        });
       }
 
       return updated;
@@ -831,15 +877,42 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
+    // Debug logging for all data, with special focus on menu data
+    console.log('[Preview] Saving template with data:', {
+      customizations,
+      menuData: customizations.pages?.home?.menu,
+      hasMenuData: !!customizations.pages?.home?.menu,
+      menuKeys: customizations.pages?.home?.menu
+        ? Object.keys(customizations.pages?.home?.menu)
+        : [],
+      hasCategories: !!customizations.pages?.home?.menu?.categories,
+      categoriesCount:
+        customizations.pages?.home?.menu?.categories?.length || 0,
+      firstCategory: customizations.pages?.home?.menu?.categories?.[0],
+      menuDataStructure: customizations.pages?.home?.menu
+        ? JSON.stringify(customizations.pages?.home?.menu, null, 2)
+        : null,
+    });
+
     this.showLoadingOverlay.set(true);
     this.loadingOverlayClass.set('active');
 
+    // Create a deep clone for saving
+    const customizationsToSave = structuredClone(customizations);
+
+    console.log('[Preview] Customizations after structuredClone:', {
+      menuData: customizationsToSave.pages?.home?.menu,
+      hasMenuData: !!customizationsToSave.pages?.home?.menu,
+      hasCategories: !!customizationsToSave.pages?.home?.menu?.categories,
+      categoriesCount:
+        customizationsToSave.pages?.home?.menu?.categories?.length || 0,
+      menuDataAfterClone: customizationsToSave.pages?.home?.menu
+        ? JSON.stringify(customizationsToSave.pages?.home?.menu, null, 2)
+        : null,
+    });
+
     this.userTemplateService
-      .updateUserTemplate(
-        templateId,
-        templateName,
-        structuredClone(customizations)
-      )
+      .updateUserTemplate(templateId, templateName, customizationsToSave)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {

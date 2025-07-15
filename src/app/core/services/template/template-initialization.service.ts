@@ -225,78 +225,113 @@ export class TemplateInitializationService {
           try {
             const configStr = template.config.trim();
             console.log(
-              '[TemplateInitializationService] Raw template.config:',
-              configStr
+              '[TemplateInit] Raw config string length:',
+              configStr.length
             );
 
             const customizationsData = JSON.parse(configStr);
+            console.log('[TemplateInit] Parsed customizations:', {
+              hasPages: !!customizationsData.pages,
+              hasHome: !!customizationsData.pages?.home,
+              hasMenu: !!customizationsData.pages?.home?.menu,
+              menuData: customizationsData.pages?.home?.menu,
+              menuHasCategories:
+                !!customizationsData.pages?.home?.menu?.categories,
+              menuCategoriesCount:
+                customizationsData.pages?.home?.menu?.categories?.length || 0,
+              menuFirstCategory:
+                customizationsData.pages?.home?.menu?.categories?.[0],
+            });
+
+            // Validate and fix menu data if needed
+            if (
+              customizationsData.pages?.home?.menu &&
+              templateType === 'restaurant'
+            ) {
+              const menuData = customizationsData.pages.home.menu;
+
+              console.log('[TemplateInit] Processing menu data:', {
+                menuData,
+                menuDataKeys: Object.keys(menuData),
+                hasCategories: !!menuData.categories,
+                categoriesType: typeof menuData.categories,
+                isArray: Array.isArray(menuData.categories),
+                categoriesCount: menuData.categories?.length || 0,
+                firstCategory: menuData.categories?.[0],
+                menuDataStructure: JSON.stringify(menuData, null, 2),
+              });
+
+              // ARCHITECTURE FIX: Simplified validation logic
+              // If categories is not a valid array, reset it.
+              // This correctly handles cases where it's missing, null, or not an array,
+              // while correctly preserving a valid, intentionally empty array [].
+              if (!Array.isArray(menuData.categories)) {
+                console.warn(
+                  '[TemplateInit] Invalid or missing `categories` array in loaded menu data. Applying defaults.'
+                );
+                const defaultMenuData =
+                  this.businessConfigService.getDefaultMenuData();
+                customizationsData.pages.home.menu.categories =
+                  defaultMenuData.categories;
+
+                console.log('[TemplateInit] Fixed menu data:', {
+                  fixedMenuData: customizationsData.pages.home.menu,
+                  categoriesCount:
+                    customizationsData.pages.home.menu.categories.length,
+                  fixedCategories:
+                    customizationsData.pages.home.menu.categories,
+                });
+              } else {
+                console.log(
+                  '[TemplateInit] Menu categories array is valid, keeping existing data:',
+                  {
+                    categoriesCount: menuData.categories?.length || 0,
+                    isEmptyArray:
+                      Array.isArray(menuData.categories) &&
+                      menuData.categories.length === 0,
+                  }
+                );
+              }
+            }
+
             result.customizations = customizationsData;
 
             // Set font if available
             if (customizationsData.fontConfig) {
-              const { fontId, family, fallback } =
-                customizationsData.fontConfig;
-              result.selectedFont = { id: fontId, family, fallback };
+              result.selectedFont = customizationsData.fontConfig;
             }
-
-            console.log(
-              '[TemplateInitializationService] Successfully loaded and applied template configuration'
-            );
-          } catch (e) {
-            console.error(
-              '[TemplateInitializationService] Error parsing template.config, falling back to defaults:',
-              e
-            );
-
-            // Fallback to defaults
-            const { customizations, font } = this.getDefaultsForTypeAndPlan(
-              templateType,
-              templatePlan
-            );
-            result.customizations = customizations;
-            result.selectedFont = font;
-
+          } catch (error) {
+            console.error('Error parsing template customizations:', error);
             this.confirmationService.showConfirmation(
               'Could not parse your template configuration – using defaults.',
               'warning',
               5000
             );
+            result.customizations = null;
           }
         } else {
-          console.warn(
-            '[TemplateInitializationService] Template has no config – using defaults'
-          );
+          console.log('[TemplateInit] No config in template');
+          result.customizations = null;
+        }
 
-          // Initialize with defaults
+        // Apply defaults if necessary
+        if (!result.customizations) {
           const { customizations, font } = this.getDefaultsForTypeAndPlan(
             templateType,
             templatePlan
           );
           result.customizations = customizations;
           result.selectedFont = font;
-
-          this.confirmationService.showConfirmation(
-            'Template has no configuration data. Using default settings.',
-            'warning',
-            3000
-          );
         }
 
         return result;
       }),
       catchError((error) => {
         console.error(
-          '[TemplateInitializationService] Error loading template from API:',
+          '[TemplateInitializationService] Error loading template:',
           error
         );
-
-        // Create a more specific error with details about what failed
-        const errorMessage =
-          error.status === 404
-            ? `Template with ID ${templateId} not found`
-            : `Failed to load template: ${error.message || 'API error'}`;
-
-        return throwError(() => new Error(errorMessage));
+        return throwError(() => error);
       })
     );
   }
@@ -507,71 +542,59 @@ export class TemplateInitializationService {
   }
 
   /**
-   * Initialize customizations with default values for the selected business type
-   * Public version to be called from PreviewComponent post-initialization
-   *
-   * @param businessTypeKey The business type key
-   * @param plan The selected plan
-   * @returns Default customizations and font
+   * Get default customizations for business type and plan.
+   * This is used when creating new templates or when stored customizations are invalid.
    */
   getDefaultsForTypeAndPlan(
-    businessTypeKey: string,
+    businessType: string,
     plan: 'standard' | 'premium'
   ): {
     customizations: Customizations;
-    font: { id: number; family: string; fallback: string } | null;
+    font: any;
   } {
-    let customizations: Customizations;
-    let font = null;
+    console.log(
+      `[TemplateInitializationService] Getting defaults for type: ${businessType}, plan: ${plan}`
+    );
 
-    if (businessTypeKey) {
-      // Use BusinessConfigService to generate appropriate defaults
-      customizations = this.businessConfigService.generateDefaultCustomizations(
-        businessTypeKey,
+    // Get base customizations from business config
+    const baseCustomizations =
+      this.businessConfigService.generateDefaultCustomizations(
+        businessType,
         plan
       );
 
-      // Extract font from the default customizations
-      if (customizations.fontConfig) {
-        font = {
-          id: customizations.fontConfig.fontId,
-          family: customizations.fontConfig.family,
-          fallback: customizations.fontConfig.fallback || 'sans-serif',
+    // Special handling for menu data to ensure proper structure
+    if (
+      businessType === 'restaurant' ||
+      businessType === 'cafe' ||
+      businessType === 'bar'
+    ) {
+      const menuData = this.businessConfigService.getDefaultMenuData();
+      console.log('[TemplateInitializationService] Using menu data:', {
+        menuData,
+        hasCategories: !!menuData.categories,
+        categoriesCount: menuData.categories?.length || 0,
+      });
+
+      // Ensure the menu data has the proper structure
+      if (baseCustomizations.pages?.home?.menu) {
+        baseCustomizations.pages.home.menu = {
+          ...baseCustomizations.pages.home.menu,
+          ...menuData,
         };
       }
-    } else {
-      // If no business type, set an empty customization object
-      customizations = this.initializeEmptyCustomizations();
     }
 
-    return { customizations, font };
-  }
+    // Default font
+    const font = {
+      id: 1,
+      family: 'Roboto',
+      fallback: 'sans-serif',
+    };
 
-  /**
-   * Initialize an empty customizations object
-   * @returns Empty customizations object
-   */
-  private initializeEmptyCustomizations(): Customizations {
     return {
-      fontConfig: {
-        fontId: 1,
-        family: 'Arial',
-        fallback: 'sans-serif',
-      },
-      header: {
-        backgroundColor: '#0dff00',
-        textColor: '#f5f5f5',
-        menuItems: [],
-      },
-      pages: { home: {} },
-      footer: {
-        backgroundColor: '#1a1a1a',
-        textColor: '#ffffff',
-        copyrightText: '© 2025 Your Company',
-        showSocialLinks: false,
-        menuItems: [],
-        socialLinks: [],
-      },
+      customizations: baseCustomizations,
+      font,
     };
   }
 
@@ -606,7 +629,7 @@ export class TemplateInitializationService {
           this.confirmationService.showConfirmation(
             'Error finding template type. Please try again.',
             'error',
-            3000
+            5000
           );
           return throwError(
             () =>
@@ -621,10 +644,20 @@ export class TemplateInitializationService {
           .getTemplatePlanId(this.templateService.convertPlanType(plan))
           .pipe(
             switchMap((planId) => {
-              // Now search using the actual template type ID from the API
-              // todo .searchTemplates(templateType.id, planId, 0, 5)
+              // ARCHITECTURE FIX: Pass the actual IDs to the search service
+              // This results in smaller, faster, and more efficient API responses
+              console.log(
+                '[TemplateInitializationService] Searching templates with filters:',
+                {
+                  templateTypeId: templateType.id,
+                  planId,
+                  businessTypeKey,
+                  plan,
+                }
+              );
+
               return this.templateService
-                .searchTemplates(null, null, 0, 30)
+                .searchTemplates(templateType.id, planId, 0, 10) // Use actual IDs, reduced limit
                 .pipe(
                   map((response) => response.content as unknown as Template[]),
                   catchError((err) => {
@@ -635,7 +668,7 @@ export class TemplateInitializationService {
                     this.confirmationService.showConfirmation(
                       'Error loading templates. Please try again.',
                       'error',
-                      3000
+                      5000
                     );
                     return throwError(
                       () =>
@@ -653,7 +686,7 @@ export class TemplateInitializationService {
               this.confirmationService.showConfirmation(
                 'Error loading plan information. Please try again.',
                 'error',
-                3000
+                5000
               );
               return throwError(
                 () =>
@@ -671,7 +704,7 @@ export class TemplateInitializationService {
         this.confirmationService.showConfirmation(
           'Error loading template types. Please try again.',
           'error',
-          3000
+          5000
         );
         return throwError(
           () =>

@@ -2,6 +2,7 @@ import {
   Component,
   Input,
   OnInit,
+  OnChanges,
   signal,
   Output,
   EventEmitter,
@@ -14,20 +15,95 @@ import {
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { BUSINESS_TYPE_MENU_ITEMS } from '../../../../core/models/business-types';
+import { ReactiveImageComponent } from '../../../../shared/components/reactive-image/reactive-image.component';
+import { ImageService } from '../../../../core/services/shared/image/image.service';
 
 @Component({
   selector: 'app-structure-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveImageComponent],
   templateUrl: './structure-header.component.html',
   styleUrls: ['./structure-header.component.scss'],
 })
-export class StructureHeaderComponent implements OnInit, OnDestroy {
+export class StructureHeaderComponent implements OnInit, OnChanges, OnDestroy {
   /**
    * Holds background color, text color, logoUrl, and menuItems
    * e.g. { backgroundColor, text, logoUrl, menuItems: [ { id, label, link } ] }
    */
   @Input() customizations: any = {};
+
+  // Force change detection when customizations change
+  ngOnChanges(changes: any): void {
+    if (changes.customizations) {
+      console.log('Header customizations changed:', this.customizations);
+
+      // Re-initialize header data when customizations change
+      this.initializeHeaderData();
+
+      // Force change detection to update template
+      this.cdr.detectChanges();
+    }
+
+    // Handle other input changes
+    if (changes.businessType || changes.plan || changes.activeSection) {
+      console.log(
+        'Header business type, plan, or active section changed:',
+        this.businessType,
+        this.plan,
+        this.activeSection
+      );
+      this.cdr.detectChanges();
+    }
+  }
+
+  /**
+   * Initialize header data when customizations change
+   */
+  private initializeHeaderData(): void {
+    // Ensure standard plan has exactly 4 menu items when customizations change
+    if (
+      this.plan === 'standard' &&
+      (!this.customizations?.menuItems ||
+        this.customizations.menuItems.length !== 4)
+    ) {
+      // Apply default menu items if not set correctly
+      if (!this.customizations) {
+        this.customizations = {};
+      }
+
+      // Use business type menu items if available, otherwise use standard default
+      if (
+        this.businessType &&
+        BUSINESS_TYPE_MENU_ITEMS[
+          this.businessType as keyof typeof BUSINESS_TYPE_MENU_ITEMS
+        ]?.standard
+      ) {
+        this.customizations.menuItems =
+          BUSINESS_TYPE_MENU_ITEMS[
+            this.businessType as keyof typeof BUSINESS_TYPE_MENU_ITEMS
+          ].standard;
+      } else {
+        this.customizations.menuItems = this.standardMenuItems;
+      }
+    }
+  }
+
+  /**
+   * Get image URL using ImageService to handle object IDs and regular URLs
+   */
+  getImageUrl(imageValue: string | undefined): string {
+    if (!imageValue) {
+      return '/assets/standard-header/default-logo.svg'; // Default logo
+    }
+
+    // Handle temporary blob URLs (during editing)
+    if (imageValue.startsWith('temp:')) {
+      return imageValue.substring(5); // Remove 'temp:' prefix
+    }
+
+    // Use ImageService to process object IDs and regular URLs
+    return this.imageService.getImageUrl(imageValue);
+  }
 
   /**
    * Determines if the layout should be displayed in mobile mode
@@ -88,7 +164,8 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private elementRef: ElementRef,
     private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private imageService: ImageService
   ) {}
 
   ngOnInit() {
@@ -98,32 +175,8 @@ export class StructureHeaderComponent implements OnInit, OnDestroy {
     console.log('Business type:', this.businessType);
     console.log('Active section:', this.activeSection);
 
-    // Ensure standard plan has exactly 4 menu items
-    if (
-      this.plan === 'standard' &&
-      (!this.customizations?.menuItems ||
-        this.customizations.menuItems.length !== 4)
-    ) {
-      // Apply default menu items if not set correctly
-      if (!this.customizations) {
-        this.customizations = {};
-      }
-
-      // Use business type menu items if available, otherwise use standard default
-      if (
-        this.businessType &&
-        BUSINESS_TYPE_MENU_ITEMS[
-          this.businessType as keyof typeof BUSINESS_TYPE_MENU_ITEMS
-        ]?.standard
-      ) {
-        this.customizations.menuItems =
-          BUSINESS_TYPE_MENU_ITEMS[
-            this.businessType as keyof typeof BUSINESS_TYPE_MENU_ITEMS
-          ].standard;
-      } else {
-        this.customizations.menuItems = this.standardMenuItems;
-      }
-    }
+    // Initialize header data
+    this.initializeHeaderData();
   }
 
   ngOnDestroy() {

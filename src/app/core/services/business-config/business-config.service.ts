@@ -456,56 +456,62 @@ export class BusinessConfigService {
   }
 
   /**
-   * Generate default menu data for restaurants
+   * Get default menu data for restaurant business types
    */
-  private getDefaultMenuData(): MenuData {
+  getDefaultMenuData(): any {
     return {
       title: 'Our Menu',
-      subtitle: 'Fresh Ingredients, Exceptional Taste',
+      subtitle:
+        'Enjoy our carefully crafted dishes made with the finest ingredients',
+      backgroundColor: '#f9f9f9',
+      textColor: '#333333',
+      cardBackgroundColor: '#ffffff',
       categories: [
         {
           id: 'cat1',
-          name: 'Starters',
+          name: 'Appetizers',
+          description: 'Perfect starters to begin your culinary journey.',
           items: [
             {
               id: 'item1',
               name: 'Bruschetta',
               description:
-                'Toasted bread with fresh tomatoes, garlic, and basil.',
-              price: '$8',
-              featured: true,
+                'Toasted bread topped with ripe tomatoes, fresh basil, and extra virgin olive oil.',
+              price: '$8.99',
+              tags: ['vegetarian'],
             },
             {
               id: 'item2',
-              name: 'Soup of the Day',
-              description: 'Ask your server about our daily special.',
-              price: '$7',
+              name: 'Calamari Fritti',
+              description:
+                'Crispy fried calamari served with lemon and marinara sauce.',
+              price: '$12.99',
             },
           ],
         },
         {
           id: 'cat2',
           name: 'Main Courses',
+          description: 'Signature dishes crafted with finest ingredients.',
           items: [
             {
               id: 'item3',
               name: 'Grilled Salmon',
-              description: 'Fresh salmon with seasonal vegetables.',
-              price: '$22',
+              description:
+                'Fresh salmon fillet grilled to perfection, served with seasonal vegetables and lemon butter sauce.',
+              price: '$24.99',
               featured: true,
             },
             {
               id: 'item4',
-              name: 'Pasta Primavera',
+              name: 'Pasta Carbonara',
               description:
-                'Fresh pasta with seasonal vegetables in a light cream sauce.',
-              price: '$18',
+                'Classic Italian pasta with pancetta, egg, black pepper, and Parmesan cheese.',
+              price: '$18.99',
             },
           ],
         },
       ],
-      backgroundColor: '#fdfbf9',
-      textColor: '#333333',
     };
   }
 
@@ -799,40 +805,64 @@ export class BusinessConfigService {
    * Get default social media URLs for a business type
    */
   private getDefaultSocialUrls(businessType: string): Record<string, string> {
-    const defaultUrls = {
-      facebook: 'https://facebook.com/',
-      instagram: 'https://instagram.com/',
-      tiktok: 'https://tiktok.com/',
+    // Return default placeholder URLs for common social platforms
+    // Users can update these with their actual social media profiles
+    const baseUrls = {
+      facebook: 'https://facebook.com/yourbusiness',
+      instagram: 'https://instagram.com/yourbusiness',
+      tiktok: 'https://tiktok.com/@yourbusiness',
+      linkedin: 'https://linkedin.com/company/yourbusiness',
+      youtube: 'https://youtube.com/@yourbusiness',
+      twitter: 'https://twitter.com/yourbusiness',
     };
 
-    // Customize URLs based on business type
+    // Customize based on business type
     switch (businessType) {
       case 'restaurant':
         return {
-          ...defaultUrls,
-          facebook: 'https://facebook.com/finedining',
-          instagram: 'https://instagram.com/finedining',
+          facebook: 'https://facebook.com/yourrestaurant',
+          instagram: 'https://instagram.com/yourrestaurant',
+          tiktok: 'https://tiktok.com/@yourrestaurant',
+          linkedin: '',
+          youtube: '',
+          twitter: '',
         };
       case 'salon':
         return {
-          ...defaultUrls,
-          facebook: 'https://facebook.com/beautystudio',
-          instagram: 'https://instagram.com/beautystudio',
+          facebook: 'https://facebook.com/yoursalon',
+          instagram: 'https://instagram.com/yoursalon',
+          tiktok: 'https://tiktok.com/@yoursalon',
+          linkedin: '',
+          youtube: '',
+          twitter: '',
         };
       case 'architecture':
         return {
-          ...defaultUrls,
-          facebook: 'https://facebook.com/designworks',
-          instagram: 'https://instagram.com/designworks',
+          facebook: 'https://facebook.com/yourfirm',
+          instagram: 'https://instagram.com/yourfirm',
+          tiktok: '',
+          linkedin: 'https://linkedin.com/company/yourfirm',
+          youtube: '',
+          twitter: '',
         };
       case 'portfolio':
         return {
-          ...defaultUrls,
-          facebook: 'https://facebook.com/creativeportfolio',
-          instagram: 'https://instagram.com/creativeportfolio',
+          facebook: '',
+          instagram: 'https://instagram.com/yourportfolio',
+          tiktok: '',
+          linkedin: 'https://linkedin.com/in/yourname',
+          youtube: '',
+          twitter: 'https://twitter.com/yourname',
         };
       default:
-        return defaultUrls;
+        return {
+          facebook: 'https://facebook.com/yourbusiness',
+          instagram: 'https://instagram.com/yourbusiness',
+          tiktok: '',
+          linkedin: '',
+          youtube: '',
+          twitter: '',
+        };
     }
   }
 
@@ -1054,7 +1084,7 @@ export class BusinessConfigService {
           title: 'Our Culinary Story',
           subtitle: 'Where tradition meets innovation in every dish',
           description:
-            'From farm-fresh ingredients to time-honored techniques, discover the passion that drives our kitchen.',
+            'From farm-to-table ingredients to time-honored techniques, discover the passion that drives our kitchen.',
         },
         story: {
           title: 'Our Journey',

@@ -1,6 +1,8 @@
 import {
   Component,
   Input,
+  Output,
+  EventEmitter,
   OnInit,
   OnChanges,
   OnDestroy,
@@ -40,53 +42,72 @@ import { ImageService } from '../../../core/services/shared/image/image.service'
       [alt]="alt"
       [ngClass]="class"
       [style]="style"
-      (load)="onImageLoad()"
-      (error)="onImageError()"
+      (load)="onImageLoad($event)"
+      (error)="onImageError($event)"
     />
   `,
-  styles: [
-    `
-      img {
-        transition: opacity 0.3s ease;
-      }
-      .loading {
-        opacity: 0.7;
-      }
-    `,
-  ],
+  styles: `
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.3s ease;
+    }
+
+    img[src=""] {
+      opacity: 0;
+    }
+
+    .loading {
+      opacity: 0.7;
+    }
+
+    .error {
+      opacity: 0.5;
+      filter: grayscale(100%);
+    }
+  `,
 })
 export class ReactiveImageComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() src: string = '';
-  @Input() alt: string = '';
-  @Input() class: string = '';
-  @Input() style: string = '';
+  @Input() src = '';
+  @Input() alt = '';
+  @Input() class = '';
+  @Input() style = '';
+
+  @Output() imageLoad = new EventEmitter<Event>();
+  @Output() imageError = new EventEmitter<Event>();
 
   private imageService = inject(ImageService);
 
+  // Signals for reactive state management
+  private currentSrc = signal<string>('');
+  private isLoading = signal(false);
   displayUrl = signal<string>('');
-  isLoading = signal<boolean>(false);
 
-  constructor() {
-    // Watch for image updates from the service
-    effect(() => {
-      const imageUpdate = this.imageService.getImageUpdateSignal()();
-      if (imageUpdate && this.src === imageUpdate.objectId) {
-        // This image has been updated, refresh the display URL
-        this.updateDisplayUrl();
-      }
-    });
-  }
+  // Track disposed URLs for cleanup
+  private disposedUrls = new Set<string>();
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.updateDisplayUrl();
   }
 
-  ngOnChanges() {
+  ngOnChanges(): void {
     this.updateDisplayUrl();
   }
 
   ngOnDestroy(): void {
-    // Cleanup handled by Angular's effect system
+    // Clean up any blob URLs we created
+    this.disposedUrls.forEach((url) => {
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
+    });
   }
 
   private updateDisplayUrl(): void {
@@ -100,12 +121,14 @@ export class ReactiveImageComponent implements OnInit, OnChanges, OnDestroy {
     this.displayUrl.set(this.imageService.getImageUrl(this.src));
   }
 
-  onImageLoad() {
+  onImageLoad(event: Event): void {
     this.isLoading.set(false);
+    this.imageLoad.emit(event);
   }
 
-  onImageError() {
+  onImageError(event: Event): void {
     this.isLoading.set(false);
     console.error('Image failed to load:', this.src);
+    this.imageError.emit(event);
   }
 }

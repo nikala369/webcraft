@@ -1,19 +1,33 @@
-import { Component, Input, OnInit, HostBinding } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  OnChanges,
+  HostBinding,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BUSINESS_TYPE_MENU_ITEMS } from '../../../../core/models/business-types';
+import { ReactiveImageComponent } from '../../../../shared/components/reactive-image/reactive-image.component';
+import { ImageService } from '../../../../core/services/shared/image/image.service';
 
 @Component({
   selector: 'app-structure-footer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveImageComponent],
   templateUrl: './structure-footer.component.html',
   styleUrls: ['./structure-footer.component.scss'],
 })
-export class StructureFooterComponent implements OnInit {
+export class StructureFooterComponent implements OnInit, OnChanges {
   @Input() customizations: any = {};
   @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = '';
   @Input() isMobileLayout: boolean = false;
+
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private imageService: ImageService
+  ) {}
 
   // Add HostBindings for direct style updates
   @HostBinding('style.background-color') get backgroundColor() {
@@ -55,6 +69,29 @@ export class StructureFooterComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeFooterData();
+  }
+
+  // Force change detection when customizations change
+  ngOnChanges(changes: any): void {
+    if (changes.customizations) {
+      console.log('Footer customizations changed:', this.customizations);
+
+      // Re-initialize footer data when customizations change
+      this.initializeFooterData();
+
+      // Force change detection to update template
+      this.cdr.detectChanges();
+    }
+
+    // Handle other input changes
+    if (changes.businessType || changes.planType) {
+      console.log(
+        'Footer business type or plan changed:',
+        this.businessType,
+        this.planType
+      );
+      this.cdr.detectChanges();
+    }
   }
 
   /**
@@ -242,15 +279,32 @@ export class StructureFooterComponent implements OnInit {
   getDefaultEmail(): string {
     switch (this.businessType) {
       case 'restaurant':
-        return 'info@finedining.com';
+        return 'info@yourrestaurant.com';
       case 'salon':
-        return 'hello@beautystudio.com';
+        return 'hello@yoursalon.com';
       case 'architecture':
-        return 'projects@designworks.com';
+        return 'contact@yourarchitecture.com';
       case 'portfolio':
-        return 'contact@creativeportfolio.com';
+        return 'hello@yourportfolio.com';
       default:
         return 'info@yourbusiness.com';
     }
+  }
+
+  /**
+   * Get image URL using ImageService to handle object IDs and regular URLs
+   */
+  getImageUrl(imageValue: string | undefined): string {
+    if (!imageValue) {
+      return '/assets/standard-footer/default-logo.svg'; // Default footer logo
+    }
+
+    // Handle temporary blob URLs (during editing)
+    if (imageValue.startsWith('temp:')) {
+      return imageValue.substring(5); // Remove 'temp:' prefix
+    }
+
+    // Use ImageService to process object IDs and regular URLs
+    return this.imageService.getImageUrl(imageValue);
   }
 }

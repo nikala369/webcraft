@@ -343,6 +343,12 @@ export class ImageService {
       return data;
     }
 
+    // Handle arrays properly - preserve array structure
+    if (Array.isArray(data)) {
+      return data.map((item) => this.cleanMalformedObjectIds(item));
+    }
+
+    // Handle objects
     const cleaned = { ...data };
 
     // Recursively clean the object
@@ -369,7 +375,7 @@ export class ImageService {
           delete cleaned[key]; // Remove malformed objectId
         }
       } else if (typeof value === 'object' && value !== null) {
-        // Recursively clean nested objects
+        // Recursively clean nested objects and arrays
         cleaned[key] = this.cleanMalformedObjectIds(value);
       }
     });
@@ -418,6 +424,7 @@ export class ImageService {
       'image/png',
       'image/webp',
       'image/gif',
+      'image/svg+xml', // SVG support for logos
       'video/mp4',
       'video/webm',
       'video/mov',

@@ -158,7 +158,7 @@
             *ngFor="let item of category.items; let i = index"
             class="menu-item-card"
             [class.premium]="isPremium()"
-            [class.with-image]="item.image"
+            [class.with-image]="item.imageUrl"
             cdkDrag
             [cdkDragDisabled]="!isPremium()"
           >
@@ -181,7 +181,7 @@
 
             <!-- Item Image Upload/Preview -->
             <div class="item-image-container">
-              <div *ngIf="!item.image" class="item-image-upload">
+              <div *ngIf="!item.imageUrl" class="item-image-upload">
                 <input
                   type="file"
                   [id]="'item-image-' + item.id"
@@ -205,8 +205,12 @@
                   Add Image
                 </label>
               </div>
-              <div *ngIf="item.image" class="item-image-preview">
-                <img [src]="item.image" [alt]="item.name" />
+              <div *ngIf="item.imageUrl" class="item-image-preview">
+                <app-reactive-image
+                  [src]="item.imageUrl"
+                  [alt]="item.name"
+                  class="item-image"
+                ></app-reactive-image>
                 <button
                   class="remove-image-btn"
                   (click)="removeItemImage(item)"

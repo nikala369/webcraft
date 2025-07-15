@@ -44,8 +44,8 @@ export class ServicesEditorComponent implements OnInit {
   @Input() onSave?: (services: ServiceItem[]) => void;
 
   // For compatibility with both approaches - injected modal and direct use
-  @Output() save = new EventEmitter<ServiceItem[]>();
-  @Output() cancel = new EventEmitter<void>();
+  @Output() servicesSave = new EventEmitter<ServiceItem[]>();
+  @Output() servicesCancel = new EventEmitter<void>();
 
   // State management with signals
   services = signal<ServiceItem[]>([]);
@@ -226,12 +226,12 @@ export class ServicesEditorComponent implements OnInit {
       this.onSave(finalServices);
     }
 
-    this.save.emit(finalServices);
+    this.servicesSave.emit(finalServices);
   }
 
   onCancelClick(): void {
     console.log('Cancelling services edit');
-    this.cancel.emit();
+    this.servicesCancel.emit();
   }
 
   /**

@@ -234,7 +234,7 @@
             trackBy: trackByFieldId
           "
         >
-          <div class="field-group" [style.--index]="i" *ngIf="field.visible">
+          <div class="field-group" [style.--index]="i" *ngIf="field.isVisible">
             <div class="field-label-row" *ngIf="field.showLabel">
               <label [for]="field.key">
                 {{ field.label }}
@@ -454,7 +454,7 @@
                     <!-- Show image preview if image has been uploaded -->
                     <div class="file-preview" *ngIf="field.value">
                       <app-reactive-image
-                        [src]="field.value"
+                        [src]="getImageUrl(field.value)"
                         alt="File preview"
                         style="width: 100%; height: 100%; object-fit: contain"
                       ></app-reactive-image>
@@ -552,7 +552,7 @@
                   <!-- Show image preview if image has been uploaded -->
                   <div class="file-preview" *ngIf="field.value">
                     <app-reactive-image
-                      [src]="field.value"
+                      [src]="getImageUrl(field.value)"
                       alt="File preview"
                       style="width: 100%; height: 100%; object-fit: contain"
                     ></app-reactive-image>

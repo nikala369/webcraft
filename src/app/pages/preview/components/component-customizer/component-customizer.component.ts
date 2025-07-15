@@ -1,20 +1,22 @@
 import {
   Component,
-  EventEmitter,
   Input,
   Output,
-  signal,
-  computed,
+  EventEmitter,
   OnInit,
+  OnDestroy,
   OnChanges,
   SimpleChanges,
-  inject,
-  effect,
+  ElementRef,
+  ViewChild,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
-  ElementRef,
   HostListener,
-  ViewChild,
+  AfterViewInit,
+  signal,
+  computed,
+  inject,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -24,24 +26,30 @@ import {
   style,
   transition,
   animate,
-  query,
-  stagger,
 } from '@angular/animations';
-import { ToastService } from '../../../../core/services/toast/toast.service';
+import { Subscription, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+// Services
 import { ModalService } from '../../../../core/services/modal/modal.service';
+import { ToastService } from '../../../../core/services/toast/toast.service';
 import { CustomizerSoundService } from '../../../../core/services/audio/customizer-sound.service';
 import { ImageService } from '../../../../core/services/shared/image/image.service';
-import { CustomSelectComponent } from '../../../../shared/components/custom-select/custom-select.component';
-import { ReactiveImageComponent } from '../../../../shared/components/reactive-image/reactive-image.component';
+
+// Components & Directives
 import {
   DraggableDirective,
   DragPosition,
 } from '../../../../shared/directives/draggable.directive';
-import {
-  ResizableDirective,
-  ResizeEvent,
-} from '../../../../shared/directives/resizable.directive';
+import { ResizableDirective } from '../../../../shared/directives/resizable.directive';
+import { CustomSelectComponent } from '../../../../shared/components/custom-select/custom-select.component';
+import { ReactiveImageComponent } from '../../../../shared/components/reactive-image/reactive-image.component';
+
+// Data & Configuration
 import { FieldConfig, getPlanSpecificConfig } from './customizing-form-config';
+
+// Types
+type CustomizerData = Record<string, unknown>;
 
 @Component({
   selector: 'app-component-customizer',
@@ -91,7 +99,7 @@ import { FieldConfig, getPlanSpecificConfig } from './customizing-form-config';
     ]),
   ],
 })
-export class ComponentCustomizerComponent implements OnInit, OnChanges {
+export class ComponentCustomizerComponent implements OnInit, OnDestroy {
   @ViewChild(DraggableDirective) draggableDirective!: DraggableDirective;
   @ViewChild(ResizableDirective) resizableDirective!: ResizableDirective;
 
@@ -217,6 +225,67 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
         });
       }
 
+      // Special handling for menu section - ensure categories are properly initialized
+      if (
+        this.componentKey === 'pages.home.menu' ||
+        this.componentKey.includes('menu')
+      ) {
+        if (
+          !mergedData.categories ||
+          !Array.isArray(mergedData.categories) ||
+          mergedData.categories.length === 0
+        ) {
+          console.log(
+            '[ComponentCustomizer] Initializing empty menu data with default categories'
+          );
+          mergedData.categories = [
+            {
+              id: 'cat1',
+              name: 'Starters',
+              description: 'Perfect appetizers to begin your meal.',
+              items: [
+                {
+                  id: 'item1',
+                  name: 'Bruschetta',
+                  description:
+                    'Toasted bread with fresh tomatoes, garlic, and basil.',
+                  price: '$8.99',
+                  featured: true,
+                },
+                {
+                  id: 'item2',
+                  name: 'Soup of the Day',
+                  description: 'Ask your server about our daily special.',
+                  price: '$7.99',
+                },
+              ],
+            },
+            {
+              id: 'cat2',
+              name: 'Main Courses',
+              description: 'Our signature dishes and specialties.',
+              items: [
+                {
+                  id: 'item3',
+                  name: 'Grilled Salmon',
+                  description:
+                    'Fresh Atlantic salmon with seasonal vegetables.',
+                  price: '$24.99',
+                  featured: true,
+                },
+                {
+                  id: 'item4',
+                  name: 'Pasta Primavera',
+                  description:
+                    'Fresh pasta with seasonal vegetables in light cream sauce.',
+                  price: '$18.99',
+                },
+              ],
+            },
+          ];
+        }
+      }
+
       // Smart CTA button logging for hero sections
       if (this.componentKey.includes('hero1')) {
         console.log(
@@ -263,22 +332,24 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
     // Create stable field objects with memoization
     return fields.map((field) => {
       const cacheKey = `${this.componentKey}-${field.key}`;
-      let cachedField = this.fieldCache.get(cacheKey);
+      let baseField = this.fieldCache.get(cacheKey);
 
-      if (!cachedField) {
-        cachedField = {
+      if (!baseField) {
+        baseField = {
           ...field,
           id: cacheKey, // Stable ID for trackBy
         };
-        this.fieldCache.set(cacheKey, cachedField);
+        this.fieldCache.set(cacheKey, baseField);
       }
 
-      // Update only the dynamic properties
-      cachedField.visible = this.checkFieldVisibility(field, data);
-      cachedField.value = this.getFieldValueComputed(field.key, data);
-      cachedField.showLabel = field.type !== 'boolean';
-
-      return cachedField;
+      // Return field with computed visibility and label visibility
+      return {
+        ...field,
+        isVisible: this.checkFieldVisibility(field, data),
+        // @ts-ignore - Type mismatch in legacy field config
+        showLabel: field.type !== 'boolean',
+        value: this.getFieldValueComputed(field.key, data),
+      };
     });
   });
 
@@ -342,7 +413,7 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
           value: option.value,
           label: option.label,
           icon:
-            option.icon ||
+            (option as any).icon ||
             (option.label.includes('🌅')
               ? option.label.split(' ')[0]
               : undefined),
@@ -454,10 +525,11 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
         );
         console.log(
           `[ComponentCustomizer] Header config fields:`,
+          // @ts-ignore - Legacy config mapping
           config.map((f) => f.key)
         );
         const headerBgType = config.find(
-          (f) => f.key === 'headerBackgroundType'
+          (f: any) => f.key === 'headerBackgroundType'
         );
         if (headerBgType) {
           console.log(
@@ -696,6 +768,18 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
   }
 
   /**
+   * ngOnDestroy - Cleanup resources
+   */
+  ngOnDestroy(): void {
+    // Clear any pending uploads
+    this.pendingUploads.clear();
+
+    // Reset signals
+    this.isVisible.set(false);
+    this.isReady.set(false);
+  }
+
+  /**
    * Initialize drag position tracking for reset button functionality
    */
   private initializeDragPositionTracking(): void {
@@ -708,7 +792,21 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
    * Initialize component state based on inputs
    */
   private initializeComponentState(): void {
-    console.log('[ComponentCustomizer] Initializing component state');
+    console.log('[ComponentCustomizer] Initializing component state:', {
+      componentKey: this.componentKey,
+      hasOriginalData: !!this.originalData,
+      originalData: this.originalData,
+      originalDataKeys: this.originalData ? Object.keys(this.originalData) : [],
+      // For menu components specifically
+      isMenuComponent: this.componentKey === 'menu',
+      menuData: this.componentKey === 'menu' ? this.originalData : null,
+      menuCategories:
+        this.componentKey === 'menu' ? this.originalData?.categories : null,
+      menuCategoriesCount:
+        this.componentKey === 'menu'
+          ? this.originalData?.categories?.length || 0
+          : 0,
+    });
 
     // Ensure componentKey is set
     if (!this.componentKey) {
@@ -747,6 +845,33 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
     // Start with component ID and existing data
     const mergedData = { id: this.componentKey, ...originalCopy };
 
+    // Special handling for menu component to ensure proper categories structure
+    if (this.componentKey === 'menu' && originalCopy) {
+      console.log('[ComponentCustomizer] Setting up menu data:', {
+        originalData: originalCopy,
+        hasCategories: !!originalCopy.categories,
+        categoriesCount: originalCopy.categories?.length || 0,
+        hasMenuProperty: !!originalCopy.menu,
+        menuCategories: originalCopy.menu?.categories,
+      });
+
+      // Ensure categories are properly structured
+      if (originalCopy.categories && Array.isArray(originalCopy.categories)) {
+        mergedData.categories = originalCopy.categories;
+      } else if (
+        originalCopy.menu?.categories &&
+        Array.isArray(originalCopy.menu.categories)
+      ) {
+        mergedData.categories = originalCopy.menu.categories;
+      }
+
+      console.log('[ComponentCustomizer] Menu data after setup:', {
+        mergedData,
+        hasCategories: !!mergedData.categories,
+        categoriesCount: mergedData.categories?.length || 0,
+      });
+    }
+
     // Apply default values for fields that don't have data
     if (configFields && configFields.length > 0) {
       configFields.forEach((field: FieldConfig) => {
@@ -768,11 +893,12 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
             mergedData[parentKey][childKey] = field.defaultValue;
           }
         } else {
-          // Handle regular fields
+          // Handle direct properties
           if (
             field.defaultValue !== undefined &&
             (mergedData[field.key] === undefined ||
-              mergedData[field.key] === null)
+              mergedData[field.key] === null ||
+              mergedData[field.key] === '')
           ) {
             mergedData[field.key] = field.defaultValue;
           }
@@ -780,9 +906,16 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
       });
     }
 
-    // Set the local data signal
+    // Set the merged data
     this.localData.set(mergedData);
-    console.log('[ComponentCustomizer] Final merged data:', mergedData);
+
+    console.log('[ComponentCustomizer] Final merged data:', {
+      componentKey: this.componentKey,
+      mergedData,
+      isMenuComponent: this.componentKey === 'menu',
+      finalCategories:
+        this.componentKey === 'menu' ? mergedData.categories : null,
+    });
   }
 
   /**
@@ -842,7 +975,7 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
   hasContentFields(): boolean {
     const config = this.getFieldsConfig();
     return config.some(
-      (field) =>
+      (field: any) =>
         field.type === 'text' ||
         field.type === 'textarea' ||
         field.type === 'file' ||
@@ -1504,6 +1637,14 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
   private finalizeApplyChanges(closeSidebar: boolean = false): void {
     const result = { ...this.localData() };
 
+    console.log(
+      '[ComponentCustomizer] finalizeApplyChanges - initial result:',
+      {
+        componentKey: this.componentKey,
+        result,
+      }
+    );
+
     // Remove the ID field we added for internal tracking
     if (result.id === this.componentKey) {
       delete result.id;
@@ -1548,6 +1689,11 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
         ...nestedProperties[parent],
       };
     });
+
+    console.log(
+      '[ComponentCustomizer] finalizeApplyChanges - final result to emit:',
+      result
+    );
 
     // Emit update event with the result
     this.update.emit(result);
@@ -1638,7 +1784,7 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
           ? data[field.key]?.trim?.() !== ''
           : data[field.key] !== undefined && data[field.key] !== null;
 
-      if (!isValid) {
+      if (!isValid && field.category) {
         result[field.category] = false;
       }
     });
@@ -1732,21 +1878,128 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
       switch (fieldKey) {
         case 'categories': // Menu items editor
           import('../menu-editor/menu-editor.component').then((m) => {
+            // Extract menu categories using robust method
+            const menuCategories = this.extractMenuCategories();
+
+            console.log(
+              '[ComponentCustomizer] Opening menu editor with categories:',
+              {
+                menuCategories,
+                categoriesCount: menuCategories.length,
+                isArray: Array.isArray(menuCategories),
+                firstCategory: menuCategories[0],
+                extractedFrom: 'extractMenuCategories()',
+              }
+            );
+
             // Configure the modal with properly structured data
             const modalConfig = {
               width: '85vw',
               height: '85vh',
               data: {
-                initialCategories: Array.isArray(currentData)
-                  ? currentData
-                  : [],
+                initialCategories: menuCategories,
                 planType: this.planType || 'standard',
+                userTemplateId: this.userTemplateId, // Pass userTemplateId for image uploads
                 onSave: (updatedCategories: any[]) => {
-                  // Update the local data
+                  console.log(
+                    '[ComponentCustomizer] Menu editor onSave called with:',
+                    {
+                      updatedCategories,
+                      categoriesCount: updatedCategories.length,
+                      firstCategory: updatedCategories[0],
+                      isValidData:
+                        updatedCategories.length > 0 &&
+                        updatedCategories[0] &&
+                        typeof updatedCategories[0] === 'object' &&
+                        'name' in updatedCategories[0] &&
+                        'items' in updatedCategories[0],
+                    }
+                  );
+
+                  // Validate the categories data before saving
+                  if (
+                    !updatedCategories ||
+                    !Array.isArray(updatedCategories) ||
+                    updatedCategories.length === 0
+                  ) {
+                    console.warn(
+                      '[ComponentCustomizer] Invalid or empty categories data received from menu editor'
+                    );
+                    this.toastService.error(
+                      'Invalid menu data received. Please try again.'
+                    );
+                    return;
+                  }
+
+                  // Validate each category structure
+                  const isValidCategories = updatedCategories.every(
+                    (cat) =>
+                      cat &&
+                      typeof cat === 'object' &&
+                      'name' in cat &&
+                      'items' in cat &&
+                      Array.isArray(cat.items)
+                  );
+
+                  if (!isValidCategories) {
+                    console.warn(
+                      '[ComponentCustomizer] Invalid category structure received from menu editor'
+                    );
+                    this.toastService.error(
+                      'Invalid menu category structure. Please try again.'
+                    );
+                    return;
+                  }
+
+                  // IMPORTANT: Save the categories array as the 'categories' field
+                  // This ensures the menu section component can access it via data().categories
                   this.updateLocalData(fieldKey, updatedCategories);
+
+                  // Debug log the local data after update
+                  console.log(
+                    '[ComponentCustomizer] Local data after menu update:',
+                    {
+                      fieldKey,
+                      localData: this.localData(),
+                      menuCategories: this.localData().categories,
+                      isValidSavedData:
+                        this.localData().categories &&
+                        Array.isArray(this.localData().categories) &&
+                        this.localData().categories.length > 0,
+                      localDataStructure: JSON.stringify(
+                        this.localData(),
+                        null,
+                        2
+                      ),
+                    }
+                  );
+
+                  // CRITICAL: Automatically apply changes to parent component
+                  // This ensures the menu data is properly saved to the template
+                  this.applyChanges(false);
+
+                  // Close the modal
+                  this.modalService.close();
+
+                  // Show success message to user
+                  this.toastService.success('Menu updated successfully!');
                 },
               },
             };
+
+            // Debug log the data being passed to menu editor
+            console.log(
+              '[ComponentCustomizer] Opening menu editor with data:',
+              {
+                fieldKey,
+                currentData,
+                menuCategories,
+                isArray: Array.isArray(menuCategories),
+                dataLength: menuCategories.length,
+                localData: this.localData(),
+                originalData: this.originalData,
+              }
+            );
 
             // Open the modal with the MenuEditorComponent
             this.modalService.open(m.MenuEditorComponent, modalConfig);
@@ -1814,7 +2067,7 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
       value: option.value,
       label: option.label,
       icon:
-        option.icon ||
+        (option as any).icon ||
         (option.label.includes('🌅') ? option.label.split(' ')[0] : undefined),
     }));
   }
@@ -1962,5 +2215,95 @@ export class ComponentCustomizerComponent implements OnInit, OnChanges {
     if (this.draggableDirective) {
       this.draggableDirective.setPosition(0, 0);
     }
+  }
+
+  /**
+   * Extract menu categories from local data, handling multiple possible data structures
+   */
+  private extractMenuCategories(): any[] {
+    const localData = this.localData();
+
+    console.log('[ComponentCustomizer] extractMenuCategories called:', {
+      localData,
+      localDataKeys: Object.keys(localData || {}),
+      hasCategories: !!localData?.categories,
+      categoriesCount: localData?.categories?.length || 0,
+      menuCategories: localData?.menu?.categories,
+      menuCategoriesCount: localData?.menu?.categories?.length || 0,
+      localDataStructure: JSON.stringify(localData, null, 2),
+    });
+
+    // Primary: Check if categories are directly available in local data
+    if (
+      localData?.categories &&
+      Array.isArray(localData.categories) &&
+      localData.categories.length > 0
+    ) {
+      console.log(
+        '[ComponentCustomizer] Found categories in localData.categories'
+      );
+      return localData.categories;
+    }
+
+    // Secondary: Check if categories are nested under menu property
+    if (
+      localData?.menu?.categories &&
+      Array.isArray(localData?.menu?.categories) &&
+      localData.menu.categories.length > 0
+    ) {
+      console.log(
+        '[ComponentCustomizer] Found categories in localData.menu.categories'
+      );
+      return localData.menu.categories;
+    }
+
+    // Tertiary: Check if the entire localData is a categories array
+    if (
+      Array.isArray(localData) &&
+      localData.length > 0 &&
+      localData[0] &&
+      typeof localData[0] === 'object' &&
+      'name' in localData[0] &&
+      'items' in localData[0]
+    ) {
+      console.log(
+        '[ComponentCustomizer] localData is itself a categories array'
+      );
+      return localData;
+    }
+
+    // Quaternary: Check if localData has any property that contains categories
+    if (localData && typeof localData === 'object') {
+      for (const [key, value] of Object.entries(localData)) {
+        if (Array.isArray(value) && value.length > 0) {
+          const firstItem = value[0];
+          if (
+            firstItem &&
+            typeof firstItem === 'object' &&
+            'name' in firstItem &&
+            'items' in firstItem
+          ) {
+            console.log(
+              `[ComponentCustomizer] Found categories in localData.${key}`
+            );
+            return value;
+          }
+        }
+      }
+    }
+
+    // Special case: If we have an empty categories array, return it (don't override with defaults)
+    if (localData?.categories && Array.isArray(localData.categories)) {
+      console.log(
+        '[ComponentCustomizer] Found empty categories array, returning it'
+      );
+      return localData.categories;
+    }
+
+    // Final fallback: Return empty array (don't return defaults here, let the editor handle it)
+    console.log(
+      '[ComponentCustomizer] No categories found, returning empty array'
+    );
+    return [];
   }
 }

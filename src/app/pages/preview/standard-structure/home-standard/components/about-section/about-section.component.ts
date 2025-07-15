@@ -14,11 +14,12 @@ import { ThemeColorsService } from '../../../../../../core/services/theme/theme-
 import { BusinessConfigService } from '../../../../../../core/services/business-config/business-config.service';
 import { AboutData } from '../../../../../../core/models/website-customizations';
 import { ImageService } from '../../../../../../core/services/shared/image/image.service';
+import { ReactiveImageComponent } from '../../../../../../shared/components/reactive-image/reactive-image.component';
 
 @Component({
   selector: 'app-about-section',
   standalone: true,
-  imports: [CommonModule, SectionHoverWrapperComponent],
+  imports: [CommonModule, SectionHoverWrapperComponent, ReactiveImageComponent],
   templateUrl: './about-section.component.html',
   styleUrls: ['./about-section.component.scss'],
 })

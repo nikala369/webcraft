@@ -112,19 +112,25 @@ export class UserTemplateService {
     name: string,
     config: Customizations
   ): Observable<UserTemplate> {
+    const configString = JSON.stringify(config);
     const updateDto: UserTemplateUpdateDto = {
       name,
-      config: JSON.stringify(config),
+      config: configString,
     };
 
     return this.http
       .put<UserTemplate>(`${this.USER_TEMPLATE_BASE}/${templateId}`, updateDto)
       .pipe(
+        map((response) => ({
+          ...response,
+          config: response.config, // Keep string format from API
+        })),
+        tap(() => {
+          // Refresh the templates list after successful update
+          this.getUserTemplates().subscribe();
+        }),
         catchError((error) => {
-          console.error(
-            `Error updating user template with ID ${templateId}:`,
-            error
-          );
+          console.error('Error updating user template:', error);
           return throwError(() => error);
         })
       );
@@ -334,7 +340,7 @@ export class UserTemplateService {
    * @returns An Observable with an array of UserTemplate objects
    */
   getUserTemplates(): Observable<UserTemplate[]> {
-    const url = `${this.apiUrl}${this.apiPrefix}/template/user-template/all`;
+    const url = `${this.apiUrl}${this.apiPrefix}/template/user-template/search`;
     console.log(`Fetching user templates from: ${url}`);
 
     return this.http.get<any>(url).pipe(
@@ -380,25 +386,14 @@ export class UserTemplateService {
   }
 
   /**
-   * Publish a user template by ID
+   * Publish a user template (mock - no backend endpoint yet)
    * @param templateId User template ID
-   * @returns Observable with updated UserTemplate
    */
-  publishTemplate(templateId: string): Observable<UserTemplate> {
-    return this.http
-      .post<UserTemplate>(
-        `${this.USER_TEMPLATE_BASE}/${templateId}/publish`,
-        {}
-      )
-      .pipe(
-        catchError((error) => {
-          console.error(
-            `Error publishing user template with ID ${templateId}:`,
-            error
-          );
-          return throwError(() => error);
-        })
-      );
+  publishUserTemplate(templateId: string): Observable<UserTemplate> {
+    console.log(`Publishing template ${templateId} - mock implementation`);
+    // For now, just return success
+    // TODO: Implement when backend endpoint is available
+    return this.getUserTemplateById(templateId);
   }
 
   /**

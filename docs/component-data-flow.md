@@ -1,396 +1,215 @@
-# Auto Website Builder: Component Data Flow & Customization Architecture
+# Component Data Flow Documentation
 
 ## Overview
 
-This document explains the data flow architecture and component interactions in the Auto Website Builder application, with a focus on the Menu and Services sections in the standard structure. Understanding this architecture is crucial for maintaining and extending the application effectively.
+This document describes the data flow patterns used throughout the Webcraft application, with special focus on the component customization system and recent fixes.
 
-## Component Hierarchy
+## Menu Data Persistence - Critical Fix Applied
 
-The application follows this component hierarchy for standard websites:
+### Issue Resolution Summary
 
-```
-PreviewComponent
-└── StandardStructureComponent
-    └── HomeStandardComponent
-        ├── HeroSectionComponent
-        ├── AboutSectionComponent
-        ├── MenuSectionComponent (for restaurant businesses)
-        ├── ServicesSectionComponent (for salon businesses)
-        ├── ProjectsSectionComponent (for architecture/portfolio businesses)
-        └── ContactSectionComponent
-```
+**Problem**: Menu data was saving correctly as arrays but displaying as defaults during template editing.
 
-Each section component is wrapped by a `SectionHoverWrapperComponent` which provides the editable overlay functionality.
+**Root Cause**: `ImageService.cleanMalformedObjectIds()` was converting arrays to objects using the spread operator `{ ...data }`, which transforms arrays into objects with numeric keys.
 
-## Data Flow Architecture
-
-### Core Data Structure
-
-The application uses a central customizations object with this structure:
+**Solution**: Enhanced the `cleanMalformedObjectIds()` method to properly handle arrays:
 
 ```typescript
-interface Customizations {
-  fontConfig: {
-    fontId: number;
-    family: string;
-    fallback: string;
-  };
-  header: {
-    backgroundColor: string;
-    textColor: string;
-    logoUrl: string;
-    menuItems: Array<{ id: number; label: string; link: string }>;
-  };
-  pages: {
-    home: {
-      hero1: { ... };
-      about: { ... };
-      menu: { ... };  // For restaurant business type
-      services: { ... };  // For salon business type
-      projects: { ... };  // For architecture/portfolio business types
-      contact: { ... };
+// BEFORE (problematic):
+const cleaned = { ...data }; // This converts arrays to objects!
+
+// AFTER (fixed):
+if (Array.isArray(data)) {
+  return data.map((item) => this.cleanMalformedObjectIds(item));
+}
+const cleaned = { ...data }; // Only for actual objects
+```
+
+### Data Flow Architecture
+
+#### 1. Template Saving Process
+
+```
+User Edit → PreviewComponent.saveAllChanges() → UserTemplateService.updateUserTemplate() → Backend API
+```
+
+**Data Structure**: Menu categories saved as array format:
+
+```json
+{
+  "pages": {
+    "home": {
+      "menu": {
+        "categories": [
+          { "id": "cat1", "name": "Starters", "items": [...] },
+          { "id": "cat2", "name": "Main Courses", "items": [...] }
+        ]
+      }
     }
-  };
-  footer: { ... };
+  }
 }
 ```
 
-### Top-Down Data Flow
+#### 2. Template Loading Process
 
-1. **PreviewComponent** maintains the central state using Angular Signals:
+```
+URL → TemplateInitializationService → JSON.parse() → ImageService.cleanMalformedObjectIds() → MenuSectionComponent
+```
 
-   - `customizations = signal<Customizations>({ ... })`
-   - Provides this signal to child components via `[customizations]="customizations"`
+**Critical Enhancement**: `ImageService.cleanMalformedObjectIds()` now preserves array structure:
 
-2. **StandardStructureComponent** receives the customizations signal:
+- Arrays remain as arrays
+- Objects remain as objects
+- Nested structures are recursively processed correctly
 
-   - Uses computed signals to extract specific sections: `homeCustomizationsSignal`, `aboutCustomizationsSignal`, etc.
-   - Passes these to the appropriate section components
+#### 3. Menu Section Rendering
 
-3. **HomeStandardComponent** receives the customizations and passes them to each section component:
+```
+MenuSectionComponent.menuCategories (computed signal) → Template rendering
+```
 
-   - Maintains its own `wholeData` input which is passed to children
-   - Conditionally renders business-specific sections (menu, services, projects)
-
-4. **Section Components** (MenuSection, ServicesSection, etc.) access their specific data through nesting paths:
-   - E.g., For MenuSection: `customizations?.pages?.home?.menu` or `wholeData?.pages?.home?.menu`
-
-## Component Customizer System (Updated January 2025)
-
-### Architecture Overview
-
-The Component Customizer is a sophisticated sidebar-based editing interface that provides:
-
-- **Draggable & Resizable Interface**: Users can reposition and resize the customizer sidebar
-- **Tab-Based Organization**: Fields are organized into General, Content, and Styling tabs
-- **Dynamic Field Rendering**: Fields are conditionally shown based on component type and plan
-- **Real-time Validation**: Required fields are validated with visual feedback
-- **Specialized Editors**: Complex data structures (menu items, services) use modal editors
-
-### Recent Improvements
-
-1. **Fixed Dropdown Positioning**: Custom select dropdowns now properly account for parent transforms when the sidebar is dragged
-2. **Enhanced Animations**: Sidebar now slides down from top when opening, slides up when closing
-3. **Performance Optimizations**: Fixed "dead zone" issues with hero1 section using immediate visibility and special animation handling
-4. **Improved File Upload UI**: Background image/video fields now correctly show/hide based on selected background type
-
-### Customization Flow
-
-1. User clicks on a section in the preview
-2. `SectionHoverWrapperComponent` emits a `sectionSelected` event with section key and path
-3. Event bubbles up through component hierarchy to `PreviewComponent`
-4. `PreviewComponent` opens the `ComponentCustomizerComponent` with:
-   - `componentKey`: The section identifier (e.g., 'hero1')
-   - `componentPath`: Full path in data structure (e.g., 'pages.home.hero1')
-   - `initialData`: Current section data
-   - `planType`: Current plan (standard/premium)
-   - `businessType`: Current business type
-5. User makes changes in the customizer
-6. Customizer emits an `update` event with the modified data
-7. `PreviewComponent.handleComponentUpdate()` updates the main customizations signal
-8. Updates flow down to all components through the signal system
-
-### Path-Based Data Access
-
-Sections use specific paths to access their data:
-
-- Header: `header`
-- Footer: `footer`
-- Hero section: `pages.home.hero1`
-- About section: `pages.home.about`
-- Menu section: `pages.home.menu`
-- Services section: `pages.home.services`
-- Contact section: `pages.home.contact`
-
-For Premium plan:
-
-- About Preview: `pages.home.aboutPreview`
-- Featured Preview: `pages.home.featuredPreview`
-- CTA Section: `pages.home.ctaSection`
-
-This path-based approach allows deep customization while maintaining a consistent data structure.
-
-## Menu Section Implementation
-
-### Data Structure
-
-The Menu section uses a hierarchical structure:
+**Architecture Fix**: Converted from method to computed signal to eliminate race conditions:
 
 ```typescript
-interface MenuSection {
-  title: string;
-  subtitle: string;
-  backgroundColor: string;
-  textColor: string;
-  cardBackgroundColor: string;
-  accentColor: string;
-  categories: MenuCategory[];
-}
+// BEFORE (race condition prone):
+getMenuCategories(): MenuCategory[] { ... }
 
-interface MenuCategory {
-  id: string;
-  name: string;
-  description?: string;
-  items: MenuItem[];
-}
+// AFTER (race condition safe):
+menuCategories = computed(() => {
+  const data = this.data();
+  if (data?.categories && Array.isArray(data.categories) && data.categories.length > 0) {
+    return data.categories;
+  }
+  return this.defaultMenuCategories;
+});
+```
 
-interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: string;
-  image?: string;
-  featured?: boolean;
-  tags?: string[];
+## Component Customization Flow
+
+### 1. Data Initialization
+
+```
+PreviewComponent.applyInitialData() → ImageService.cleanMalformedObjectIds() → Component Signals
+```
+
+### 2. Component Updates
+
+```
+ComponentCustomizerComponent → PreviewComponent.handleComponentUpdate() → Component Signals
+```
+
+### 3. Data Persistence
+
+```
+PreviewComponent.saveAllChanges() → UserTemplateService → Backend API
+```
+
+## Signal-Based Architecture
+
+### MenuSectionComponent Enhancement
+
+- **Before**: Method-based `getMenuCategories()` with race conditions
+- **After**: Computed signal `menuCategories` with reactive updates
+- **Benefit**: Eliminates race conditions and ensures rendering only occurs after data stabilization
+
+### Best Practices Applied
+
+1. **Computed Signals**: For derived data that depends on reactive inputs
+2. **Array Preservation**: Maintain data structure integrity during processing
+3. **Race Condition Prevention**: Use computed signals instead of methods for template binding
+4. **Data Validation**: Proper type checking and fallback mechanisms
+
+## Footer Logo Enhancements
+
+### Size Constraints Implementation
+
+```scss
+.footer-logo {
+  max-height: 40px; // Base constraint
+  max-width: 100%;
+  min-height: 20px; // Prevent too small logos
+  object-fit: contain; // Maintain aspect ratio
+  object-position: center; // Center within container
+  overflow: hidden; // Prevent overflow
 }
 ```
 
-### Customization Flow
+### Plan-Specific Overrides
 
-1. User clicks on Menu section
-2. `MenuSectionComponent` emits path `pages.home.menu`
-3. `ComponentCustomizerComponent` opens with specialized fields for menu configuration
-4. For category/item editing, a specialized `MenuEditorComponent` is opened as a modal
-5. User edits categories and items in the modal
-6. On save, data flows back through the customizer to update the main customizations signal
+- **Standard Plan**: max-height: 55px, max-width: 180px
+- **Premium Plan**: max-height: 70px, max-width: 250px
+- **Mobile**: Responsive scaling with maintained constraints
 
-### Key Functions
+## Code Quality Improvements
 
-- `getMenuCategories()`: Retrieves menu categories from customizations or defaults
-- `getSectionData()`: Handles retrieval from different possible locations in the customizations object
-- `getMenuTitle()/getMenuSubtitle()`: Get title/subtitle from customizations or defaults based on business type
+### 1. Error Handling
 
-## Services Section Implementation
+- Comprehensive fallback mechanisms
+- Proper data validation
+- Graceful degradation
 
-### Data Structure
+### 2. Performance
 
-The Services section uses a flat list structure:
+- Computed signals for reactive updates
+- Memoization where appropriate
+- Efficient data processing
 
-```typescript
-interface ServiceSection {
-  title: string;
-  subtitle: string;
-  backgroundColor: string;
-  textColor: string;
-  cardBackgroundColor: string;
-  accentColor: string;
-  items: ServiceItem[];
-}
+### 3. Maintainability
 
-interface ServiceItem {
-  id: string;
-  title: string;
-  description: string;
-  price?: string;
-  duration?: string;
-  image?: string;
-  featured?: boolean;
-  bookingUrl?: string;
-}
-```
+- Clear separation of concerns
+- Comprehensive documentation
+- Consistent code patterns
 
-### Customization Flow
+## Testing Considerations
 
-1. User clicks on Services section
-2. `ServicesSectionComponent` emits path `pages.home.services`
-3. `ComponentCustomizerComponent` opens with fields for services configuration
-4. For services editing, a specialized `ServicesEditorComponent` is opened as a modal
-5. User can add/edit/remove services (limited to 10 for standard plan, 15 for premium)
-6. On save, data flows back through the customizer to update the main customizations signal
+### Menu Data Persistence Testing
 
-### Key Functions
+1. **Save Test**: Verify categories save as arrays
+2. **Load Test**: Verify categories load as arrays
+3. **Edit Test**: Verify categories display correctly during editing
+4. **Fallback Test**: Verify defaults display when no saved data
 
-- `getServices()`: Retrieves services list from customizations or defaults, limited to max count
-- `getSectionData()`: Handles retrieval from different possible locations in the customizations object
-- `applyCustomColors()`: Applies custom colors from configuration to the component using CSS variables
+### Footer Logo Testing
 
-## Limitations and Constraints
+1. **Size Test**: Upload large images and verify constraints
+2. **Responsive Test**: Verify scaling on mobile devices
+3. **Plan Test**: Verify different sizing for standard vs premium
 
-1. **Standard Plan Limits**:
+## Future Improvements
 
-   - Menu: 4 categories, 6 items per category
-   - Services: 10 services maximum
+### 1. Type Safety
 
-2. **Premium Plan Limits**:
+- Implement strict TypeScript interfaces
+- Add runtime type validation
+- Create data transformation utilities
 
-   - Menu: 8 categories, 15 items per category
-   - Services: 15 services maximum
+### 2. Performance Optimization
 
-3. **Feature Differences by Plan**:
-   - Standard: Basic customization, no featured items
-   - Premium: Advanced customization, featured items, booking URLs, tags
+- Implement lazy loading for large datasets
+- Add caching mechanisms
+- Optimize bundle sizes
 
-## CSS Architecture
+### 3. Testing Coverage
 
-The application uses a CSS Variable approach for theming:
+- Unit tests for data transformations
+- Integration tests for component flows
+- E2E tests for user scenarios
 
-1. Each section component defines its own CSS variables (e.g., `--primary-accent-color`, `--section-bg-color`)
-2. The component's TypeScript code applies custom colors via `ElementRef`:
-   ```typescript
-   host.style.setProperty("--section-bg-color", data.backgroundColor);
-   ```
-3. The CSS uses these variables for consistent styling:
-   ```css
-   .services-section {
-     background-color: var(--section-bg-color);
-   }
-   ```
+## Migration Notes
 
-## Responsive Design Strategy
+### For Future Developers
 
-Sections use CSS Grid with breakpoints to ensure proper display:
+1. **Array Handling**: Always use `Array.isArray()` before processing arrays
+2. **Signal Usage**: Prefer computed signals over methods for template binding
+3. **Data Validation**: Implement proper validation at data boundaries
+4. **Image Constraints**: Use consistent sizing patterns across components
 
-- Desktop: 4 columns
-- Large tablet: 3 columns
-- Tablet: 2 columns
-- Mobile: 1 column
+### Breaking Changes
 
-Specific breakpoints:
+- Menu section now uses computed signals (internal change, no API impact)
+- ImageService array handling improved (internal change, no API impact)
+- Footer logo sizing enhanced (visual improvement, no API impact)
 
-- 1200px: 3 columns
-- 992px: 2 columns
-- 768px: 1 column
+---
 
-## Best Practices for Extending
-
-1. **Adding a New Section**:
-
-   - Create component in the appropriate structure directory
-   - Add to the `HomeStandardComponent` template with business type condition
-   - Define path in format `pages.home.{sectionKey}`
-   - Create customization config in `customizing-form-config.ts`
-
-2. **Adding New Customization Fields**:
-
-   - Update the relevant data interfaces
-   - Add fields to the configuration in `customizing-form-config.ts`
-   - Add UI controls in the component customizer templates
-   - Implement handlers in component customizer
-
-3. **Business Type Conditions**:
-
-   - Use the `businessType` input to conditionally render components
-   - Implement `supportsBusinessType()` method in section components
-   - Provide different defaults based on business type
-
-4. **Plan-Based Limitations**:
-   - Use the `planType` input to control features
-   - Implement `isPremium()` and `maxItems` methods in components
-   - Show upgrade CTAs for standard plan users
-
-## Editing Nested Sections (e.g., Hero, About within Home)
-
-This section details the specific data flow when a user edits a nested component (like the Hero section which is part of the Home page) via the `ComponentCustomizerComponent`. This flow relies on correctly passing both the specific component **key** and its full **path** within the `customizations` object.
-
-**1. User Interaction & Initial Event:**
-
-- The user hovers over a section (e.g., Hero section) in the preview.
-- The `SectionHoverWrapperComponent` displays an "Edit" button.
-- When the user clicks "Edit":
-  - `SectionHoverWrapperComponent` emits `(sectionSelected)` (or legacy `onEdit`). Crucially, it needs to know the correct `sectionKey` (e.g., `'hero1'`) and `sectionPath` (e.g., `'pages.home.hero1'`) to emit. _Note: This emission might originate from the specific section component itself (e.g., `HeroSectionComponent`) which then bubbles up._
-
-**2. Event Propagation through Structure Components:**
-
-- **`HomeStandardComponent`:**
-  - Catches the `sectionSelected` event from the specific section (or its wrapper).
-  - Its primary role here is often to _re-emit_ the event upwards, ensuring the _full path_ (e.g., `pages.home.hero1`) is included in the payload. It emits `(sectionSelected)` with the full path.
-- **`StandardStructureComponent`:**
-  - Catches the `(sectionSelected)` event from `HomeStandardComponent`.
-  - Calls its `handlePageSectionEdit(fullPath)` method.
-  - **Critical Step:** This method parses the `fullPath`:
-    - Extracts the final segment as the `componentKey` (e.g., `'hero1'`).
-    - Derives a user-friendly `sectionName` (e.g., `'Hero1'`).
-    - Keeps the original `fullPath` (e.g., `'pages.home.hero1'`).
-  - Emits `(componentSelected)` with the structured payload: `{ key: 'hero1', name: 'Hero1', path: 'pages.home.hero1' }`.
-
-**3. Handling Selection in `PreviewComponent`:**
-
-- `PreviewComponent` catches the `(componentSelected)` event.
-- Calls its `handleComponentSelection(payload)` method.
-- Sets the `selectedComponent` signal with the received payload `{ key: 'hero1', name: 'Hero1', path: 'pages.home.hero1' }`. This triggers the display of the customizer.
-
-**4. Data Display and Update via `ComponentCustomizerComponent`:**
-
-- `ComponentCustomizerComponent` is rendered (often within `PreviewComponent.html`).
-- It receives inputs derived from the `selectedComponent` signal:
-  - `[componentKey]="selectedComponent()!.key"` (receives `'hero1'`)
-  - `[componentPath]="selectedComponent()?.path"` (receives `'pages.home.hero1'`)
-  - `[initialData]="selectedCustomization()?.data"` (receives the actual data object for `pages.home.hero1` fetched via the `selectedCustomization` computed signal in `PreviewComponent`).
-- The user modifies data within the customizer.
-- When changes are applied, `ComponentCustomizerComponent` emits the `(update)` event containing _only the modified data_ (e.g., `{ title: 'New Hero Title' }`).
-
-**5. Applying Updates in `PreviewComponent`:**
-
-- `PreviewComponent` catches the `(update)` event from the customizer.
-- Calls its `handleComponentUpdate(updateData)` method.
-- **Critical Step:** Inside `handleComponentUpdate`:
-  - It retrieves the _currently selected component's_ info from the `selectedComponent` signal (which still holds `{ key: 'hero1', path: 'pages.home.hero1', ... }`).
-  - It checks if `selected.path` exists. If yes (indicating a nested update):
-    - It performs a `structuredClone` of the current `customizations()` signal state.
-    - It uses the `path` (`'pages.home.hero1'`) to traverse the cloned object structure, creating intermediate objects `{}` if they don't exist.
-    - It reaches the target object (the data for `hero1`).
-    - It _merges_ the `updateData` into the target object using the spread operator: `target[lastPart] = { ...target[lastPart], ...updateData };`. **Crucially, it does NOT simply overwrite the target object.**
-    - It updates the `customizations` signal with the modified clone.
-  - If `selected.path` does _not_ exist (e.g., updating 'header' or 'footer'):
-    - It uses `selected.key` to target the top-level property.
-    - It merges the `updateData` similarly: `[key]: { ...(current[key] || {}), ...updateData }`.
-
-**6. Reactivity and View Update:**
-
-- The update to the `customizations` signal in `PreviewComponent` automatically triggers recalculation downstream.
-- `StandardStructureComponent`'s `@Input customizations` receives the new signal value.
-- Its computed signals (`wholeDataSignal`, `homeCustomizationsSignal`, etc.) recalculate based on the updated signal.
-- These computed signals are passed as inputs to `HomeStandardComponent`.
-- `HomeStandardComponent` passes the relevant data slice to the specific child section component (e.g., `HeroSectionComponent` receives the updated `hero1` data).
-- The child section component's template re-renders based on its updated input data, displaying the changes visually.
-
-**Key Requirements for Correct Flow:**
-
-- **Signal Input:** Child components (`StandardStructureComponent`, etc.) should accept the `customizations` data as a `Signal<Customizations | null>` via `@Input`.
-- **Computed Signals:** Use `computed()` within intermediate components (`StandardStructureComponent`) to derive specific data slices for children, ensuring reactivity.
-- **Distinct Key/Path:** `StandardStructureComponent` _must_ correctly extract the final `key` and the `fullPath` and emit them separately.
-- **Path-Based Traversal:** `PreviewComponent.handleComponentUpdate` _must_ use the `path` to correctly locate the nested object to update.
-- **Merge, Don't Overwrite:** Updates must be _merged_ into the existing data object using the spread operator (`...`) in `PreviewComponent.handleComponentUpdate` to avoid losing other properties within that section's data.
-- **Deep Cloning:** Use `structuredClone()` within `handleComponentUpdate` _before_ making modifications to ensure immutability when updating the signal.
-
-## Component Customizer Performance Optimizations
-
-### Field Rendering Optimization
-
-- Fields are memoized using a `fieldCache` Map to prevent unnecessary re-renders
-- `trackByFieldId` function ensures stable DOM elements during updates
-- Computed signals are used for reactive field visibility and values
-
-### Tab Memory System
-
-- Last active tab per component is persisted in sessionStorage
-- Automatically restores previous tab when reopening customizer
-- Clears memory when exiting fullscreen mode
-
-### Animation Performance
-
-- Uses `requestAnimationFrame` for smooth position updates
-- CSS `will-change` property optimizes transform animations
-- Transitions are temporarily disabled during drag operations
-
-For more detailed information about the Component Customizer system, see the dedicated [Component Customizer Guide](./component-customizer-guide.md).
+This documentation should be updated whenever significant data flow changes are made to the application.

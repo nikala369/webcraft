@@ -14,11 +14,11 @@
       <!-- Brand Section -->
       <div class="footer-brand">
         <div class="brand-logo" *ngIf="customizations?.logoUrl">
-          <img
-            [src]="customizations.logoUrl"
+          <app-reactive-image
+            [src]="getImageUrl(customizations.logoUrl)"
             [alt]="customizations?.title || getCompanyName()"
             class="footer-logo"
-          />
+          ></app-reactive-image>
         </div>
         <div class="brand-content">
           <h3 class="brand-title">

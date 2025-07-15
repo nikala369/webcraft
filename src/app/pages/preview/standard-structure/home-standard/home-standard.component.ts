@@ -64,7 +64,41 @@ export class HomeStandardComponent implements OnInit, OnChanges {
 
   // Add computed signals for each section
   aboutDataSignal = computed(() => this.wholeData()?.pages?.home?.about || {});
-  menuDataSignal = computed(() => this.pagesHomeData()?.menu || {});
+  menuDataSignal = computed(() => {
+    const wholeData = this.wholeData();
+    const menuData = wholeData?.pages?.home?.menu || {};
+
+    // Only return menu data if wholeData is properly loaded
+    // This prevents race conditions during initialization
+    if (!wholeData || !wholeData.pages || !wholeData.pages.home) {
+      console.log('[HomeStandard] menuDataSignal: Data not fully loaded yet');
+      return {};
+    }
+
+    console.log('[HomeStandard] menuDataSignal computed:', {
+      wholeData,
+      hasPages: !!wholeData.pages,
+      hasHome: !!wholeData.pages.home,
+      hasMenu: !!wholeData.pages.home.menu,
+      menuData,
+      menuDataKeys: Object.keys(menuData),
+      hasCategories: !!menuData.categories,
+      categoriesType: typeof menuData.categories,
+      isArray: Array.isArray(menuData.categories),
+      categoriesCount: menuData.categories?.length || 0,
+      firstCategory: menuData.categories?.[0],
+      isValidCategoryData:
+        menuData.categories &&
+        Array.isArray(menuData.categories) &&
+        menuData.categories.length > 0 &&
+        menuData.categories[0] &&
+        typeof menuData.categories[0] === 'object' &&
+        'name' in menuData.categories[0],
+      menuDataStructure: JSON.stringify(menuData, null, 2),
+    });
+
+    return menuData;
+  });
   servicesDataSignal = computed(
     () => this.wholeData()?.pages?.home?.services || {}
   );

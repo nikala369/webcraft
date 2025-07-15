@@ -9,10 +9,13 @@ import {
   OnInit,
   ElementRef,
   Signal,
+  computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
 import { ThemeColorsService } from '../../../../../../core/services/theme/theme-colors.service';
+import { ImageService } from '../../../../../../core/services/shared/image/image.service';
+import { ReactiveImageComponent } from '../../../../../../shared/components/reactive-image/reactive-image.component';
 
 // Interface definition should match the MenuCategory from menu-editor.component.ts
 interface MenuItem {
@@ -20,7 +23,7 @@ interface MenuItem {
   name: string;
   description: string;
   price: string;
-  image?: string;
+  imageUrl?: string; // Updated to match menu editor
   tags?: string[];
   featured?: boolean;
 }
@@ -29,13 +32,14 @@ interface MenuCategory {
   id?: string;
   name: string;
   description?: string;
+  imageUrl?: string; // Updated to match menu editor
   items: MenuItem[];
 }
 
 @Component({
   selector: 'app-menu-section',
   standalone: true,
-  imports: [CommonModule, SectionHoverWrapperComponent],
+  imports: [CommonModule, SectionHoverWrapperComponent, ReactiveImageComponent],
   templateUrl: './menu-section.component.html',
   styleUrls: ['./menu-section.component.scss'],
 })
@@ -58,6 +62,7 @@ export class MenuSectionComponent implements OnChanges, OnInit {
 
   private themeColorsService = inject(ThemeColorsService);
   private elementRef = inject(ElementRef);
+  private imageService = inject(ImageService);
 
   // Track when updates happen
   private lastUpdated = Date.now();
@@ -110,14 +115,65 @@ export class MenuSectionComponent implements OnChanges, OnInit {
     },
   ];
 
+  // ARCHITECTURE FIX: Convert getMenuCategories() to computed signal
+  // This eliminates the race condition by ensuring rendering logic only executes
+  // after data dependencies have changed and stabilized
+  menuCategories = computed(() => {
+    const data = this.data();
+
+    // Primary: Check if categories are directly available in data
+    if (
+      data?.categories &&
+      Array.isArray(data.categories) &&
+      data.categories.length > 0
+    ) {
+      return data.categories;
+    }
+
+    // Secondary: Check if categories are nested under menu property
+    if (
+      data?.menu?.categories &&
+      Array.isArray(data.menu.categories) &&
+      data.menu.categories.length > 0
+    ) {
+      return data.menu.categories;
+    }
+
+    // Fallback: Use default categories
+    return this.defaultMenuCategories;
+  });
+
   ngOnInit() {
-    // Apply custom colors from configuration
-    this.applyCustomColors();
+    // Debug logging
+    const data = this.data();
+    console.log('[MenuSection] Component initialized with data:', {
+      data,
+      dataType: typeof data,
+      isArray: Array.isArray(data),
+      dataKeys: data ? Object.keys(data) : [],
+      hasCategories: !!data?.categories,
+      categoriesCount: data?.categories?.length || 0,
+      firstCategory: data?.categories?.[0],
+      // Check for nested menu structure
+      hasMenuProperty: !!data?.menu,
+      menuCategories: data?.menu?.categories,
+      menuCategoriesCount: data?.menu?.categories?.length || 0,
+      // Raw data inspection
+      rawData: JSON.stringify(data, null, 2),
+    });
+
+    // Log the categories result
+    const categories = this.menuCategories();
     console.log(
-      'MenuSectionComponent initialized with businessType:',
-      this.businessType
+      '[MenuSection] Categories result from menuCategories computed:',
+      {
+        categories,
+        categoriesCount: categories.length,
+        isDefault: categories === this.defaultMenuCategories,
+        firstCategoryName: categories[0]?.name,
+        firstCategoryItems: categories[0]?.items?.length || 0,
+      }
     );
-    console.log('Initial menu data:', this.data());
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -192,20 +248,6 @@ export class MenuSectionComponent implements OnChanges, OnInit {
   }
 
   /**
-   * Get menu categories or use defaults
-   */
-  getMenuCategories(): MenuCategory[] {
-    const data = this.data();
-    const categories = data?.categories;
-
-    if (categories && categories.length > 0) {
-      return categories;
-    } else {
-      return this.defaultMenuCategories;
-    }
-  }
-
-  /**
    * Check if menu item has tags
    */
   hasTags(item: MenuItem): boolean {
@@ -274,12 +316,71 @@ export class MenuSectionComponent implements OnChanges, OnInit {
    * Check if menu item has an image
    */
   hasImage(item: MenuItem): boolean {
-    return !!item.image && item.image.trim() !== '';
+    return !!item.imageUrl && item.imageUrl.trim() !== '';
+  }
+
+  /**
+   * Get image URL for menu items and categories
+   * @param imageUrl The image URL from the menu item or category
+   * @returns The processed image URL
+   */
+  getImageUrl(imageUrl: string | undefined): string {
+    if (!imageUrl) {
+      return '/assets/placeholder-menu-item.jpg'; // Default placeholder
+    }
+
+    // Handle temporary blob URLs (during editing)
+    if (imageUrl.startsWith('temp:')) {
+      return imageUrl.substring(5); // Remove 'temp:' prefix
+    }
+
+    // Handle backend object IDs
+    if (imageUrl.match(/^[a-f\d]{24}$/i)) {
+      return this.imageService.getImageUrl(imageUrl);
+    }
+
+    // Handle regular URLs
+    return imageUrl;
+  }
+
+  /**
+   * Get computed value or default
+   */
+  private getValue(key: string, defaultValue: any): any {
+    return this.data()?.[key] || defaultValue;
+  }
+
+  /**
+   * Check if menu data is fully loaded and ready to display
+   */
+  isDataLoaded(): boolean {
+    const data = this.data();
+
+    // Data is considered loaded if we have a data object
+    // We don't need to be too strict here - just ensure we have something
+    const hasData = data && typeof data === 'object';
+
+    if (!hasData) {
+      console.log('[MenuSection] Data not loaded: no data object');
+      return false;
+    }
+
+    // If we have any menu-related properties, consider it loaded
+    const hasMenuProperties = Object.keys(data).length > 0;
+
+    console.log('[MenuSection] Data loaded check:', {
+      hasData,
+      hasMenuProperties,
+      dataKeys: Object.keys(data),
+      hasCategories: !!data.categories,
+      categoriesCount: data.categories?.length || 0,
+    });
+
+    return hasMenuProperties;
   }
 
   handleSectionEdit(sectionId: string) {
     // Emit the section selected event to open the customizer
-    console.log('Edit requested for section:', sectionId);
     this.sectionSelected.emit({
       key: 'menu',
       name: 'Menu Section',

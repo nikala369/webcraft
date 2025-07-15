@@ -10,19 +10,21 @@
 >
   <!-- LOGO SECTION -->
   <div class="structure-header__logo">
-    <img
-      [src]="
-        customizations?.logoUrl ||
-        '/assets/standard-header/default-logo-white.svg'
-      "
-      alt="Company Logo"
+    <app-reactive-image
+      *ngIf="customizations?.logoUrl"
+      [src]="getImageUrl(customizations.logoUrl)"
+      [alt]="'Business Logo'"
       class="logo"
-      loading="lazy"
-      (error)="onLogoError($event)"
-      (load)="onLogoLoad($event)"
+      (imageError)="onLogoError($event)"
+      (imageLoad)="onLogoLoad($event)"
+    ></app-reactive-image>
+    <!-- Default logo when no custom logo is uploaded -->
+    <img
+      *ngIf="!customizations?.logoUrl"
+      src="assets/standard-header/default-logo-white.svg"
+      alt="Business Logo"
+      class="logo"
     />
-    <!-- If there's a 'text' field for brand name, you can display it next to the logo -->
-    <!-- <span class="brand-text" *ngIf="customizations?.text">{{ customizations.text }}</span> -->
   </div>
 
   <!-- DESKTOP NAVIGATION -->
