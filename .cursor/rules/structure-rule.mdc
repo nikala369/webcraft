@@ -1,7 +1,5 @@
 ---
-description: 
-globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 # Webcraft Auto Website Builder: Cursor Development Rules & AI Collaboration Guide
 # Version: 3.2 (Date: 2025-01-XX)
