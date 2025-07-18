@@ -129,6 +129,38 @@ export interface HeroData {
   buttonScrollTargetID?: string; // Auto-generated based on business type
   buttonBackgroundColor?: string;
   buttonTextColor?: string;
+
+  // Enhanced features for Standard Plan V2
+  textAnimation?: 'none' | 'fade' | 'slide' | 'typewriter' | 'word-by-word';
+  backgroundAnimation?:
+    | 'none'
+    | 'fade'
+    | 'parallax'
+    | 'zoom'
+    | 'ken-burns'
+    | 'gradient-shift';
+  secondaryButton?: {
+    text: string;
+    link: string;
+    action: 'link' | 'scroll' | 'modal';
+    scrollTarget?: string;
+    backgroundColor?: string;
+    textColor?: string;
+  };
+  businessHours?: {
+    enabled: boolean;
+    status: 'open' | 'closed' | 'busy';
+    nextChange?: string;
+    customMessage?: string;
+  };
+  scrollIndicator?: {
+    enabled: boolean;
+    style: 'arrow' | 'dots' | 'pulse';
+    color?: string;
+  };
+  parallaxIntensity?: number; // 0-1 scale
+  animationDuration?: number; // milliseconds
+  preloadImages?: boolean;
 }
 
 /**

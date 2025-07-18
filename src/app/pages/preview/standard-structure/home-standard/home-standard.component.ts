@@ -19,6 +19,14 @@ import {
 import { SectionHoverWrapperComponent } from '../../components/section-hover-wrapper/section-hover-wrapper.component';
 import { ThemeColorsService } from '../../../../core/services/theme/theme-colors.service';
 import { BusinessConfigService } from '../../../../core/services/business-config/business-config.service';
+import { Router } from '@angular/router';
+
+// Import enhanced hero section models
+import {
+  CTAClickEvent,
+  ButtonActionType,
+  EnhancedHeroData,
+} from './components/hero-section/hero-section.model';
 
 // Import all section components
 import { HeroSectionComponent } from './components/hero-section/hero-section.component';
@@ -53,10 +61,15 @@ export class HomeStandardComponent implements OnInit, OnChanges {
   @Input() isMobileView: string = 'view-desktop';
   @Input() planType: 'standard' | 'premium' = 'standard';
   @Input() businessType: string = 'restaurant';
-  @Output() sectionSelected = new EventEmitter<string>();
+  @Output() sectionSelected = new EventEmitter<{
+    key: string;
+    name: string;
+    path?: string;
+  }>();
 
   private themeColorsService = inject(ThemeColorsService);
   private businessConfigService = inject(BusinessConfigService);
+  private router = inject(Router);
   primaryColor = signal<string>('');
 
   // Track data updates for debugging
@@ -71,31 +84,8 @@ export class HomeStandardComponent implements OnInit, OnChanges {
     // Only return menu data if wholeData is properly loaded
     // This prevents race conditions during initialization
     if (!wholeData || !wholeData.pages || !wholeData.pages.home) {
-      console.log('[HomeStandard] menuDataSignal: Data not fully loaded yet');
       return {};
     }
-
-    console.log('[HomeStandard] menuDataSignal computed:', {
-      wholeData,
-      hasPages: !!wholeData.pages,
-      hasHome: !!wholeData.pages.home,
-      hasMenu: !!wholeData.pages.home.menu,
-      menuData,
-      menuDataKeys: Object.keys(menuData),
-      hasCategories: !!menuData.categories,
-      categoriesType: typeof menuData.categories,
-      isArray: Array.isArray(menuData.categories),
-      categoriesCount: menuData.categories?.length || 0,
-      firstCategory: menuData.categories?.[0],
-      isValidCategoryData:
-        menuData.categories &&
-        Array.isArray(menuData.categories) &&
-        menuData.categories.length > 0 &&
-        menuData.categories[0] &&
-        typeof menuData.categories[0] === 'object' &&
-        'name' in menuData.categories[0],
-      menuDataStructure: JSON.stringify(menuData, null, 2),
-    });
 
     return menuData;
   });
@@ -108,15 +98,20 @@ export class HomeStandardComponent implements OnInit, OnChanges {
   contactDataSignal = computed(
     () => this.wholeData()?.pages?.home?.contact || {}
   );
-  heroDataSignal = computed(() => this.wholeData()?.pages?.home?.hero1 || {});
+  heroDataSignal = computed((): EnhancedHeroData => {
+    const heroData = this.wholeData()?.pages?.home?.hero1 || ({} as any);
+
+    // Ensure we have the required properties for EnhancedHeroData
+    return {
+      backgroundImage: heroData.backgroundImage || '',
+      title: heroData.title || '',
+      subtitle: heroData.subtitle || '',
+      ...heroData,
+    } as EnhancedHeroData;
+  });
 
   ngOnInit(): void {
-    console.log(
-      'HomeStandardComponent initialized with businessType:',
-      this.businessType
-    );
-    console.log('Initial customizations:', this.pagesHomeData());
-    console.log('Initial wholeData:', this.wholeData());
+    // HomeStandardComponent initialized
 
     // Set the appropriate color based on plan
     this.primaryColor.set(
@@ -141,21 +136,13 @@ export class HomeStandardComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['pagesHomeData'] || changes['wholeData']) {
-      console.log(
-        '[HomeStandard] ngOnChanges detected changes (may be less reliable with signal inputs):',
-        changes
-      );
+      // ngOnChanges detected changes
       this.lastCustomizationsUpdate.set(Date.now());
-      console.log(
-        '[HomeStandard] New pagesHomeData value:',
-        this.pagesHomeData()
-      );
-      console.log('[HomeStandard] New wholeData value:', this.wholeData());
     }
 
     // Update business type if changed
     if (changes['businessType']) {
-      console.log('BusinessType changed to:', this.businessType);
+      // BusinessType changed
     }
   }
 
@@ -189,17 +176,158 @@ export class HomeStandardComponent implements OnInit, OnChanges {
 
   /**
    * Forward section selection to parent component
+   * CRITICAL FIX: Emit proper object structure, not string
    */
   handleSectionSelection(data: { key: string; name: string; path?: string }) {
-    console.log('Home component - section selected:', data);
+    console.log('[HomeStandard] Section selection received:', data);
 
-    // Ensure we have the full path
-    const fullPath = data.path || `pages.home.${data.key}`;
-    console.log(
-      `Home component - emitting sectionSelected with path: ${fullPath}`
-    );
+    // Create properly structured event object
+    const eventData = {
+      key: data.key,
+      name: data.name,
+      path: data.path || `pages.home.${data.key}`,
+    };
 
-    this.sectionSelected.emit(fullPath);
+    console.log('[HomeStandard] Emitting structured event:', eventData);
+    this.sectionSelected.emit(eventData);
+  }
+
+  // ======== ENHANCED HERO SECTION EVENT HANDLERS ========
+
+  /**
+   * Handle CTA button click with proper action routing
+   */
+  handleHeroCTAClick(event: CTAClickEvent): void {
+    console.log('[SmartCTA] Hero CTA clicked:', event);
+
+    if (!event.action) {
+      console.warn('[SmartCTA] No action specified for CTA click');
+      return;
+    }
+
+    switch (event.action) {
+      case 'scroll':
+        if (event.scrollTarget || event.target) {
+          this.scrollToSection(event.scrollTarget || event.target || '');
+        }
+        break;
+      case 'navigate':
+        if (event.navigateTarget || event.target) {
+          this.router.navigate([event.navigateTarget || event.target]);
+        }
+        break;
+      case 'link':
+        const link = event.link || event.target;
+        if (link) {
+          if (link.startsWith('http')) {
+            window.open(link, '_blank');
+          } else if (link.startsWith('tel:')) {
+            window.location.href = link;
+          } else if (link.startsWith('mailto:')) {
+            window.location.href = link;
+          } else {
+            this.router.navigate([link]);
+          }
+        }
+        break;
+      case 'modal':
+        // Handle modal action if needed in future
+        console.log('[SmartCTA] Modal action not implemented yet');
+        break;
+      default:
+        console.warn('[SmartCTA] Unknown action type:', event.action);
+    }
+  }
+
+  /**
+   * Handle business hours widget clicks from hero section
+   */
+  handleHeroBusinessHoursClick(): void {
+    // Scroll to contact section which typically contains business hours
+    this.scrollToSection('contact');
+  }
+
+  /**
+   * Handle scroll indicator clicks from hero section
+   */
+  handleHeroScrollIndicatorClick(): void {
+    // Scroll to the next section (typically about)
+    this.scrollToNextSection();
+  }
+
+  // ======== SCROLL FUNCTIONALITY (Moved from Hero Section) ========
+
+  /**
+   * Smooth scroll to a section by ID
+   */
+  private scrollToSection(sectionId: string): void {
+    // Wait a bit for DOM to be ready
+    setTimeout(() => {
+      // Find the target element using multiple strategies
+      let targetElement = document.getElementById(sectionId);
+
+      if (!targetElement) {
+        // Try with section selector
+        targetElement = document.querySelector(
+          `section#${sectionId}`
+        ) as HTMLElement;
+      }
+
+      if (!targetElement) {
+        // Try within the structure container
+        const structureContainer = document.querySelector(
+          '.structure-container'
+        );
+        if (structureContainer) {
+          targetElement = structureContainer.querySelector(
+            `#${sectionId}`
+          ) as HTMLElement;
+        }
+      }
+
+      if (!targetElement) {
+        // Try finding any element with the matching ID attribute
+        targetElement = document.querySelector(
+          `[id="${sectionId}"]`
+        ) as HTMLElement;
+      }
+
+      if (targetElement) {
+        // Simple scrollIntoView approach that works in all cases
+        targetElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest',
+        });
+
+        // Scrolled to section using scrollIntoView
+      } else {
+        // Target section not found for scroll
+      }
+    }, 100); // Small delay to ensure DOM is ready
+  }
+
+  /**
+   * Scroll to the next section after hero
+   */
+  private scrollToNextSection(): void {
+    // Logic to determine the next section based on business type
+    let nextSection = 'about'; // Default
+
+    // Could be enhanced to be more intelligent about which section is next
+    // based on the current scroll position or business type
+    if (this.businessType === 'restaurant') {
+      nextSection = 'about'; // or 'menu' if about is not prominent
+    } else if (this.businessType === 'salon') {
+      nextSection = 'about'; // or 'services' if about is not prominent
+    } else if (
+      this.businessType === 'architecture' ||
+      this.businessType === 'portfolio'
+    ) {
+      nextSection = 'about'; // or 'projects' if about is not prominent
+    }
+
+    this.scrollToSection(nextSection);
   }
 
   /**

@@ -269,7 +269,9 @@
         *ngIf="
           (currentPlan() === 'standard' ||
             (currentPlan() === 'premium' && !showBusinessTypeSelector())) &&
-          !showTemplateNameInput()
+          !showTemplateNameInput() &&
+          customizations() &&
+          businessType()
         "
       >
         <app-standard-structure

@@ -120,6 +120,13 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
     return this._componentKey;
   }
 
+  /**
+   * Get component key as a regular property (not signal)
+   */
+  getComponentKey(): string {
+    return this._componentKey;
+  }
+
   @Input() componentPath?: string;
   @Input() userTemplateId?: string;
 
@@ -177,6 +184,21 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
       value
     );
 
+    // DEBUG: Special logging for backgroundAnimation field
+    if (
+      this.componentKey === 'pages.home.hero1' ||
+      this.componentKey.includes('hero')
+    ) {
+      console.log(
+        `[ComponentCustomizer] HERO BACKGROUND ANIMATION DEBUG - Initial data:`,
+        {
+          componentKey: this.componentKey,
+          backgroundAnimation: value?.backgroundAnimation,
+          hasBackgroundAnimation: value && 'backgroundAnimation' in value,
+        }
+      );
+    }
+
     if (value) {
       // Store original for reset functionality
       this.originalData = structuredClone(value);
@@ -195,6 +217,30 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
       if (configFields && configFields.length > 0) {
         // Apply defaults from field config where missing
         configFields.forEach((field: FieldConfig) => {
+          // DEBUG: Special logging for backgroundAnimation field
+          if (
+            field.key === 'backgroundAnimation' &&
+            (this.componentKey === 'pages.home.hero1' ||
+              this.componentKey.includes('hero'))
+          ) {
+            console.log(
+              `[ComponentCustomizer] BACKGROUND ANIMATION DEFAULT CHECK:`,
+              {
+                fieldKey: field.key,
+                fieldDefaultValue: field.defaultValue,
+                currentValue: mergedData[field.key],
+                currentValueType: typeof mergedData[field.key],
+                isUndefined: mergedData[field.key] === undefined,
+                isNull: mergedData[field.key] === null,
+                isEmpty: mergedData[field.key] === '',
+                willApplyDefault:
+                  field.defaultValue !== undefined &&
+                  (mergedData[field.key] === undefined ||
+                    mergedData[field.key] === null),
+              }
+            );
+          }
+
           // Handle nested fields (like socialUrls.facebook)
           if (field.key.includes('.')) {
             const [parentKey, childKey] = field.key.split('.');
@@ -213,13 +259,33 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
               mergedData[parentKey][childKey] = field.defaultValue;
             }
           } else {
-            // Handle regular fields
+            // Handle regular fields - BE CAREFUL WITH DEFAULTS
             if (
               field.defaultValue !== undefined &&
               (mergedData[field.key] === undefined ||
                 mergedData[field.key] === null)
             ) {
-              mergedData[field.key] = field.defaultValue;
+              // CRITICAL FIX: For backgroundAnimation, only apply 'none' default if there's truly no value
+              // This prevents overriding saved values like 'gradient-shift' with 'none'
+              if (
+                field.key === 'backgroundAnimation' &&
+                (this.componentKey === 'pages.home.hero1' ||
+                  this.componentKey.includes('hero'))
+              ) {
+                // Only apply default if the field is completely missing from the data
+                if (
+                  !(field.key in mergedData) ||
+                  mergedData[field.key] === null ||
+                  mergedData[field.key] === undefined
+                ) {
+                  mergedData[field.key] = field.defaultValue;
+                  console.log(
+                    `[ComponentCustomizer] Applied default for backgroundAnimation: ${field.defaultValue}`
+                  );
+                }
+              } else {
+                mergedData[field.key] = field.defaultValue;
+              }
             }
           }
         });
@@ -299,11 +365,37 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
         console.log(`[SmartCTA] Button link: ${mergedData.buttonLink}`);
       }
 
+      // DEBUG: Final backgroundAnimation value check
+      if (
+        this.componentKey === 'pages.home.hero1' ||
+        this.componentKey.includes('hero')
+      ) {
+        console.log(
+          `[ComponentCustomizer] HERO BACKGROUND ANIMATION DEBUG - Final merged data:`,
+          {
+            componentKey: this.componentKey,
+            finalBackgroundAnimation: mergedData.backgroundAnimation,
+            originalBackgroundAnimation: value?.backgroundAnimation,
+            wasDefaultApplied:
+              mergedData.backgroundAnimation === 'none' &&
+              (!value?.backgroundAnimation ||
+                value?.backgroundAnimation === undefined ||
+                value?.backgroundAnimation === null),
+          }
+        );
+      }
+
       // Set the local data signal
       this.localData.set(mergedData);
       console.log(
         `[ComponentCustomizer] Final merged data for ${this.componentKey}:`,
-        mergedData
+        {
+          mergedData,
+          backgroundAnimation: mergedData.backgroundAnimation,
+          textAnimation: mergedData.textAnimation,
+          hasBackgroundAnimation: 'backgroundAnimation' in mergedData,
+          hasTextAnimation: 'textAnimation' in mergedData,
+        }
       );
     } else {
       console.warn('Component customizer received null/undefined initial data');
@@ -388,10 +480,30 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
     // Check if this is a nested field (contains a dot)
     if (fieldKey.includes('.')) {
       const [parentKey, childKey] = fieldKey.split('.');
-      return data[parentKey]?.[childKey] || '';
+      return data[parentKey]?.[childKey] ?? '';
     }
-    // Regular field
-    return data[fieldKey] || '';
+    // Regular field - use nullish coalescing to preserve falsy values like 'false', '0'
+    const value = data[fieldKey] ?? '';
+
+    // DEBUG: Special logging for backgroundAnimation field
+    if (
+      fieldKey === 'backgroundAnimation' &&
+      (this.componentKey === 'pages.home.hero1' ||
+        this.componentKey.includes('hero'))
+    ) {
+      console.log(
+        `[ComponentCustomizer] getFieldValueComputed for backgroundAnimation:`,
+        {
+          fieldKey,
+          rawValue: data[fieldKey],
+          finalValue: value,
+          dataKeys: Object.keys(data),
+          componentKey: this.componentKey,
+        }
+      );
+    }
+
+    return value;
   }
 
   /**
@@ -728,19 +840,41 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
 
       // Do NOT clear position here! Only on ngOnInit/open/reset.
 
-      // Make visible immediately for interactivity
-      this.isVisible.set(true);
+      // CRITICAL FIX: Only make visible when componentKey changes (new component selected)
+      if (changes['componentKey'] && this.componentKey) {
+        console.log(
+          '[ComponentCustomizer] New component selected:',
+          this.componentKey
+        );
 
-      // Play opening sound effect
-      this.customizerSoundService.play(true);
+        // Make visible for editing
+        this.isVisible.set(true);
 
-      // Restore last active or default category BEFORE animation
-      this.restoreActiveCategory();
+        // Play opening sound effect
+        this.customizerSoundService.play(true);
 
-      // Trigger slide-down animation after a brief delay so sidebar starts hidden then animates
-      requestAnimationFrame(() => {
-        this.isReady.set(true);
-      });
+        // Restore last active or default category BEFORE animation
+        this.restoreActiveCategory();
+
+        // Trigger slide-down animation after a brief delay so sidebar starts hidden then animates
+        requestAnimationFrame(() => {
+          this.isReady.set(true);
+        });
+      } else if (
+        changes['initialData'] ||
+        changes['planType'] ||
+        changes['businessType']
+      ) {
+        // For other input changes, just update the data without showing sidebar
+        console.log(
+          '[ComponentCustomizer] Input updated without opening sidebar'
+        );
+
+        // Only restore category if already visible
+        if (this.isVisible()) {
+          this.restoreActiveCategory();
+        }
+      }
     }
   }
 
@@ -1214,6 +1348,16 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
     // Update the field value
     this.localData.update((data) => ({ ...data, [fieldKey]: typedValue }));
 
+    // DEBUG: Special logging for backgroundAnimation field
+    if (fieldKey === 'backgroundAnimation') {
+      console.log('[ComponentCustomizer] backgroundAnimation updated:', {
+        fieldKey,
+        typedValue,
+        newBackgroundAnimation: this.localData().backgroundAnimation,
+        componentKey: this.componentKey,
+      });
+    }
+
     // SPECIAL HANDLING: When headerBackgroundType changes to 'custom', apply default values for gradient fields
     if (fieldKey === 'headerBackgroundType' && typedValue === 'custom') {
       const allFields = this.getFieldsConfig();
@@ -1642,6 +1786,10 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
       {
         componentKey: this.componentKey,
         result,
+        backgroundAnimation: result.backgroundAnimation,
+        textAnimation: result.textAnimation,
+        hasBackgroundAnimation: 'backgroundAnimation' in result,
+        hasTextAnimation: 'textAnimation' in result,
       }
     );
 
@@ -1694,6 +1842,21 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
       '[ComponentCustomizer] finalizeApplyChanges - final result to emit:',
       result
     );
+
+    // DEBUG: Special logging for backgroundAnimation field
+    if (
+      (this.componentKey === 'pages.home.hero1' ||
+        this.componentKey.includes('hero')) &&
+      'backgroundAnimation' in result
+    ) {
+      console.log(
+        '[ComponentCustomizer] HERO BACKGROUND ANIMATION DEBUG - finalizeApplyChanges result:',
+        {
+          componentKey: this.componentKey,
+          backgroundAnimation: result.backgroundAnimation,
+        }
+      );
+    }
 
     // Emit update event with the result
     this.update.emit(result);

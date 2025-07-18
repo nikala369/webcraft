@@ -42,6 +42,11 @@ export class StructureHeaderComponent implements OnInit, OnChanges, OnDestroy {
 
       // Force change detection to update template
       this.cdr.detectChanges();
+
+      // CRITICAL FIX: Force re-evaluation of header styles
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      }, 0);
     }
 
     // Handle other input changes

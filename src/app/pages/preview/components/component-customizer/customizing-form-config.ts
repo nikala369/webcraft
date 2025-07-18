@@ -702,6 +702,98 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
         'A brief description or tagline that appears below the headline.',
     },
 
+    // ENHANCED CONTENT FIELDS - Hero Section V2
+    {
+      key: 'textAnimation',
+      label: 'Text Animation Style',
+      type: 'select',
+      category: 'content',
+      defaultValue: 'fade',
+      description: 'Choose how your text appears on the page',
+      options: [
+        { value: 'none', label: 'No Animation' },
+        { value: 'fade', label: 'Fade In' },
+        { value: 'slide', label: 'Slide Up' },
+        { value: 'typewriter', label: '⌨️ Typewriter Effect' },
+        { value: 'word-by-word', label: '🌟 Word-by-Word Reveal' },
+      ],
+    },
+    {
+      key: 'backgroundAnimation',
+      label: 'Background Animation',
+      type: 'select',
+      category: 'content',
+      defaultValue: 'none',
+      description: 'Add dynamic effects to your background',
+      options: [
+        { value: 'none', label: 'No Animation' },
+        { value: 'parallax', label: '🌊 Parallax Scroll' },
+        { value: 'zoom', label: '🔍 Zoom Effect' },
+        { value: 'ken-burns', label: '🎬 Ken Burns Effect' },
+        { value: 'gradient-shift', label: '🌈 Gradient Shift' },
+      ],
+    },
+
+    {
+      key: 'businessHours.enabled',
+      label: 'Show Business Hours Widget',
+      type: 'select',
+      category: 'content',
+      defaultValue: false,
+      description: 'Display current business status in the hero section',
+      options: [
+        { value: true, label: 'Yes' },
+        { value: false, label: 'No' },
+      ],
+    },
+    {
+      key: 'businessHours.status',
+      label: 'Business Status',
+      type: 'select',
+      category: 'content',
+      defaultValue: 'open',
+      description: 'Current business status',
+      options: [
+        { value: 'open', label: '🟢 Open' },
+        { value: 'closed', label: '🔴 Closed' },
+        { value: 'busy', label: '🟡 Busy' },
+      ],
+    },
+    {
+      key: 'businessHours.customMessage',
+      label: 'Business Hours Message',
+      type: 'text',
+      category: 'content',
+      defaultValue: "We're open today!",
+      description: 'Custom message for business hours widget',
+      placeholder: 'e.g., Open until 9 PM, Closed for lunch',
+    },
+    {
+      key: 'scrollIndicator.enabled',
+      label: 'Show Scroll Indicator',
+      type: 'select',
+      category: 'content',
+      defaultValue: false,
+      description: 'Show scroll indicator at bottom of hero section',
+      options: [
+        { value: true, label: 'Yes' },
+        { value: false, label: 'No' },
+      ],
+    },
+    {
+      key: 'scrollIndicator.style',
+      label: 'Scroll Indicator Style',
+      type: 'select',
+      category: 'content',
+      defaultValue: 'arrow',
+      description: 'Choose the scroll indicator design',
+      options: [
+        { value: 'arrow', label: '⬇️ Arrow' },
+        { value: 'dots', label: '⚫ Dots' },
+        { value: 'pulse', label: '🔘 Pulse' },
+      ],
+    },
+
     // STYLING category
     {
       key: 'overlayOpacity',
@@ -742,6 +834,21 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
       description: 'The color of the subtitle text.',
     },
 
+    {
+      key: 'animationDuration',
+      label: 'Animation Speed',
+      type: 'select',
+      category: 'styling',
+      defaultValue: 800,
+      description: 'Control how fast animations play',
+      options: [
+        { value: 500, label: 'Fast' },
+        { value: 800, label: 'Normal' },
+        { value: 1200, label: 'Slow' },
+        { value: 1800, label: 'Very Slow' },
+      ],
+    },
+
     // GENERAL category
     {
       key: 'layout',
@@ -757,7 +864,6 @@ export const CustomizationFormConfig: Record<string, FieldConfig[]> = {
         { value: 'right', label: 'Right-Aligned' },
       ],
     },
-
     {
       key: 'textShadow',
       label: 'Text Shadow',
@@ -1162,7 +1268,7 @@ export function getPlanSpecificConfig(
       // Standard plan: Remove video options, add smart CTA button controls
       return baseConfig
         .filter((field) => {
-          // Remove video-related fields
+          // Remove video-related fields for standard plan
           return !['backgroundType', 'backgroundVideo'].includes(field.key);
         })
         .map((field) => {
@@ -1180,11 +1286,11 @@ export function getPlanSpecificConfig(
           // Add smart CTA button configuration for standard plan
           {
             key: 'showButton',
-            label: 'Show Call-to-Action Button',
+            label: 'Show Primary Button',
             type: 'select',
             category: 'content',
             defaultValue: true,
-            description: 'Show or hide the call-to-action button',
+            description: 'Show or hide the main call-to-action button',
             options: [
               { value: true, label: 'Yes' },
               { value: false, label: 'No' },
@@ -1193,53 +1299,98 @@ export function getPlanSpecificConfig(
           // Note: buttonText and buttonScrollTargetID are auto-generated based on business type for standard plan
           {
             key: 'buttonBackgroundColor',
-            label: 'Button Background Color',
+            label: 'Primary Button Background',
             type: 'color',
             category: 'styling',
             defaultValue: '#2876ff',
-            description: 'Background color of the call-to-action button',
+            description: 'Background color of the main call-to-action button',
           },
           {
             key: 'buttonTextColor',
-            label: 'Button Text Color',
+            label: 'Primary Button Text',
             type: 'color',
             category: 'styling',
             defaultValue: '#ffffff',
-            description: 'Text color of the call-to-action button',
+            description: 'Text color of the main call-to-action button',
           },
         ]);
     } else {
-      // Premium plan: Full config with video support but smart CTA (no custom text/link)
+      // Premium plan: Full config with video support and enhanced CTA options
       return baseConfig.concat([
-        // Premium CTA options (smart defaults like standard, but with premium styling)
+        // Premium CTA options with full customization
         {
           key: 'showButton',
-          label: 'Show Call-to-Action Button',
+          label: 'Show Primary Button',
           type: 'select',
           category: 'content',
           defaultValue: true,
-          description: 'Show or hide the call-to-action button',
+          description: 'Show or hide the main call-to-action button',
           options: [
             { value: true, label: 'Yes' },
             { value: false, label: 'No' },
           ],
         },
-        // Note: buttonText and buttonScrollTargetID are auto-generated based on business type for premium plan too
+        {
+          key: 'buttonText',
+          label: 'Primary Button Text',
+          type: 'text',
+          category: 'content',
+          defaultValue: ctaDefaults.buttonText,
+          description: 'Text for the main call-to-action button',
+        },
         {
           key: 'buttonBackgroundColor',
-          label: 'Button Background Color',
+          label: 'Primary Button Background',
           type: 'color',
           category: 'styling',
           defaultValue: '#9e6aff',
-          description: 'Background color of the call-to-action button',
+          description: 'Background color of the main call-to-action button',
         },
         {
           key: 'buttonTextColor',
-          label: 'Button Text Color',
+          label: 'Primary Button Text',
           type: 'color',
           category: 'styling',
           defaultValue: '#ffffff',
-          description: 'Text color of the call-to-action button',
+          description: 'Text color of the main call-to-action button',
+        },
+        {
+          key: 'secondaryButton.text',
+          label: 'Secondary Button Text',
+          type: 'text',
+          category: 'content',
+          defaultValue: '',
+          description: 'Text for secondary button (leave empty to hide)',
+          placeholder: 'e.g., Learn More, View Gallery',
+        },
+        {
+          key: 'secondaryButton.action',
+          label: 'Secondary Button Action',
+          type: 'select',
+          category: 'content',
+          defaultValue: 'scroll',
+          description: 'What happens when secondary button is clicked',
+          options: [
+            { value: 'scroll', label: 'Scroll to Section' },
+            { value: 'link', label: 'Navigate to Link' },
+            { value: 'modal', label: 'Open Modal' },
+          ],
+        },
+        {
+          key: 'secondaryButton.backgroundColor',
+          label: 'Secondary Button Background',
+          type: 'color',
+          category: 'styling',
+          defaultValue: 'transparent',
+          description: 'Background color of the secondary button',
+        },
+        {
+          key: 'secondaryButton.textColor',
+          label: 'Secondary Button Text',
+          type: 'color',
+          category: 'styling',
+          defaultValue: '#ffffff',
+          description: 'Text color of the secondary button',
         },
       ]);
     }

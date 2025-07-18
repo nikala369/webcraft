@@ -5,8 +5,11 @@ import {
   EventEmitter,
   inject,
   OnInit,
+  OnChanges,
   HostBinding,
   Signal,
+  ChangeDetectorRef,
+  SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionHoverWrapperComponent } from '../../../../components/section-hover-wrapper/section-hover-wrapper.component';
@@ -23,7 +26,7 @@ import { ReactiveImageComponent } from '../../../../../../shared/components/reac
   templateUrl: './about-section.component.html',
   styleUrls: ['./about-section.component.scss'],
 })
-export class AboutSectionComponent implements OnInit {
+export class AboutSectionComponent implements OnInit, OnChanges {
   @Input({ required: true }) data!: Signal<any>;
   @Input() isMobileLayout: boolean = false;
   @Input() isMobileView: string = 'view-desktop';
@@ -39,6 +42,7 @@ export class AboutSectionComponent implements OnInit {
   private themeColorsService = inject(ThemeColorsService);
   private businessConfigService = inject(BusinessConfigService);
   private imageService = inject(ImageService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Default about section image based on business type
   get defaultAboutImage(): string {
@@ -47,11 +51,15 @@ export class AboutSectionComponent implements OnInit {
 
   // Use HostBinding to apply custom styles directly to the host element
   @HostBinding('style.--section-bg-color') get sectionBgColor() {
-    return this.getAboutContent().backgroundColor || '#ffffff';
+    const content = this.getAboutContent();
+    console.log('About section background color:', content.backgroundColor);
+    return content.backgroundColor || '#ffffff';
   }
 
   @HostBinding('style.--text-color') get textColor() {
-    return this.getAboutContent().textColor || '#333333';
+    const content = this.getAboutContent();
+    console.log('About section text color:', content.textColor);
+    return content.textColor || '#333333';
   }
 
   @HostBinding('style.--heading-color') get headingColor() {
@@ -74,6 +82,14 @@ export class AboutSectionComponent implements OnInit {
 
   ngOnInit() {
     console.log('About section data:', this.data());
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['data']) {
+      console.log('About section data changed:', this.data());
+      // Force change detection to update @HostBinding styles
+      this.cdr.detectChanges();
+    }
   }
 
   /**

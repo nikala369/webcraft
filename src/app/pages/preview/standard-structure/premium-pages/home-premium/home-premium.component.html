@@ -9,7 +9,7 @@
   >
     <app-hero-section
       [data]="heroData"
-      [customizations]="wholeData()"
+      [customizations]="wholeData() || {}"
       [isMobileLayout]="isMobileLayout"
       [isMobileView]="isMobileView"
       [planType]="planType"

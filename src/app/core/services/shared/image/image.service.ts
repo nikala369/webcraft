@@ -357,7 +357,14 @@ export class ImageService {
 
       if (typeof value === 'string') {
         // Check if this looks like an image field and has malformed objectId
+        // CRITICAL: Exclude animation fields which are legitimate string values, not ObjectIds
+        const isAnimationField =
+          key.toLowerCase().includes('animation') ||
+          key.toLowerCase().includes('transition') ||
+          key.toLowerCase().includes('effect');
+
         if (
+          !isAnimationField &&
           (key.toLowerCase().includes('image') ||
             key.toLowerCase().includes('background') ||
             key.toLowerCase().includes('photo')) &&

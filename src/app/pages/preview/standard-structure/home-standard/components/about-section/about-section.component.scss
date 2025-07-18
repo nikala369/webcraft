@@ -93,7 +93,9 @@
         p {
           font-size: 1.125rem;
           line-height: 1.7;
-          color: var(--text-light);
+          color: var(
+            --text-color
+          ); /* FIXED: Use actual text color instead of --text-light */
           margin: 0;
         }
       }

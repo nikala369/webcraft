@@ -5,27 +5,53 @@
   [isMobileView]="isMobileView"
   (editSection)="handleSectionEdit('hero1')"
 >
-  <div
-    id="hero"
-    class="hero-section"
-    [ngClass]="{ 'hero-section--mobile': isMobileLayout }"
-  >
+  <div id="hero" class="hero-section" [ngClass]="getHeroClasses()">
+    <!-- Business Hours Widget (simplified - only Open/Closed) -->
+    <div
+      *ngIf="businessStatus()"
+      class="business-hours-widget"
+      [ngClass]="animationState().businessHoursClass"
+      (click)="handleBusinessHoursClick()"
+    >
+      <div class="status-indicator" [class.open]="businessStatus()?.isOpen">
+        <div class="status-dot"></div>
+        <div class="status-content">
+          <span class="status-label">{{
+            businessStatus()?.isOpen ? "OPEN" : "CLOSED"
+          }}</span>
+          <span class="status-text">{{ businessStatus()?.message }}</span>
+        </div>
+      </div>
+
+      <!-- Next change time -->
+      <div class="next-change" *ngIf="businessStatus()?.nextChange">
+        <span class="change-label">{{
+          businessStatus()?.isOpen ? "Closes" : "Opens"
+        }}</span>
+        <span class="change-time">{{ businessStatus()?.nextChange }}</span>
+      </div>
+    </div>
+
     <!-- Background media container -->
     <div class="hero-background">
-      <!-- Image background (shown only when backgroundType is 'image' or not specified) -->
+      <!-- Image background -->
       <div
-        *ngIf="getBackgroundType() === 'image'"
+        *ngIf="backgroundType() === 'image'"
         class="hero-background-image"
         [style.background-image]="
-          getHeroBackground() ? 'url(' + getHeroBackground() + ')' : 'none'
+          backgroundImageUrl() ? 'url(' + backgroundImageUrl() + ')' : 'none'
         "
+        [style.transform]="parallaxTransform()"
       ></div>
 
-      <!-- Video background (shown only when backgroundType is 'video') -->
+      <!-- Video background -->
       <video
-        *ngIf="getBackgroundType() === 'video' && getHeroBackgroundVideo()"
+        *ngIf="backgroundType() === 'video' && backgroundVideoUrl()"
         class="hero-background-video"
-        [src]="getHeroBackgroundVideo()"
+        [src]="backgroundVideoUrl()"
+        [style.transform]="
+          'translateX(-50%) translateY(-50%) ' + parallaxTransform()
+        "
         autoplay
         loop
         muted
@@ -35,46 +61,135 @@
       <!-- Background overlay with customizable opacity and color -->
       <div
         class="hero-overlay"
-        [ngClass]="'overlay-' + getOverlayOpacity()"
-        [ngStyle]="{ 'background-color': getOverlayColor() }"
+        [ngClass]="'overlay-' + overlayOpacity()"
+        [style.background-color]="overlayColor()"
       ></div>
     </div>
 
+    <!-- Hero Content Wrapper -->
     <div class="hero-content-wrapper">
-      <div class="hero-content" [ngClass]="'layout-' + getLayout()">
-        <!-- Text content (can be hidden) -->
+      <div
+        class="hero-content"
+        [ngClass]="getContentClasses()"
+        [style.opacity]="contentOpacity()"
+      >
+        <!-- Text content -->
         <ng-container *ngIf="shouldShowContentText()">
-          <!-- Title -->
+          <!-- Title with enhanced animations -->
           <h1
             class="hero-title"
-            [ngClass]="getTextShadow()"
-            [style.color]="getTitleColor()"
+            [ngClass]="textShadowClass()"
+            [style.color]="titleColor()"
           >
-            {{ getHeroTitle() }}
+            <!-- Word-by-word animation support -->
+            <ng-container
+              *ngIf="
+                animationState().textAnimationClass ===
+                  'hero-text-word-by-word';
+                else normalTitle
+              "
+            >
+              <span
+                *ngFor="let word of heroTitle().split(' '); index as i"
+                class="word-animate"
+                [style.animation-delay]="i * 0.1 + 's'"
+              >
+                {{ word }}&nbsp;
+              </span>
+            </ng-container>
+
+            <ng-template #normalTitle>
+              {{ heroTitle() }}
+            </ng-template>
           </h1>
 
-          <!-- Subtitle -->
+          <!-- Subtitle with enhanced animations -->
           <p
             class="hero-subtitle"
-            [ngClass]="getTextShadow()"
-            [style.color]="getSubtitleColor()"
+            [ngClass]="textShadowClass()"
+            [style.color]="subtitleColor()"
           >
-            {{ getHeroSubtitle() }}
+            <!-- Word-by-word animation support for subtitle -->
+            <ng-container
+              *ngIf="
+                animationState().textAnimationClass ===
+                  'hero-text-word-by-word';
+                else normalSubtitle
+              "
+            >
+              <span
+                *ngFor="let word of heroSubtitle().split(' '); index as i"
+                class="word-animate"
+                [style.animation-delay]="
+                  (i + heroTitle().split(' ').length) * 0.1 + 's'
+                "
+              >
+                {{ word }}&nbsp;
+              </span>
+            </ng-container>
+
+            <ng-template #normalSubtitle>
+              {{ heroSubtitle() }}
+            </ng-template>
           </p>
 
-          <!-- CTA Button -->
-          <div *ngIf="shouldShowButton()" class="hero-cta">
-            <button
-              class="hero-button"
-              [style.background-color]="getButtonBackgroundColor()"
-              [style.color]="getButtonTextColor()"
-              (click)="handleCtaClick()"
-              type="button"
-            >
-              {{ getButtonText() }}
-            </button>
+          <!-- CTA Button Container (Primary only - no secondary) -->
+          <div class="hero-cta-container">
+            <!-- Primary CTA Button -->
+            <div *ngIf="primaryCTA()" class="hero-cta primary-cta">
+              <button
+                class="hero-button primary-button"
+                [style.background-color]="primaryCTA()?.backgroundColor"
+                [style.color]="primaryCTA()?.textColor"
+                (click)="handlePrimaryCTAClick()"
+                type="button"
+              >
+                {{ primaryCTA()?.text }}
+              </button>
+            </div>
           </div>
         </ng-container>
+      </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div
+      *ngIf="scrollIndicator()"
+      class="scroll-indicator"
+      [ngClass]="getScrollIndicatorClasses()"
+      (click)="handleScrollIndicatorClick()"
+    >
+      <!-- Arrow Style -->
+      <div *ngIf="scrollIndicator()?.style === 'arrow'" class="indicator-arrow">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 4V20M12 20L18 14M12 20L6 14"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+
+      <!-- Dots Style -->
+      <div *ngIf="scrollIndicator()?.style === 'dots'" class="indicator-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+
+      <!-- Pulse Style (fixed alignment) -->
+      <div *ngIf="scrollIndicator()?.style === 'pulse'" class="indicator-pulse">
+        <div class="pulse-circle"></div>
+        <div class="pulse-circle pulse-delay-1"></div>
+        <div class="pulse-circle pulse-delay-2"></div>
       </div>
     </div>
   </div>

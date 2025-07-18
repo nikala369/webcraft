@@ -4,12 +4,15 @@
     <!-- 1. Hero Section (Always shown) -->
     <app-hero-section
       [data]="heroDataSignal"
-      [customizations]="wholeData"
+      [customizations]="wholeData() || {}"
       [isMobileLayout]="isMobileLayout"
       [isMobileView]="isMobileView"
       [planType]="planType"
       [businessType]="businessType"
       (sectionSelected)="handleSectionSelection($event)"
+      (ctaClicked)="handleHeroCTAClick($event)"
+      (businessHoursClicked)="handleHeroBusinessHoursClick()"
+      (scrollIndicatorClicked)="handleHeroScrollIndicatorClick()"
     >
     </app-hero-section>
 
