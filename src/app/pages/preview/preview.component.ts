@@ -465,6 +465,14 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
     );
   }
 
+  /**
+   * Get business type icon filename (lowercase for asset path)
+   */
+  getBusinessTypeIcon(businessTypeKey: string): string {
+    // Convert uppercase backend key to lowercase for asset filename
+    return businessTypeKey.toLowerCase();
+  }
+
   // ======== TEMPLATE NAMING FLOW ========
   /**
    * Start building - show template naming modal
@@ -553,7 +561,29 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
     const baseTemplateId =
       this.selectedBaseTemplateId() || this.availableThemes()[0]?.id;
 
+    // DEBUGGING: Log the values to identify the issue
+    console.log('[CREATE TEMPLATE DEBUG] Template creation data:', {
+      templateName,
+      customizations: !!customizations,
+      customizationsKeys: customizations ? Object.keys(customizations) : null,
+      selectedBaseTemplateId: this.selectedBaseTemplateId(),
+      availableThemes: this.availableThemes(),
+      availableThemesCount: this.availableThemes().length,
+      firstThemeId: this.availableThemes()[0]?.id,
+      finalBaseTemplateId: baseTemplateId,
+      businessType: this.businessType(),
+      currentPlan: this.currentPlan(),
+      isAuthenticated: this.isAuthenticated(),
+    });
+
     if (!customizations || !baseTemplateId) {
+      console.error('[CREATE TEMPLATE DEBUG] Creation failed - missing data:', {
+        hasCustomizations: !!customizations,
+        hasBaseTemplateId: !!baseTemplateId,
+        selectedBaseTemplateId: this.selectedBaseTemplateId(),
+        availableThemesLength: this.availableThemes().length,
+      });
+
       this.confirmationService.showConfirmation(
         'Unable to create template. Please try again.',
         'error',

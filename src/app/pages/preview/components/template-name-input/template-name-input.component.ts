@@ -35,6 +35,14 @@ export class TemplateNameInputComponent implements OnInit {
     this.validateName();
   }
 
+  /**
+   * Get business type icon filename (lowercase for asset path)
+   */
+  getBusinessTypeIcon(businessTypeKey: string): string {
+    // Convert uppercase backend key to lowercase for asset filename
+    return businessTypeKey.toLowerCase();
+  }
+
   private generateDefaultName(): string {
     const businessTypeName = this.businessTypeName || 'Business';
     const planSuffix = this.plan === 'premium' ? ' Pro' : '';

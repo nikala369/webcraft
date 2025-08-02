@@ -10,25 +10,25 @@ export interface BusinessType {
 
 export const BUSINESS_TYPES: BusinessType[] = [
   {
-    id: 'restaurant',
+    id: 'RESTAURANT',
     name: 'Restaurant & Food',
     description: 'For cafes, restaurants, food trucks, and food businesses',
-    icon: 'restaurant',
+    icon: 'restaurant', // Keep lowercase for asset filename
     enabled: true,
   },
   {
-    id: 'salon',
+    id: 'SALON',
     name: 'Salon & Beauty',
     description: 'For salons, spas, and beauty services',
-    icon: 'salon',
+    icon: 'salon', // Keep lowercase for asset filename
     enabled: false,
     comingSoon: true,
   },
   {
-    id: 'portfolio',
+    id: 'PORTFOLIO',
     name: 'Portfolio & Creative',
     description: 'For freelancers, artists, and creative professionals',
-    icon: 'portfolio',
+    icon: 'portfolio', // Keep lowercase for asset filename
     enabled: false,
     comingSoon: true,
   },
@@ -38,7 +38,7 @@ export const BUSINESS_TYPES: BusinessType[] = [
 // Sections configuration by business type and plan
 // Only include restaurant since it's the only enabled type
 export const BUSINESS_TYPE_SECTIONS = {
-  restaurant: {
+  RESTAURANT: {
     standard: ['hero', 'about', 'menu', 'contact'],
     premium: [
       'hero',
@@ -50,7 +50,7 @@ export const BUSINESS_TYPE_SECTIONS = {
     ],
   },
   // Keep other configurations for future use but they won't be accessible
-  salon: {
+  SALON: {
     standard: ['hero', 'about', 'services', 'contact'],
     premium: [
       'hero',
@@ -62,7 +62,7 @@ export const BUSINESS_TYPE_SECTIONS = {
       'contact',
     ],
   },
-  portfolio: {
+  PORTFOLIO: {
     standard: ['hero', 'about', 'projects', 'contact'],
     premium: ['hero', 'about', 'skills', 'projects', 'testimonials', 'contact'],
   },
@@ -71,7 +71,7 @@ export const BUSINESS_TYPE_SECTIONS = {
 // Menu items configuration by business type and plan
 // Only include restaurant since it's the only enabled type
 export const BUSINESS_TYPE_MENU_ITEMS = {
-  restaurant: {
+  RESTAURANT: {
     standard: [
       { id: 1, label: 'Home', link: '#hero' },
       { id: 2, label: 'About', link: '#about' },
@@ -87,7 +87,7 @@ export const BUSINESS_TYPE_MENU_ITEMS = {
     ],
   },
   // Keep other configurations for future use but they won't be accessible
-  salon: {
+  SALON: {
     standard: [
       { id: 1, label: 'Home', link: '#hero' },
       { id: 2, label: 'About', link: '#about' },
@@ -102,7 +102,7 @@ export const BUSINESS_TYPE_MENU_ITEMS = {
       { id: 5, label: 'Contact', link: '/contact' },
     ],
   },
-  portfolio: {
+  PORTFOLIO: {
     standard: [
       { id: 1, label: 'Home', link: '#hero' },
       { id: 2, label: 'About', link: '#about' },

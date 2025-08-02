@@ -135,7 +135,11 @@
         <div class="info-item">
           <img
             class="info-icon"
-            [src]="'assets/business-types/' + businessType() + '.svg'"
+            [src]="
+              'assets/business-types/' +
+              getBusinessTypeIcon(businessType()) +
+              '.svg'
+            "
             [alt]="businessTypeDisplayName() + ' icon'"
             loading="lazy"
           />

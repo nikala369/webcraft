@@ -36,7 +36,11 @@
         </div>
         <div class="business-type-info">
           <img
-            [src]="'assets/business-types/' + businessType + '.svg'"
+            [src]="
+              'assets/business-types/' +
+              getBusinessTypeIcon(businessType) +
+              '.svg'
+            "
             [alt]="businessTypeName + ' icon'"
             class="business-type-icon"
           />

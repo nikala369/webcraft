@@ -51,21 +51,21 @@
           <!-- Restaurant icon -->
           <img
             style="width: 40px; height: 40px"
-            *ngIf="type.id === 'restaurant'"
+            *ngIf="type.id === 'RESTAURANT'"
             src="assets/business-types/restaurant.svg"
           />
 
           <!-- Salon icon -->
           <img
             style="width: 40px; height: 40px"
-            *ngIf="type.id === 'salon'"
+            *ngIf="type.id === 'SALON'"
             src="assets/business-types/salon.svg"
           />
 
           <!-- Portfolio icon -->
           <img
             style="width: 40px; height: 40px"
-            *ngIf="type.id === 'portfolio'"
+            *ngIf="type.id === 'PORTFOLIO'"
             src="assets/business-types/portfolio.svg"
           />
 
@@ -73,11 +73,11 @@
           <img
             style="width: 40px; height: 40px"
             *ngIf="
-              type.id !== 'restaurant' &&
-              type.id !== 'salon' &&
-              type.id !== 'portfolio'
+              type.id !== 'RESTAURANT' &&
+              type.id !== 'SALON' &&
+              type.id !== 'PORTFOLIO'
             "
-            src="assets/business-types/generic.svg"
+            src="assets/business-types/portfolio.svg"
           />
         </div>
         <h4 class="business-type-name">{{ type.name }}</h4>
@@ -215,21 +215,21 @@
             <!-- Restaurant icon -->
             <img
               style="width: 22px; height: 22px"
-              *ngIf="type.id === 'restaurant'"
+              *ngIf="type.id === 'RESTAURANT'"
               src="assets/business-types/restaurant.svg"
             />
 
             <!-- Salon icon -->
             <img
               style="width: 22px; height: 22px"
-              *ngIf="type.id === 'salon'"
+              *ngIf="type.id === 'SALON'"
               src="assets/business-types/salon.svg"
             />
 
             <!-- Portfolio icon -->
             <img
               style="width: 22px; height: 22px"
-              *ngIf="type.id === 'portfolio'"
+              *ngIf="type.id === 'PORTFOLIO'"
               src="assets/business-types/portfolio.svg"
             />
 
@@ -237,11 +237,11 @@
             <img
               style="width: 22px; height: 22px"
               *ngIf="
-                type.id !== 'restaurant' &&
-                type.id !== 'salon' &&
-                type.id !== 'portfolio'
+                type.id !== 'RESTAURANT' &&
+                type.id !== 'SALON' &&
+                type.id !== 'PORTFOLIO'
               "
-              src="assets/business-types/generic.svg"
+              src="assets/business-types/portfolio.svg"
             />
           </div>
           <span>{{ type.name }}</span>

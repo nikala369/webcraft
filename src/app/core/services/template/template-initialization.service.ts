@@ -1,7 +1,7 @@
 import { Injectable, DestroyRef, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, throwError, forkJoin } from 'rxjs';
-import { catchError, map, switchMap, take } from 'rxjs/operators';
+import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 // Services
@@ -559,6 +559,21 @@ export class TemplateInitializationService {
 
     // First, we need to get the template type ID that corresponds to the business type key
     return this.templateService.getAllTemplateTypes().pipe(
+      tap((templateTypes) => {
+        // DEBUGGING: Log all available template types from backend
+        console.log(
+          '[TEMPLATE DEBUG] Available template types from backend:',
+          templateTypes
+        );
+        console.log(
+          '[TEMPLATE DEBUG] Template types keys:',
+          templateTypes.map((t) => ({ id: t.id, key: t.key, name: t.name }))
+        );
+        console.log(
+          '[TEMPLATE DEBUG] Looking for business type key:',
+          businessTypeKey
+        );
+      }),
       switchMap((templateTypes) => {
         // Find the template type with matching key
         const templateType = templateTypes.find(
@@ -567,8 +582,14 @@ export class TemplateInitializationService {
 
         if (!templateType) {
           console.error(
-            `No template type found for business type key: ${businessTypeKey}`
+            `[TEMPLATE DEBUG] No template type found for business type key: ${businessTypeKey}`
           );
+          console.error(
+            '[TEMPLATE DEBUG] Available keys:',
+            templateTypes.map((t) => t.key)
+          );
+          console.error('[TEMPLATE DEBUG] Expected key:', businessTypeKey);
+
           this.confirmationService.showConfirmation(
             'Error finding template type. Please try again.',
             'error',
@@ -577,16 +598,23 @@ export class TemplateInitializationService {
           return throwError(
             () =>
               new Error(
-                `No template type found for business type: ${businessTypeKey}`
+                `No template type found for business type: ${businessTypeKey}. Available types: ${templateTypes
+                  .map((t) => t.key)
+                  .join(', ')}`
               )
           );
         }
+
+        console.log(
+          '[TEMPLATE DEBUG] Found matching template type:',
+          templateType
+        );
 
         // Get plan ID based on current plan
         return this.templateService
           .getTemplatePlanId(this.templateService.convertPlanType(plan))
           .pipe(
-            switchMap((planId) => {
+            switchMap((planId: string) => {
               // ARCHITECTURE FIX: Pass the actual IDs to the search service
               // This results in smaller, faster, and more efficient API responses
               console.log(
@@ -644,6 +672,13 @@ export class TemplateInitializationService {
       }),
       catchError((err) => {
         console.error('Error loading template types:', err);
+        console.error('[TEMPLATE DEBUG] Full error details:', {
+          message: err.message,
+          status: err.status,
+          statusText: err.statusText,
+          url: err.url,
+        });
+
         this.confirmationService.showConfirmation(
           'Error loading template types. Please try again.',
           'error',
