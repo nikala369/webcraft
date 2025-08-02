@@ -119,21 +119,21 @@
           <!-- Restaurant icon -->
           <img
             style="width: 22px; height: 22px"
-            *ngIf="selectedBusinessType === 'restaurant'"
+            *ngIf="selectedBusinessType === 'RESTAURANT'"
             src="assets/business-types/restaurant.svg"
           />
 
           <!-- Salon icon -->
           <img
             style="width: 22px; height: 22px"
-            *ngIf="selectedBusinessType === 'salon'"
+            *ngIf="selectedBusinessType === 'SALON'"
             src="assets/business-types/salon.svg"
           />
 
           <!-- Portfolio icon -->
           <img
             style="width: 22px; height: 22px"
-            *ngIf="selectedBusinessType === 'portfolio'"
+            *ngIf="selectedBusinessType === 'PORTFOLIO'"
             src="assets/business-types/portfolio.svg"
           />
 
@@ -142,11 +142,11 @@
             style="width: 22px; height: 22px"
             *ngIf="
               selectedBusinessType &&
-              selectedBusinessType !== 'restaurant' &&
-              selectedBusinessType !== 'salon' &&
-              selectedBusinessType !== 'portfolio'
+              selectedBusinessType !== 'RESTAURANT' &&
+              selectedBusinessType !== 'SALON' &&
+              selectedBusinessType !== 'PORTFOLIO'
             "
-            src="assets/business-types/generic.svg"
+            src="assets/business-types/portfolio.svg"
           />
 
           <!-- Default icon if no business type selected -->
