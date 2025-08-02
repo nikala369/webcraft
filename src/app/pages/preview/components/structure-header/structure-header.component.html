@@ -4,7 +4,7 @@
   [ngClass]="{
     'structure-header--mobile': isMobileLayout
   }"
-  [ngStyle]="getHeaderStyles()"
+  [ngStyle]="headerStyles()"
   role="banner"
   aria-label="Main website header"
 >
@@ -12,8 +12,9 @@
   <div class="structure-header__logo">
     <app-reactive-image
       *ngIf="customizations?.logoUrl"
-      [src]="getImageUrl(customizations.logoUrl)"
+      [src]="logoUrl()"
       [alt]="'Business Logo'"
+      [imageType]="'logo'"
       class="logo"
       (imageError)="onLogoError($event)"
       (imageLoad)="onLogoLoad($event)"
@@ -66,7 +67,7 @@
     <nav
       class="mobile-menu"
       [class.open]="isMobileMenuOpen()"
-      [ngStyle]="getMobileMenuStyles()"
+      [ngStyle]="mobileMenuStyles()"
       (click)="onMobileMenuClick($event)"
     >
       <ul (click)="$event.stopPropagation()">

@@ -180,24 +180,13 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
 
   @Input() set initialData(value: any) {
     console.log(
-      `[ComponentCustomizer] initialData setter called for ${this.componentKey} with:`,
-      value
+      `[ComponentCustomizer] initialData setter for ${this.componentKey}:`,
+      {
+        backgroundColor: value?.backgroundColor,
+        textColor: value?.textColor,
+        hasColors: !!(value?.backgroundColor || value?.textColor),
+      }
     );
-
-    // DEBUG: Special logging for backgroundAnimation field
-    if (
-      this.componentKey === 'pages.home.hero1' ||
-      this.componentKey.includes('hero')
-    ) {
-      console.log(
-        `[ComponentCustomizer] HERO BACKGROUND ANIMATION DEBUG - Initial data:`,
-        {
-          componentKey: this.componentKey,
-          backgroundAnimation: value?.backgroundAnimation,
-          hasBackgroundAnimation: value && 'backgroundAnimation' in value,
-        }
-      );
-    }
 
     if (value) {
       // Store original for reset functionality
@@ -259,33 +248,24 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
               mergedData[parentKey][childKey] = field.defaultValue;
             }
           } else {
-            // Handle regular fields - BE CAREFUL WITH DEFAULTS
+            // Handle regular fields - ONLY apply defaults when NO value exists
+            // CRITICAL: Check if field key exists in original data FIRST
+            const hasExistingValue =
+              field.key in value &&
+              value[field.key] !== null &&
+              value[field.key] !== undefined;
+
             if (
               field.defaultValue !== undefined &&
+              !hasExistingValue &&
               (mergedData[field.key] === undefined ||
-                mergedData[field.key] === null)
+                mergedData[field.key] === null ||
+                mergedData[field.key] === '')
             ) {
-              // CRITICAL FIX: For backgroundAnimation, only apply 'none' default if there's truly no value
-              // This prevents overriding saved values like 'gradient-shift' with 'none'
-              if (
-                field.key === 'backgroundAnimation' &&
-                (this.componentKey === 'pages.home.hero1' ||
-                  this.componentKey.includes('hero'))
-              ) {
-                // Only apply default if the field is completely missing from the data
-                if (
-                  !(field.key in mergedData) ||
-                  mergedData[field.key] === null ||
-                  mergedData[field.key] === undefined
-                ) {
-                  mergedData[field.key] = field.defaultValue;
-                  console.log(
-                    `[ComponentCustomizer] Applied default for backgroundAnimation: ${field.defaultValue}`
-                  );
-                }
-              } else {
-                mergedData[field.key] = field.defaultValue;
-              }
+              // Applying field default value
+              mergedData[field.key] = field.defaultValue;
+            } else if (hasExistingValue) {
+              // Preserving existing field value
             }
           }
         });
@@ -388,13 +368,10 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
       // Set the local data signal
       this.localData.set(mergedData);
       console.log(
-        `[ComponentCustomizer] Final merged data for ${this.componentKey}:`,
+        `[ComponentCustomizer] Final localData for ${this.componentKey}:`,
         {
-          mergedData,
-          backgroundAnimation: mergedData.backgroundAnimation,
-          textAnimation: mergedData.textAnimation,
-          hasBackgroundAnimation: 'backgroundAnimation' in mergedData,
-          hasTextAnimation: 'textAnimation' in mergedData,
+          backgroundColor: mergedData.backgroundColor,
+          textColor: mergedData.textColor,
         }
       );
     } else {
@@ -420,6 +397,8 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
   visibleFields = computed(() => {
     const fields = this.fieldsForCategory();
     const data = this.localData();
+
+    // Field processing for customizer
 
     // Create stable field objects with memoization
     return fields.map((field) => {
@@ -485,23 +464,7 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
     // Regular field - use nullish coalescing to preserve falsy values like 'false', '0'
     const value = data[fieldKey] ?? '';
 
-    // DEBUG: Special logging for backgroundAnimation field
-    if (
-      fieldKey === 'backgroundAnimation' &&
-      (this.componentKey === 'pages.home.hero1' ||
-        this.componentKey.includes('hero'))
-    ) {
-      console.log(
-        `[ComponentCustomizer] getFieldValueComputed for backgroundAnimation:`,
-        {
-          fieldKey,
-          rawValue: data[fieldKey],
-          finalValue: value,
-          dataKeys: Object.keys(data),
-          componentKey: this.componentKey,
-        }
-      );
-    }
+    // Field value retrieval complete
 
     return value;
   }
@@ -1164,65 +1127,7 @@ export class ComponentCustomizerComponent implements OnInit, OnDestroy {
     return this.fieldsForCategory();
   }
 
-  // Check if we should show presets for this component
-  hasPresets(): boolean {
-    // Add component types that support presets
-    return ['header', 'services', 'hero1', 'footer'].includes(
-      this.componentKey
-    );
-  }
-
-  getPresets() {
-    if (this.componentKey === 'header') {
-      return [
-        { id: 'light', label: 'Light Theme' },
-        { id: 'dark', label: 'Dark Theme' },
-        { id: 'colorful', label: 'Colorful' },
-        { id: 'gradient', label: 'Gradient' },
-      ];
-    }
-
-    // Add presets for other components as needed
-    return [];
-  }
-
-  applyPreset(presetId: string): void {
-    if (this.componentKey === 'header') {
-      if (presetId === 'light') {
-        // A light theme with a soft light-gray background and dark text.
-        this.localData.update((data) => ({
-          ...data,
-          backgroundColor: '#808080', // Soft light gray, not pure white
-          textColor: '#ffffff',
-          position: 'fixed',
-        }));
-      } else if (presetId === 'dark') {
-        // A dark theme with a deep gray background and light text.
-        this.localData.update((data) => ({
-          ...data,
-          backgroundColor: '#121212', // Deep gray
-          textColor: '#ffffff', // Near white text for contrast
-          position: 'fixed',
-        }));
-      } else if (presetId === 'colorful') {
-        // A transparent header with white text.
-        this.localData.update((data) => ({
-          ...data,
-          backgroundColor: '#ffb86d',
-          textColor: '#ffffff',
-          position: 'fixed',
-        }));
-      } else if (presetId === 'gradient') {
-        // A gradient header with modern blue tones and white text.
-        this.localData.update((data) => ({
-          ...data,
-          backgroundColor: 'linear-gradient(135deg, #3a8dff 0%, #0066ff 100%)',
-          textColor: '#ffffff',
-          position: 'fixed',
-        }));
-      }
-    }
-  }
+  // Preset functions removed - no longer used in the application
 
   // Helper for displaying field labels
   shouldShowLabel(field: FieldConfig | any): boolean {

@@ -5,7 +5,7 @@
   [isMobileView]="isMobileView"
   (editSection)="handleSectionEdit('about')"
 >
-  <section id="about" class="about-section">
+  <section id="about" class="about-section" [ngStyle]="getSectionStyles()">
     <div class="section-container">
       <!-- Section Header -->
       <div class="section-header">

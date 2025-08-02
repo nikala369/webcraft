@@ -2,214 +2,463 @@
 
 ## Overview
 
-This document describes the data flow patterns used throughout the Webcraft application, with special focus on the component customization system and recent fixes.
+This document describes the data flow patterns used throughout the Webcraft application, with special focus on the component customization system and **recent critical architectural patterns**.
 
-## Menu Data Persistence - Critical Fix Applied
+## **🚨 CRITICAL ARCHITECTURAL PATTERNS (RECENTLY DISCOVERED)**
 
-### Issue Resolution Summary
+### **1. Angular Change Detection with OnPush Strategy**
 
-**Problem**: Menu data was saving correctly as arrays but displaying as defaults during template editing.
+**Problem**: Components using `ChangeDetectionStrategy.OnPush` don't detect changes inside function calls, even if the function's computed values changed.
 
-**Root Cause**: `ImageService.cleanMalformedObjectIds()` was converting arrays to objects using the spread operator `{ ...data }`, which transforms arrays into objects with numeric keys.
+**Symptoms**:
 
-**Solution**: Enhanced the `cleanMalformedObjectIds()` method to properly handle arrays:
+- Data updates in console but UI doesn't reflect changes
+- Computed styles work initially but break after save/reload
+- Functions return correct values but templates don't re-render
+
+**Solution Pattern**: Convert getter functions to computed signals
 
 ```typescript
-// BEFORE (problematic):
-const cleaned = { ...data }; // This converts arrays to objects!
+// ❌ PROBLEMATIC: Function approach with OnPush
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class StructureHeaderComponent {
+  @Input() customizations: any = {};
 
-// AFTER (fixed):
-if (Array.isArray(data)) {
-  return data.map((item) => this.cleanMalformedObjectIds(item));
+  getHeaderStyles(): any {
+    return {
+      backgroundColor: this.customizations?.backgroundColor || '#default'
+    };
+  }
 }
-const cleaned = { ...data }; // Only for actual objects
+
+// ❌ Template doesn't update after customizations change
+<div [ngStyle]="getHeaderStyles()"></div>
 ```
 
-### Data Flow Architecture
+```typescript
+// ✅ CORRECT: Computed signal approach
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class StructureHeaderComponent implements OnChanges {
+  @Input() customizations: any = {};
 
-#### 1. Template Saving Process
+  // Make input reactive via signal
+  private customizationsSignal = signal<any>({});
+
+  // Convert function to computed signal
+  headerStyles = computed(() => {
+    const customizations = this.customizationsSignal();
+    return {
+      backgroundColor: customizations?.backgroundColor || '#default'
+    };
+  });
+
+  constructor(private cdr: ChangeDetectorRef) {
+    // Force change detection when computed values change
+    effect(() => {
+      this.headerStyles(); // Subscribe to changes
+      this.cdr.markForCheck(); // Force detection
+    });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['customizations']) {
+      this.customizationsSignal.set(changes['customizations'].currentValue || {});
+    }
+  }
+}
+
+// ✅ Template updates reactively
+<div [ngStyle]="headerStyles()"></div>
+```
+
+### **2. Reactive Image Loading Pattern**
+
+**Problem**: Images show default placeholder initially, then correct image after scroll/interaction.
+
+**Root Cause**: Component image URL computation not reactive to ImageService cache updates.
+
+**Solution Pattern**: Make image URLs reactive to service updates
+
+```typescript
+// ❌ PROBLEMATIC: Non-reactive image computation
+export class StructureHeaderComponent {
+  getImageUrl(imageValue: any): string {
+    return this.imageService.getImageUrl(imageValue, 'logo');
+  }
+}
+
+// ❌ Template shows stale image URLs
+<img [src]="getImageUrl(logoUrl)" alt="Logo">
+```
+
+```typescript
+// ✅ CORRECT: Reactive image computation
+export class StructureHeaderComponent {
+  private customizationsSignal = signal<any>({});
+
+  logoUrl = computed(() => {
+    const customizations = this.customizationsSignal();
+    const logoValue = customizations?.logoUrl;
+
+    if (!logoValue) {
+      return this.imageService.getAppropriateImagePlaceholder('logo');
+    }
+
+    // Subscribe to image service updates for reactivity
+    this.imageService.getImageUpdateSignal()();
+
+    return this.imageService.getImageUrl(logoValue, 'logo');
+  });
+}
+
+// ✅ Template updates when images load
+<app-reactive-image [src]="logoUrl()" [imageType]="'logo'" alt="Logo">
+</app-reactive-image>
+```
+
+### **3. Loading State Management Pattern**
+
+**Problem**: Button states show incorrectly after save operations due to loading overlay animation timing.
+
+**Root Cause**: UI conditions depend on loading flags that remain `true` during fade animations.
+
+**Solution Pattern**: Immediate state clearing independent of animations
+
+```typescript
+// ❌ PROBLEMATIC: Animation-dependent state management
+saveAllChanges(): void {
+  this.userTemplateService.updateTemplate(data).subscribe({
+    next: () => {
+      this.hideLoading(); // Sets fadeOut class, keeps showLoadingOverlay=true
+      // Button condition `hasStarted() && !showLoadingOverlay()` fails here!
+    }
+  });
+}
+
+// ❌ Buttons show wrong state during animation
+<button *ngIf="hasStartedBuilding() && !showLoadingOverlay()">
+  Continue Editing  <!-- This disappears during fadeOut! -->
+</button>
+```
+
+```typescript
+// ✅ CORRECT: Immediate state clearing
+saveAllChanges(): void {
+  this.userTemplateService.updateTemplate(data).subscribe({
+    next: () => {
+      this.confirmationService.showConfirmation('Changes saved!', 'success', 3000);
+
+      // CRITICAL: Immediately clear loading overlay
+      this.showLoadingOverlay.set(false);
+      this.loadingOverlayClass.set('');
+
+      // Handle other UI transitions separately with delay
+      setTimeout(() => {
+        if (this.viewManagementService.isFullscreen()) {
+          this.toggleFullscreen();
+        }
+      }, 100);
+    },
+    error: () => {
+      // CRITICAL: Also clear on error
+      this.showLoadingOverlay.set(false);
+      this.loadingOverlayClass.set('');
+    }
+  });
+}
+
+// ✅ Buttons show correct state immediately
+<button *ngIf="hasStartedBuilding() && !showLoadingOverlay()">
+  Continue Editing  <!-- Always shows correctly -->
+</button>
+```
+
+## **📊 DATA FLOW ARCHITECTURE**
+
+### **Core Data Movement Pattern**
 
 ```
-User Edit → PreviewComponent.saveAllChanges() → UserTemplateService.updateUserTemplate() → Backend API
+1. Route Parameters → TemplateInitializationService
+2. Initial Data → PreviewComponent.applyInitialData()
+3. Data Cleaning → ImageService.cleanMalformedObjectIds()
+4. Signal Updates → Component Computed Properties
+5. Template Rendering → Reactive UI Updates
+6. User Edits → ComponentCustomizer
+7. Data Updates → PreviewComponent.handleComponentUpdate()
+8. State Persistence → UserTemplateService.updateTemplate()
 ```
 
-**Data Structure**: Menu categories saved as array format:
+### **Critical Data Processing Points**
 
-```json
-{
-  "pages": {
-    "home": {
-      "menu": {
-        "categories": [
-          { "id": "cat1", "name": "Starters", "items": [...] },
-          { "id": "cat2", "name": "Main Courses", "items": [...] }
-        ]
-      }
+#### **1. Data Initialization (PreviewComponent)**
+
+```typescript
+private applyInitialData(initialData: InitialTemplateData): void {
+  // CRITICAL: Clean malformed data before applying
+  let cleanedCustomizations = initialData.customizations;
+  if (cleanedCustomizations) {
+    cleanedCustomizations = this.imageService.cleanMalformedObjectIds(cleanedCustomizations);
+  }
+
+  // Apply to signals for reactivity
+  this.customizations.set(cleanedCustomizations);
+  this.businessType.set(initialData.businessType);
+  this.currentPlan.set(initialData.plan);
+}
+```
+
+#### **2. Component Data Flow (Structure Components)**
+
+```typescript
+export class StructureHeaderComponent implements OnInit, OnChanges {
+  @Input() customizations: any = {};
+
+  // Convert input to reactive signal
+  private customizationsSignal = signal<any>({});
+
+  // Reactive computed properties
+  headerStyles = computed(() => {
+    const customizations = this.customizationsSignal();
+    return {
+      backgroundColor: customizations?.backgroundColor || this.getDefaultColor(),
+      textColor: customizations?.textColor || this.getDefaultTextColor(),
+    };
+  });
+
+  logoUrl = computed(() => {
+    const customizations = this.customizationsSignal();
+    const logoValue = customizations?.logoUrl;
+
+    if (!logoValue) {
+      return this.imageService.getAppropriateImagePlaceholder("logo");
+    }
+
+    // Subscribe to service updates for reactivity
+    this.imageService.getImageUpdateSignal()();
+    return this.imageService.getImageUrl(logoValue, "logo");
+  });
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes["customizations"]) {
+      this.customizationsSignal.set(changes["customizations"].currentValue || {});
     }
   }
 }
 ```
 
-#### 2. Template Loading Process
-
-```
-URL → TemplateInitializationService → JSON.parse() → ImageService.cleanMalformedObjectIds() → MenuSectionComponent
-```
-
-**Critical Enhancement**: `ImageService.cleanMalformedObjectIds()` now preserves array structure:
-
-- Arrays remain as arrays
-- Objects remain as objects
-- Nested structures are recursively processed correctly
-
-#### 3. Menu Section Rendering
-
-```
-MenuSectionComponent.menuCategories (computed signal) → Template rendering
-```
-
-**Architecture Fix**: Converted from method to computed signal to eliminate race conditions:
+#### **3. Data Persistence Flow**
 
 ```typescript
-// BEFORE (race condition prone):
-getMenuCategories(): MenuCategory[] { ... }
+// User Edit → ComponentCustomizer → PreviewComponent
+handleComponentUpdate(update: any): void {
+  this.customizations.update((current) => {
+    if (!current) return current;
+    const updated = structuredClone(current);
 
-// AFTER (race condition safe):
-menuCategories = computed(() => {
-  const data = this.data();
-  if (data?.categories && Array.isArray(data.categories) && data.categories.length > 0) {
-    return data.categories;
-  }
-  return this.defaultMenuCategories;
-});
-```
+    // Apply updates based on component path/key
+    if (selected.path) {
+      // Handle nested updates (e.g., pages.home.about)
+      const pathParts = selected.path.split('.');
+      let target: any = updated;
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const part = pathParts[i];
+        if (!target[part]) target[part] = {};
+        target = target[part];
+      }
+      const lastPart = pathParts[pathParts.length - 1];
+      target[lastPart] = { ...target[lastPart], ...update };
+    } else {
+      // Handle direct updates (e.g., header, footer)
+      updated[selected.key] = { ...updated[selected.key], ...update };
+    }
 
-## Component Customization Flow
+    return updated;
+  });
+}
 
-### 1. Data Initialization
+// Save → Backend
+saveAllChanges(): void {
+  const customizations = this.customizations();
+  const templateId = this.currentUserTemplateId();
 
-```
-PreviewComponent.applyInitialData() → ImageService.cleanMalformedObjectIds() → Component Signals
-```
+  this.userTemplateService
+    .updateUserTemplate(templateId, templateName, structuredClone(customizations))
+    .subscribe({
+      next: () => {
+        // CRITICAL: Immediate state clearing
+        this.showLoadingOverlay.set(false);
+        this.loadingOverlayClass.set('');
 
-### 2. Component Updates
-
-```
-ComponentCustomizerComponent → PreviewComponent.handleComponentUpdate() → Component Signals
-```
-
-### 3. Data Persistence
-
-```
-PreviewComponent.saveAllChanges() → UserTemplateService → Backend API
-```
-
-## Signal-Based Architecture
-
-### MenuSectionComponent Enhancement
-
-- **Before**: Method-based `getMenuCategories()` with race conditions
-- **After**: Computed signal `menuCategories` with reactive updates
-- **Benefit**: Eliminates race conditions and ensures rendering only occurs after data stabilization
-
-### Best Practices Applied
-
-1. **Computed Signals**: For derived data that depends on reactive inputs
-2. **Array Preservation**: Maintain data structure integrity during processing
-3. **Race Condition Prevention**: Use computed signals instead of methods for template binding
-4. **Data Validation**: Proper type checking and fallback mechanisms
-
-## Footer Logo Enhancements
-
-### Size Constraints Implementation
-
-```scss
-.footer-logo {
-  max-height: 40px; // Base constraint
-  max-width: 100%;
-  min-height: 20px; // Prevent too small logos
-  object-fit: contain; // Maintain aspect ratio
-  object-position: center; // Center within container
-  overflow: hidden; // Prevent overflow
+        this.confirmationService.showConfirmation('Changes saved!', 'success', 3000);
+      }
+    });
 }
 ```
 
-### Plan-Specific Overrides
+## **🔧 COMPONENT SELECTION & PATH MANAGEMENT**
 
-- **Standard Plan**: max-height: 55px, max-width: 180px
-- **Premium Plan**: max-height: 70px, max-width: 250px
-- **Mobile**: Responsive scaling with maintained constraints
+### **Path-Based vs Direct Component Updates**
 
-## Code Quality Improvements
+```typescript
+// In StandardStructureComponent
+handleComponentSelection(componentKey: string): void {
+  // CRITICAL: Distinguish between top-level and nested components
+  const isTopLevelComponent = ['header', 'footer', 'fontConfig'].includes(componentKey);
 
-### 1. Error Handling
+  const selectedData = {
+    key: componentKey,
+    name: componentKey.charAt(0).toUpperCase() + componentKey.slice(1),
+    // Only set path for nested components
+    ...(isTopLevelComponent ? {} : { path: componentKey })
+  };
 
-- Comprehensive fallback mechanisms
-- Proper data validation
-- Graceful degradation
+  this.componentSelected.emit(selectedData);
+}
+```
 
-### 2. Performance
+**Path Examples**:
 
-- Computed signals for reactive updates
-- Memoization where appropriate
-- Efficient data processing
+- **Top-level**: `{ key: 'header', name: 'Header' }` (no path)
+- **Nested**: `{ key: 'about', name: 'About', path: 'pages.home.about' }`
 
-### 3. Maintainability
+## **🛠️ CRITICAL SERVICE PATTERNS**
 
-- Clear separation of concerns
-- Comprehensive documentation
-- Consistent code patterns
+### **1. ImageService Data Cleaning**
 
-## Testing Considerations
+```typescript
+cleanMalformedObjectIds(data: any): any {
+  if (!data || typeof data !== 'object') return data;
 
-### Menu Data Persistence Testing
+  // CRITICAL: Handle arrays properly
+  if (Array.isArray(data)) {
+    return data.map((item) => this.cleanMalformedObjectIds(item));
+  }
 
-1. **Save Test**: Verify categories save as arrays
-2. **Load Test**: Verify categories load as arrays
-3. **Edit Test**: Verify categories display correctly during editing
-4. **Fallback Test**: Verify defaults display when no saved data
+  const cleaned = { ...data };
 
-### Footer Logo Testing
+  for (const [key, value] of Object.entries(cleaned)) {
+    if (typeof value === 'string') {
+      // CRITICAL: Exclude valid data types
+      const isColorField = key.toLowerCase().includes('color') || this.isValidColor(value);
+      const isBackgroundTypeField = key.toLowerCase().includes('type') ||
+        ['solid', 'gradient', 'none', 'sunset', 'ocean'].includes(value);
 
-1. **Size Test**: Upload large images and verify constraints
-2. **Responsive Test**: Verify scaling on mobile devices
-3. **Plan Test**: Verify different sizing for standard vs premium
+      if (!isColorField && !isBackgroundTypeField && this.looksLikeMalformedObjectId(value)) {
+        delete cleaned[key];
+      }
+    } else if (value && typeof value === 'object') {
+      cleaned[key] = this.cleanMalformedObjectIds(value);
+    }
+  }
 
-## Future Improvements
+  return cleaned;
+}
+```
 
-### 1. Type Safety
+### **2. Reactive Image URL Service**
 
-- Implement strict TypeScript interfaces
-- Add runtime type validation
-- Create data transformation utilities
+```typescript
+// In ImageService
+private imageUpdateSubject = new BehaviorSubject<number>(0);
 
-### 2. Performance Optimization
+getImageUpdateSignal(): Signal<number> {
+  return toSignal(this.imageUpdateSubject.asObservable(), { initialValue: 0 });
+}
 
-- Implement lazy loading for large datasets
-- Add caching mechanisms
-- Optimize bundle sizes
+getImageUrl(imageValue: any, imageType?: 'logo' | 'hero' | 'about' | 'general'): string {
+  if (!imageValue) {
+    return this.getAppropriateImagePlaceholder(imageType || 'general');
+  }
 
-### 3. Testing Coverage
+  // Process and cache image, then notify subscribers
+  this.processImageAndNotify(imageValue);
 
-- Unit tests for data transformations
-- Integration tests for component flows
-- E2E tests for user scenarios
+  return this.getCachedUrlOrPlaceholder(imageValue, imageType);
+}
 
-## Migration Notes
+private processImageAndNotify(imageValue: any): void {
+  // ... process image ...
+  this.imageUpdateSubject.next(Date.now()); // Notify reactive subscribers
+}
+```
 
-### For Future Developers
+## **📋 DEBUGGING CHECKLIST**
 
-1. **Array Handling**: Always use `Array.isArray()` before processing arrays
-2. **Signal Usage**: Prefer computed signals over methods for template binding
-3. **Data Validation**: Implement proper validation at data boundaries
-4. **Image Constraints**: Use consistent sizing patterns across components
+When troubleshooting component issues, check these in order:
 
-### Breaking Changes
+### **Data Flow Issues**
 
-- Menu section now uses computed signals (internal change, no API impact)
-- ImageService array handling improved (internal change, no API impact)
-- Footer logo sizing enhanced (visual improvement, no API impact)
+- [ ] Are `@Input` properties converted to signals for reactivity?
+- [ ] Are computed properties used instead of getter functions?
+- [ ] Is `ngOnChanges` properly updating internal signals?
+- [ ] Is change detection triggered with `cdr.markForCheck()` in effects?
+
+### **Image Loading Issues**
+
+- [ ] Is image URL computation reactive to `ImageService.getImageUpdateSignal()`?
+- [ ] Is correct `imageType` context passed to `getImageUrl()`?
+- [ ] Are appropriate placeholders returned for each context?
+- [ ] Is `ReactiveImageComponent` used with proper `imageType` binding?
+
+### **State Management Issues**
+
+- [ ] Are loading states cleared immediately after operations (not after animations)?
+- [ ] Are button conditions independent of animation timing?
+- [ ] Are template creation flows using proper state isolation?
+- [ ] Is error handling clearing loading states in all code paths?
+
+### **Data Persistence Issues**
+
+- [ ] Are color fields excluded from `ImageService.cleanMalformedObjectIds()`?
+- [ ] Are background type fields preserved during data processing?
+- [ ] Are arrays properly handled without conversion to objects?
+- [ ] Is component path/key distinction correct for updates?
+
+## **⚡ PERFORMANCE CONSIDERATIONS**
+
+### **Computed Signal Benefits**
+
+- **Automatic Dependency Tracking**: Only recompute when dependencies change
+- **Memoization**: Results cached until dependencies change
+- **Change Detection Optimization**: Angular tracks signal changes efficiently
+
+### **Memory Management**
+
+- **Effect Cleanup**: Effects automatically clean up on component destruction
+- **Image Caching**: Blob URLs properly managed and cleaned up
+- **Signal Updates**: Only emit when values actually change
+
+## **🔮 FUTURE IMPROVEMENTS**
+
+### **Enhanced Type Safety**
+
+```typescript
+// Future: Branded types for better type safety
+type ObjectId = string & { __brand: "ObjectId" };
+type ComponentPath = string & { __brand: "ComponentPath" };
+
+interface ComponentSelection {
+  key: string;
+  name: string;
+  path?: ComponentPath;
+}
+```
+
+### **Advanced Caching**
+
+```typescript
+// Future: Intelligent caching with invalidation
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  dependencies: string[];
+}
+```
 
 ---
 
-This documentation should be updated whenever significant data flow changes are made to the application.
+This documentation should be referenced whenever implementing new components or debugging existing ones. The patterns documented here are battle-tested and resolve the most common architectural issues in the Webcraft application.

@@ -173,9 +173,13 @@ export class ImageService {
    * 5. Valid objectId → Cached or trigger backend fetch
    *
    * @param imageValue - ObjectId, temp URL, legacy URL, or asset path
+   * @param imageType - Optional context hint for better placeholder selection
    * @returns Display URL (always returns a string, never null)
    */
-  getImageUrl(imageValue: any): string {
+  getImageUrl(
+    imageValue: any,
+    imageType?: 'logo' | 'hero' | 'about' | 'general'
+  ): string {
     // Handle null/undefined
     if (!imageValue) {
       return '';
@@ -204,7 +208,8 @@ export class ImageService {
           'ImageService: Invalid objectId format, using placeholder:',
           imageValue
         );
-        return '/assets/standard-hero1/background-image1.jpg';
+        // Use appropriate placeholder based on context
+        return this.getAppropriateImagePlaceholder(imageType);
       }
 
       // Check recent uploads cache first (immediate access for just uploaded images)
@@ -217,9 +222,9 @@ export class ImageService {
         return this.blobUrlCache.get(imageValue)!;
       }
 
-      // Valid objectId - return placeholder and trigger async fetch
+      // Valid objectId - return appropriate placeholder and trigger async fetch
       this.fetchAndCacheImageBlob(imageValue);
-      return '/assets/standard-hero1/background-image1.jpg'; // Return placeholder while loading
+      return this.getAppropriateImagePlaceholder(imageType); // Use appropriate placeholder while loading
     }
 
     // Handle ImageData objects (legacy compatibility)
@@ -272,7 +277,7 @@ export class ImageService {
     // Set a placeholder to prevent multiple fetches
     this.blobUrlCache.set(
       objectId,
-      '/assets/standard-hero1/background-image1.jpg'
+      this.getAppropriateImagePlaceholder('general') // Use generic placeholder for background fetching
     );
 
     this.userTemplateService.getImageBlob(objectId).subscribe({
@@ -335,6 +340,17 @@ export class ImageService {
   }
 
   /**
+   * Validate color hex code (e.g., #ff0000, #00ff00, #0000ff)
+   */
+  private isValidColor(value: string): boolean {
+    if (!value || typeof value !== 'string') {
+      return false;
+    }
+    const colorRegex = /^#([A-Fa-f0-9]{3}){1,2}$/;
+    return colorRegex.test(value);
+  }
+
+  /**
    * Clean malformed objectIds from customizations data
    * This removes malformed JSON responses stored as objectIds in legacy data
    */
@@ -363,8 +379,33 @@ export class ImageService {
           key.toLowerCase().includes('transition') ||
           key.toLowerCase().includes('effect');
 
+        // CRITICAL FIX: Exclude color fields from ObjectId cleaning
+        const isColorField =
+          key.toLowerCase().includes('color') ||
+          key.toLowerCase().includes('colour') ||
+          this.isValidColor(value);
+
+        // CRITICAL FIX: Exclude background type fields (like 'solid', 'gradient', etc.)
+        const isBackgroundTypeField =
+          key.toLowerCase().includes('type') ||
+          key.toLowerCase().includes('style') ||
+          [
+            'solid',
+            'gradient',
+            'none',
+            'sunset',
+            'ocean',
+            'forest',
+            'royal',
+            'fire',
+            'midnight',
+            'custom',
+          ].includes(value);
+
         if (
           !isAnimationField &&
+          !isColorField &&
+          !isBackgroundTypeField &&
           (key.toLowerCase().includes('image') ||
             key.toLowerCase().includes('background') ||
             key.toLowerCase().includes('photo')) &&
@@ -488,5 +529,25 @@ export class ImageService {
    */
   getCurrentProgress(): ImageUploadProgress | null {
     return this.uploadProgressSubject.value;
+  }
+
+  /**
+   * Get an appropriate image placeholder based on context
+   */
+  private getAppropriateImagePlaceholder(
+    imageType?: 'logo' | 'hero' | 'about' | 'general'
+  ): string {
+    // Return appropriate placeholders based on context
+    if (imageType === 'logo') {
+      return '/assets/standard-header/default-logo-white.svg'; // Use existing logo placeholder
+    }
+    if (imageType === 'hero') {
+      return '/assets/standard-hero1/background-image1.jpg'; // Hero background placeholder
+    }
+    if (imageType === 'about') {
+      return '/assets/standard-hero1/background-image2.jpg'; // Use alternative hero image for about
+    }
+    // General/fallback - use hero background as default
+    return '/assets/standard-hero1/background-image1.jpg';
   }
 }

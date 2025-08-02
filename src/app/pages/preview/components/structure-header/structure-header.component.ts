@@ -1,16 +1,19 @@
 import {
   Component,
-  Input,
   OnInit,
   OnChanges,
-  signal,
+  OnDestroy,
+  Input,
   Output,
   EventEmitter,
-  OnDestroy,
-  HostBinding,
   ElementRef,
   NgZone,
   ChangeDetectorRef,
+  ChangeDetectionStrategy,
+  SimpleChanges,
+  computed,
+  signal,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -24,6 +27,7 @@ import { ImageService } from '../../../../core/services/shared/image/image.servi
   imports: [CommonModule, ReactiveImageComponent],
   templateUrl: './structure-header.component.html',
   styleUrls: ['./structure-header.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StructureHeaderComponent implements OnInit, OnChanges, OnDestroy {
   /**
@@ -32,32 +36,129 @@ export class StructureHeaderComponent implements OnInit, OnChanges, OnDestroy {
    */
   @Input() customizations: any = {};
 
-  // Force change detection when customizations change
-  ngOnChanges(changes: any): void {
-    if (changes.customizations) {
-      console.log('Header customizations changed:', this.customizations);
+  // Convert input to signal for reactivity
+  private customizationsSignal = signal<any>({});
 
-      // Re-initialize header data when customizations change
-      this.initializeHeaderData();
+  // CRITICAL FIX: Convert to computed signal that tracks the signal version
+  headerStyles = computed(() => {
+    const customizations = this.customizationsSignal();
+    const styles: any = {};
 
-      // Force change detection to update template
-      this.cdr.detectChanges();
+    // Get the colors to use
+    const backgroundColor = customizations?.backgroundColor || '#2876FF';
+    const textColor = customizations?.textColor || '#ffffff';
 
-      // CRITICAL FIX: Force re-evaluation of header styles
-      setTimeout(() => {
-        this.cdr.detectChanges();
-      }, 0);
+    // Apply header customizations
+    // Set CSS variables for mobile menu inheritance
+    styles['--header-bg-color'] = backgroundColor;
+    styles['--header-text-color'] = textColor;
+
+    // Handle background styling - SIMPLIFIED AND ROBUST
+    const backgroundType = customizations?.headerBackgroundType;
+
+    // SIMPLIFIED LOGIC: Default to solid color unless explicitly using gradient
+    if (
+      backgroundType &&
+      backgroundType !== 'solid' &&
+      backgroundType !== 'none' &&
+      backgroundColor
+    ) {
+      // Only use gradient if we have a valid gradient type and a backgroundColor fallback
+      const gradientValue = this.getGradientValue(backgroundType);
+      if (gradientValue) {
+        styles.background = gradientValue;
+      } else {
+        console.warn(
+          `Unknown gradient type: ${backgroundType}, falling back to solid color`
+        );
+        styles.background = backgroundColor;
+      }
+    } else {
+      // Default: solid background color
+      styles.background = backgroundColor;
     }
 
-    // Handle other input changes
-    if (changes.businessType || changes.plan || changes.activeSection) {
+    // Always apply text color
+    styles.color = textColor;
+
+    return styles;
+  });
+
+  // CRITICAL FIX: Convert mobile menu styles to computed signal too
+  mobileMenuStyles = computed(() => {
+    const customizations = this.customizationsSignal();
+    const styles: any = {};
+
+    // Get the exact same values as desktop header
+    const backgroundColor = customizations?.backgroundColor || '#2876FF';
+    const textColor = customizations?.textColor || '#ffffff';
+    const backgroundType = customizations?.headerBackgroundType;
+
+    // Handle background styling exactly like desktop
+    if (
+      backgroundType &&
+      backgroundType !== 'solid' &&
+      backgroundType !== 'none'
+    ) {
+      // Use gradient - same as desktop
+      const gradientValue = this.getGradientValue(backgroundType);
+      if (gradientValue) {
+        styles.background = gradientValue;
+      } else {
+        styles.backgroundColor = backgroundColor;
+      }
+    } else {
+      // Use solid background color - exact same as desktop
+      styles.backgroundColor = backgroundColor;
+    }
+
+    // Use exact same text color as desktop
+    styles.color = textColor;
+    styles.fontFamily = this.fontFamily;
+
+    // Ensure visibility
+    styles.display = 'block';
+
+    return styles;
+  });
+
+  // CRITICAL FIX: Add reactive logo URL like hero1 section
+  logoUrl = computed(() => {
+    const logoValue = this.customizationsSignal()?.logoUrl;
+    if (!logoValue) {
+      return '';
+    }
+
+    // Handle temporary blob URLs (during editing)
+    if (logoValue.startsWith('temp:')) {
+      return logoValue.substring(5); // Remove 'temp:' prefix
+    }
+
+    // CRITICAL: Subscribe to ImageService cache updates like hero1 section
+    const imageUpdate = this.imageService.getImageUpdateSignal()();
+
+    // If there's an update for our current logo, use the cached URL
+    if (imageUpdate && imageUpdate.objectId === logoValue) {
       console.log(
-        'Header business type, plan, or active section changed:',
-        this.businessType,
-        this.plan,
-        this.activeSection
+        '[HeaderSection] Using cached logo URL:',
+        imageUpdate.blobUrl
       );
-      this.cdr.detectChanges();
+      return imageUpdate.blobUrl;
+    }
+
+    // Use ImageService with logo context
+    return this.imageService.getImageUrl(logoValue, 'logo');
+  });
+
+  // Force change detection when customizations change
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['customizations']) {
+      // CRITICAL: Update the signal with the new input value
+      this.customizationsSignal.set(
+        changes['customizations'].currentValue || {}
+      );
+      this.initializeHeaderData();
+      // OnPush + effect() will handle change detection
     }
   }
 
@@ -95,6 +196,7 @@ export class StructureHeaderComponent implements OnInit, OnChanges, OnDestroy {
 
   /**
    * Get image URL using ImageService to handle object IDs and regular URLs
+   * DEPRECATED: Use logoUrl computed signal instead for reactive updates
    */
   getImageUrl(imageValue: string | undefined): string {
     if (!imageValue) {
@@ -106,8 +208,8 @@ export class StructureHeaderComponent implements OnInit, OnChanges, OnDestroy {
       return imageValue.substring(5); // Remove 'temp:' prefix
     }
 
-    // Use ImageService to process object IDs and regular URLs
-    return this.imageService.getImageUrl(imageValue);
+    // Use ImageService to process object IDs and regular URLs with logo context
+    return this.imageService.getImageUrl(imageValue, 'logo');
   }
 
   /**
@@ -171,14 +273,18 @@ export class StructureHeaderComponent implements OnInit, OnChanges, OnDestroy {
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef,
     private imageService: ImageService
-  ) {}
+  ) {
+    // CRITICAL FIX: Force change detection when computed signals update
+    effect(() => {
+      const styles = this.headerStyles();
+      // Force change detection
+      this.cdr.markForCheck();
+    });
+  }
 
   ngOnInit() {
-    console.log('Header customizations:', this.customizations);
-    console.log('Current page:', this.currentPage);
-    console.log('Current plan:', this.plan);
-    console.log('Business type:', this.businessType);
-    console.log('Active section:', this.activeSection);
+    // Initialize the signal with current customizations value
+    this.customizationsSignal.set(this.customizations || {});
 
     // Initialize header data
     this.initializeHeaderData();
@@ -339,44 +445,6 @@ export class StructureHeaderComponent implements OnInit, OnChanges, OnDestroy {
     // Ensure visibility
     styles.minHeight = '200px';
     styles.display = 'block';
-
-    return styles;
-  }
-
-  /**
-   * Get header styles including background colors and gradients
-   * Also sets CSS variables for mobile menu inheritance
-   */
-  getHeaderStyles(): any {
-    const styles: any = {};
-
-    // Get the colors to use
-    const backgroundColor = this.customizations?.backgroundColor || '#2876FF';
-    const textColor = this.customizations?.textColor || '#ffffff';
-
-    // Set CSS variables for mobile menu inheritance
-    styles['--header-bg-color'] = backgroundColor;
-    styles['--header-text-color'] = textColor;
-
-    // Handle background styling
-    const backgroundType = this.customizations?.headerBackgroundType;
-
-    if (
-      backgroundType &&
-      backgroundType !== 'solid' &&
-      backgroundType !== 'none'
-    ) {
-      // Use gradient
-      const gradientValue = this.getGradientValue(backgroundType);
-      if (gradientValue) {
-        styles.background = gradientValue;
-        // Also set the gradient as the CSS variable for mobile menu
-        styles['--header-bg-color'] = gradientValue;
-      }
-    } else {
-      // Use solid background color
-      styles.backgroundColor = backgroundColor;
-    }
 
     return styles;
   }

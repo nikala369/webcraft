@@ -252,11 +252,17 @@ export class StandardStructureComponent
 
     console.log('handleComponentSelection called with:', componentKey);
 
-    // Create a simple object with a key, name, and path.
+    // CRITICAL FIX: Top-level components (header, footer) should NOT have a path
+    // Only nested components under pages.home should have paths
+    const isTopLevelComponent = ['header', 'footer', 'fontConfig'].includes(
+      componentKey
+    );
+
     const selectedData = {
       key: componentKey,
       name: componentKey.charAt(0).toUpperCase() + componentKey.slice(1),
-      path: componentKey, // Add path property for consistency
+      // Only set path for non-top-level components
+      ...(isTopLevelComponent ? {} : { path: componentKey }),
     };
 
     console.log('Emitting componentSelected:', selectedData);

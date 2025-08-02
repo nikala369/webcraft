@@ -79,6 +79,7 @@ export class ReactiveImageComponent implements OnInit, OnChanges, OnDestroy {
   @Input() alt = '';
   @Input() class = '';
   @Input() style = '';
+  @Input() imageType?: 'logo' | 'hero' | 'about' | 'general'; // Added context support
 
   @Output() imageLoad = new EventEmitter<Event>();
   @Output() imageError = new EventEmitter<Event>();
@@ -116,9 +117,11 @@ export class ReactiveImageComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    // Use the ImageService to get the correct URL
-    // This handles temp:, blob:, assets, and objectId cases
-    this.displayUrl.set(this.imageService.getImageUrl(this.src));
+    // Use the ImageService to get the correct URL with context support
+    // This handles temp:, blob:, assets, and objectId cases with proper placeholders
+    this.displayUrl.set(
+      this.imageService.getImageUrl(this.src, this.imageType)
+    );
   }
 
   onImageLoad(event: Event): void {

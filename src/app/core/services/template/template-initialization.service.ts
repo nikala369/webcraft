@@ -60,14 +60,6 @@ export class TemplateInitializationService {
         const urlMode = params['mode'] || 'edit';
         const urlStep = params['step'] ? parseInt(params['step'], 10) : null;
 
-        console.log(
-          `[TemplateInitializationService] Determined: ` +
-            `templateId=${templateId}, ` +
-            `newTemplate=${isCreatingNew}, ` +
-            `businessType=${urlBusinessType}, ` +
-            `plan=${urlPlan}`
-        );
-
         return {
           templateId,
           isCreatingNew,
@@ -120,10 +112,6 @@ export class TemplateInitializationService {
         else if (urlBusinessType) {
           // For unauthenticated preview with businessType
           if (!this.authService.isAuthenticated()) {
-            console.log(
-              `[TemplateInitializationService] Unauthenticated preview for businessType=${urlBusinessType}`
-            );
-
             return of(
               this.createUnauthenticatedPreview(
                 urlBusinessType,
@@ -158,10 +146,6 @@ export class TemplateInitializationService {
     templateId: string,
     mode: string
   ): Observable<InitialTemplateData> {
-    console.log(
-      `[TemplateInitializationService] Loading template with ID ${templateId} in ${mode} mode`
-    );
-
     return this.userTemplateService.getUserTemplateById(templateId).pipe(
       switchMap((template) => {
         if (!template) {
@@ -224,24 +208,8 @@ export class TemplateInitializationService {
         if (template.config) {
           try {
             const configStr = template.config.trim();
-            console.log(
-              '[TemplateInit] Raw config string length:',
-              configStr.length
-            );
 
             const customizationsData = JSON.parse(configStr);
-            console.log('[TemplateInit] Parsed customizations:', {
-              hasPages: !!customizationsData.pages,
-              hasHome: !!customizationsData.pages?.home,
-              hasMenu: !!customizationsData.pages?.home?.menu,
-              menuData: customizationsData.pages?.home?.menu,
-              menuHasCategories:
-                !!customizationsData.pages?.home?.menu?.categories,
-              menuCategoriesCount:
-                customizationsData.pages?.home?.menu?.categories?.length || 0,
-              menuFirstCategory:
-                customizationsData.pages?.home?.menu?.categories?.[0],
-            });
 
             // Validate and fix menu data if needed
             if (
@@ -250,21 +218,8 @@ export class TemplateInitializationService {
             ) {
               const menuData = customizationsData.pages.home.menu;
 
-              console.log('[TemplateInit] Processing menu data:', {
-                menuData,
-                menuDataKeys: Object.keys(menuData),
-                hasCategories: !!menuData.categories,
-                categoriesType: typeof menuData.categories,
-                isArray: Array.isArray(menuData.categories),
-                categoriesCount: menuData.categories?.length || 0,
-                firstCategory: menuData.categories?.[0],
-                menuDataStructure: JSON.stringify(menuData, null, 2),
-              });
-
               // ARCHITECTURE FIX: Simplified validation logic
               // If categories is not a valid array, reset it.
-              // This correctly handles cases where it's missing, null, or not an array,
-              // while correctly preserving a valid, intentionally empty array [].
               if (!Array.isArray(menuData.categories)) {
                 console.warn(
                   '[TemplateInit] Invalid or missing `categories` array in loaded menu data. Applying defaults.'
@@ -273,24 +228,6 @@ export class TemplateInitializationService {
                   this.businessConfigService.getDefaultMenuData();
                 customizationsData.pages.home.menu.categories =
                   defaultMenuData.categories;
-
-                console.log('[TemplateInit] Fixed menu data:', {
-                  fixedMenuData: customizationsData.pages.home.menu,
-                  categoriesCount:
-                    customizationsData.pages.home.menu.categories.length,
-                  fixedCategories:
-                    customizationsData.pages.home.menu.categories,
-                });
-              } else {
-                console.log(
-                  '[TemplateInit] Menu categories array is valid, keeping existing data:',
-                  {
-                    categoriesCount: menuData.categories?.length || 0,
-                    isEmptyArray:
-                      Array.isArray(menuData.categories) &&
-                      menuData.categories.length === 0,
-                  }
-                );
               }
             }
 
@@ -300,6 +237,9 @@ export class TemplateInitializationService {
             if (customizationsData.fontConfig) {
               result.selectedFont = customizationsData.fontConfig;
             }
+
+            // Return the complete result object
+            return result;
           } catch (error) {
             console.error('Error parsing template customizations:', error);
             this.confirmationService.showConfirmation(
@@ -384,8 +324,11 @@ export class TemplateInitializationService {
         };
 
         return result;
+      }),
+      catchError((error) => {
+        console.error(`Error in initializeNewTemplate:`, error);
+        return throwError(() => error);
       })
-      // No catchError here - let errors from getThemesForTypeAndPlan propagate up
     );
   }
 

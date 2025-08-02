@@ -368,14 +368,6 @@ export class MenuSectionComponent implements OnChanges, OnInit {
     // If we have any menu-related properties, consider it loaded
     const hasMenuProperties = Object.keys(data).length > 0;
 
-    console.log('[MenuSection] Data loaded check:', {
-      hasData,
-      hasMenuProperties,
-      dataKeys: Object.keys(data),
-      hasCategories: !!data.categories,
-      categoriesCount: data.categories?.length || 0,
-    });
-
     return hasMenuProperties;
   }
 

@@ -6,7 +6,6 @@ import {
   inject,
   OnInit,
   OnChanges,
-  HostBinding,
   Signal,
   ChangeDetectorRef,
   SimpleChanges,
@@ -49,47 +48,48 @@ export class AboutSectionComponent implements OnInit, OnChanges {
     return this.getBusinessTypeImage();
   }
 
-  // Use HostBinding to apply custom styles directly to the host element
-  @HostBinding('style.--section-bg-color') get sectionBgColor() {
+  /**
+   * Get section styles (similar to header approach)
+   * This directly applies styles instead of relying on CSS variables
+   */
+  getSectionStyles(): any {
     const content = this.getAboutContent();
-    console.log('About section background color:', content.backgroundColor);
-    return content.backgroundColor || '#ffffff';
-  }
+    const styles: any = {};
 
-  @HostBinding('style.--text-color') get textColor() {
-    const content = this.getAboutContent();
-    console.log('About section text color:', content.textColor);
-    return content.textColor || '#333333';
-  }
+    // Apply background color directly
+    const backgroundColor = content.backgroundColor || '#ffffff';
+    // Use 'background' instead of 'backgroundColor' to ensure it overrides any CSS
+    styles.background = backgroundColor;
 
-  @HostBinding('style.--heading-color') get headingColor() {
-    return this.getAboutContent().textColor || '#333333';
-  }
+    // Apply text color directly
+    const textColor = content.textColor || '#333333';
+    styles.color = textColor;
 
-  @HostBinding('style.--text-color-rgb') get textColorRgb() {
-    return this.hexToRgb(this.getAboutContent().textColor || '#333333');
-  }
+    // Applying about section customizations
 
-  @HostBinding('style.--theme-primary-color') get themePrimaryColor() {
-    return this.themeColorsService.getPrimaryColor(this.planType);
-  }
-
-  @HostBinding('style.--theme-primary-color-rgb') get themePrimaryColorRgb() {
-    return this.hexToRgb(
+    // Set CSS variables for child elements
+    styles['--section-bg-color'] = backgroundColor;
+    styles['--text-color'] = textColor;
+    styles['--heading-color'] = textColor;
+    styles['--text-color-rgb'] = this.hexToRgb(textColor);
+    styles['--theme-primary-color'] = this.themeColorsService.getPrimaryColor(
+      this.planType
+    );
+    styles['--theme-primary-color-rgb'] = this.hexToRgb(
       this.themeColorsService.getPrimaryColor(this.planType)
     );
+
+    // Applying about section customizations
+
+    return styles;
   }
 
   ngOnInit() {
-    console.log('About section data:', this.data());
+    // Component initialization
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['data']) {
-      console.log('About section data changed:', this.data());
-      // Force change detection to update @HostBinding styles
-      this.cdr.detectChanges();
-    }
+  ngOnChanges(changes: SimpleChanges): void {
+    // Handle data changes if needed
   }
 
   /**

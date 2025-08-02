@@ -339,10 +339,18 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
     this.currentPage.set('home');
     this.currentStep.set(initialData.currentStep);
     this.customizations.set(cleanedCustomizations); // Use cleaned customizations
-    this.selectedFont.set(initialData.selectedFont as FontOption);
+
+    // Set theme-related data
+    this.availableThemes.set(initialData.availableThemes || []);
     this.selectedBaseTemplateId.set(initialData.selectedBaseTemplateId);
-    this.availableThemes.set(initialData.availableThemes);
-    this.hasStartedBuilding.set(initialData.hasStartedBuilding);
+    if (initialData.selectedFont) {
+      // Ensure fallback is always a string
+      const font = {
+        ...initialData.selectedFont,
+        fallback: initialData.selectedFont.fallback || 'sans-serif',
+      };
+      this.selectedFont.set(font);
+    }
 
     // Update theme colors service
     this.themeColorsService.setPlan(initialData.plan);
@@ -494,8 +502,7 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
       this.hasStartedBuilding.set(true);
       this.currentStep.set(3);
 
-      // Clear any stale template ID that might be interfering
-      this.currentUserTemplateId.set(null);
+      // Clear URL params for new template creation
       this.updateUrlParams({
         templateId: null,
         mode: null,
@@ -552,7 +559,9 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
         'error',
         3000
       );
-      this.hideLoading();
+      // CRITICAL FIX: Immediately clear loading overlay on error too
+      this.showLoadingOverlay.set(false);
+      this.loadingOverlayClass.set('');
       return;
     }
 
@@ -604,7 +613,9 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
             5000
           );
           this.showTemplateNameInput.set(true);
-          this.hideLoading();
+          // CRITICAL FIX: Immediately clear loading overlay on error too
+          this.showLoadingOverlay.set(false);
+          this.loadingOverlayClass.set('');
 
           // Keep the creation flow flag so user can try again
           // this.isInTemplateCreationFlow.set(false);
@@ -781,18 +792,6 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
     const selected = this.selectedComponent();
     if (!selected) return;
 
-    // Debug logging for menu updates
-    if (selected.path === 'pages.home.menu' || selected.key === 'menu') {
-      console.log('[Preview] Menu update received:', {
-        selected,
-        update,
-        hasCategories: !!update.categories,
-        categoriesCount: update.categories?.length || 0,
-        firstCategory: update.categories?.[0],
-        updateKeys: Object.keys(update),
-      });
-    }
-
     this.customizations.update((current) => {
       if (!current) return current;
 
@@ -817,42 +816,26 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
           // Ensure the menu object structure is preserved
           const existingMenu = target[lastPart] || {};
           target[lastPart] = { ...existingMenu, ...update };
-
-          console.log('[Preview] Menu data after update:', {
-            path: selected.path,
-            menuData: target[lastPart],
-            hasCategories: !!target[lastPart].categories,
-            categoriesCount: target[lastPart].categories?.length || 0,
-          });
         } else {
           target[lastPart] = { ...target[lastPart], ...update };
         }
       } else {
         // Handle direct key updates
         const key = selected.key;
-        if (key === 'menu') {
+        if (key === 'header') {
+          // Special handling for header updates
+          const existingHeader = (updated as any)[key] || {};
+          (updated as any)[key] = { ...existingHeader, ...update };
+        } else if (key === 'menu') {
           // Special handling for menu updates
           const existingMenu = (updated as any)[key] || {};
           (updated as any)[key] = { ...existingMenu, ...update };
         } else {
           // For other components, use the original logic
-          (updated as any)[key] = {
-            ...((updated as any)[key] || {}),
-            ...update,
-          };
+          const existingData = (updated as any)[key] || {};
+          const mergedData = { ...existingData, ...update };
+          (updated as any)[key] = mergedData;
         }
-      }
-
-      // Debug log the updated customizations for menu
-      if (selected.path === 'pages.home.menu' || selected.key === 'menu') {
-        console.log('[Preview] Updated customizations:', {
-          fullCustomizations: updated,
-          menuSection: updated.pages?.home?.menu,
-          hasMenuSection: !!updated.pages?.home?.menu,
-          menuCategories: updated.pages?.home?.menu?.categories,
-          menuCategoriesCount:
-            updated.pages?.home?.menu?.categories?.length || 0,
-        });
       }
 
       return updated;
@@ -877,39 +860,8 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Debug logging for all data, with special focus on menu data
-    console.log('[Preview] Saving template with data:', {
-      customizations,
-      menuData: customizations.pages?.home?.menu,
-      hasMenuData: !!customizations.pages?.home?.menu,
-      menuKeys: customizations.pages?.home?.menu
-        ? Object.keys(customizations.pages?.home?.menu)
-        : [],
-      hasCategories: !!customizations.pages?.home?.menu?.categories,
-      categoriesCount:
-        customizations.pages?.home?.menu?.categories?.length || 0,
-      firstCategory: customizations.pages?.home?.menu?.categories?.[0],
-      menuDataStructure: customizations.pages?.home?.menu
-        ? JSON.stringify(customizations.pages?.home?.menu, null, 2)
-        : null,
-    });
-
-    this.showLoadingOverlay.set(true);
-    this.loadingOverlayClass.set('active');
-
     // Create a deep clone for saving
     const customizationsToSave = structuredClone(customizations);
-
-    console.log('[Preview] Customizations after structuredClone:', {
-      menuData: customizationsToSave.pages?.home?.menu,
-      hasMenuData: !!customizationsToSave.pages?.home?.menu,
-      hasCategories: !!customizationsToSave.pages?.home?.menu?.categories,
-      categoriesCount:
-        customizationsToSave.pages?.home?.menu?.categories?.length || 0,
-      menuDataAfterClone: customizationsToSave.pages?.home?.menu
-        ? JSON.stringify(customizationsToSave.pages?.home?.menu, null, 2)
-        : null,
-    });
 
     this.userTemplateService
       .updateUserTemplate(templateId, templateName, customizationsToSave)
@@ -924,12 +876,20 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
             'success',
             3000
           );
-          this.hideLoading();
 
-          // Exit fullscreen after saving
-          if (this.viewManagementService.isFullscreen()) {
-            this.toggleFullscreen();
-          }
+          // CRITICAL FIX: Immediately clear loading overlay to show correct buttons
+          // The button condition is `hasStartedBuilding() && !showLoadingOverlay()`
+          // hideLoading() uses fadeOut animation, keeping showLoadingOverlay=true during fade
+          // This caused "Start Crafting" to show instead of "Continue Editing"/"View Mode"
+          this.showLoadingOverlay.set(false);
+          this.loadingOverlayClass.set('');
+
+          // Exit fullscreen after saving (with delay to ensure state is preserved)
+          setTimeout(() => {
+            if (this.viewManagementService.isFullscreen()) {
+              this.toggleFullscreen();
+            }
+          }, 100); // Small delay to ensure template state is stable
         },
         error: (error) => {
           console.error('Error saving template:', error);
@@ -938,7 +898,9 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
             'error',
             5000
           );
-          this.hideLoading();
+          // CRITICAL FIX: Immediately clear loading overlay on error too
+          this.showLoadingOverlay.set(false);
+          this.loadingOverlayClass.set('');
         },
       });
   }
