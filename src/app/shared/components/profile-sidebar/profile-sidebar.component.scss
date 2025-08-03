@@ -1,5 +1,5 @@
-@import "../../../../styles/variables";
-@import "../../../../styles/mixins";
+@use "../../../../styles/variables" as v;
+@use "../../../../styles/mixins" as m;
 
 // Overlay that covers the screen when sidebar is open
 .sidebar-overlay {
@@ -82,8 +82,8 @@
       margin-top: 0.5rem;
 
       .user-avatar {
-        width: 55px;
-        height: 50px;
+        width: 40px;
+        height: 47.5px;
         border-radius: 15% 15% 15% 15%;
         background-color: #0984e3;
         color: white;
@@ -110,6 +110,10 @@
           opacity: 0.8;
         }
       }
+    }
+
+    @include m.breakpoint(md) {
+      padding: 0.5rem 1.6rem;
     }
   }
 
@@ -171,6 +175,11 @@
         }
       }
     }
+
+    @include m.breakpoint(md) {
+      padding: 0.5rem 0.5rem;
+      flex: unset;
+    }
   }
 
   &__footer {
@@ -205,6 +214,10 @@
           color: white;
         }
       }
+    }
+
+    @include m.breakpoint(md) {
+      padding: 1rem 1.5rem;
     }
   }
 }
@@ -293,6 +306,7 @@
     list-style: none;
     padding: 0;
     margin: 0;
+    margin-left: 2.5px;
   }
 
   &__item {
@@ -367,6 +381,10 @@
     height: 1px;
     background-color: rgba(255, 255, 255, 0.08);
     margin: 1.5rem 0;
+
+    @include m.breakpoint(md) {
+      margin: 0.5rem 0;
+    }
   }
 }
 

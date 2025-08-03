@@ -37,7 +37,7 @@
     box-sizing: border-box;
 
     @include m.breakpoint(md) {
-      padding: 0 1.5rem;
+      padding: 0.75rem 1.1rem;
     }
   }
 

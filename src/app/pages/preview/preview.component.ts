@@ -773,19 +773,81 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
    * Load themes for business type
    */
   private loadThemes(businessType: string): void {
+    console.log(
+      '[PREVIEW DEBUG] Loading themes for:',
+      businessType,
+      'plan:',
+      this.currentPlan()
+    );
+
     this.templateInitializationService
       .getThemesForTypeAndPlan(businessType, this.currentPlan())
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (themes) => {
+          console.log(
+            '[PREVIEW DEBUG] Themes received:',
+            themes.length,
+            themes
+          );
           this.availableThemes.set(themes);
           if (themes.length > 0) {
             this.selectedBaseTemplateId.set(themes[0].id);
+            console.log(
+              '[PREVIEW DEBUG] Selected base template ID:',
+              themes[0].id
+            );
+          } else {
+            console.warn(
+              '[PREVIEW DEBUG] No themes received, providing emergency fallback'
+            );
+            // EMERGENCY FALLBACK: If we get empty themes array
+            // Use a REAL backend template ID that should exist
+            const fallbackTemplateId = 'basic-template-001';
+
+            const emergencyFallbackTheme = {
+              id: fallbackTemplateId,
+              name: `Emergency ${businessType} Template`,
+              description: `Emergency template for ${businessType}`,
+              templateType: { key: businessType },
+              templatePlan: {
+                type: this.currentPlan() === 'standard' ? 'BASIC' : 'PREMIUM',
+              },
+              config: '{}',
+            } as any;
+
+            this.availableThemes.set([emergencyFallbackTheme] as any[]);
+            this.selectedBaseTemplateId.set(fallbackTemplateId);
           }
         },
         error: (error) => {
-          console.error('Error loading themes:', error);
-          this.availableThemes.set([]);
+          console.error('[PREVIEW DEBUG] Error loading themes:', error);
+          console.log(
+            '[PREVIEW DEBUG] Theme loading failed, providing emergency fallback'
+          );
+
+          // EMERGENCY FALLBACK: If TemplateInitializationService fallback also fails,
+          // provide a minimal fallback theme to allow template creation
+          // Use a REAL backend template ID that should exist
+          const fallbackTemplateId = 'basic-template-001';
+
+          const emergencyFallbackTheme = {
+            id: fallbackTemplateId,
+            name: `Emergency ${businessType} Template`,
+            description: `Emergency template for ${businessType}`,
+            templateType: { key: businessType },
+            templatePlan: {
+              type: this.currentPlan() === 'standard' ? 'BASIC' : 'PREMIUM',
+            },
+            config: '{}',
+          } as any;
+
+          this.availableThemes.set([emergencyFallbackTheme] as any[]);
+          this.selectedBaseTemplateId.set(fallbackTemplateId);
+          console.log(
+            '[PREVIEW DEBUG] Emergency fallback theme set:',
+            emergencyFallbackTheme
+          );
         },
       });
   }

@@ -314,7 +314,7 @@ interface Feature {
         }
 
         .section-subtitle {
-          font-size: 1rem;
+          font-size: 1.1rem;
           margin-top: 1.25rem;
         }
 
@@ -325,7 +325,8 @@ interface Feature {
 
       @media (max-width: 480px) {
         .features-section {
-          padding: 4rem 1rem;
+          padding: 2rem 1.5rem;
+          padding-bottom: 3rem;
         }
 
         .section-header {
@@ -333,7 +334,17 @@ interface Feature {
         }
 
         h2 {
-          font-size: 1.85rem;
+          font-size: 1.6rem;
+          text-align: left;
+        }
+
+        .section-subtitle {
+          text-align: right;
+          font-size: 1.05rem;
+        }
+
+        .underline {
+          margin: 0.75rem auto 2.1rem;
         }
       }
     `,

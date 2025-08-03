@@ -154,13 +154,13 @@ $z-layers: (
     width: 50%; // Fix main content to 50% width
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    padding: 0 2rem;
+    gap: 0.5rem;
+    padding: 0 0.75rem;
   }
 
   .preview-intro {
     text-align: center;
-    margin-top: 1.5rem;
+    margin-top: 2rem;
     margin-bottom: 2rem;
 
     .preview-main-title {
@@ -640,7 +640,7 @@ $z-layers: (
     .main-content {
       width: 100%; // Full width on mobile
       gap: 1rem;
-      padding: 0 0.75rem;
+      padding: 5px 0.75rem;
     }
 
     .preview-intro {
@@ -649,12 +649,14 @@ $z-layers: (
       padding: 0;
 
       .preview-main-title {
-        font-size: 1.75rem;
+        font-size: 1.65rem;
+        text-align: center;
       }
 
       .preview-main-subtitle {
         max-width: 100%;
-        padding: 0 0.5rem;
+        // padding: 0 0.5rem;
+        text-align: left;
       }
     }
 

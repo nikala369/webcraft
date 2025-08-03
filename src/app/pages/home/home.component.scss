@@ -158,7 +158,7 @@
     }
 
     @media (max-width: 480px) {
-      font-size: 1.65rem;
+      font-size: 1.45rem;
 
       .typing-container {
         min-width: 130px;
@@ -615,6 +615,7 @@
 
     &__frame {
       padding: 3rem 2rem; // Slightly reduce padding
+      margin-top: -60px;
 
       &:before {
         padding: 1.5px; // Slightly thinner border on mobile

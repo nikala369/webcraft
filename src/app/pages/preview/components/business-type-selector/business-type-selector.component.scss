@@ -1,3 +1,5 @@
+@use "../../../../../styles/mixins" as m;
+
 :host {
   --accent-color: #4a8dff; /* Default, overridden in component */
   /* --accent-color-rgb is set dynamically by the component (e.g. "74,141,255") */
@@ -7,7 +9,7 @@
   width: 100%;
   max-width: 1000px; /* Increase from 800px to 1000px for more spacious layout */
   margin: 0 auto;
-  padding: 1rem 2rem 2rem;
+  padding: 1.75rem 2rem 2rem;
   color: #ffffff;
   position: relative;
   //min-height: 200px;
@@ -34,6 +36,10 @@
     margin-bottom: 0.75rem;
     text-align: center;
     transition: opacity 0.3s ease;
+
+    @include m.breakpoint(md) {
+      font-size: 1.5rem;
+    }
   }
 
   .selector-subtitle {
