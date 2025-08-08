@@ -409,24 +409,12 @@ export class TemplateInitializationService {
           error
         );
 
-        // EMERGENCY FALLBACK: Provide a basic structure when theme loading fails
+        // Provide defaults for customizations, but do NOT fabricate a base template ID.
+        // Caller/UI should handle empty theme list appropriately.
         const { customizations, font } = this.getDefaultsForTypeAndPlan(
           businessType,
           plan
         );
-
-        // Use a REAL backend template ID that should exist
-        // Most backends have a default/basic template - try common IDs
-        const fallbackTemplateId = 'basic-template-001'; // Common fallback ID
-
-        const fallbackTheme = {
-          id: fallbackTemplateId,
-          name: `Basic ${businessType} Template`,
-          description: `Basic template for ${businessType}`,
-          templateType: { key: businessType },
-          templatePlan: { type: plan === 'standard' ? 'BASIC' : 'PREMIUM' },
-          config: '{}', // Basic empty config
-        } as any; // Type assertion to avoid interface issues
 
         return of({
           currentUserTemplateId: null,
@@ -438,8 +426,8 @@ export class TemplateInitializationService {
           currentStep: step,
           showBusinessTypeSelector: false,
           selectedFont: font,
-          selectedBaseTemplateId: fallbackTemplateId,
-          availableThemes: [fallbackTheme],
+          selectedBaseTemplateId: null,
+          availableThemes: [],
           hasStartedBuilding: false,
           hasSavedChangesFlag: false,
           initialMode: 'edit' as 'edit' | 'view',
@@ -472,23 +460,6 @@ export class TemplateInitializationService {
       plan
     );
 
-    // CRITICAL FIX: Even for unauthenticated preview, we need themes for template creation
-    // Use a fallback theme ID that should exist in the backend
-    const fallbackTemplateId = 'basic-template-001';
-    const fallbackTheme = {
-      id: fallbackTemplateId,
-      name: `Default ${businessType} Template`,
-      description: `Default template for ${businessType}`,
-      templateType: { key: businessType },
-      templatePlan: { type: plan === 'standard' ? 'BASIC' : 'PREMIUM' },
-      config: '{}',
-    } as any;
-
-    console.log(
-      '[TemplateInit] Unauthenticated preview - providing fallback theme:',
-      fallbackTheme
-    );
-
     return {
       currentUserTemplateId: null,
       currentTemplateName: null,
@@ -499,8 +470,8 @@ export class TemplateInitializationService {
       currentStep: step,
       showBusinessTypeSelector: false,
       selectedFont: font,
-      selectedBaseTemplateId: fallbackTemplateId, // FIXED: Provide theme ID
-      availableThemes: [fallbackTheme], // FIXED: Provide theme array
+      selectedBaseTemplateId: null,
+      availableThemes: [],
       hasStartedBuilding: false,
       hasSavedChangesFlag: false,
       initialMode: 'view' as 'edit' | 'view',
@@ -673,10 +644,12 @@ export class TemplateInitializationService {
         );
       }),
       switchMap((templateTypes) => {
-        // Find the template type with matching key
-        const templateType = templateTypes.find(
-          (type) => type.key === businessTypeKey
-        );
+        // Find the template type with matching key (case-insensitive to be robust)
+        const targetKeyLower = (businessTypeKey || '').toLowerCase();
+        const templateType = templateTypes.find((type) => {
+          const keyLower = (type.key || '').toLowerCase();
+          return keyLower === targetKeyLower;
+        });
 
         if (!templateType) {
           console.error(
@@ -728,61 +701,41 @@ export class TemplateInitializationService {
               return this.templateService
                 .searchTemplates(templateType.id, planId, 0, 10) // Use actual IDs, reduced limit
                 .pipe(
-                  map((response) => response.content as unknown as Template[]),
+                  switchMap((response) => {
+                    const primary = response.content as unknown as Template[];
+                    if (primary && primary.length > 0) {
+                      return of(primary);
+                    }
+                    console.warn(
+                      '[TEMPLATE DEBUG] No templates found for type+plan. Retrying without plan filter…'
+                    );
+                    // Retry without plan filter to broaden results
+                    return this.templateService
+                      .searchTemplates(templateType.id, null, 0, 10)
+                      .pipe(map((r) => r.content as unknown as Template[]));
+                  }),
                   catchError((err) => {
                     console.error(
                       'Error loading templates for business type:',
                       err
                     );
 
-                    // FALLBACK: If template search fails (likely due to auth), provide a fallback theme
-                    // This ensures template creation can proceed even if backend templates are unavailable
+                    // If template search fails, return empty list; caller will decide how to proceed
                     console.log(
-                      '[TEMPLATE DEBUG] Template search failed, providing fallback theme'
+                      '[TEMPLATE DEBUG] Template search failed, returning empty theme list'
                     );
-
-                    // Use a REAL backend template ID that should exist
-                    const fallbackTemplateId = 'basic-template-001';
-
-                    const fallbackTheme = {
-                      id: fallbackTemplateId,
-                      name: `Default ${businessTypeKey} Template`,
-                      description: `Default template for ${businessTypeKey}`,
-                      templateType: { key: businessTypeKey },
-                      templatePlan: {
-                        type: plan === 'standard' ? 'BASIC' : 'PREMIUM',
-                      },
-                      config: '{}',
-                    } as any;
-
-                    return of([fallbackTheme] as Template[]);
+                    return of([] as Template[]);
                   })
                 );
             }),
             catchError((err) => {
               console.error('Error getting plan ID for', plan, ':', err);
 
-              // FALLBACK: If plan ID lookup fails (likely due to auth), provide a fallback theme
-              // This ensures template creation can proceed even if backend plan lookup is unavailable
+              // If plan ID lookup fails, return empty list
               console.log(
-                '[TEMPLATE DEBUG] Plan ID lookup failed, providing fallback theme'
+                '[TEMPLATE DEBUG] Plan ID lookup failed, returning empty theme list'
               );
-
-              // Use a REAL backend template ID that should exist
-              const fallbackTemplateId = 'basic-template-001';
-
-              const fallbackTheme = {
-                id: fallbackTemplateId,
-                name: `Default ${businessTypeKey} Template`,
-                description: `Default template for ${businessTypeKey}`,
-                templateType: { key: businessTypeKey },
-                templatePlan: {
-                  type: plan === 'standard' ? 'BASIC' : 'PREMIUM',
-                },
-                config: '{}',
-              } as any;
-
-              return of([fallbackTheme] as Template[]);
+              return of([] as Template[]);
             })
           );
       }),
@@ -795,32 +748,11 @@ export class TemplateInitializationService {
           url: err.url,
         });
 
-        // FALLBACK: If template types loading fails (likely due to auth), provide a fallback structure
-        // This ensures theme loading can proceed even if backend template types are unavailable
+        // If template types loading fails, return empty list
         console.log(
-          '[TEMPLATE DEBUG] Template types loading failed, providing fallback structure'
+          '[TEMPLATE DEBUG] Template types loading failed, returning empty theme list'
         );
-
-        const fallbackTemplateType = {
-          id: `fallback-type-${businessTypeKey.toLowerCase()}`,
-          key: businessTypeKey,
-          name: `${businessTypeKey} Template Type`,
-        };
-
-        // Return fallback template structure that will work with our fallback theme
-        // Use a REAL backend template ID that should exist
-        const fallbackTemplateId = 'basic-template-001';
-
-        const fallbackTheme = {
-          id: fallbackTemplateId,
-          name: `Default ${businessTypeKey} Template`,
-          description: `Default template for ${businessTypeKey}`,
-          templateType: { key: businessTypeKey },
-          templatePlan: { type: plan === 'standard' ? 'BASIC' : 'PREMIUM' },
-          config: '{}',
-        } as any;
-
-        return of([fallbackTheme] as Template[]);
+        return of([] as Template[]);
       })
     );
   }

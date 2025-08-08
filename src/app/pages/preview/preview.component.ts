@@ -585,7 +585,9 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
       });
 
       this.confirmationService.showConfirmation(
-        'Unable to create template. Please try again.',
+        this.availableThemes().length === 0
+          ? 'No base templates available. Please select a business type again or try later.'
+          : 'Unable to create template. Please try again.',
         'error',
         3000
       );
@@ -799,55 +801,19 @@ export class PreviewComponent implements OnInit, OnDestroy, AfterViewInit {
             );
           } else {
             console.warn(
-              '[PREVIEW DEBUG] No themes received, providing emergency fallback'
+              '[PREVIEW DEBUG] No themes received from backend. Clearing selection.'
             );
-            // EMERGENCY FALLBACK: If we get empty themes array
-            // Use a REAL backend template ID that should exist
-            const fallbackTemplateId = 'basic-template-001';
-
-            const emergencyFallbackTheme = {
-              id: fallbackTemplateId,
-              name: `Emergency ${businessType} Template`,
-              description: `Emergency template for ${businessType}`,
-              templateType: { key: businessType },
-              templatePlan: {
-                type: this.currentPlan() === 'standard' ? 'BASIC' : 'PREMIUM',
-              },
-              config: '{}',
-            } as any;
-
-            this.availableThemes.set([emergencyFallbackTheme] as any[]);
-            this.selectedBaseTemplateId.set(fallbackTemplateId);
+            this.availableThemes.set([] as any[]);
+            this.selectedBaseTemplateId.set(null);
           }
         },
         error: (error) => {
           console.error('[PREVIEW DEBUG] Error loading themes:', error);
           console.log(
-            '[PREVIEW DEBUG] Theme loading failed, providing emergency fallback'
+            '[PREVIEW DEBUG] Theme loading failed. Clearing selection.'
           );
-
-          // EMERGENCY FALLBACK: If TemplateInitializationService fallback also fails,
-          // provide a minimal fallback theme to allow template creation
-          // Use a REAL backend template ID that should exist
-          const fallbackTemplateId = 'basic-template-001';
-
-          const emergencyFallbackTheme = {
-            id: fallbackTemplateId,
-            name: `Emergency ${businessType} Template`,
-            description: `Emergency template for ${businessType}`,
-            templateType: { key: businessType },
-            templatePlan: {
-              type: this.currentPlan() === 'standard' ? 'BASIC' : 'PREMIUM',
-            },
-            config: '{}',
-          } as any;
-
-          this.availableThemes.set([emergencyFallbackTheme] as any[]);
-          this.selectedBaseTemplateId.set(fallbackTemplateId);
-          console.log(
-            '[PREVIEW DEBUG] Emergency fallback theme set:',
-            emergencyFallbackTheme
-          );
+          this.availableThemes.set([] as any[]);
+          this.selectedBaseTemplateId.set(null);
         },
       });
   }
