@@ -16,7 +16,7 @@ import {
   Customizations,
   HeroData,
 } from '../../../../core/models/website-customizations';
-import { SectionHoverWrapperComponent } from '../../components/section-hover-wrapper/section-hover-wrapper.component';
+// SectionHoverWrapperComponent is used in child section components
 import { ThemeColorsService } from '../../../../core/services/theme/theme-colors.service';
 import { BusinessConfigService } from '../../../../core/services/business-config/business-config.service';
 import { Router } from '@angular/router';
@@ -35,21 +35,19 @@ import { MenuSectionComponent } from './components/menu-section/menu-section.com
 import { ServicesSectionComponent } from './components/services-section/services-section.component';
 import { ProjectsSectionComponent } from './components/projects-section/projects-section.component';
 import { ContactSectionComponent } from './components/contact-section/contact-section.component';
-import { ComponentCustomizerComponent } from '../../components/component-customizer/component-customizer.component';
+// ComponentCustomizerComponent is handled at parent level
 
 @Component({
   selector: 'app-home-standard',
   standalone: true,
   imports: [
     CommonModule,
-    SectionHoverWrapperComponent,
     HeroSectionComponent,
     AboutSectionComponent,
     MenuSectionComponent,
     ProjectsSectionComponent,
     ServicesSectionComponent,
     ContactSectionComponent,
-    ComponentCustomizerComponent,
   ],
   templateUrl: './home-standard.component.html',
   styleUrl: './home-standard.component.scss',
@@ -316,13 +314,14 @@ export class HomeStandardComponent implements OnInit, OnChanges {
 
     // Could be enhanced to be more intelligent about which section is next
     // based on the current scroll position or business type
-    if (this.businessType === 'restaurant') {
+    const businessTypeLower = this.businessType?.toLowerCase() || '';
+    if (businessTypeLower === 'restaurant') {
       nextSection = 'about'; // or 'menu' if about is not prominent
-    } else if (this.businessType === 'salon') {
+    } else if (businessTypeLower === 'salon') {
       nextSection = 'about'; // or 'services' if about is not prominent
     } else if (
-      this.businessType === 'architecture' ||
-      this.businessType === 'portfolio'
+      businessTypeLower === 'architecture' ||
+      businessTypeLower === 'portfolio'
     ) {
       nextSection = 'about'; // or 'projects' if about is not prominent
     }
@@ -336,13 +335,14 @@ export class HomeStandardComponent implements OnInit, OnChanges {
   getBusinessTypeSections(): string[] {
     const commonSections = ['hero', 'about', 'contact'];
 
-    if (this.businessType === 'restaurant') {
+    const businessTypeLower = this.businessType?.toLowerCase() || '';
+    if (businessTypeLower === 'restaurant') {
       return [...commonSections, 'menu'];
-    } else if (this.businessType === 'salon') {
+    } else if (businessTypeLower === 'salon') {
       return [...commonSections, 'services'];
     } else if (
-      this.businessType === 'architecture' ||
-      this.businessType === 'portfolio'
+      businessTypeLower === 'architecture' ||
+      businessTypeLower === 'portfolio'
     ) {
       return [...commonSections, 'projects'];
     }
@@ -359,17 +359,21 @@ export class HomeStandardComponent implements OnInit, OnChanges {
 
   /**
    * Check if current business type should show restaurant-style menu section
+   * FIXED: Handle both uppercase and lowercase business types for robust matching
    */
   isRestaurantType(): boolean {
-    return ['restaurant', 'cafe', 'bar'].includes(this.businessType);
+    const businessTypeLower = this.businessType?.toLowerCase() || '';
+    return ['restaurant', 'cafe', 'bar'].includes(businessTypeLower);
   }
 
   /**
    * Check if current business type should show services section
+   * FIXED: Handle both uppercase and lowercase business types for robust matching
    */
   isServiceType(): boolean {
+    const businessTypeLower = this.businessType?.toLowerCase() || '';
     return ['salon', 'spa', 'beauty', 'fitness', 'gym'].includes(
-      this.businessType
+      businessTypeLower
     );
   }
 }

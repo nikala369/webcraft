@@ -618,13 +618,14 @@ export class BusinessConfigService {
           hero1: this.getDefaultHeroData(businessType),
           about: this.getDefaultAboutData(businessType),
           contact: this.getDefaultContactData(businessType),
-          ...(businessType === 'restaurant'
+          ...(businessType?.toLowerCase() === 'restaurant'
             ? { menu: this.getDefaultMenuData() }
             : {}),
-          ...(businessType === 'salon'
+          ...(businessType?.toLowerCase() === 'salon'
             ? { services: this.getDefaultServicesData(businessType) }
             : {}),
-          ...(businessType === 'architecture' || businessType === 'portfolio'
+          ...(businessType?.toLowerCase() === 'architecture' ||
+          businessType?.toLowerCase() === 'portfolio'
             ? { projects: this.getDefaultProjectsData(businessType) }
             : {}),
         },
@@ -649,11 +650,11 @@ export class BusinessConfigService {
         about: this.getPremiumAboutPageData(businessType),
         contact: this.getPremiumContactPageData(businessType),
         menu:
-          businessType === 'restaurant'
+          businessType?.toLowerCase() === 'restaurant'
             ? this.getPremiumMenuPageData(businessType)
             : undefined,
         services:
-          businessType === 'salon'
+          businessType?.toLowerCase() === 'salon'
             ? this.getPremiumServicesPageData(businessType)
             : undefined,
       };

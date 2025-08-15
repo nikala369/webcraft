@@ -576,10 +576,11 @@ export class TemplateInitializationService {
       );
 
     // Special handling for menu data to ensure proper structure
+    const businessTypeLower = businessType?.toLowerCase() || '';
     if (
-      businessType === 'restaurant' ||
-      businessType === 'cafe' ||
-      businessType === 'bar'
+      businessTypeLower === 'restaurant' ||
+      businessTypeLower === 'cafe' ||
+      businessTypeLower === 'bar'
     ) {
       const menuData = this.businessConfigService.getDefaultMenuData();
       console.log('[TemplateInitializationService] Using menu data:', {

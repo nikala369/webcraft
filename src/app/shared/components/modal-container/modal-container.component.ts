@@ -89,25 +89,43 @@ export class ModalContainerComponent implements OnInit, AfterViewInit {
         });
       }
 
-      // Subscribe to child component's output events (assuming 'save' and 'cancel')
+      // Subscribe to child component's output events
+      // Handle both generic and specific event names
+
+      // Handle save events (generic 'save' or specific like 'menuSave')
       if (this.childComponentRef.instance.save) {
         console.log('Subscribing to save event on child component');
         this.childComponentRef.instance.save.subscribe((result: any) => {
           console.log('Save event received with result:', result);
           this.close(result);
         });
+      } else if (this.childComponentRef.instance.menuSave) {
+        console.log('Subscribing to menuSave event on child component');
+        this.childComponentRef.instance.menuSave.subscribe((result: any) => {
+          console.log('MenuSave event received with result:', result);
+          this.close(result);
+        });
       } else {
-        console.warn('Child component does not have a save output');
+        console.warn('Child component does not have a save or menuSave output');
       }
 
+      // Handle cancel events (generic 'cancel' or specific like 'menuCancel')
       if (this.childComponentRef.instance.cancel) {
         console.log('Subscribing to cancel event on child component');
         this.childComponentRef.instance.cancel.subscribe(() => {
           console.log('Cancel event received from child component');
           this.close();
         });
+      } else if (this.childComponentRef.instance.menuCancel) {
+        console.log('Subscribing to menuCancel event on child component');
+        this.childComponentRef.instance.menuCancel.subscribe(() => {
+          console.log('MenuCancel event received from child component');
+          this.close();
+        });
       } else {
-        console.warn('Child component does not have a cancel output');
+        console.warn(
+          'Child component does not have a cancel or menuCancel output'
+        );
       }
 
       this.cdr.detectChanges();

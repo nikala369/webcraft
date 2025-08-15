@@ -352,23 +352,13 @@ export class MenuSectionComponent implements OnChanges, OnInit {
 
   /**
    * Check if menu data is fully loaded and ready to display
+   * FIXED: Always return true since menuCategories computed signal handles fallback to defaults
    */
   isDataLoaded(): boolean {
-    const data = this.data();
-
-    // Data is considered loaded if we have a data object
-    // We don't need to be too strict here - just ensure we have something
-    const hasData = data && typeof data === 'object';
-
-    if (!hasData) {
-      console.log('[MenuSection] Data not loaded: no data object');
-      return false;
-    }
-
-    // If we have any menu-related properties, consider it loaded
-    const hasMenuProperties = Object.keys(data).length > 0;
-
-    return hasMenuProperties;
+    // Since our menuCategories computed signal always provides valid data
+    // (either from the actual data or from defaults), we should always
+    // consider the data "loaded" and ready to display
+    return true;
   }
 
   handleSectionEdit(sectionId: string) {

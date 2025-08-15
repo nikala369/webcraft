@@ -210,7 +210,8 @@ export class ContactSectionComponent implements OnInit {
 
     // For premium plans with certain business types, show hours
     if (this.planType === 'premium') {
-      if (this.businessType === 'restaurant' || this.businessType === 'salon') {
+      const businessTypeLower = this.businessType?.toLowerCase() || '';
+      if (businessTypeLower === 'restaurant' || businessTypeLower === 'salon') {
         standardFields.push('hours');
       }
     }
